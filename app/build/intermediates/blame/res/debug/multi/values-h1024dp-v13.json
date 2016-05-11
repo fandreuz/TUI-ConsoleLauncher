@@ -1,0 +1,45 @@
+[
+    {
+        "outputFile": "/Users/francescoandreuzzi/Programming/Android/ConsoleLauncher/app/build/intermediates/res/merged/debug/values-h1024dp-v13/values-h1024dp-v13.xml",
+        "map": [
+            {
+                "to": {
+                    "startLine": 2,
+                    "startColumn": 4,
+                    "startOffset": 55,
+                    "endColumn": 43,
+                    "endOffset": 94
+                },
+                "from": {
+                    "file": "/Users/francescoandreuzzi/Programming/Android/ConsoleLauncher/app/src/main/res/values-h1024dp/dimension.xml",
+                    "position": {
+                        "startLine": 3,
+                        "startColumn": 4,
+                        "startOffset": 56,
+                        "endColumn": 43,
+                        "endOffset": 95
+                    }
+                }
+            },
+            {
+                "to": {
+                    "startLine": 3,
+                    "startColumn": 4,
+                    "startOffset": 99,
+                    "endColumn": 48,
+                    "endOffset": 143
+                },
+                "from": {
+                    "file": "/Users/francescoandreuzzi/Programming/Android/ConsoleLauncher/app/src/main/res/values-h1024dp/dimension.xml",
+                    "position": {
+                        "startLine": 4,
+                        "startColumn": 4,
+                        "startOffset": 100,
+                        "endColumn": 48,
+                        "endOffset": 144
+                    }
+                }
+            }
+        ]
+    }
+]

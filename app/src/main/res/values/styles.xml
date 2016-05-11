@@ -1,0 +1,7 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="CustomColorStyle" parent="android:Theme.Light.NoTitleBar"></style>
+
+    <style name="SystemWallpaperStyle" parent="android:Theme.Wallpaper.NoTitleBar"></style>
+
+</resources>

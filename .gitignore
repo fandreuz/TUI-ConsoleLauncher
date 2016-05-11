@@ -1,0 +1,26 @@
+
+*.class
+
+# Package Files #
+*.dex
+*.war
+*.ear
+*.apk
+bin/
+bin
+gen/
+release/
+release
+gen
+.metadata/
+.metadata
+.idea/
+.idea
+*.project
+.DS_Store
+target/
+
+*.iml
+*.properties
+app/proguard-rules.pro
+app/app.iml

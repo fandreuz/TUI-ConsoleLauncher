@@ -1,0 +1,248 @@
+<resources>
+
+    <!-- various text -->
+    <string name="app_name">T-UI</string>
+    <string name="separator_text">>></string>
+    <string name="separator_text_su">$</string>
+    <string name="su">T-UI got SU permissions</string>
+    <string name="nosu">Seems that your device isn\'t properly rooted</string>
+    <string name="permissions_toast">You have to grant at least Storage and Contacts permissions to make t-ui work</string>
+    <string name="permission_error">t-ui has not the permissions to do this</string>
+
+    <!-- app mgr -->
+    <string name="output_appnotfound">Application or package not found</string>
+    <string name="output_hideapp">state: hidden</string>
+    <string name="output_unhideapp">state: shown</string>
+
+    <!-- label -->
+    <string name="share_label">Share</string>
+    <string name="adminrequest_label">Lock the screen on double tap</string>
+    <string name="error_label">Errors:</string>
+
+    <!-- pending operation -->
+    <string name="starting_app">Starting:</string>
+    <string name="calling">Calling:</string>
+    <string name="sharing">Sharing:</string>
+
+    <!-- various outputs -->
+    <string name="output_nothingfound">No matches</string>
+
+    <!-- search-->
+    <string name="output_searchingplaystore">Play Store search:</string>
+    <string name="output_searchinggoogle">Google search:</string>
+    <string name="output_search_youtube">YouTube search:</string>
+    <string name="output_search_file">File Search here:</string>
+    <string name="output_nothing_found">Nothing was found</string>
+
+    <!-- telephony -->
+    <string name="output_wifi">WiFi active:</string>
+    <string name="output_data">Mobile Data active:</string>
+    <string name="output_numbernotfound">Contact not found</string>
+    <string name="output_noairplane">Can\'t toggle Airplane Mode on 4.2+ Android Version</string>
+    <string name="output_airplane">Airplane Mode active:</string>
+
+    <!-- files -->
+    <string name="output_isfile">Cant\'t write here. It\'s a file</string>
+    <string name="output_isdirectory">The selected file is a directory</string>
+    <string name="output_filenotfound">File not found</string>
+    <string name="output_ioerror">An unknown I/O error has occurred</string>
+
+    <string name="output_operationdone">Done</string>
+    <string name="output_opening">Opening file:</string>
+
+    <!-- install/uninstall -->
+    <string name="output_uninstalling">Uninstall triggered:</string>
+    <string name="output_removetui">Uninstalling t-ui</string>
+
+    <!-- music -->
+    <string name="output_playing">Playing:</string>
+    <string name="output_stopped">Player stopped</string>
+    <string name="output_nomusic">Player wasn\'t started</string>
+    <string name="output_cantstop">Couldn\'t stop the player. Force stop t-ui from settings</string>
+    <string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain mp3 files.\nYou should set a
+        new one in the settings.txt file
+    </string>
+
+    <!-- command/args -->
+    <string name="output_commandnotfound">Command not found.\nTry to use \"help\"</string>
+    <string name="output_toomanyargs">Too many arguments, try passing only needed</string>
+    <string name="output_invalid_param">Invalid parameter</string>
+
+    <!-- flash -->
+    <string name="output_flashon">Flashlight ON</string>
+    <string name="output_flashoff">Flashlight OFF</string>
+    <string name="output_flashlightnotavailable">Your device doesn\'t support flashlight</string>
+
+    <!-- status -->
+    <string name="battery_charge">Battery charge:</string>
+    <string name="mobile_data">Mobile data:</string>
+    <string name="wifi">WiFi:</string>
+
+    <!-- infos -->
+    <string name="output_about">Francesco Andreuzzi, ITA, Programmer, andreuzzi.francesco@gmail.com
+        \n\nLuke Winward, USA, Designer
+        \n\nOpen Source Libraries:
+        \nandre1299-comparestring
+        \nApache commons-io
+    </string>
+    <string name="output_refresh">Refreshed: apps and alias</string>
+    <string name="output_rate">Thank you!</string>
+    <string name="output_lookfortutorial">Looking for Tutorial</string>
+
+
+    <string name="help_about">Informations about the app</string>
+    <string name="help_airplane">Toggle Airplane Mode</string>
+    <string name="help_aliases">Print alias that are currently saved in \"sdcard\"/t-ui/alias.txt</string>
+    <string name="help_aliasfile">Open alias.txt</string>
+    <string name="help_apps">Manage your apps
+        \nUsage apps [option] [app name]
+        \n\n[option] can be:
+        \n-h [app name] -> hide the app
+        \n-uh [app name] -> unhide the app
+        \n-sh -> show hidden apps
+        \nno option -> list your apps
+        \n\nExample:
+        \napps -h whatsapp
+    </string>
+    <string name="help_clear">Clear the screen</string>
+    <string name="help_call">Perform a call to someone;
+        \nUsage: call number OR name
+        \n\ncall MOTHER
+    </string>
+    <string name="help_contacts">Print your contacts</string>
+    <string name="help_cp">Copy one or more files to a folder
+        \nUsage: [su] cp [files] [folder]
+        \n\nExample:
+        \nsu cp fool.txt fool2.png myFolder
+        \ncp myFile.txt myFolder
+    </string>
+    <string name="help_data">Toggle mobile data. Will always turn off it if WiFi is active</string>
+    <string name="help_flash">Toggle the flashlight</string>
+    <string name="help_help">Print a list of available commands at this moment, or informations about a command
+        \nUsage: help command
+        \n\nExample:
+        \nhelp search
+    </string>
+    <string name="help_mv">Move one or more files to a folder
+        \nUsage: [su] mv [files] [folder]
+        \n\nsu mv fool.txt fool2.png myFolder
+        \nmv fool.txt myFolder
+    </string>
+    <string name="help_next">Play the next track in the queue</string>
+    <string name="help_listen">Play a specific track
+        \nUsage: listen trackname
+        \n\nExample:
+        \nplay back in black
+        \n\n(The track has to be located in your Music Folder)
+    </string>
+    <string name="help_previous">Play the last track played</string>
+    <string name="help_rate">Help T-UI with a positive rate (or negative, I don\'t know)\t;)</string>
+    <string name="help_refresh">Refresh apps and alias</string>
+    <string name="help_remove">Uninstall t-ui automatically.
+        \n\nMake sure you have another Launcher!
+    </string>
+    <string name="help_restart">Restart t-ui and load modified values</string>
+    <string name="help_rm">Remove a file:
+        \nUsage: [su] rm [files]
+        \n\nExample:
+        \n\nsu rm fool.txt fool2.png
+        \nrm Downloads/fool.txt
+    </string>
+    <string name="help_search">Search something somewhere
+        \nUsage: search [option] something
+        \n\n[option] can be:
+        \n-g -> (Google Search)
+        \n-p -> (Google Play Store)
+        \n-f -> (Files)
+        \n-y -> (YouTube)
+        \n\nExample:
+        \nsearch -p T-UI
+    </string>
+    <string name="help_share">Share a file
+        \nUsage: share pathToFile
+        \n\nExample:
+        \nshare fool.jpg
+    </string>
+    <string name="help_shellcommands">Print Terminal Emulator commands</string>
+    <string name="help_status">Get infos about battery charge, wifi status and mobile data</string>
+    <string name="help_stop">Stop the player</string>
+    <string name="help_time">Print current time</string>
+    <string name="help_track">Print informations about the current track</string>
+    <string name="help_tracks">Print all of the tracks in your music folder</string>
+    <string name="help_tuisettings">Open t-ui settings file</string>
+    <string name="help_tutorial">Go to T-UI tutorial page</string>
+    <string name="help_uninstall">Uninstall an application
+        \nUsage: uninstall appName OR packageName
+        \n\nExample:
+        \nuninstall dropbox
+    </string>
+    <string name="help_wifi">Toggle wifi</string>
+
+    <!-- linux -->
+    <string name="help_cd">Change the current directory
+        \nUsage: cd path
+        \n\nExample:
+        \ncd /storage/sdcard1/DCIM
+    </string>
+    <string name="help_open">Open a file with the default application
+        \nUsage: open pathToFile
+        \n\nExample:
+        \nopen docs/fool.txt
+    </string>
+
+    <string name="start_notification">T-UI started</string>
+    <string name="tui_running">T-UI is running</string>
+
+    <string name="tutorial_actionbar">T-UI Tutorial</string>
+    <string name="tutorial_header">Tap anywhere to learn how to use T-UI</string>
+    <string-array name="tutorial_index">
+        <item>Launch Applications</item>
+        <item>Commands</item>
+        <item>Settings</item>
+        <item>Alias</item>
+        <item>Playing music</item>
+    </string-array>
+
+    <string name="applications_tutorial">Keep in mind that T-UI uses CompareString library. So, you can mistype the application name, or type ONLY A PART of the name.
+        \nFor example:
+        \n\n>> inagrm
+        \nLaunching com.instagram.android
+        \n>> whats
+        \nLaunching com.whatsapp</string>
+
+    <string name="music_tutorial">You can play your music from t-ui. Just use those commands:
+        \n\nnext ==> Play the next song in the queue
+        \nprevious ==> Play the previous song in the queue
+        \nstop ==> Stop the player
+        \nlisten ==> Play a specific track
+        \ntrack ==> Print informations about the **current** track
+        \ntracks ==> List your songs
+        \n\nYour songs have to be in mainstorage/Music.</string>
+
+    <string name="settings_tutorial">T-UI is completely customizable, you can set your personal colors, preferences, disable/enable features,
+        and do many other things. You just need to use the command
+        \n\n>>tuisettings
+        \n\nThen you can edit the file which get opened. To change a value, just delete everything on the right of the "=" character, and
+        replace it with your own value.</string>
+
+    <string name="commands_tutorial">T-UI comes with many commands which will simplify your Android experience. Some examples are uninstall, call,
+        search.
+        \nYou can get a detailed list of them using the command 
+        \n>>help.
+        \n\nYou can also get specific informations about a command typing
+        \n>>help command_name
+        \n\nYou can also use default Linux Shell commands built in your Android device. You can get a list of them using the command
+        \n>>shellcommands
+    </string>
+    
+    <string name="alias_tutorial">Alias are abbreviation that can be used as entire commands.
+        \n\nTo create an alias:
+        \n1. Use the command "aliasfile"
+        \n2. Choose a name for your alias (everything you want)
+        \n3. Decide what your alias will mean
+        \n4. Go to a newline in the file, type the name, a "=", and the meaning of the alias
+        \n5. Save and use the command "refresh"
+        \n\nTo use an alias:
+        \nJust type its name and press enter</string>
+
+</resources>

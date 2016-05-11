@@ -1,0 +1,4 @@
+// do not insert random spaces!
+
+w=whatsapp
+root=cd /
