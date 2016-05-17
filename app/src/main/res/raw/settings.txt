@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=4.0
+settingsVersion=4.2
 
 // when you are ready go back to t-ui and type "restart" to see changes
 
@@ -26,6 +26,7 @@ transparentSuggestions=false
 useSystemWallpaper=false
 fullscreen=false
 keepAliveWithNotification=true
+openKeyboardOnStart=true
 
 // music
 playRandom=true
