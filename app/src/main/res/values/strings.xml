@@ -189,6 +189,11 @@
         \n\nExample:
         \nopen docs/fool.txt
     </string>
+    <string name="help_ls">Print a list of the files in a directory
+        \nUsage: ls directory
+        \n\nExample:
+        \nls Downloads
+    </string>
 
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
