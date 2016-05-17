@@ -276,26 +276,30 @@ public class AppsManager {
     }
 
     private String getNewLabel(String oldLabel, String packageName) {
-        int firstDot = packageName.indexOf(".") + 1;
-        int secondDot = packageName.substring(firstDot).indexOf(".") + firstDot;
+        try {
+            int firstDot = packageName.indexOf(".") + 1;
+            int secondDot = packageName.substring(firstDot).indexOf(".") + firstDot;
 
-        StringBuilder newLabel = new StringBuilder();
-        if (firstDot == -1) {
-            newLabel.append(packageName);
-            newLabel.append(" ");
-            newLabel.append(oldLabel);
-        } else if (secondDot == -1) {
-            newLabel.append(packageName.substring(firstDot, packageName.length()));
-            newLabel.append(" ");
-            newLabel.append(oldLabel);
-        } else {
-            newLabel.append(packageName.substring(firstDot, secondDot));
-            newLabel.append(" ");
-            newLabel.append(oldLabel);
+            StringBuilder newLabel = new StringBuilder();
+            if (firstDot == -1) {
+                newLabel.append(packageName);
+                newLabel.append(Tuils.SPACE);
+                newLabel.append(oldLabel);
+            } else if (secondDot == -1) {
+                newLabel.append(packageName.substring(firstDot, packageName.length()));
+                newLabel.append(Tuils.SPACE);
+                newLabel.append(oldLabel);
+            } else {
+                newLabel.append(packageName.substring(firstDot, secondDot));
+                newLabel.append(Tuils.SPACE);
+                newLabel.append(oldLabel);
+            }
+
+            String label = newLabel.toString();
+            return label.substring(0, 1).toUpperCase() + label.substring(1);
+        } catch (IndexOutOfBoundsException e) {
+            return packageName;
         }
-
-        String label = newLabel.toString();
-        return label.substring(0, 1).toUpperCase() + label.substring(1);
     }
 
     public void unregisterReceiver(Context context) {
