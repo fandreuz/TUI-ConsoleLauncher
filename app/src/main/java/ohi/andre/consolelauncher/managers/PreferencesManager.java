@@ -46,8 +46,11 @@ public class PreferencesManager {
     public static final String USE_SYSTEMWP = "useSystemWallpaper";
     public static final String FULLSCREEN = "fullscreen";
     public static final String NOTIFICATION = "keepAliveWithNotification";
-    public static final String ALIASES_FILENAME = "alias.txt";
+    public static final String OPEN_KEYBOARD = "openKeyboardOnStart";
+
+    public static final String ALIAS_FILENAME = "alias.txt";
     public static final int ALIAS = 11;
+
     //    settings version
     private static final String SETTINGS_VERSION = "settingsVersion";
     private List<String> settings;
@@ -101,7 +104,7 @@ public class PreferencesManager {
                 name = SETTINGS_FILENAME;
                 break;
             case PreferencesManager.ALIAS:
-                name = ALIASES_FILENAME;
+                name = ALIAS_FILENAME;
                 break;
             default:
                 return null;

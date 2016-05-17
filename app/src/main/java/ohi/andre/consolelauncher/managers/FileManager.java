@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -160,7 +161,7 @@ public class FileManager {
         return 0;
     }
 
-    public static ArrayList<File> lsFile(File f, boolean showHidden) {
+    public static List<File> lsFile(File f, boolean showHidden) {
         File[] content = f.listFiles();
 
         Arrays.sort(content, new Comparator<File>() {
@@ -175,7 +176,7 @@ public class FileManager {
             }
         });
 
-        ArrayList<File> files = new ArrayList<>();
+        List<File> files = new ArrayList<>();
         for (File u : content)
             if (!u.isHidden() || showHidden)
                 files.add(u);

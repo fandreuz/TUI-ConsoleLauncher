@@ -79,8 +79,7 @@ public class SuggestionsManager {
                 Command cmd = null;
                 try {
                     cmd = CommandTuils.parse(before, info, true);
-                } catch (Exception e) {
-                }
+                } catch (Exception e) {}
 
                 if (cmd != null) {
                     if (cmd.cmd.maxArgs() == 1 && before.contains(" ")) {

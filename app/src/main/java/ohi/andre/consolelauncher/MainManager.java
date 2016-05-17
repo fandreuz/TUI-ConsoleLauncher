@@ -229,13 +229,31 @@ public class MainManager {
     class TuiCommandTrigger implements CmdTrigger {
 
         @Override
-        public boolean trigger(ExecInfo info, Outputable out, String input, int id) throws Exception {
-            Command command = CommandTuils.parse(input, info, false);
-            if (command != null) {
-                out.onOutput(command.exec(info), id);
-                return true;
-            } else
-                return false;
+        public boolean trigger(final ExecInfo info, final Outputable out, final String input, final int id) throws Exception {
+
+            final boolean[] returnValue = new boolean[1];
+            Thread t = new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+
+                    try {
+                        Command command = CommandTuils.parse(input, info, false);
+                        if (command != null) {
+                            out.onOutput(command.exec(info), id);
+                            returnValue[0] = true;
+                        } else
+                            returnValue[0] = false;
+                    } catch (Exception e) {
+                        out.onOutput(e.toString(), id);
+                    }
+                }
+            };
+
+            t.run();
+            t.join();
+
+            return returnValue[0];
         }
     }
 }

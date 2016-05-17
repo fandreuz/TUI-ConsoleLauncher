@@ -1,19 +1,22 @@
 apply plugin: 'com.android.application'
+apply plugin: 'versionPlugin'
 
 android {
     signingConfigs {
         config {
         }
     }
+
     compileSdkVersion 23
     buildToolsVersion '23.0.2'
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
         minSdkVersion 8
         targetSdkVersion 23
-        versionCode 66
-        versionName "4.1"
+        versionCode 67
+        versionName "4.2"
     }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -21,6 +24,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    versionPlugin {
+        buildTypesMatcher = 'release'
+
+        supportBuildNumber = true
+        buildNumberPrefix = 'b'
+
+        fileNameFormat = 't-ui-vrs_$versionName-build_$versionCode'
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -28,7 +41,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.android.support:appcompat-v7:23.4.0'
     compile files('../libs/CompareString.jar')
     compile files('../libs/commons-io-2.4.jar')
 }

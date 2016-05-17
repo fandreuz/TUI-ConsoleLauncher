@@ -43,25 +43,25 @@ public class UIManager implements OnTouchListener {
 
     private final int RAM_DELAY = 3000;
     public Handler handler;
-    //    usable stuff
+
     protected Context mContext;
     protected LinearLayout suggestionsView;
-    //    this is for double tap
+
     private DevicePolicyManager policy;
     private ComponentName component;
     private GestureDetector det;
     private ExecInfo info;
-    //    reference for open/close kb
+
     private InputMethodManager imm;
-    //    reference to MainManager's onCommand
+
     private CommandExecuter trigger;
-    //    my terminal
+
     private TerminalAdapter mTerminalAdapter;
-    //    last measured root height
+
     private int lastMeasuredHeight;
-    //    reference to views
+
     private TextView ram;
-    //    this is for RAM view
+
     private ActivityManager.MemoryInfo memory;
     private ActivityManager activityManager;
     private Runnable ramRunnable = new Runnable() {
@@ -284,8 +284,6 @@ public class UIManager implements OnTouchListener {
 
     //    call this to trigger a suggestion change
     private void requestSuggestion(final String before, final String lastWord) {
-
-        suggestionsView.removeAllViews();
 
         if (suggestionViewParams == null) {
             suggestionViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);

@@ -25,10 +25,10 @@ public class aliasfile implements CommandAbstraction {
     @Override
     public String exec(final ExecInfo info) throws Exception {
         File tuiFolder = Tuils.getTuiFolder();
-        final File aliasFile = new File(tuiFolder, PreferencesManager.ALIASES_FILENAME);
+        final File aliasFile = new File(tuiFolder, PreferencesManager.ALIAS_FILENAME);
         FileManager.openFile(info.context, aliasFile);
 
-        return info.res.getString(R.string.output_opening) + " " + PreferencesManager.ALIASES_FILENAME;
+        return info.res.getString(R.string.output_opening) + " " + PreferencesManager.ALIAS_FILENAME;
     }
 
     @Override

@@ -39,9 +39,10 @@ public class LauncherActivity extends Activity implements Reloadable {
     private MainManager main;
 
     private boolean hideStatusBar;
+    private boolean openKeyboardOnStart;
 
     private PreferencesManager preferencesManager;
-    //    access Main.onCommand from UIManager
+
     private CommandExecuter ex = new CommandExecuter() {
 
         @Override
@@ -54,7 +55,7 @@ public class LauncherActivity extends Activity implements Reloadable {
             return null;
         }
     };
-    //    access input from MainManager
+
     private Inputable in = new Inputable() {
 
         @Override
@@ -66,7 +67,7 @@ public class LauncherActivity extends Activity implements Reloadable {
             }
         }
     };
-    //    access output from MainManager
+
     private Outputable out = new Outputable() {
 
         @Override
@@ -124,13 +125,16 @@ public class LauncherActivity extends Activity implements Reloadable {
             startService(service);
         }
 
-//        use system wp
         boolean useSystemWP = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.USE_SYSTEMWP));
         if (useSystemWP)
             setTheme(R.style.SystemWallpaperStyle);
 
-//        hide status bar
         hideStatusBar = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.FULLSCREEN));
+
+        openKeyboardOnStart = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.OPEN_KEYBOARD));
+        if (!openKeyboardOnStart) {
+            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        }
 
         setContentView(R.layout.main_view);
 
@@ -184,7 +188,8 @@ public class LauncherActivity extends Activity implements Reloadable {
     protected void onStart() {
         super.onStart();
 
-        ui.onStart();
+        if (openKeyboardOnStart)
+            ui.onStart();
     }
 
     @Override
