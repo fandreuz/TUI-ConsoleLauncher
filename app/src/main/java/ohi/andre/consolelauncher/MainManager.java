@@ -239,21 +239,27 @@ public class MainManager {
 
                     try {
                         Command command = CommandTuils.parse(input, info, false);
-                        if (command != null) {
+
+                        synchronized (returnValue) {
+                            returnValue[0] = command != null;
+                            returnValue.notify();
+                        }
+
+                        if (returnValue[0]) {
                             out.onOutput(command.exec(info), id);
-                            returnValue[0] = true;
-                        } else
-                            returnValue[0] = false;
+                        }
                     } catch (Exception e) {
                         out.onOutput(e.toString(), id);
                     }
                 }
             };
 
-            t.run();
-            t.join();
+            t.start();
 
-            return returnValue[0];
+            synchronized (returnValue) {
+                returnValue.wait();
+                return returnValue[0];
+            }
         }
     }
 }
