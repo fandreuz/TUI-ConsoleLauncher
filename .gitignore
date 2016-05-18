@@ -26,5 +26,4 @@ target/
 
 *.iml
 *.properties
-app/proguard-rules.pro
 app/app.iml
