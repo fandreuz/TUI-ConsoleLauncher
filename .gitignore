@@ -12,6 +12,8 @@ gen/
 release/
 release
 gen
+build/
+build
 .metadata/
 .metadata
 .gradle/
