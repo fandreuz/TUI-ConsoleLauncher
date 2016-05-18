@@ -240,6 +240,18 @@ public class Tuils {
         return Tuils.toPlanString(strings.toArray(object), separator);
     }
 
+    public static String filesToPlanString(List<File> files, String separator) {
+        StringBuilder builder = new StringBuilder();
+        int limit = files.size() - 1;
+        for (int count = 0; count < files.size(); count++) {
+            builder.append(files.get(count).getName());
+            if (count < limit) {
+                builder.append(separator);
+            }
+        }
+        return builder.toString();
+    }
+
     public static String toPlanString(List<String> strings) {
         return Tuils.toPlanString(strings, "\n");
     }
