@@ -12,8 +12,12 @@ gen/
 release/
 release
 gen
+build/
+build
 .metadata/
 .metadata
+.gradle/
+.gradle
 .idea/
 .idea
 *.project
@@ -22,5 +26,4 @@ target/
 
 *.iml
 *.properties
-app/proguard-rules.pro
 app/app.iml
