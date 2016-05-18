@@ -7,6 +7,7 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -38,6 +39,7 @@ public class TerminalAdapter {
 
     private final CharSequence PREFIX = ">>";
     private final CharSequence NEWLINE = "\n";
+
     private final int INPUT = 10;
     private final int OUTPUT = 11;
 
@@ -108,7 +110,7 @@ public class TerminalAdapter {
     }
 
     private void setupNewInput() {
-        mInputView.setText("");
+        mInputView.setText(Tuils.EMPTYSTRING);
         mCurrentOutputId++;
         requestInputFocus();
     }
@@ -145,33 +147,45 @@ public class TerminalAdapter {
 
     private void writeToView(String text, int type, int id) {
 //        Log.e("andre", "---------------------");
+//        Log.e("andre", "startId: " + String.valueOf(id));
 //        Log.e("andre", "to write: " + text);
         text = text.concat(NEWLINE.toString());
 
         Spannable toWriteSpannable = new SpannableString(text);
-        ForegroundColorSpan colorSpan = new ForegroundColorSpan(type == INPUT ? mSkinManager.getInputColor() : mSkinManager.getOutputColor());
+        int color;
+        switch (type) {
+            case INPUT:
+                color = mSkinManager.getInputColor();
+                break;
+            case OUTPUT:
+                color = mSkinManager.getOutputColor();
+                break;
+            default:
+                color = 0;
+                break;
+        }
+        ForegroundColorSpan colorSpan = new ForegroundColorSpan(color);
         toWriteSpannable.setSpan(colorSpan, 0, toWriteSpannable.length(), 0);
 
         if (id == mCurrentOutputId) {
-//            Log.e("andre", String.valueOf(System.currentTimeMillis()));
-//            Log.e("andre", Arrays.toString(Thread.currentThread().getStackTrace()));
-//            Log.e("andre", "==");
-//            Log.e("andre", toWriteSpannable.toString());
+//            Log.e("andre", "current id, " + id);
             mTerminalView.append(toWriteSpannable);
         } else {
-//            Log.e("andre", String.valueOf(System.currentTimeMillis()));
             CharSequence[] mCurrentText = Tuils.split(mTerminalView.getText(), NEWLINE, -1);
             final List<CharSequence> mNewText = new ArrayList<>();
 
             int count = 0;
             boolean check = false;
             List<CharSequence> output = null;
-//            Log.e("andre", String.valueOf(mCurrentText.length));
+//            Log.e("andre", "Current text length: " + String.valueOf(mCurrentText.length));
+//            Log.e("andre", "Current text");
 //            Log.e("andre", Arrays.toString(mCurrentText));
+//            Log.e("andre", "-----------------");
             while (count < mCurrentText.length) {
-//                Log.e("andre", String.valueOf(count) + ", " + mCurrentText[count]);
+//                Log.e("andre", "Line n. " + String.valueOf(count) + ": " + mCurrentText[count]);
 
                 if (isInput(mCurrentText[count])) {
+//                    Log.e("andre", mCurrentText[count] + " is input");
                     id--;
 
                     if (output != null && output.size() > 0) {
@@ -204,9 +218,21 @@ public class TerminalAdapter {
 //                Log.e("andre", "id: " + id);
                 if (id == -1) {
                     mNewText.add(toWriteSpannable);
-//                    Log.e("andre", "towrite");
+//                    Log.e("andre", "writing towrite");
 //                    Log.e("andre", toWriteSpannable.toString());
                     check = true;
+                }
+
+                if (count == mCurrentText.length - 1 && output.size() > 0) {
+                    for (CharSequence sequence : output) {
+                        ForegroundColorSpan outputColorSpan = new ForegroundColorSpan(mSkinManager.getOutputColor());
+                        Spannable spannable = new SpannableString(sequence.toString());
+                        spannable.setSpan(outputColorSpan, 0, spannable.length(), 0);
+                        mNewText.add(spannable);
+                        mNewText.add(NEWLINE);
+                    }
+//                    Log.e("andre", "output");
+//                    Log.e("andre", output.toString());
                 }
 
                 count++;
@@ -230,6 +256,13 @@ public class TerminalAdapter {
 
     private boolean isInput(CharSequence s) {
         return s.length() >= PREFIX.length() && s.subSequence(0, PREFIX.length()).toString().equals(PREFIX);
+    }
+
+    private String getLastLine() {
+        String text = mTerminalView.getText().toString();
+        String[] lines = text.split(Tuils.NEWLINE);
+        Log.e("andre", lines[lines.length - 1]);
+        return lines[lines.length - 1];
     }
 
     public String getInput() {
