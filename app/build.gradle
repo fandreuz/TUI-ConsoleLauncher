@@ -41,8 +41,7 @@ android {
 
     dependencies {
         compile 'com.android.support:appcompat-v7:23.4.0'
-        compile 'com.jpardogo.flabbylistview:library:1.0.0'
-        compile 'com.github.Andre1299:CompareString:4.0'
+        compile 'com.github.Andre1299:CompareString:44.0'
         compile 'commons-io:commons-io:2.4'
     }
 
