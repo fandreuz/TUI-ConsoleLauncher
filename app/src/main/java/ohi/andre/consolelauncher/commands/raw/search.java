@@ -179,7 +179,7 @@ public class search implements CommandAbstraction {
 
     @Override
     public int notFoundRes() {
-        return R.string.output_invalid_param;
+        return helpRes();
     }
 
 }

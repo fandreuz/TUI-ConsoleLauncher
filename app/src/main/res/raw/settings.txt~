@@ -1,0 +1,24 @@
+// skin
+deviceColor=#ffff9800
+inputColor=#ff00ff00
+outputColor=#ffffffff
+backgroundColor=#ff004d40
+useSystemFont=false
+fontSize=15
+filesColor=#ffffffff
+foldersColor=#ffffffff
+ramColor=#fff44336
+directoryColor=#ff607d8b
+fileColumns=2
+showHiddenFiles=false
+
+// pre-load
+useSystemWallpaper=false
+
+// music
+playRandom=true
+songsFolder=/sdcard/Music
+
+// others
+closeOnDbTap=true
+useIntelligentDeletion=true
