@@ -26,12 +26,12 @@ import java.util.List;
  */
 public class ShellUtils {
 
-    public static final String SPACE = " ";
+    public static final String SPACE = Tuils.SPACE;
     public static final String COMMAND_SU = "su";
     public static final String COMMAND_SU_ADD = "-c";
     public static final String COMMAND_SH = "sh";
     public static final String COMMAND_EXIT = "exit\n";
-    public static final String COMMAND_LINE_END = "\n";
+    public static final String COMMAND_LINE_END = Tuils.NEWLINE;
     public static final String COMMAND_CD = "cd";
 
     private ShellUtils() {

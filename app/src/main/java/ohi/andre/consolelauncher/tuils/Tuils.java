@@ -41,9 +41,9 @@ import ohi.andre.consolelauncher.tuils.tutorial.TutorialIndexActivity;
 
 public class Tuils {
 
-    public static final String SPACE = ShellUtils.SPACE;
+    public static final String SPACE = " ";
     public static final String DOUBLE_SPACE = "  ";
-    public static final String NEWLINE = ShellUtils.COMMAND_LINE_END;
+    public static final String NEWLINE = "\n";
     public static final String TRIBLE_SPACE = "   ";
     public static final String DOT = ".";
     public static final String EMPTYSTRING = "";
@@ -205,7 +205,7 @@ public class Tuils {
             }
 
             if (current != c) {
-                s.add(count, (newLine ? "\n" : "") + Character.toString(c).toUpperCase() + (newLine ? "\n" : ""));
+                s.add(count, (newLine ? NEWLINE : EMPTYSTRING) + Character.toString(c).toUpperCase() + (newLine ? NEWLINE : EMPTYSTRING));
                 current = c;
             }
         }
@@ -253,7 +253,7 @@ public class Tuils {
     }
 
     public static String toPlanString(List<String> strings) {
-        return Tuils.toPlanString(strings, "\n");
+        return Tuils.toPlanString(strings, NEWLINE);
     }
 
     public static CharSequence toPlanSequence(List<CharSequence> sequences, CharSequence separator) {
@@ -287,65 +287,64 @@ public class Tuils {
         return TextUtils.concat(sequences);
     }
 
-    public static CharSequence[] split(CharSequence input, CharSequence re, int limit) {
-        // Can we do it cheaply?
-        int len = re.length();
-        if (len == 0) {
-            return null;
-        }
-        char ch = re.charAt(0);
-        if (len == 1 && METACHARACTERS.indexOf(ch) == -1) {
-            // We're looking for a single non-metacharacter. Easy.
-        } else if (len == 2 && ch == '\\') {
-            // We're looking for a quoted character.
-            // Quoted metacharacters are effectively single non-metacharacters.
-            ch = re.charAt(1);
-            if (METACHARACTERS.indexOf(ch) == -1) {
-                return null;
-            }
-        } else {
-            return null;
-        }
-        // We can do this cheaply...
-        // Unlike Perl, which considers the result of splitting the empty string to be the empty
-        // array, Java returns an array containing the empty string.
-        if (input.length() == 0) {
-            return new CharSequence[]{""};
-        }
-        // Count separators
-        int separatorCount = 0;
-        int begin = 0;
-        int end;
-        while (separatorCount + 1 != limit && (end = input.toString().indexOf(ch, begin)) != -1) {
-            ++separatorCount;
-            begin = end + 1;
-        }
-        int lastPartEnd = input.length();
-        if (limit == 0 && begin == lastPartEnd) {
-            // Last part is empty for limit == 0, remove all trailing empty matches.
-            if (separatorCount == lastPartEnd) {
-                // Input contains only separators.
-                return new CharSequence[0];
-            }
-            // Find the beginning of trailing separators.
-            do {
-                --begin;
-            } while (input.charAt(begin - 1) == ch);
-            // Reduce separatorCount and fix lastPartEnd.
-            separatorCount -= input.length() - begin;
-            lastPartEnd = begin;
-        }
-        // Collect the result parts.
-        CharSequence[] result = new CharSequence[separatorCount];
-        begin = 0;
-        for (int i = 0; i != separatorCount; ++i) {
-            end = input.toString().indexOf(ch, begin);
-            result[i] = input.subSequence(begin, end);
-            begin = end + 1;
-        }
-
-        return result;
-    }
+//    public static CharSequence[] split(CharSequence input, CharSequence re, int limit) {
+//        int len = re.length();
+//        if (len == 0) {
+//            return null;
+//        }
+//        char ch = re.charAt(0);
+//        if (len == 1 && METACHARACTERS.indexOf(ch) == -1) {
+//            // We're looking for a single non-metacharacter. Easy.
+//        } else if (len == 2 && ch == '\\') {
+//            // We're looking for a quoted character.
+//            // Quoted metacharacters are effectively single non-metacharacters.
+//            ch = re.charAt(1);
+//            if (METACHARACTERS.indexOf(ch) == -1) {
+//                return null;
+//            }
+//        } else {
+//            return null;
+//        }
+//        // We can do this cheaply...
+//        // Unlike Perl, which considers the result of splitting the empty string to be the empty
+//        // array, Java returns an array containing the empty string.
+//        if (input.length() == 0) {
+//            return new CharSequence[]{""};
+//        }
+//        // Count separators
+//        int separatorCount = 0;
+//        int begin = 0;
+//        int end;
+//        while (separatorCount + 1 != limit && (end = input.toString().indexOf(ch, begin)) != -1) {
+//            ++separatorCount;
+//            begin = end + 1;
+//        }
+//        int lastPartEnd = input.length();
+//        if (limit == 0 && begin == lastPartEnd) {
+//            // Last part is empty for limit == 0, remove all trailing empty matches.
+//            if (separatorCount == lastPartEnd) {
+//                // Input contains only separators.
+//                return new CharSequence[0];
+//            }
+//            // Find the beginning of trailing separators.
+//            do {
+//                --begin;
+//            } while (input.charAt(begin - 1) == ch);
+//            // Reduce separatorCount and fix lastPartEnd.
+//            separatorCount -= input.length() - begin;
+//            lastPartEnd = begin;
+//        }
+//        // Collect the result parts.
+//        CharSequence[] result = new CharSequence[separatorCount];
+//        begin = 0;
+//        for (int i = 0; i != separatorCount; ++i) {
+//            end = input.toString().indexOf(ch, begin);
+//            result[i] = input.subSequence(begin, end);
+//            begin = end + 1;
+//        }
+//
+//        return result;
+//    }
 
     public static String removeUnncesarySpaces(String string) {
         while (string.contains(DOUBLE_SPACE))
@@ -381,9 +380,9 @@ public class Tuils {
     }
 
     public static String trimSpaces(String s) {
-        while (s.startsWith(" "))
+        while (s.startsWith(SPACE))
             s = s.substring(1);
-        while (s.endsWith(" "))
+        while (s.endsWith(SPACE))
             s = s.substring(0, s.length() - 1);
         return s;
     }

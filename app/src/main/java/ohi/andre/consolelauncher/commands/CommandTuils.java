@@ -78,7 +78,7 @@ public class CommandTuils {
 
     //	find command name
     private static String findName(String input) {
-        int space = input.indexOf(" ");
+        int space = input.indexOf(Tuils.SPACE);
 
         input = input.toLowerCase();
 
@@ -141,7 +141,7 @@ public class CommandTuils {
                 }
             }
 
-            arg = arg.concat(c + "");
+            arg = arg.concat(c + Tuils.EMPTYSTRING);
         }
 
         if (arg.length() > 0)
@@ -274,7 +274,7 @@ public class CommandTuils {
         int indexOfFirstSpace = 0;
 
         if (input.startsWith("-")) {
-            indexOfFirstSpace = input.indexOf(" ");
+            indexOfFirstSpace = input.indexOf(Tuils.SPACE);
             if (indexOfFirstSpace == -1)
                 indexOfFirstSpace = input.length();
 
