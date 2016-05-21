@@ -3,11 +3,11 @@ package ohi.andre.consolelauncher.tuils;
 import android.app.Activity;
 import android.os.IBinder;
 import android.text.InputType;
+import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
@@ -38,7 +39,8 @@ limitations under the License.*/
 public class TerminalAdapter {
 
     private final CharSequence PREFIX = ">>";
-    private final CharSequence NEWLINE = "\n";
+
+    private final int SCROLL_DELAY = 200;
 
     private final int INPUT = 10;
     private final int OUTPUT = 11;
@@ -70,7 +72,7 @@ public class TerminalAdapter {
         prefixView.setTypeface(this.mSkinManager.getGlobalTypeface());
         prefixView.setTextColor(this.mSkinManager.getInputColor());
         prefixView.setTextSize(this.mSkinManager.getTextSize());
-        prefixView.setText(">>");
+        prefixView.setText(PREFIX);
 
         if (submitView != null) {
             submitView.setTextColor(this.mSkinManager.getInputColor());
@@ -130,6 +132,7 @@ public class TerminalAdapter {
         }
 
         setupNewInput();
+
         return true;
     }
 
@@ -146,107 +149,36 @@ public class TerminalAdapter {
     }
 
     private void writeToView(String text, int type, int id) {
-//        Log.e("andre", "---------------------");
-//        Log.e("andre", "startId: " + String.valueOf(id));
-//        Log.e("andre", "to write: " + text);
-        text = text.concat(NEWLINE.toString());
-
-        Spannable toWriteSpannable = new SpannableString(text);
-        int color;
-        switch (type) {
-            case INPUT:
-                color = mSkinManager.getInputColor();
-                break;
-            case OUTPUT:
-                color = mSkinManager.getOutputColor();
-                break;
-            default:
-                color = 0;
-                break;
-        }
-        ForegroundColorSpan colorSpan = new ForegroundColorSpan(color);
-        toWriteSpannable.setSpan(colorSpan, 0, toWriteSpannable.length(), 0);
-
-        if (id == mCurrentOutputId) {
-//            Log.e("andre", "current id, " + id);
-            mTerminalView.append(toWriteSpannable);
-        } else {
-            CharSequence[] mCurrentText = Tuils.split(mTerminalView.getText(), NEWLINE, -1);
-            final List<CharSequence> mNewText = new ArrayList<>();
-
-            int count = 0;
-            boolean check = false;
-            List<CharSequence> output = null;
-//            Log.e("andre", "Current text length: " + String.valueOf(mCurrentText.length));
-//            Log.e("andre", "Current text");
-//            Log.e("andre", Arrays.toString(mCurrentText));
-//            Log.e("andre", "-----------------");
-            while (count < mCurrentText.length) {
-//                Log.e("andre", "Line n. " + String.valueOf(count) + ": " + mCurrentText[count]);
-
-                if (isInput(mCurrentText[count])) {
-//                    Log.e("andre", mCurrentText[count] + " is input");
-                    id--;
-
-                    if (output != null && output.size() > 0) {
-                        for (CharSequence sequence : output) {
-                            ForegroundColorSpan outputColorSpan = new ForegroundColorSpan(mSkinManager.getOutputColor());
-                            Spannable spannable = new SpannableString(sequence.toString());
-                            spannable.setSpan(outputColorSpan, 0, spannable.length(), 0);
-                            mNewText.add(spannable);
-                        }
-//                        Log.e("andre", "output");
-//                        Log.e("andre", output.toString());
-                    }
-
-                    if (output == null)
-                        output = new ArrayList<>();
-                    else
-                        output.clear();
-
-                    SpannableString inputSpannable = new SpannableString(mCurrentText[count] + NEWLINE.toString());
-                    ForegroundColorSpan inputColorSpan = new ForegroundColorSpan(mSkinManager.getInputColor());
-                    inputSpannable.setSpan(inputColorSpan, 0, inputSpannable.length(), 0);
-                    mNewText.add(inputSpannable);
-//                    Log.e("andre", "input");
-//                    Log.e("andre", inputSpannable.toString());
-
-                } else {
-                    output.add(mCurrentText[count]);
-                }
-
-//                Log.e("andre", "id: " + id);
-                if (id == -1) {
-                    mNewText.add(toWriteSpannable);
-//                    Log.e("andre", "writing towrite");
-//                    Log.e("andre", toWriteSpannable.toString());
-                    check = true;
-                }
-
-                if (count == mCurrentText.length - 1 && output.size() > 0) {
-                    for (CharSequence sequence : output) {
-                        ForegroundColorSpan outputColorSpan = new ForegroundColorSpan(mSkinManager.getOutputColor());
-                        Spannable spannable = new SpannableString(sequence.toString());
-                        spannable.setSpan(outputColorSpan, 0, spannable.length(), 0);
-                        mNewText.add(spannable);
-                        mNewText.add(NEWLINE);
-                    }
-//                    Log.e("andre", "output");
-//                    Log.e("andre", output.toString());
-                }
-
-                count++;
+        if(type == INPUT || id == mCurrentOutputId) {
+            if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
+                mTerminalView.append(Tuils.NEWLINE);
             }
+            mTerminalView.append(getSpannable(text, type));
+        } else if(type == OUTPUT) {
+            List<String> oldText = getLines(mTerminalView);
+            List<Map.Entry<String, String>> wrappedOldText = splitInputOutput(oldText);
 
-            if (!check)
-                mNewText.add(toWriteSpannable);
+            if(wrappedOldText.size() > id) {
+                SimpleMutableEntry selectedEntry = (SimpleMutableEntry) wrappedOldText.get(id);
+                selectedEntry.setValue(getSpannable(text, type));
 
-            ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mTerminalView.setText(Tuils.toPlanSequence(mNewText, NEWLINE));
-                }
-            });
+                final List<String> newText = toFlatList(wrappedOldText);
+
+                ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTerminalView.setText(Tuils.EMPTYSTRING);
+                        for(CharSequence sequence : newText) {
+                            if(isInput(sequence)) {
+                                mTerminalView.append(getSpannable(sequence.toString(), INPUT));
+                                mTerminalView.append(Tuils.NEWLINE);
+                            } else {
+                                mTerminalView.append(getSpannable(sequence.toString(), OUTPUT));
+                            }
+                        }
+                    }
+                });
+            }
         }
     }
 
@@ -258,11 +190,70 @@ public class TerminalAdapter {
         return s.length() >= PREFIX.length() && s.subSequence(0, PREFIX.length()).toString().equals(PREFIX);
     }
 
-    private String getLastLine() {
-        String text = mTerminalView.getText().toString();
-        String[] lines = text.split(Tuils.NEWLINE);
-        Log.e("andre", lines[lines.length - 1]);
-        return lines[lines.length - 1];
+    private List<String> toFlatList(List<Map.Entry<String, String>> list) {
+        List<String> flatList = new ArrayList<>();
+
+        for(Map.Entry<String, String> entry : list) {
+            flatList.add(entry.getKey());
+            flatList.add(entry.getValue());
+        }
+
+        return flatList;
+    }
+
+    private List<Map.Entry<String, String>> splitInputOutput(List<String> text) {
+        List<Map.Entry<String, String>> list = new ArrayList<>();
+
+        String input, output = null;
+        for(int count = 0; count < text.size();) {
+            if(isInput(text.get(count))) {
+                input = text.get(count);
+                int count2;
+                for(count2 = count + 1; count2 < text.size() && !isInput(text.get(count2)); count2++) {
+                    output = output == null ? text.get(count2) : output.concat(text.get(count2));
+                }
+                count += (count2 - count);
+                list.add(new SimpleMutableEntry<>(input, output));
+            }
+
+            output = null;
+        }
+
+        return list;
+    }
+
+    private SpannableString getSpannable(String text, int type) {
+        SpannableString spannableString = new SpannableString(text);
+        int color;
+        if(type == INPUT) {
+            color = mSkinManager.getInputColor();
+        } else if(type == OUTPUT) {
+            color = mSkinManager.getOutputColor();
+        } else {
+            return null;
+        }
+        spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return spannableString;
+    }
+
+    private List<String> getLines(TextView view) {
+        List<String> lines = new ArrayList<>();
+        Layout layout = view.getLayout();
+
+        if (layout != null) {
+            final int lineCount = layout.getLineCount();
+            final CharSequence text = layout.getText();
+
+            for (int i = 0, startIndex = 0; i < lineCount; i++) {
+                final int endIndex = layout.getLineEnd(i);
+                CharSequence sequence = text.subSequence(startIndex, endIndex);
+                if(sequence.length() > 0 && !sequence.toString().equals(Tuils.NEWLINE)) {
+                    lines.add(sequence.toString());
+                }
+                startIndex = endIndex;
+            }
+        }
+        return lines;
     }
 
     public String getInput() {
@@ -282,7 +273,7 @@ public class TerminalAdapter {
     }
 
     public void scrollToEnd() {
-        mScrollView.post(mScrollRunnable);
+        mScrollView.postDelayed(mScrollRunnable, SCROLL_DELAY);
     }
 
     public void requestInputFocus() {
@@ -302,9 +293,9 @@ public class TerminalAdapter {
     }
 
     public void clear() {
-        mTerminalView.setText("");
-        mInputView.setText("");
-        mCurrentOutputId = -1;
+        mTerminalView.setText(Tuils.EMPTYSTRING);
+        mInputView.setText(Tuils.EMPTYSTRING);
+        mCurrentOutputId = 0;
     }
 
 }
