@@ -74,11 +74,10 @@ public class UIManager implements OnTouchListener {
         }
     };
 
-    //    suggestions stuff
     private SuggestionViewDecorer suggestionViewDecorer;
     private LinearLayout.LayoutParams suggestionViewParams;
     private Thread lastSuggestionThread;
-    //    input looker for suggestions
+
     protected TextWatcher textWatcher = new TextWatcher() {
 
         @Override
@@ -90,8 +89,10 @@ public class UIManager implements OnTouchListener {
             if (suggestionsView == null)
                 return;
 
-            if (s.length() == 0)
+            if (s.length() == 0) {
+                suggestionsView.removeAllViews();
                 return;
+            }
 
             String text = s.toString();
             int lastSpace = text.lastIndexOf(" ");
@@ -106,7 +107,7 @@ public class UIManager implements OnTouchListener {
         public void afterTextChanged(Editable s) {
         }
     };
-    //    clicklistener for suggestions
+
     private View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -256,6 +257,7 @@ public class UIManager implements OnTouchListener {
             @Override
             public void onNewInput(String input) {
                 trigger.exec(input, mTerminalAdapter.getCurrentOutputId());
+                suggestionsView.removeAllViews();
             }
         });
 
