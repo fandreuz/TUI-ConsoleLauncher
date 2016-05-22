@@ -379,12 +379,18 @@ public class Tuils {
         return true;
     }
 
-    public static String trimSpaces(String s) {
-        while (s.startsWith(SPACE))
-            s = s.substring(1);
-        while (s.endsWith(SPACE))
-            s = s.substring(0, s.length() - 1);
-        return s;
+    public static CharSequence trimWhitespaces(CharSequence source) {
+
+        if(source == null)
+            return "";
+
+        int i = source.length();
+
+        // loop back to the first non-whitespace character
+        while(--i >= 0 && Character.isWhitespace(source.charAt(i))) {
+        }
+
+        return source.subSequence(0, i+1);
     }
 
     public static String getSDK() {

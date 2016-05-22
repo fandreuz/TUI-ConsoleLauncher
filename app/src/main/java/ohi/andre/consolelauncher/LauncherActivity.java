@@ -188,8 +188,9 @@ public class LauncherActivity extends Activity implements Reloadable {
     protected void onStart() {
         super.onStart();
 
-        if (openKeyboardOnStart)
+        if (ui != null && openKeyboardOnStart) {
             ui.onStart();
+        }
     }
 
     @Override
@@ -213,13 +214,16 @@ public class LauncherActivity extends Activity implements Reloadable {
     protected void onDestroy() {
         super.onDestroy();
 
-        main.destroy();
+        if(main != null) {
+            main.destroy();
+        }
     }
 
     @Override
     public void onBackPressed() {
-        if (main != null)
+        if (main != null) {
             main.onBackPressed();
+        }
     }
 
     @Override
