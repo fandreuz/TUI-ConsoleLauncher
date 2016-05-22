@@ -114,7 +114,7 @@ public class AppsManager {
     //    find a package using its public label
 //    notice that it can be an app or an hidden app (depends on appList parameter)
     public String findPackage(Set<AppInfo> appList, String name) {
-        String label = Compare.getOneSimilarString(labelSet(appList), name, MIN_RATE, USE_SCROLL_COMPARE);
+        String label = Compare.similarString(labelSet(appList), name, MIN_RATE, USE_SCROLL_COMPARE);
         if (label == null)
             return null;
 

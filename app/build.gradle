@@ -41,7 +41,7 @@ android {
 
     dependencies {
         compile 'com.android.support:appcompat-v7:23.4.0'
-        compile 'com.github.Andre1299:CompareString:1.4'
+        compile 'com.github.Andre1299:CompareString:1.4.1'
         compile 'commons-io:commons-io:2.4'
     }
 

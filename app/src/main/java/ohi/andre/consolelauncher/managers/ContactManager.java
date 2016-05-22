@@ -56,7 +56,7 @@ public class ContactManager {
         Map<String, String> contacts = getContacts();
         Set<String> names = contacts.keySet();
 
-        String mostSuitable = Compare.getOneSimilarString(names, name, minRate, USE_SCROLL_COMPARE);
+        String mostSuitable = Compare.similarString(names, name, minRate, USE_SCROLL_COMPARE);
         return mostSuitable == null ? null : contacts.get(mostSuitable);
     }
 }

@@ -11,7 +11,6 @@ import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.commands.ExecInfo;
-import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by francescoandreuzzi on 25/12/15.
@@ -36,8 +35,8 @@ public class SuggestionsManager {
 
         List<Compare.CompareInfo> suggestionList = new ArrayList<>();
 
-        before = Tuils.trimSpaces(before);
-        lastWord = Tuils.trimSpaces(lastWord);
+        before = before.trim();
+        lastWord = lastWord.trim();
 
 //        lastword = 0
         if (lastWord.length() == 0) {
@@ -168,7 +167,7 @@ public class SuggestionsManager {
                 FileManager.DirInfo dirInfo = FileManager.cd(info.currentDirectory, prev);
                 if (dirInfo.file.isDirectory()) {
                     prev = prev.substring(prev.indexOf(File.separator) + 1);
-                    Compare.getCompareInfo(suggestions, dirInfo.file.list(), prev, MIN_FILE_RATE, FileManager.USE_SCROLL_COMPARE);
+                    Compare.compareInfo(suggestions, dirInfo.file.list(), prev, MIN_FILE_RATE, FileManager.USE_SCROLL_COMPARE);
                 }
             }
         }
@@ -179,7 +178,7 @@ public class SuggestionsManager {
             for (String s : info.contacts.names())
                 suggestions.add(new Compare.CompareInfo(s, -1));
         } else
-            Compare.getCompareInfo(suggestions, info.contacts.names(), prev, MIN_CONTACTS_RATE, ContactManager.USE_SCROLL_COMPARE);
+            Compare.compareInfo(suggestions, info.contacts.names(), prev, MIN_CONTACTS_RATE, ContactManager.USE_SCROLL_COMPARE);
     }
 
     private static void suggestSong(ExecInfo info, List<Compare.CompareInfo> suggestions, String prev) {
@@ -187,7 +186,7 @@ public class SuggestionsManager {
             for (String s : info.player.getNames())
                 suggestions.add(new Compare.CompareInfo(s, -1));
         } else
-            Compare.getCompareInfo(suggestions, info.player.getNames(), prev, MIN_SONGS_RATE, MusicManager.USE_SCROLL_COMPARE);
+            Compare.compareInfo(suggestions, info.player.getNames(), prev, MIN_SONGS_RATE, MusicManager.USE_SCROLL_COMPARE);
     }
 
     //    help...
@@ -197,7 +196,7 @@ public class SuggestionsManager {
             return;
         }
 
-        Compare.getCompareInfo(suggestions, info.commandGroup.getCommands(), prev, MIN_COMMAND_RATE, false);
+        Compare.compareInfo(suggestions, info.commandGroup.getCommands(), prev, MIN_COMMAND_RATE, false);
     }
 
     //    use when suggesting random commands
@@ -219,7 +218,7 @@ public class SuggestionsManager {
             for (String s : info.appsManager.getAppsLabels())
                 suggestions.add(new Compare.CompareInfo(s, -1));
         } else
-            Compare.getCompareInfo(suggestions, info.appsManager.getAppsLabels(), prev, MIN_APPS_RATE, AppsManager.USE_SCROLL_COMPARE);
+            Compare.compareInfo(suggestions, info.appsManager.getAppsLabels(), prev, MIN_APPS_RATE, AppsManager.USE_SCROLL_COMPARE);
     }
 
     private static void suggestFilesInDir(List<Compare.CompareInfo> suggestions, File dir, String prev) {
@@ -231,7 +230,7 @@ public class SuggestionsManager {
             return;
         }
 
-        Compare.getCompareInfo(suggestions, dir.list(), prev, MIN_FILE_RATE, FileManager.USE_SCROLL_COMPARE);
+        Compare.compareInfo(suggestions, dir.list(), prev, MIN_FILE_RATE, FileManager.USE_SCROLL_COMPARE);
     }
 
     private static void suggestFilesInDir(List<Compare.CompareInfo> suggestions, File dir) {

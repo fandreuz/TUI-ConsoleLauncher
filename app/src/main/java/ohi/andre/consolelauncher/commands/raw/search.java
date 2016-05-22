@@ -23,6 +23,11 @@ public class search implements CommandAbstraction {
     private final int FILE = 12;
     private final int YOUTUBE = 13;
 
+    private final String YOUTUBE_PREFIX = "https://www.youtube.com/results?search_query=";
+    private final String GOOGLE_PREFIX = "http://www.google.com/#q=";
+    private final String PLAYSTORE_PREFIX = "market://search?q=";
+    private final String PLAYSTORE_BROWSER_PREFIX = "https://play.google.com/store/search?q=";
+
     private final String PLAYSTORE_PARAM = "-p";
     private final String FILE_PARAM = "-f";
     private final String GOOGLE_PARAM = "-g";
@@ -64,35 +69,35 @@ public class search implements CommandAbstraction {
     private String google(List<String> args, Context c, Resources res) {
         String toSearch = Tuils.toPlanString(args, "+");
 
-        Uri uri = Uri.parse("http://www.google.com/#q=" + toSearch);
+        Uri uri = Uri.parse(GOOGLE_PREFIX + toSearch);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         c.startActivity(intent);
 
-        return res.getString(R.string.output_searchinggoogle) + " " + flat(args);
+        return res.getString(R.string.output_searchinggoogle) + Tuils.SPACE + flat(args);
     }
 
     private String playstore(List<String> args, Context c, Resources res) {
         String toSearch = Tuils.toPlanString(args, "%20");
 
         try {
-            c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=" + toSearch)));
+            c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(PLAYSTORE_PREFIX + toSearch)));
         } catch (android.content.ActivityNotFoundException anfe) {
-            c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/search?q=" + toSearch)));
+            c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(PLAYSTORE_BROWSER_PREFIX + toSearch)));
         }
 
         return res.getString(R.string.output_searchingplaystore) + " " + flat(args);
     }
 
     private String file(List<String> args, File cd, Resources res) {
-        String header = res.getString(R.string.output_search_file) + " " + cd.getAbsolutePath();
+        String header = res.getString(R.string.output_search_file) + Tuils.SPACE + cd.getAbsolutePath();
 
         String name = Tuils.toPlanString(args);
         String found = Tuils.toPlanString(rightPaths(cd, name, FileManager.USE_SCROLL_COMPARE), "\n");
 
         if (found.length() > 1)
-            return header.concat("\n" + found);
+            return header.concat(Tuils.NEWLINE + found);
         else
-            return header.concat("\n" + res.getString(R.string.output_nothing_found));
+            return header.concat(Tuils.NEWLINE + res.getString(R.string.output_nothing_found));
     }
 
     private List<String> rightPaths(File dir, String name, boolean scrollCompare) {
@@ -116,24 +121,24 @@ public class search implements CommandAbstraction {
 
     private boolean fileMatch(File f, String name, boolean scrollCompare) {
         if (scrollCompare)
-            return Compare.scrollCompareTwoStrings(f.getName(), name) >= MIN_FILE_RATE;
+            return Compare.scrollComparison(f.getName(), name) >= MIN_FILE_RATE;
         else
-            return Compare.linearCompareTwoStrings(f.getName(), name) >= MIN_FILE_RATE;
+            return Compare.linearComparison(f.getName(), name) >= MIN_FILE_RATE;
     }
 
     private String youTube(List<String> args, Context c, Resources res) {
         String toSearch = Tuils.toPlanString(args, "+");
-        Uri uri = Uri.parse("https://www.youtube.com/results?search_query=" + toSearch);
+        Uri uri = Uri.parse(YOUTUBE_PREFIX + toSearch);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         c.startActivity(intent);
 
-        return res.getString(R.string.output_search_youtube) + " " + flat(args);
+        return res.getString(R.string.output_search_youtube) + Tuils.SPACE + flat(args);
     }
 
     private String flat(List<String> args) {
         String flat = "";
         for (String s : args)
-            flat = flat.concat(s + " ");
+            flat = flat.concat(s + Tuils.SPACE);
         return flat;
     }
 

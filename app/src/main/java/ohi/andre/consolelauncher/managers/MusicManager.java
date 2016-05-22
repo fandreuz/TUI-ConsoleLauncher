@@ -54,7 +54,7 @@ public class MusicManager implements OnCompletionListener {
 
     //	return a song by incomplete name
     public String getSong(String s, int minRate) {
-        return Compare.getOneSimilarString(getNames(), s, minRate, USE_SCROLL_COMPARE);
+        return Compare.similarString(getNames(), s, minRate, USE_SCROLL_COMPARE);
     }
 
     //	return the path by complete name
