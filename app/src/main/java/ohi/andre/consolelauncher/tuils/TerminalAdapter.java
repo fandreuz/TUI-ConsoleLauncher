@@ -63,7 +63,8 @@ public class TerminalAdapter {
 
     private OnNewInputListener mInputListener;
 
-    public TerminalAdapter(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager, String hint) {
+    public TerminalAdapter(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager,
+                           String hint) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
             throw new UnsupportedOperationException();
 
@@ -169,7 +170,9 @@ public class TerminalAdapter {
                     public void run() {
                         mTerminalView.setText(Tuils.EMPTYSTRING);
                         for(CharSequence sequence : newText) {
+                            sequence = Tuils.trimWhitespaces(sequence);
                             if(isInput(sequence)) {
+                                mTerminalView.append(Tuils.NEWLINE);
                                 mTerminalView.append(getSpannable(sequence.toString(), INPUT));
                                 mTerminalView.append(Tuils.NEWLINE);
                             } else {

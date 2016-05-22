@@ -103,7 +103,7 @@ public class MainManager {
         lastCommands.add(input);
         lastCommandIndex = lastCommands.size() - 1;
 
-        input = Tuils.trimSpaces(input);
+        input = input.trim();
         input = Tuils.removeUnncesarySpaces(input);
 
         for (CmdTrigger trigger : triggers) {

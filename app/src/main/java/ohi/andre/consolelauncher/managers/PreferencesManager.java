@@ -18,7 +18,7 @@ public class PreferencesManager {
 
     public static final String SETTINGS_FILENAME = "settings.txt";
     public static final int SETTINGS = 10;
-    //	  skin values
+
     public static final String DEVICE = "deviceColor";
     public static final String INPUT = "inputColor";
     public static final String OUTPUT = "outputColor";
@@ -36,13 +36,13 @@ public class PreferencesManager {
     public static final String SUGGESTION_BG = "suggestionBg";
     public static final String SUGGESTION_COLOR = "suggestionColor";
     public static final String TRANSPARENT_SUGGESTIONS = "transparentSuggestions";
-    //	  other values
+
     public static final String DOUBLETAP = "closeOnDbTap";
     public static final String SHOWSUGGESTIONS = "showSuggestions";
-    //	  music values
+
     public static final String PLAY_RANDOM = "playRandom";
     public static final String SONGSFOLDER = "songsFolder";
-    //	  preload values
+
     public static final String USE_SYSTEMWP = "useSystemWallpaper";
     public static final String FULLSCREEN = "fullscreen";
     public static final String NOTIFICATION = "keepAliveWithNotification";
@@ -51,7 +51,6 @@ public class PreferencesManager {
     public static final String ALIAS_FILENAME = "alias.txt";
     public static final int ALIAS = 11;
 
-    //    settings version
     private static final String SETTINGS_VERSION = "settingsVersion";
     private List<String> settings;
     private List<String> aliases;
@@ -84,7 +83,7 @@ public class PreferencesManager {
                 if (n != ALIAS)
                     line = line.replaceAll("\\s+", "");
                 else
-                    line = Tuils.trimSpaces(line);
+                    line = line.trim();
                 list.add(line);
             }
 

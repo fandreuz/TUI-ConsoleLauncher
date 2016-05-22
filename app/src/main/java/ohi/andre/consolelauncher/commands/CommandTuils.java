@@ -53,7 +53,7 @@ public class CommandTuils {
 
         if (types != null) {
             for (int type : types) {
-                input = Tuils.trimSpaces(input);
+                input = input.trim();
                 if (input.length() <= 0)
                     break;
 
