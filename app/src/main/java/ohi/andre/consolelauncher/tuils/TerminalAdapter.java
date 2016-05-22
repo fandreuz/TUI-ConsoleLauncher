@@ -296,9 +296,14 @@ public class TerminalAdapter {
     }
 
     public void clear() {
-        mTerminalView.setText(Tuils.EMPTYSTRING);
-        mInputView.setText(Tuils.EMPTYSTRING);
-        mCurrentOutputId = 0;
+        ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mTerminalView.setText(Tuils.EMPTYSTRING);
+                mInputView.setText(Tuils.EMPTYSTRING);
+                mCurrentOutputId = 0;
+            }
+        });
     }
 
 }

@@ -150,10 +150,15 @@ public class Tuils {
     }
 
     @SuppressWarnings("unchecked")
-    public static CommandAbstraction getCommandInstance(String cmdName) throws Exception {
-        Class<CommandAbstraction> clazz = (Class<CommandAbstraction>) Class.forName(cmdName);
-        Constructor<?> ctor = clazz.getConstructor();
-        return (CommandAbstraction) ctor.newInstance();
+    public static CommandAbstraction getCommandInstance(String cmdName) {
+        Class<CommandAbstraction> clazz;
+        try {
+            clazz = (Class<CommandAbstraction>) Class.forName(cmdName);
+            Constructor<?> constructor = clazz.getConstructor();
+            return (CommandAbstraction) constructor.newInstance();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static int findPrefix(List<String> list, String prefix) {
@@ -161,14 +166,6 @@ public class Tuils {
             if (list.get(count).startsWith(prefix))
                 return count;
         return -1;
-    }
-
-    public static int count(String string, String toCount) {
-        return string.length() - string.replaceAll(toCount, "").length();
-    }
-
-    public static int count(CharSequence[] sequences, String toCount) {
-        return count(toPlanSequence(sequences).toString(), toCount);
     }
 
     public static boolean verifyRoot() {
@@ -232,7 +229,7 @@ public class Tuils {
     }
 
     public static String toPlanString(String[] strings) {
-        return Tuils.toPlanString(strings, "\n");
+        return Tuils.toPlanString(strings, Tuils.NEWLINE);
     }
 
     public static String toPlanString(List<String> strings, String separator) {
