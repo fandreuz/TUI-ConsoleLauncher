@@ -256,7 +256,9 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.setInputListener(new OnNewInputListener() {
             @Override
             public void onNewInput(String input) {
-                suggestionsView.removeAllViews();
+                if(suggestionsView != null) {
+                    suggestionsView.removeAllViews();
+                }
                 trigger.exec(input, mTerminalAdapter.getCurrentOutputId());
             }
         });
