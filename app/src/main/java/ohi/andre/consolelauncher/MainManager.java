@@ -4,7 +4,6 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,16 +103,10 @@ public class MainManager {
         lastCommands.add(input);
         lastCommandIndex = lastCommands.size() - 1;
 
-        Log.e("andre", "5");
-
         input = input.trim();
         input = Tuils.removeUnncesarySpaces(input);
 
-        Log.e("andre", "6");
-        Log.e("andre", input);
-
         for (CmdTrigger trigger : triggers) {
-            Log.e("andre", trigger.toString());
             boolean r;
             try {
                 r = trigger.trigger(info, out, input, id);
@@ -121,12 +114,9 @@ public class MainManager {
                 out.onOutput(Tuils.getStackTrace(e), id);
                 return;
             }
-            Log.e("andre", String.valueOf(r));
             if (r) {
-                Log.e("andre", trigger.toString());
                 return;
             } else {
-                Log.e("andre", trigger.toString());
             }
         }
     }
