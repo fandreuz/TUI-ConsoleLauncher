@@ -15,6 +15,8 @@
         android:layout_height="@dimen/input_height"
         android:layout_weight="1"
 
+        android:paddingTop="@dimen/input_padding"
+
         android:background="@null"
         android:cursorVisible="true"
 
