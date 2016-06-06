@@ -140,7 +140,7 @@ public class LauncherActivity extends Activity implements Reloadable {
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
         main = new MainManager(this, in, out, preferencesManager, policy, component, clearer);
-        ui = new UIManager(main.getInfo(), this, mainView, ex, policy, component, preferencesManager);
+        ui = new UIManager(main.getInfo(), this, mainView, ex, policy, component, preferencesManager, getResources());
 
         System.gc();
     }
@@ -175,10 +175,6 @@ public class LauncherActivity extends Activity implements Reloadable {
     @TargetApi(23)
     private void checkPermission(Resources res) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            this.finish();
-            Tuils.openSettingsPage(this, res.getString(R.string.permissions_toast));
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             this.finish();
             Tuils.openSettingsPage(this, res.getString(R.string.permissions_toast));
         }
