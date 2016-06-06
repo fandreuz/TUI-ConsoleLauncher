@@ -23,7 +23,9 @@ public class FileManager {
     public static final int ISFILE = 13;
 
     public static final boolean USE_SCROLL_COMPARE = true;
-    public static final String ALL = "allFiles";
+
+    private static final String ASTERISK = "*";
+    private static final String DOT = Tuils.DOT;
 
     public static int mv(File[] files, File where, boolean su) throws IOException {
         if (files == null || files.length == 0 || where == null)
@@ -274,16 +276,14 @@ public class FileManager {
         return new DirInfo(file, notFound);
     }
 
-    public static String wildcard(String path) {
-        if (path == null || !path.contains("*") || path.contains("/"))
+    public static WildcardInfo wildcard(String path) {
+        if (path == null || !path.contains(ASTERISK) || path.contains("/"))
             return null;
 
-//        if there is only "*", means that you have to select all files in folder
-        String after = path.substring(path.indexOf("*") + 1);
-        if (after.length() == 0)
-            return ALL;
+        String beforeDot = path.substring(0, path.lastIndexOf(DOT));
+        String afterDot = path.substring(path.lastIndexOf(DOT) + 1);
 
-        return after;
+        return new WildcardInfo(beforeDot, afterDot);
     }
 
     public static class DirInfo {
@@ -293,6 +293,22 @@ public class FileManager {
         public DirInfo(File f, String nF) {
             this.file = f;
             this.notFound = nF;
+        }
+    }
+
+    public static class WildcardInfo {
+
+        public boolean allNames;
+        public boolean allExtensions;
+        public String name;
+        public String extension;
+
+        public WildcardInfo(String name, String extension) {
+            this.name = name;
+            this.extension = extension;
+
+            allNames = name.length() == 0 || name.equals(ASTERISK);
+            allExtensions = extension.length() == 0 || extension.equals(ASTERISK);
         }
     }
 }
