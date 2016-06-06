@@ -64,7 +64,7 @@ public class TerminalAdapter {
     private OnNewInputListener mInputListener;
 
     public TerminalAdapter(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager,
-                           String hint) {
+                           String hint, final boolean physicalEnter) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
             throw new UnsupportedOperationException();
 
@@ -103,7 +103,9 @@ public class TerminalAdapter {
         this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
+
+                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE
+                        || (physicalEnter && actionId == EditorInfo.IME_ACTION_UNSPECIFIED)) {
                     onNewInput();
                     return true;
                 } else
@@ -183,6 +185,10 @@ public class TerminalAdapter {
                 });
             }
         }
+    }
+
+    public void simulateEnter() {
+        onNewInput();
     }
 
     public void setupScroller() {
