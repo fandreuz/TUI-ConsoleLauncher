@@ -28,12 +28,13 @@ public class SuggestionsManager {
 
     private static final int MIN_SONGS_RATE = 2;
 
-    //    use to place something at the top
+//    use to place something at the top
     private static final int MAX_RATE = 100;
+    private static final int NO_RATE = -1;
 
-    public static String[] getSuggestions(ExecInfo info, String before, String lastWord) {
+    public static Suggestion[] getSuggestions(ExecInfo info, String before, String lastWord) {
 
-        List<Compare.CompareInfo> suggestionList = new ArrayList<>();
+        List<Suggestion> suggestionList = new ArrayList<>();
 
         before = before.trim();
         lastWord = lastWord.trim();
@@ -44,7 +45,7 @@ public class SuggestionsManager {
             if (before.length() == 0) {
                 suggestAlias(info, suggestionList);
                 suggestCommand(info, suggestionList);
-                return toSuggestionArray(suggestionList);
+                return suggestionList.toArray(new Suggestion[suggestionList.size()]);
             }
 //            lastword = 0 && before > 0
             else {
@@ -57,7 +58,7 @@ public class SuggestionsManager {
 
                 if (cmd != null) {
                     if (cmd.nArgs == cmd.cmd.maxArgs())
-                        return new String[0];
+                        return new Suggestion[0];
 
                     int nextArg = cmd.nextArg();
                     if (nextArg == CommandAbstraction.PARAM)
@@ -103,24 +104,24 @@ public class SuggestionsManager {
         }
 
         Collections.sort(suggestionList);
-        return toSuggestionArray(suggestionList);
+        return suggestionList.toArray(new Suggestion[suggestionList.size()]);
     }
 
-    private static void suggestAlias(ExecInfo info, List<Compare.CompareInfo> suggestions) {
+    private static void suggestAlias(ExecInfo info, List<Suggestion> suggestions) {
         Set<String> alias = info.aliasManager.getAliass();
         for (String s : alias)
-            suggestions.add(new Compare.CompareInfo(s, -1));
+            suggestions.add(new Suggestion(s, Suggestion.TYPE_ALIAS, NO_RATE));
     }
 
-    private static void suggestParams(List<Compare.CompareInfo> suggestions, CommandAbstraction cmd) {
+    private static void suggestParams(List<Suggestion> suggestions, CommandAbstraction cmd) {
         String[] params = cmd.parameters();
         if (params == null)
             return;
         for (String s : cmd.parameters())
-            suggestions.add(new Compare.CompareInfo(s, -1));
+            suggestions.add(new Suggestion(s, Suggestion.TYPE_PARAM, NO_RATE));
     }
 
-    private static void suggestArgs(ExecInfo info, int type, List<Compare.CompareInfo> suggestions, String prev) {
+    private static void suggestArgs(ExecInfo info, int type, List<Suggestion> suggestions, String prev) {
         switch (type) {
             case CommandAbstraction.FILE:
             case CommandAbstraction.FILE_LIST:
@@ -141,12 +142,12 @@ public class SuggestionsManager {
         }
     }
 
-    private static void suggestArgs(ExecInfo info, int type, List<Compare.CompareInfo> suggestions) {
+    private static void suggestArgs(ExecInfo info, int type, List<Suggestion> suggestions) {
         suggestArgs(info, type, suggestions, null);
     }
 
-    private static void suggestFile(ExecInfo info, List<Compare.CompareInfo> suggestions, String prev) {
-        suggestions.add(new Compare.CompareInfo(File.separator, MAX_RATE));
+    private static void suggestFile(ExecInfo info, List<Suggestion> suggestions, String prev) {
+        suggestions.add(new Suggestion(File.separator, Suggestion.TYPE_FILE, MAX_RATE));
 
         if (prev == null || prev.length() == 0) {
             suggestFilesInDir(suggestions, info.currentDirectory);
@@ -161,46 +162,63 @@ public class SuggestionsManager {
                 FileManager.DirInfo dirInfo = FileManager.cd(info.currentDirectory, prev);
                 if (dirInfo.file.isDirectory()) {
                     for (String s : dirInfo.file.list())
-                        suggestions.add(new Compare.CompareInfo(s, -1));
+                        suggestions.add(new Suggestion(s, Suggestion.TYPE_FILE, NO_RATE));
                 }
             } else {
                 FileManager.DirInfo dirInfo = FileManager.cd(info.currentDirectory, prev);
                 if (dirInfo.file.isDirectory()) {
                     prev = prev.substring(prev.indexOf(File.separator) + 1);
-                    Compare.compareInfo(suggestions, dirInfo.file.list(), prev, MIN_FILE_RATE, FileManager.USE_SCROLL_COMPARE);
+                    List<Compare.CompareInfo> infos = Compare.compareInfo(dirInfo.file.list(), prev, MIN_FILE_RATE,
+                            FileManager.USE_SCROLL_COMPARE);
+                    for(Compare.CompareInfo i : infos) {
+                        suggestions.add(new Suggestion(i.s, Suggestion.TYPE_FILE, i.rate));
+                    }
                 }
             }
         }
     }
 
-    private static void suggestContact(ExecInfo info, List<Compare.CompareInfo> suggestions, String prev) {
+    private static void suggestContact(ExecInfo info, List<Suggestion> suggestions, String prev) {
         if (prev == null || prev.length() == 0) {
             for (String s : info.contacts.names())
-                suggestions.add(new Compare.CompareInfo(s, -1));
-        } else
-            Compare.compareInfo(suggestions, info.contacts.names(), prev, MIN_CONTACTS_RATE, ContactManager.USE_SCROLL_COMPARE);
+                suggestions.add(new Suggestion(s, Suggestion.TYPE_CONTACT, NO_RATE));
+        } else {
+            List<Compare.CompareInfo> infos = Compare.compareInfo(info.contacts.names(), prev, MIN_CONTACTS_RATE,
+                    ContactManager.USE_SCROLL_COMPARE);
+            for(Compare.CompareInfo i : infos) {
+                suggestions.add(new Suggestion(i.s, Suggestion.TYPE_CONTACT, i.rate));
+            }
+        }
     }
 
-    private static void suggestSong(ExecInfo info, List<Compare.CompareInfo> suggestions, String prev) {
+    private static void suggestSong(ExecInfo info, List<Suggestion> suggestions, String prev) {
         if (prev == null || prev.length() == 0) {
             for (String s : info.player.getNames())
-                suggestions.add(new Compare.CompareInfo(s, -1));
-        } else
-            Compare.compareInfo(suggestions, info.player.getNames(), prev, MIN_SONGS_RATE, MusicManager.USE_SCROLL_COMPARE);
+                suggestions.add(new Suggestion(s, Suggestion.TYPE_SONG, NO_RATE));
+        } else {
+            List<Compare.CompareInfo> infos = Compare.compareInfo(info.player.getNames(), prev, MIN_SONGS_RATE,
+                    MusicManager.USE_SCROLL_COMPARE);
+            for(Compare.CompareInfo i : infos) {
+                suggestions.add(new Suggestion(i.s, Suggestion.TYPE_SONG, i.rate));
+            }
+        }
     }
 
     //    help...
-    private static void suggestCommand(ExecInfo info, List<Compare.CompareInfo> suggestions, String prev) {
+    private static void suggestCommand(ExecInfo info, List<Suggestion> suggestions, String prev) {
         if (prev == null || prev.length() == 0) {
             suggestCommand(info, suggestions);
             return;
         }
 
-        Compare.compareInfo(suggestions, info.commandGroup.getCommands(), prev, MIN_COMMAND_RATE, false);
+        List<Compare.CompareInfo> infos = Compare.compareInfo(info.commandGroup.getCommands(), prev, MIN_COMMAND_RATE, false);
+        for(Compare.CompareInfo i : infos) {
+            suggestions.add(new Suggestion(i.s, Suggestion.TYPE_COMMAND, i.rate));
+        }
     }
 
     //    use when suggesting random commands
-    private static void suggestCommand(ExecInfo info, List<Compare.CompareInfo> suggestions) {
+    private static void suggestCommand(ExecInfo info, List<Suggestion> suggestions) {
         for (String s : info.commandGroup.getCommands()) {
             CommandAbstraction cmd = null;
             try {
@@ -208,20 +226,27 @@ public class SuggestionsManager {
             } catch (Exception e) {
             }
 
-            if (cmd != null && cmd.priority() >= MIN_COMMAND_PRIORITY)
-                suggestions.add(new Compare.CompareInfo(s, cmd.priority()));
+            if (cmd != null && cmd.priority() >= MIN_COMMAND_PRIORITY) {
+                suggestions.add(new Suggestion(s, Suggestion.TYPE_COMMAND, cmd.priority()));
+            }
         }
     }
 
-    private static void suggestApp(ExecInfo info, List<Compare.CompareInfo> suggestions, String prev) {
+    private static void suggestApp(ExecInfo info, List<Suggestion> suggestions, String prev) {
         if (prev == null || prev.length() == 0) {
-            for (String s : info.appsManager.getAppsLabels())
-                suggestions.add(new Compare.CompareInfo(s, -1));
-        } else
-            Compare.compareInfo(suggestions, info.appsManager.getAppsLabels(), prev, MIN_APPS_RATE, AppsManager.USE_SCROLL_COMPARE);
+            for (String s : info.appsManager.getAppsLabels()) {
+                suggestions.add(new Suggestion(s, Suggestion.TYPE_APP, NO_RATE));
+            }
+        } else {
+            List<Compare.CompareInfo> infos = Compare.compareInfo(info.appsManager.getAppsLabels(), prev, MIN_APPS_RATE,
+                    AppsManager.USE_SCROLL_COMPARE);
+            for(Compare.CompareInfo i : infos) {
+                suggestions.add(new Suggestion(i.s, Suggestion.TYPE_APP, i.rate));
+            }
+        }
     }
 
-    private static void suggestFilesInDir(List<Compare.CompareInfo> suggestions, File dir, String prev) {
+    private static void suggestFilesInDir(List<Suggestion> suggestions, File dir, String prev) {
         if (dir == null || !dir.isDirectory())
             return;
 
@@ -230,24 +255,48 @@ public class SuggestionsManager {
             return;
         }
 
-        Compare.compareInfo(suggestions, dir.list(), prev, MIN_FILE_RATE, FileManager.USE_SCROLL_COMPARE);
+        List<Compare.CompareInfo> infos = Compare.compareInfo(dir.list(), prev, MIN_FILE_RATE,
+                FileManager.USE_SCROLL_COMPARE);
+        for(Compare.CompareInfo i : infos) {
+            suggestions.add(new Suggestion(i.s, Suggestion.TYPE_FILE, i.rate));
+        }
     }
 
-    private static void suggestFilesInDir(List<Compare.CompareInfo> suggestions, File dir) {
+    private static void suggestFilesInDir(List<Suggestion> suggestions, File dir) {
         if (dir == null || !dir.isDirectory())
             return;
 
         try {
             for (String s : dir.list())
-                suggestions.add(new Compare.CompareInfo(s, -1));
-        } catch (NullPointerException e) {
-        }
+                suggestions.add(new Suggestion(s, Suggestion.TYPE_FILE, NO_RATE));
+        } catch (NullPointerException e) {}
     }
 
-    private static String[] toSuggestionArray(List<Compare.CompareInfo> list) {
-        String[] strings = new String[list.size()];
-        for (int count = 0; count < strings.length; count++)
-            strings[count] = list.get(count).s;
-        return strings;
+    public static class Suggestion implements Comparable<Suggestion> {
+
+        public static final int TYPE_APP = 10;
+        public static final int TYPE_FILE = 11;
+        public static final int TYPE_ALIAS = 12;
+        public static final int TYPE_COMMAND = 13;
+        public static final int TYPE_SONG = 14;
+        public static final int TYPE_PARAM = 15;
+        public static final int TYPE_CONTACT = 16;
+
+        public static final int[] TAP_TO_EXECUTE_TYPES = {TYPE_APP, TYPE_SONG, TYPE_CONTACT, TYPE_ALIAS};
+
+        public String text;
+        public int id;
+        public int rate;
+
+        public Suggestion(String text, int id, int rate) {
+            this.text = text;
+            this.id = id;
+            this.rate = rate;
+        }
+
+        @Override
+        public int compareTo(Suggestion another) {
+            return this.rate > another.rate? -1 : (this.rate == another.rate ? 0 : 1);
+        }
     }
 }
