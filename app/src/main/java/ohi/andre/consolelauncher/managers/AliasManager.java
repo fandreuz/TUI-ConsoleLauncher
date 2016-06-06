@@ -6,19 +6,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class AliasManager {
+import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
+
+public class AliasManager implements Reloadable {
 
     private Map<String, String> alias;
+    private PreferencesManager preferences;
 
     public AliasManager(PreferencesManager prefs) {
-        alias = new HashMap<>();
-        for (int count = 0; count < prefs.getLength(PreferencesManager.ALIAS); count++) {
-            String line = prefs.getLine(PreferencesManager.ALIAS, count);
-            String name = prefs.obtainKey(line);
-            String value = prefs.obtainValue(line);
-
-            alias.put(name, value);
-        }
+        this.preferences = prefs;
+        reload();
     }
 
     public String printAliases() {
@@ -49,4 +46,15 @@ public class AliasManager {
         return alias.keySet();
     }
 
+    @Override
+    public void reload() {
+        alias = new HashMap<>();
+        for (int count = 0; count < preferences.getLength(PreferencesManager.ALIAS); count++) {
+            String line = preferences.getLine(PreferencesManager.ALIAS, count);
+            String name = preferences.obtainKey(line);
+            String value = preferences.obtainValue(line);
+
+            alias.put(name, value);
+        }
+    }
 }
