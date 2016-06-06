@@ -19,6 +19,8 @@ import ohi.andre.consolelauncher.tuils.broadcast.HeadsetBroadcast;
 
 public class MusicManager implements OnCompletionListener {
 
+    public static final String[] MUSIC_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac"};
+
     public static final boolean USE_SCROLL_COMPARE = true;
 
     private File songFolder;
@@ -45,6 +47,7 @@ public class MusicManager implements OnCompletionListener {
         c.registerReceiver(headsetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
         randomActive = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.PLAY_RANDOM));
+
         songFolder = new File(preferencesManager.getValue(PreferencesManager.SONGSFOLDER));
     }
 
@@ -60,14 +63,19 @@ public class MusicManager implements OnCompletionListener {
     //	return the path by complete name
     public String getPath(String name) {
         File file = new File(songFolder, name);
-        if (!file.exists())
+        if (!file.exists()) {
             return null;
+        }
         return file.getAbsolutePath();
     }
 
     //	return names
     public List<String> getNames() {
         List<File> songs = Tuils.getSongsInFolder(songFolder);
+        if(songs == null) {
+            return null;
+        }
+
         List<String> names = new ArrayList<>();
 
         for (File file : songs)

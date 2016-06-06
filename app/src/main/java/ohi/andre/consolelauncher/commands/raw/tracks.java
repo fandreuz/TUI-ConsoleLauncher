@@ -16,7 +16,11 @@ public class tracks implements CommandAbstraction {
     @Override
     public String exec(ExecInfo info) {
         List<String> names = info.player.getNames();
-        Tuils.addPrefix(names, "  ");
+        if(names == null) {
+            return info.res.getString(R.string.output_musicfoldererror);
+        }
+
+        Tuils.addPrefix(names, Tuils.DOUBLE_SPACE);
         Tuils.insertHeaders(names, false);
         return Tuils.toPlanString(names);
     }
