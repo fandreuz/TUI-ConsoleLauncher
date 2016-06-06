@@ -18,7 +18,7 @@ public class CommandGroup {
         this.packageName = packageName;
 
         try {
-            this.commands = Tuils.getClassesOfPackage(packageName, c);
+            this.commands = Tuils.getClassesInPackage(packageName, c);
         } catch (IOException e) {
         }
 
