@@ -33,12 +33,21 @@ public class PreferencesManager {
     public static final String DEVICENAME = "deviceName";
     public static final String SHOWRAM = "showRam";
     public static final String SHOWDEVICE = "showDevice";
-    public static final String SUGGESTION_BG = "suggestionBg";
-    public static final String SUGGESTION_COLOR = "suggestionColor";
+
+    public static final String SUGGESTIONTEXT_COLOR = "suggestionTextColor";
     public static final String TRANSPARENT_SUGGESTIONS = "transparentSuggestions";
+    public static final String USE_MULTICOLOR_SUGGESTIONS = "multicolorSuggestions";
+    public static final String DEFAULT_SUGGESTION_BG = "defaultSuggestionBg";
+    public static final String ALIAS_SIGGESTION_BG = "aliasSuggestionBg";
+    public static final String APP_SUGGESTION_BG = "appSuggestionBg";
+    public static final String COMMAND_SUGGESTION_BG = "commandSuggestionsBg";
+    public static final String SONG_SUGGESTION_BG = "songSuggestionBg";
+    public static final String CONTACT_SUGGESTION_BG = "contactSuggestionBg";
+    public static final String FILE_SUGGESTION_BG = "fileSuggestionBg";
 
     public static final String DOUBLETAP = "closeOnDbTap";
     public static final String SHOWSUGGESTIONS = "showSuggestions";
+    public static final String EXECUTE_ON_SUGGESTION_CLICK = "executeOnSuggestionClick";
 
     public static final String PLAY_RANDOM = "playRandom";
     public static final String SONGSFOLDER = "songsFolder";
@@ -47,6 +56,7 @@ public class PreferencesManager {
     public static final String FULLSCREEN = "fullscreen";
     public static final String NOTIFICATION = "keepAliveWithNotification";
     public static final String OPEN_KEYBOARD = "openKeyboardOnStart";
+    public static final String ENTER_PHYSICAL_KEYBOARD = "enableEnterInPhysicalKeyboard";
 
     public static final String ALIAS_FILENAME = "alias.txt";
     public static final int ALIAS = 11;

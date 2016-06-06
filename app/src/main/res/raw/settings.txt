@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=4.2
+settingsVersion=4.3
 
 // when you are ready go back to t-ui and type "restart" to see changes
 
@@ -7,7 +7,7 @@ settingsVersion=4.2
 deviceColor=#ffff9800
 inputColor=#ff00ff00
 outputColor=#ffffffff
-backgroundColor=#ff004d40
+backgroundColor=#ff000000
 useSystemFont=false
 fontSize=15
 ramColor=#fff44336
@@ -18,9 +18,19 @@ showSubmit=true
 deviceName=null
 showRam=true
 showDevice=true
-suggestionBg=#ffffffff
-suggestionColor=#ff000000
+
+// suggestions
+suggestionTextColor=#ff000000
 transparentSuggestions=false
+multicolorSuggestions=true
+executeOnSuggestionClick=true
+aliasSuggestionBg=#ffFF5722
+appSuggestionBg=#ff00897B
+commandSuggestionsBg=#ff76FF03
+songSuggestionBg=#ffEEFF41
+contactSuggestionBg=#ff64FFDA
+fileSuggestionBg=#ff03A9F4
+defaultSuggestionBg=#ffFFFFFF
 
 // pre-load
 useSystemWallpaper=false
@@ -35,3 +45,4 @@ songsFolder=/sdcard/Music
 // others
 closeOnDbTap=true
 showSuggestions=true
+enableEnterInPhysicalKeyboard=false
