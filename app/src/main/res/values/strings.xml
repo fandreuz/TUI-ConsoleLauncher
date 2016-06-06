@@ -6,7 +6,7 @@
     <string name="separator_text_su">$</string>
     <string name="su">T-UI got SU permissions</string>
     <string name="nosu">Seems that your device isn\'t properly rooted</string>
-    <string name="permissions_toast">You have to grant at least Storage and Contacts permissions to make t-ui work</string>
+    <string name="permissions_toast">You have to grant at least Storage permission to make t-ui work</string>
     <string name="permission_error">t-ui has not the permissions to do this</string>
 
     <!-- app mgr -->
@@ -26,6 +26,7 @@
 
     <!-- various outputs -->
     <string name="output_nothingfound">No matches</string>
+    <string name="output_nopermissions">You didn\'t grant the permission to do this</string>
 
     <!-- search-->
     <string name="output_searchingplaystore">Play Store search:</string>
@@ -59,8 +60,8 @@
     <string name="output_stopped">Player stopped</string>
     <string name="output_nomusic">Player wasn\'t started</string>
     <string name="output_cantstop">Couldn\'t stop the player. Force stop t-ui from settings</string>
-    <string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain mp3 files.\nYou should set a
-        new one in the settings.txt file
+    <string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain audio files.\nYou should set the right path
+        in settings.txt
     </string>
 
     <!-- command/args -->
