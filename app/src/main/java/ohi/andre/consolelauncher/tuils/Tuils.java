@@ -18,6 +18,7 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.widget.Toast;
 
@@ -37,6 +38,7 @@ import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
+import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.tuils.tutorial.TutorialIndexActivity;
 
 public class Tuils {
@@ -71,24 +73,52 @@ public class Tuils {
 
         List<ResolveInfo> infos = mgr.queryIntentActivities(i, 0);
 
-        AppInfo app;
         for (ResolveInfo info : infos) {
-            app = new AppInfo(info.activityInfo.packageName, info.loadLabel(mgr).toString());
-            set.add(app);
+            set.add(new AppInfo(info.activityInfo.packageName, info.loadLabel(mgr).toString()));
         }
 
         return set;
+    }
+
+    public static boolean arrayContains(int[] array, int value) {
+        for(int i : array) {
+            if(i == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean containsExtension(String[] array, String value) {
+        value = value.toLowerCase().trim();
+        for(String s : array) {
+            if(value.endsWith(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static List<File> getSongsInFolder(File folder) {
         List<File> songs = new ArrayList<>();
 
         File[] files = folder.listFiles();
+        if(files == null || files.length == 0) {
+            return null;
+        }
+
         for (File file : files) {
-            if (file.isDirectory())
+            Log.e("andre", file.getAbsolutePath());
+            if (file.isDirectory()) {
+                Log.e("andre", "dir");
                 songs.addAll(getSongsInFolder(file));
-            else if (file.getName().toLowerCase().endsWith(".mp3"))
+            }
+            else if (containsExtension(MusicManager.MUSIC_EXTENSIONS, file.getName())) {
+                Log.e("andre", "song");
                 songs.add(file);
+            } else {
+                Log.e("andre", "nothing");
+            }
         }
 
         return songs;
@@ -135,7 +165,7 @@ public class Tuils {
         return availableMegs + " MB";
     }
 
-    public static List<String> getClassesOfPackage(String packageName, Context c)
+    public static List<String> getClassesInPackage(String packageName, Context c)
             throws IOException {
         List<String> classes = new ArrayList<>();
         String packageCodePath = c.getPackageCodePath();

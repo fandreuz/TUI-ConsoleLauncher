@@ -3,7 +3,6 @@ package ohi.andre.consolelauncher.commands;
 import android.annotation.SuppressLint;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +13,8 @@ import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
 import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.tuils.ShellUtils;
+import ohi.andre.consolelauncher.tuils.SpecificExtensionFileFilter;
+import ohi.andre.consolelauncher.tuils.SpecificNameFileFilter;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 @SuppressLint("DefaultLocale")
@@ -21,6 +22,9 @@ public class CommandTuils {
 
     private static final int MIN_CONTACT_RATE = 4;
     private static final int MIN_SONG_RATE = 5;
+
+    private static SpecificExtensionFileFilter extensionFileFilter = new SpecificExtensionFileFilter();
+    private static SpecificNameFileFilter nameFileFilter = new SpecificNameFileFilter();
 
     //	parse a command
     public static Command parse(String input, ExecInfo info, boolean suggestion) throws Exception {
@@ -57,7 +61,7 @@ public class CommandTuils {
                 if (input.length() <= 0)
                     break;
 
-                ArgInfo arg = CommandTuils.getArg(info, input, type);
+                ArgInfo arg = CommandTuils.getArg(info, input, type, suggestion);
 
                 if (!arg.found) {
                     command.nArgs = Command.ARG_NOTFOUND;
@@ -89,7 +93,7 @@ public class CommandTuils {
     }
 
     //	find args
-    public static ArgInfo getArg(ExecInfo info, String input, int type) {
+    public static ArgInfo getArg(ExecInfo info, String input, int type, boolean suggestion) {
         if (type == CommandAbstraction.FILE)
             return file(input, info.currentDirectory);
         else if (type == CommandAbstraction.CONTACTNUMBER)
@@ -105,7 +109,10 @@ public class CommandTuils {
         else if (type == CommandAbstraction.SONG)
             return song(input, info.player);
         else if (type == CommandAbstraction.FILE_LIST)
-            return fileList(input, info.currentDirectory);
+            if(suggestion)
+                return file(input, info.currentDirectory);
+            else
+                return fileList(input, info.currentDirectory);
         else if (type == CommandAbstraction.COMMAND)
             return command(input, info.commandGroup);
         else if (type == CommandAbstraction.PARAM)
@@ -226,47 +233,33 @@ public class CommandTuils {
     private static List<File> attemptWildcard(DirInfo dir) {
         List<File> files;
 
-        String extension = FileManager.wildcard(dir.notFound);
-        if (extension == null)
+        FileManager.WildcardInfo info = FileManager.wildcard(dir.notFound);
+        if(info == null) {
             return null;
-
-        File cd = dir.file;
-        if (!cd.isDirectory())
-            return null;
-
-        int spaceIndex = extension.indexOf(Tuils.SPACE);
-        if (spaceIndex != -1)
-            extension = extension.substring(0, spaceIndex);
-
-        final String ext = extension;
-
-        if (extension.equals(FileManager.ALL))
-            files = Arrays.asList(cd.listFiles());
-        else {
-            FileFilter filter = new FileFilter() {
-
-                @Override
-                public boolean accept(File f) {
-                    if (f.isDirectory())
-                        return false;
-
-                    String name = f.getName();
-                    if (!name.contains("."))
-                        return false;
-
-                    String fileExtension = name.substring(name.lastIndexOf("."));
-
-                    return !(!fileExtension.equals(ext.toLowerCase()) && !fileExtension.equals(ext.toUpperCase()));
-
-                }
-            };
-
-            files = Arrays.asList(cd.listFiles(filter));
         }
 
-        if (files.size() > 0)
+        File cd = dir.file;
+        if (!cd.isDirectory()) {
+            return null;
+        }
+
+        if (info.allExtensions && info.allNames) {
+            files = Arrays.asList(cd.listFiles());
+        } else if(info.allNames) {
+            extensionFileFilter.setExtension(info.extension);
+            files = Arrays.asList(cd.listFiles(extensionFileFilter));
+        } else if(info.allExtensions) {
+            nameFileFilter.setName(info.name);
+            files = Arrays.asList(cd.listFiles(nameFileFilter));
+        } else {
+            return null;
+        }
+
+        if (files.size() > 0) {
             return files;
-        return null;
+        } else {
+            return null;
+        }
     }
 
     private static ArgInfo param(String input) {
