@@ -1,5 +1,9 @@
 package ohi.andre.consolelauncher.commands.raw;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.v4.content.ContextCompat;
+
 import java.util.List;
 
 import ohi.andre.consolelauncher.R;
@@ -11,6 +15,10 @@ public class contacts implements CommandAbstraction {
 
     @Override
     public String exec(ExecInfo info) {
+        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            return info.res.getString(R.string.output_nopermissions);
+        }
+
         List<String> contacts = info.contacts.listNamesAndNumbers();
         Tuils.addPrefix(contacts, "  ");
         Tuils.insertHeaders(contacts, false);

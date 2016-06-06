@@ -1,7 +1,10 @@
 package ohi.andre.consolelauncher.commands.raw;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.support.v4.content.ContextCompat;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
@@ -11,6 +14,10 @@ public class call implements CommandAbstraction {
 
     @Override
     public String exec(ExecInfo info) {
+        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            return info.res.getString(R.string.output_nopermissions);
+        }
+
         String number = info.get(String.class, 0);
         Uri uri = Uri.parse("tel:" + number);
         Intent intent = new Intent(Intent.ACTION_CALL, uri);
