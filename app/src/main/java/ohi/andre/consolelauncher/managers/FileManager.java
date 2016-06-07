@@ -277,13 +277,22 @@ public class FileManager {
     }
 
     public static WildcardInfo wildcard(String path) {
-        if (path == null || !path.contains(ASTERISK) || path.contains("/"))
+        if (path == null || !path.contains(ASTERISK) || path.contains(File.separator)) {
             return null;
+        }
 
-        String beforeDot = path.substring(0, path.lastIndexOf(DOT));
-        String afterDot = path.substring(path.lastIndexOf(DOT) + 1);
+        if(path.trim().equals(ASTERISK)) {
+            return new WildcardInfo(true);
+        }
 
-        return new WildcardInfo(beforeDot, afterDot);
+        int dot = path.lastIndexOf(DOT);
+        try {
+            String beforeDot = path.substring(0, dot);
+            String afterDot = path.substring(dot + 1);
+            return new WildcardInfo(beforeDot, afterDot);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static class DirInfo {
@@ -309,6 +318,13 @@ public class FileManager {
 
             allNames = name.length() == 0 || name.equals(ASTERISK);
             allExtensions = extension.length() == 0 || extension.equals(ASTERISK);
+        }
+
+        public WildcardInfo(boolean all) {
+            if(all) {
+                this.allExtensions = all;
+                this.allNames = all;
+            }
         }
     }
 }
