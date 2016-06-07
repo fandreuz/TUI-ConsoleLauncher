@@ -1,14 +1,17 @@
 package ohi.andre.consolelauncher.commands.raw;
 
+import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class about implements CommandAbstraction {
 
     @Override
     public String exec(ExecInfo info) {
-        return info.res.getString(R.string.output_about);
+        return info.res.getString(R.string.version_label) + Tuils.SPACE + BuildConfig.VERSION_NAME + Tuils.NEWLINE + Tuils.NEWLINE +
+                info.res.getString(R.string.output_about);
     }
 
     @Override
