@@ -8,6 +8,7 @@
     <string name="nosu">Seems that your device isn\'t properly rooted</string>
     <string name="permissions_toast">You have to grant at least Storage permission to make t-ui work</string>
     <string name="permission_error">t-ui has not the permissions to do this</string>
+    <string name="version_label">Version:</string>
 
     <!-- app mgr -->
     <string name="output_appnotfound">Application or package not found</string>
@@ -118,6 +119,7 @@
         \ncp myFile.txt myFolder
     </string>
     <string name="help_data">Toggle mobile data. Will always turn off it if WiFi is active</string>
+    <string name="help_donate">Donate something to the developer</string>
     <string name="help_flash">Toggle the flashlight</string>
     <string name="help_help">Print a list of available commands at this moment, or informations about a command
         \nUsage: help command
