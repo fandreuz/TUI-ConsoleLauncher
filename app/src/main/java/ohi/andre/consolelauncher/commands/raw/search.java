@@ -22,6 +22,7 @@ public class search implements CommandAbstraction {
     private final int PLAYSTORE = 11;
     private final int FILE = 12;
     private final int YOUTUBE = 13;
+    private final int URL = 14;
 
     private final String YOUTUBE_PREFIX = "https://www.youtube.com/results?search_query=";
     private final String GOOGLE_PREFIX = "http://www.google.com/#q=";
@@ -32,6 +33,7 @@ public class search implements CommandAbstraction {
     private final String FILE_PARAM = "-f";
     private final String GOOGLE_PARAM = "-g";
     private final String YOUTUBE_PARAM = "-y";
+    private final String URL_PARAM = "-u";
 
     private final int MIN_FILE_RATE = 6;
 
@@ -39,31 +41,24 @@ public class search implements CommandAbstraction {
     public String exec(ExecInfo info) {
         String param = info.get(String.class, 0);
         List<String> args = info.get(ArrayList.class, 1);
-        if (args == null)
+        if (args == null) {
             return info.res.getString(R.string.output_nothing_found);
+        }
 
-        int type;
-        if (param.equals(PLAYSTORE_PARAM))
-            type = PLAYSTORE;
-        else if (param.equals(FILE_PARAM))
-            type = FILE;
-        else if (param.equals(YOUTUBE_PARAM))
-            type = YOUTUBE;
-        else if (param.equals(GOOGLE_PARAM))
-            type = GOOGLE;
-        else
-            return info.res.getString(R.string.output_invalid_param);
-
-        if (type == GOOGLE)
-            return google(args, info.context, info.res);
-        else if (type == PLAYSTORE)
-            return playstore(args, info.context, info.res);
-        else if (type == FILE)
-            return file(args, info.currentDirectory, info.res);
-        else if (type == YOUTUBE)
-            return youTube(args, info.context, info.res);
-
-        return null;
+        switch (param) {
+            case PLAYSTORE_PARAM:
+                return playstore(args, info.context, info.res);
+            case YOUTUBE_PARAM:
+                return youTube(args, info.context, info.res);
+            case FILE_PARAM:
+                return file(args, info.currentDirectory, info.res);
+            case GOOGLE_PARAM:
+                return google(args, info.context, info.res);
+            case URL_PARAM:
+                return url(args.get(0), info.context, info.res);
+            default:
+                return info.res.getString(R.string.output_invalid_param);
+        }
     }
 
     private String google(List<String> args, Context c, Resources res) {
@@ -86,6 +81,18 @@ public class search implements CommandAbstraction {
         }
 
         return res.getString(R.string.output_searchingplaystore) + " " + flat(args);
+    }
+
+    private String url(String url, Context c, Resources res) {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "http://" + url;
+        }
+
+        Uri uri = Uri.parse(url);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        c.startActivity(intent);
+
+        return res.getString(R.string.output_search_url) + Tuils.SPACE + url;
     }
 
     private String file(List<String> args, File cd, Resources res) {
@@ -159,7 +166,7 @@ public class search implements CommandAbstraction {
 
     @Override
     public int[] argType() {
-        return new int[]{CommandAbstraction.PARAM, CommandAbstraction.TEXTLIST};
+        return new int[] {CommandAbstraction.PARAM, CommandAbstraction.TEXTLIST};
     }
 
     @Override
@@ -173,7 +180,8 @@ public class search implements CommandAbstraction {
                 PLAYSTORE_PARAM,
                 FILE_PARAM,
                 GOOGLE_PARAM,
-                YOUTUBE_PARAM
+                YOUTUBE_PARAM,
+                URL_PARAM
         };
     }
 
