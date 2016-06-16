@@ -5,7 +5,6 @@ import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
@@ -22,17 +21,20 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.File;
+import java.lang.reflect.Field;
 
 import ohi.andre.consolelauncher.commands.ExecInfo;
 import ohi.andre.consolelauncher.managers.PreferencesManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.SuggestionsManager;
-import ohi.andre.consolelauncher.tuils.TerminalAdapter;
+import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.tuils.SuggestionRunnable;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
@@ -45,7 +47,6 @@ public class UIManager implements OnTouchListener {
     public Handler handler;
 
     protected Context mContext;
-    protected LinearLayout suggestionsView;
 
     private SkinManager skinManager;
 
@@ -56,7 +57,7 @@ public class UIManager implements OnTouchListener {
 
     private InputMethodManager imm;
     private CommandExecuter trigger;
-    private TerminalAdapter mTerminalAdapter;
+    private TerminalManager mTerminalAdapter;
 
     private int lastMeasuredHeight;
 
@@ -74,9 +75,18 @@ public class UIManager implements OnTouchListener {
         }
     };
 
+    private LinearLayout suggestionsView;
     private SuggestionViewDecorer suggestionViewDecorer;
     private LinearLayout.LayoutParams suggestionViewParams;
     private Thread lastSuggestionThread;
+    private SuggestionRunnable suggestionRunnable;
+    private Handler activityHandler;
+    private Runnable removeAllSuggestions = new Runnable() {
+        @Override
+        public void run() {
+            suggestionsView.removeAllViews();
+        }
+    };
 
     protected TextWatcher textWatcher = new TextWatcher() {
 
@@ -88,10 +98,6 @@ public class UIManager implements OnTouchListener {
         public void onTextChanged(CharSequence s, int st, int b, int c) {
             if (suggestionsView == null)
                 return;
-
-            if (lastSuggestionThread != null && lastSuggestionThread.isAlive()) {
-                lastSuggestionThread.interrupt();
-            }
 
             String text = s.toString();
             int lastSpace = text.lastIndexOf(Tuils.SPACE);
@@ -115,7 +121,7 @@ public class UIManager implements OnTouchListener {
 
             String inputText = mTerminalAdapter.getInput();
 
-            int lastSpace = inputText.lastIndexOf(" ");
+            int lastSpace = inputText.lastIndexOf(Tuils.SPACE);
             String lastWord = inputText.substring(lastSpace != -1 ? lastSpace + 1 : 0);
             String before = inputText.substring(0, lastSpace + 1);
 
@@ -135,7 +141,7 @@ public class UIManager implements OnTouchListener {
             }
 
             mTerminalAdapter.setInput(builder.toString());
-            if (executeOnSuggestionClick && Tuils.arrayContains(SuggestionsManager.Suggestion.TAP_TO_EXECUTE_TYPES, v.getId())) {
+            if (executeOnSuggestionClick && v.getId() == SuggestionsManager.Suggestion.EXEC_ON_CLICK) {
                 mTerminalAdapter.simulateEnter();
             } else {
                 mTerminalAdapter.focusInputEnd();
@@ -143,8 +149,100 @@ public class UIManager implements OnTouchListener {
         }
     };
 
+    private void requestSuggestion(final String before, final String lastWord) {
+
+        if (suggestionViewParams == null) {
+            suggestionViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            suggestionViewParams.setMargins(SkinManager.SUGGESTION_MARGIN, 0, SkinManager.SUGGESTION_MARGIN, 0);
+            suggestionViewParams.gravity = Gravity.CENTER_VERTICAL;
+        }
+
+        if(suggestionRunnable == null) {
+            suggestionRunnable = new SuggestionRunnable(skinManager, suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent());
+        }
+
+        if(activityHandler == null) {
+            Field field;
+            try {
+                field = mContext.getClass().getSuperclass().getDeclaredField("mHandler");
+                field.setAccessible(true);
+                activityHandler = (Handler) field.get(mContext);
+            }
+            catch (Exception e) {}
+        }
+
+        if (lastSuggestionThread != null) {
+            lastSuggestionThread.interrupt();
+            suggestionRunnable.interrupt();
+            if(activityHandler != null) {
+                activityHandler.removeCallbacks(suggestionRunnable);
+            }
+        }
+
+        lastSuggestionThread = new Thread() {
+            @Override
+            public void run() {
+                super.run();
+
+                final SuggestionsManager.Suggestion[] suggestions = SuggestionsManager.getSuggestions(info, before, lastWord);
+
+                if(suggestions.length == 0) {
+                    ((Activity) mContext).runOnUiThread(removeAllSuggestions);
+                    return;
+                }
+
+                if (Thread.interrupted()) {
+                    suggestionRunnable.interrupt();
+                    return;
+                }
+
+                final TextView[] existingViews = new TextView[suggestionsView.getChildCount()];
+                for (int count = 0; count < existingViews.length; count++) {
+                    existingViews[count] = (TextView) suggestionsView.getChildAt(count);
+                }
+
+                if (Thread.interrupted()) {
+                    suggestionRunnable.interrupt();
+                    return;
+                }
+
+                int n = suggestions.length - existingViews.length;
+                TextView[] toAdd = null;
+                TextView[] toRecycle = null;
+                if (n == 0) {
+                    toRecycle = existingViews;
+                    toAdd = null;
+                } else if (n > 0) {
+                    toRecycle = existingViews;
+                    toAdd = new TextView[n];
+                    for (int count = 0; count < toAdd.length; count++) {
+                        toAdd[count] = suggestionViewDecorer.getSuggestionView(mContext);
+                    }
+                } else if (n < 0) {
+                    toAdd = null;
+                    toRecycle = new TextView[suggestions.length];
+                    System.arraycopy(existingViews, 0, toRecycle, 0, toRecycle.length);
+                }
+
+                if (Thread.interrupted()) {
+                    suggestionRunnable.interrupt();
+                    return;
+                }
+
+                suggestionRunnable.setN(n);
+                suggestionRunnable.setSuggestions(suggestions);
+                suggestionRunnable.setToAdd(toAdd);
+                suggestionRunnable.setToRecycle(toRecycle);
+                suggestionRunnable.reset();
+                ((Activity) mContext).runOnUiThread(suggestionRunnable);
+            }
+        };
+
+        lastSuggestionThread.start();
+    }
+
     protected UIManager(ExecInfo info, Context context, final ViewGroup rootView, final CommandExecuter tri, DevicePolicyManager mgr, ComponentName name,
-                        PreferencesManager prefsMgr, Resources resources) {
+                        PreferencesManager prefsMgr) {
 
         rootView.setOnTouchListener(this);
 
@@ -257,7 +355,7 @@ public class UIManager implements OnTouchListener {
         } else
             initDetector();
 
-        mTerminalAdapter = new TerminalAdapter(terminalView, inputView, prefixView, submitView, skinManager, getHint(prefsMgr),
+        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, skinManager, getHint(prefsMgr),
                 Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.ENTER_PHYSICAL_KEYBOARD)));
         mTerminalAdapter.setInputListener(new OnNewInputListener() {
             @Override
@@ -292,87 +390,6 @@ public class UIManager implements OnTouchListener {
         });
     }
 
-    //    call this to trigger a suggestion change
-    private void requestSuggestion(final String before, final String lastWord) {
-
-        if (suggestionViewParams == null) {
-            suggestionViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            suggestionViewParams.setMargins(SkinManager.SUGGESTION_MARGIN, 0, SkinManager.SUGGESTION_MARGIN, 0);
-            suggestionViewParams.gravity = Gravity.CENTER_VERTICAL;
-        }
-
-        lastSuggestionThread = new Thread() {
-            @Override
-            public void run() {
-                super.run();
-
-                final SuggestionsManager.Suggestion[] suggestions = SuggestionsManager.getSuggestions(info, before, lastWord);
-
-                if (Thread.interrupted())
-                    return;
-
-                final TextView[] recycledViews = new TextView[suggestionsView.getChildCount()];
-                for (int count = 0; count < recycledViews.length; count++) {
-                    recycledViews[count] = (TextView) suggestionsView.getChildAt(count);
-                }
-
-                if (Thread.interrupted())
-                    return;
-
-                final int n = suggestions.length - recycledViews.length;
-                final TextView[] toAdd;
-                final TextView[] toRecycle;
-                if (n == 0) {
-                    toRecycle = recycledViews;
-                    toAdd = null;
-                } else if (n > 0) {
-                    toRecycle = recycledViews;
-                    toAdd = new TextView[n];
-                    for (int count = 0; count < toAdd.length; count++) {
-                        toAdd[count] = suggestionViewDecorer.getSuggestionView(mContext);
-                    }
-                } else if (n < 0) {
-                    toAdd = null;
-                    toRecycle = new TextView[suggestions.length];
-                    System.arraycopy(recycledViews, 0, toRecycle, 0, toRecycle.length);
-                } else {
-                    return;
-                }
-
-                if (Thread.interrupted())
-                    return;
-
-                ((Activity) mContext).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (n < 0) {
-                            for (int count = toRecycle.length; count < suggestionsView.getChildCount(); count++) {
-                                suggestionsView.removeViewAt(count);
-                            }
-                        }
-
-                        for (int count = 0; count < suggestions.length; count++) {
-                            String s = suggestions[count].text;
-                            if (count < toRecycle.length) {
-                                toRecycle[count].setId(suggestions[count].id);
-                                toRecycle[count].setBackgroundDrawable(null);
-                                toRecycle[count].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].id));
-                                toRecycle[count].setText(s);
-                            } else if (toAdd != null && count < toAdd.length) {
-                                toAdd[count].setText(s);
-                                toAdd[count].setId(suggestions[count].id);
-                                toAdd[count].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].id));
-                                suggestionsView.addView(toAdd[count], suggestionViewParams);
-                            }
-                        }
-                    }
-                });
-            }
-        };
-
-        lastSuggestionThread.start();
-    }
-
     private void openKeyboard() {
         mTerminalAdapter.requestInputFocus();
         imm.showSoftInput(mTerminalAdapter.getInputView(), InputMethodManager.SHOW_IMPLICIT);
@@ -389,7 +406,7 @@ public class UIManager implements OnTouchListener {
 
     //   accessor for input
     public void setInput(String s) {
-        if (s == null || s.length() == 0)
+        if (s == null)
             return;
 
         mTerminalAdapter.setInput(s);
