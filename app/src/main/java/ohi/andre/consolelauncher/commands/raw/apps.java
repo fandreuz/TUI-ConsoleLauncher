@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.managers.AppsManager;
 
 public class apps implements CommandAbstraction {
 
@@ -30,7 +31,7 @@ public class apps implements CommandAbstraction {
 
     private String hideApp(ExecInfo info, String app) {
         SharedPreferences.Editor editor = ((Activity) info.context).getPreferences(0).edit();
-        String result = info.appsManager.hideApp(editor, app);
+        String result = info.appsManager.hideApp(app);
         if (result != null) {
             editor.commit();
             return result + " " + info.res.getString(R.string.output_hideapp);
@@ -40,7 +41,7 @@ public class apps implements CommandAbstraction {
 
     private String unHideApp(ExecInfo info, String app) {
         SharedPreferences.Editor editor = ((Activity) info.context).getPreferences(0).edit();
-        String result = info.appsManager.unhideApp(editor, app);
+        String result = info.appsManager.unhideApp(app);
         if (result != null) {
             editor.commit();
             return result + " " + info.res.getString(R.string.output_unhideapp);
@@ -49,7 +50,7 @@ public class apps implements CommandAbstraction {
     }
 
     private String showHiddenApps(ExecInfo info) {
-        return info.appsManager.printHiddenApps();
+        return info.appsManager.printApps(AppsManager.HIDDEN_APPS);
     }
 
     @Override
@@ -94,7 +95,7 @@ public class apps implements CommandAbstraction {
             else
                 return info.res.getString(helpRes());
         } else
-            return info.appsManager.printApps();
+            return info.appsManager.printApps(AppsManager.SHOWN_APPS);
     }
 
     @Override

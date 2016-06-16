@@ -53,11 +53,9 @@ public class MainManager {
 
     private Context mContext;
 
-    //    interfaces
     private Inputable in;
     private Outputable out;
 
-    //    last commands
     private List<String> lastCommands;
     private int lastCommandIndex;
 
@@ -88,7 +86,7 @@ public class MainManager {
 
         MusicManager music = new MusicManager(mContext, prefsMgr);
 
-        AppsManager appsMgr = new AppsManager(c);
+        AppsManager appsMgr = new AppsManager(c, Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.COMPARESTRING_APPS)));
         AliasManager aliasManager = new AliasManager(prefsMgr);
 
         info = new ExecInfo(mContext, prefsMgr, group, aliasManager, appsMgr, music, cont, devicePolicyManager, componentName,
@@ -116,8 +114,7 @@ public class MainManager {
             }
             if (r) {
                 return;
-            } else {
-            }
+            } else {}
         }
     }
 
@@ -127,13 +124,13 @@ public class MainManager {
         if (lastCommands.size() > 0 && lastCommandIndex < lastCommands.size() && lastCommandIndex >= 0)
             s = lastCommands.get(lastCommandIndex--);
         else
-            s = "";
+            s = Tuils.EMPTYSTRING;
 
         in.in(s);
     }
 
     public void onLongBack() {
-        in.in("");
+        in.in(Tuils.EMPTYSTRING);
     }
 
     //    dispose
@@ -212,13 +209,15 @@ public class MainManager {
 
         @Override
         public boolean trigger(ExecInfo info, Outputable out, String input, int id) {
-            String packageName = info.appsManager.findPackage(info.appsManager.getApps(), input);
-            if (packageName == null)
+            String packageName = info.appsManager.findPackage(input, AppsManager.SHOWN_APPS);
+            if (packageName == null) {
                 return false;
+            }
 
             Intent intent = info.appsManager.getIntent(packageName);
-            if (intent == null)
+            if (intent == null) {
                 return false;
+            }
 
             out.onOutput(info.res.getString(R.string.starting_app) + Tuils.SPACE + intent.getComponent().getClassName(), id);
 

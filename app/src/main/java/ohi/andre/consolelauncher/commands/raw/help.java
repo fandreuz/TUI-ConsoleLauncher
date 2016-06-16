@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher.commands.raw;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -52,7 +53,7 @@ public class help implements CommandAbstraction {
 
     @Override
     public String onNotArgEnough(ExecInfo info, int nArgs) {
-        List<String> toPrint = new ArrayList<>(info.commandGroup.getCommands());
+        List<String> toPrint = new ArrayList<>(Arrays.asList(info.commandGroup.getCommandNames()));
 
         Collections.sort(toPrint, new Comparator<String>() {
             @Override
