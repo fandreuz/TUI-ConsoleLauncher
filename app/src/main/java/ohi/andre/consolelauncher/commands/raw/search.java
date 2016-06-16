@@ -18,12 +18,6 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class search implements CommandAbstraction {
 
-    private final int GOOGLE = 10;
-    private final int PLAYSTORE = 11;
-    private final int FILE = 12;
-    private final int YOUTUBE = 13;
-    private final int URL = 14;
-
     private final String YOUTUBE_PREFIX = "https://www.youtube.com/results?search_query=";
     private final String GOOGLE_PREFIX = "http://www.google.com/#q=";
     private final String PLAYSTORE_PREFIX = "market://search?q=";
