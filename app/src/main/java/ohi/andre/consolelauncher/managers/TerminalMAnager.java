@@ -1,7 +1,8 @@
-package ohi.andre.consolelauncher.tuils;
+package ohi.andre.consolelauncher.managers;
 
 import android.app.Activity;
 import android.os.IBinder;
+import android.os.Looper;
 import android.text.InputType;
 import android.text.Layout;
 import android.text.Spannable;
@@ -19,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
+import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
 
 /*Copyright Francesco Andreuzzi
@@ -36,14 +38,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
 
-public class TerminalAdapter {
+public class TerminalManager {
 
     private final CharSequence PREFIX = ">>";
 
     private final int SCROLL_DELAY = 200;
 
-    private final int INPUT = 10;
-    private final int OUTPUT = 11;
+    public static final int INPUT = 10;
+    public static final int OUTPUT = 11;
 
     private int mCurrentOutputId = 0;
 
@@ -63,7 +65,7 @@ public class TerminalAdapter {
 
     private OnNewInputListener mInputListener;
 
-    public TerminalAdapter(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager,
+    public TerminalManager(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager,
                            String hint, final boolean physicalEnter) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
             throw new UnsupportedOperationException();
@@ -140,23 +142,33 @@ public class TerminalAdapter {
     }
 
     public void setOutput(String output, int id) {
-        if (output == null || output.length() == 0)
+        if (output == null)
             return;
 
         writeToView(output, OUTPUT, id);
         scrollToEnd();
     }
 
-    private void writeToView(String text, int type) {
+    public void writeToView(String text, int type) {
         writeToView(text, type, mCurrentOutputId);
     }
 
-    private void writeToView(String text, int type, int id) {
+    private void writeToView(final String text, final int type, int id) {
         if(type == INPUT || id == mCurrentOutputId) {
             if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
                 mTerminalView.append(Tuils.NEWLINE);
             }
-            mTerminalView.append(getSpannable(text, type));
+
+            if(Looper.myLooper() == Looper.getMainLooper()) {
+                mTerminalView.append(getSpannable(text, type));
+            } else {
+                ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTerminalView.append(getSpannable(text, type));
+                    }
+                });
+            }
         } else if(type == OUTPUT) {
             List<String> oldText = getLines(mTerminalView);
             List<Map.Entry<String, String>> wrappedOldText = splitInputOutput(oldText);
