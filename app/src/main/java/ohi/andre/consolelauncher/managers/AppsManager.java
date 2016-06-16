@@ -1,6 +1,6 @@
 package ohi.andre.consolelauncher.managers;
 
-import android.app.Activity;
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,29 +9,39 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
+import android.os.Build;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import ohi.andre.comparestring.Compare;
-import ohi.andre.consolelauncher.tuils.AppInfo;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class AppsManager {
 
+    public static final int SHOWN_APPS = 10;
+    public static final int HIDDEN_APPS = 11;
+
     public static final int MIN_RATE = 5;
     public static final boolean USE_SCROLL_COMPARE = false;
-    private static final String HIDDENAPP_KEY = "hiddenapp_";
-    private static final String HIDDENAPP_N_KEY = "hiddenapp_n";
+
+    private final int SUGGESTED_APPS_LENGTH = 5;
+
+    private final String APPS_PREFERENCES = "appsPreferences";
+
+    private Context context;
+    private SharedPreferences.Editor prefsEditor;
     private PackageManager mgr;
 
-    private Set<AppInfo> apps;
-    private Set<AppInfo> hiddenApps;
+    private AppsHolder appsHolder;
+    private List<AppInfo> hiddenApps;
+
+    private boolean useCompareString;
 
     private BroadcastReceiver appsBroadcast = new BroadcastReceiver() {
         @Override
@@ -45,11 +55,14 @@ public class AppsManager {
         }
     };
 
-    //    constructor
-    public AppsManager(Context context) {
-        mgr = context.getPackageManager();
+    public AppsManager(Context context, boolean useCompareString) {
+        this.context = context;
+        this.mgr = context.getPackageManager();
+        this.useCompareString = useCompareString;
 
-        fill(((Activity) context).getPreferences(0));
+        SharedPreferences preferences = context.getSharedPreferences(APPS_PREFERENCES, Context.MODE_PRIVATE);
+        prefsEditor = preferences.edit();
+        fill(preferences);
 
         initAppListener(context);
     }
@@ -64,246 +77,450 @@ public class AppsManager {
     }
 
     public void fill(SharedPreferences preferences) {
-        apps = Tuils.getApps(mgr);
+        Map<String, AppInfo> map = createAppMap(mgr);
+        List<AppInfo> shownApps = new ArrayList<>();
+        hiddenApps = new ArrayList<>();
 
-        Set<String> hiddenPackages = readHiddenApps(preferences);
-        hiddenApps = new HashSet<>();
+        Map<String, ?> values;
+        try {
+            values = preferences.getAll();
+        } catch (Exception e) {
+            for(Map.Entry<String, AppInfo> entry : map.entrySet()) {
+                shownApps.add(entry.getValue());
+            }
+            appsHolder = new AppsHolder(shownApps);
+            return;
+        }
 
-//        remove hidden apps from apps & store coincidences in hiddenApps
-        Iterator<AppInfo> it = apps.iterator();
-        while (it.hasNext()) {
-            AppInfo app = it.next();
-            if (hiddenPackages.contains(app.packageName)) {
-                hiddenApps.add(app);
-                it.remove();
+        for(Map.Entry<String, ?> entry : values.entrySet()) {
+            if(entry.getValue() instanceof Boolean) {
+                if((Boolean) entry.getValue()) {
+                    AppInfo info = map.get(entry.getKey());
+                    hiddenApps.add(info);
+                    map.remove(entry.getKey());
+                }
+            } else {
+                map.get(entry.getKey()).launchedTimes = (Integer) entry.getValue();
             }
         }
 
-//        add company name if necessary (Google/FaceBook Messenger)
-        apps = checkEquality(apps);
-        hiddenApps = checkEquality(hiddenApps);
+        for (Map.Entry<String, AppInfo> stringAppInfoEntry : map.entrySet()) {
+            AppInfo app = stringAppInfoEntry.getValue();
+            shownApps.add(app);
+        }
+
+        appsHolder = new AppsHolder(shownApps);
+        AppUtils.checkEquality(hiddenApps);
     }
 
-    //    add a new app (onPackageAdded listener)
+    private Map<String, AppInfo> createAppMap(PackageManager mgr) {
+        Map<String, AppInfo> map = new HashMap<>();
+
+        Intent i = new Intent(Intent.ACTION_MAIN, null);
+        i.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> infos = mgr.queryIntentActivities(i, 0);
+
+        for (ResolveInfo info : infos) {
+            AppInfo app = new AppInfo(info.activityInfo.packageName, info.loadLabel(mgr).toString());
+            map.put(info.activityInfo.packageName, app);
+        }
+
+        return map;
+    }
+
     private void add(String packageName) {
         try {
             ApplicationInfo info = mgr.getApplicationInfo(packageName, 0);
-            AppInfo app = new AppInfo(packageName, info.loadLabel(mgr).toString());
-            apps.add(app);
-        } catch (NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        apps = checkEquality(apps);
+            AppInfo app = new AppInfo(packageName, info.loadLabel(mgr).toString(), 0);
+            appsHolder.add(app);
+        } catch (NameNotFoundException e) {}
     }
 
-    //    as below, but remove
     private void remove(String packageName) {
-        Iterator<AppInfo> it = apps.iterator();
-
-        AppInfo app;
-        while (it.hasNext()) {
-            app = it.next();
-            if (app.packageName.equals(packageName)) {
-                it.remove();
-                break;
-            }
-        }
-    }
-
-    //    find a package using its public label
-//    notice that it can be an app or an hidden app (depends on appList parameter)
-    public String findPackage(Set<AppInfo> appList, String name) {
-        String label = Compare.similarString(labelSet(appList), name, MIN_RATE, USE_SCROLL_COMPARE);
-        if (label == null)
-            return null;
-
-        Iterator<AppInfo> it = appList.iterator();
-        AppInfo app;
-        while (it.hasNext()) {
-            app = it.next();
-            if (app.publicLabel.equals(label))
-                return app.packageName;
-        }
-
-        return null;
+        appsHolder.remove(packageName);
     }
 
     public String findPackage(String name) {
-        Set<AppInfo> allApps = new HashSet<>(apps);
+        List<AppInfo> allApps = new ArrayList<>(appsHolder.getApps());
         allApps.addAll(hiddenApps);
-        return findPackage(allApps, name);
+        return findPackage(allApps, null, name);
     }
 
-    //    find the Application intent from an input
+    public String findPackage(List<AppInfo> appList, List<String> labels, String name) {
+        name = Compare.removeSpaces(name).toLowerCase();
+        if(labels == null) {
+            labels = AppUtils.labelList(appList);
+        }
+
+        if(useCompareString) {
+            String label = Compare.similarString(labels, name, MIN_RATE, USE_SCROLL_COMPARE);
+            if (label == null) {
+                return null;
+            }
+
+            for(AppInfo info : appList) {
+                if (info.publicLabel.equals(name)) {
+                    return info.packageName;
+                }
+            }
+        } else {
+            for(AppInfo info : appList) {
+                if(name.equals(Compare.removeSpaces(info.publicLabel.toLowerCase()))) {
+                    return info.packageName;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public String findPackage(String name, int type) {
+        List<AppInfo> appList;
+        List<String> labelList;
+        if(type == SHOWN_APPS) {
+            appList = appsHolder.getApps();
+            labelList = appsHolder.getAppLabels();
+        } else {
+            appList = hiddenApps;
+            labelList = AppUtils.labelList(appList);
+        }
+
+        return findPackage(appList, labelList, name);
+    }
+
     public Intent getIntent(String packageName) {
+        AppInfo info = AppUtils.findAppInfo(packageName, appsHolder.getApps());
+        if(info == null) {
+            return null;
+        }
+
+        info.launchedTimes++;
+        appsHolder.updateSuggestion(info);
+
+        prefsEditor.putInt(packageName, info.launchedTimes);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            applyPrefs();
+        } else {
+            prefsEditor.commit();
+        }
+
         return mgr.getLaunchIntentForPackage(packageName);
     }
 
-    //    read hidden apps
-    private Set<String> readHiddenApps(SharedPreferences preferences) {
-        int n = preferences.getInt(HIDDENAPP_N_KEY, 0);
-
-        Set<String> hiddenPackages = new HashSet<>();
-        for (int count = 0; count < n; count++)
-            hiddenPackages.add(preferences.getString(HIDDENAPP_KEY + count, null));
-        return hiddenPackages;
-    }
-
-    //    store hidden apps in shared preferences
-    private void storeHiddenApps(SharedPreferences.Editor editor, Set<String> hiddenPackages) {
-        int n = hiddenPackages.size();
-
-        editor.putInt(HIDDENAPP_N_KEY, n);
-
-        Iterator<String> it = hiddenPackages.iterator();
-        for (int count = 0; count < n; count++)
-            editor.putString(HIDDENAPP_KEY + count, it.next());
-    }
-
-    //    hide an app
-    public String hideApp(SharedPreferences.Editor editor, String packageName) {
-        Iterator<AppInfo> it = apps.iterator();
-        while (it.hasNext()) {
-            AppInfo i = it.next();
-            if (i.packageName.equals(packageName)) {
-                it.remove();
-                hiddenApps.add(i);
-                hiddenApps = checkEquality(hiddenApps);
-
-                storeHiddenApps(editor, packageSet(hiddenApps));
-
-                return i.publicLabel;
-            }
+    public String hideApp(String packageName) {
+        AppInfo info = AppUtils.findAppInfo(packageName, appsHolder.getApps());
+        if(info == null) {
+            return null;
         }
 
-        return null;
-    }
+        appsHolder.remove(packageName);
+        hiddenApps.add(info);
+        AppUtils.checkEquality(hiddenApps);
 
-    //    unhide an app
-    public String unhideApp(SharedPreferences.Editor editor, String packageName) {
-
-        Iterator<AppInfo> it = hiddenApps.iterator();
-        while (it.hasNext()) {
-            AppInfo i = it.next();
-            if (i.packageName.equals(packageName)) {
-                it.remove();
-                apps.add(i);
-
-                storeHiddenApps(editor, packageSet(hiddenApps));
-
-                return i.publicLabel;
-            }
+        prefsEditor.putBoolean(packageName, true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            applyPrefs();
+        } else {
+            prefsEditor.commit();
         }
 
-        return null;
+        return info.publicLabel;
     }
 
-    //    return a set of labels in AppInfos
-    private Set<String> labelSet(Set<AppInfo> infos) {
-        Set<String> set = new HashSet<>();
+    public String unhideApp(String packageName) {
 
-        Iterator<AppInfo> it = infos.iterator();
-        while (it.hasNext())
-            set.add(it.next().publicLabel);
-
-        return set;
-    }
-
-    //    return a set of packages in AppInfos
-    private Set<String> packageSet(Set<AppInfo> infos) {
-        Set<String> set = new HashSet<>();
-
-        Iterator<AppInfo> it = infos.iterator();
-        while (it.hasNext())
-            set.add(it.next().packageName);
-
-        return set;
-    }
-
-    public String printApps() {
-        List<String> list = new ArrayList<>(labelSet(apps));
-
-        Collections.sort(list, new Comparator<String>() {
-            @Override
-            public int compare(String lhs, String rhs) {
-                return Compare.alphabeticCompare(lhs, rhs);
-            }
-        });
-
-        Tuils.addPrefix(list, Tuils.DOUBLE_SPACE);
-        Tuils.insertHeaders(list, false);
-        return Tuils.toPlanString(list);
-    }
-
-    public Set<AppInfo> getApps() {
-        return apps;
-    }
-
-    public Set<String> getAppsLabels() {
-        return labelSet(apps);
-    }
-
-    public String printHiddenApps() {
-        List<String> list = new ArrayList<>(labelSet(hiddenApps));
-
-        Collections.sort(list, new Comparator<String>() {
-            @Override
-            public int compare(String lhs, String rhs) {
-                return Compare.alphabeticCompare(lhs, rhs);
-            }
-        });
-
-        Tuils.addPrefix(list, "  ");
-        Tuils.insertHeaders(list, false);
-        return Tuils.toPlanString(list);
-    }
-
-    private Set<AppInfo> checkEquality(Set<AppInfo> appInfoSet) {
-        List<AppInfo> list = new ArrayList<>(appInfoSet);
-
-        for (Iterator<AppInfo> iterator = appInfoSet.iterator(); iterator.hasNext(); ) {
-            AppInfo info = iterator.next();
-
-            for (int count = 0; count < list.size(); count++) {
-                AppInfo info2 = list.get(count);
-                if (!info.equals(info2) && info.publicLabel.equals(info2.publicLabel))
-                    list.set(count, new AppInfo(info2.packageName, getNewLabel(info2.publicLabel, info2.packageName)));
-            }
+        AppInfo info = AppUtils.findAppInfo(packageName, hiddenApps);
+        if(info == null) {
+            return null;
         }
 
-        return new HashSet<>(list);
+        hiddenApps.remove(info);
+        appsHolder.add(info);
+
+        prefsEditor.putBoolean(packageName, false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            applyPrefs();
+        } else {
+            prefsEditor.commit();
+        }
+
+        return info.publicLabel;
     }
 
-    private String getNewLabel(String oldLabel, String packageName) {
-        try {
-            int firstDot = packageName.indexOf(".") + 1;
-            int secondDot = packageName.substring(firstDot).indexOf(".") + firstDot;
+    public List<String> getAppLabels() {
+        return appsHolder.getAppLabels();
+    }
 
-            StringBuilder newLabel = new StringBuilder();
-            if (firstDot == -1) {
-                newLabel.append(packageName);
-                newLabel.append(Tuils.SPACE);
-                newLabel.append(oldLabel);
-            } else if (secondDot == -1) {
-                newLabel.append(packageName.substring(firstDot, packageName.length()));
-                newLabel.append(Tuils.SPACE);
-                newLabel.append(oldLabel);
-            } else {
-                newLabel.append(packageName.substring(firstDot, secondDot));
-                newLabel.append(Tuils.SPACE);
-                newLabel.append(oldLabel);
-            }
+    public String[] getSuggestedApps() {
+        return appsHolder.getSuggestedApps();
+    }
 
-            String label = newLabel.toString();
-            return label.substring(0, 1).toUpperCase() + label.substring(1);
-        } catch (IndexOutOfBoundsException e) {
-            return packageName;
-        }
+    public String printApps(int type) {
+        List<String> labels = type == SHOWN_APPS ? appsHolder.appLabels : AppUtils.labelList(hiddenApps);
+        return AppUtils.printApps(labels);
     }
 
     public void unregisterReceiver(Context context) {
         context.unregisterReceiver(appsBroadcast);
+    }
+
+    public void onDestroy() {
+        unregisterReceiver(context);
+    }
+
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    private void applyPrefs() {
+        prefsEditor.apply();
+    }
+
+    public static class AppInfo {
+
+        public String packageName;
+        public String publicLabel;
+        public int launchedTimes;
+
+        public AppInfo(String packageName, String publicLabel, int launchedTimes) {
+            this.packageName = packageName;
+            this.publicLabel = publicLabel;
+            this.launchedTimes = launchedTimes;
+        }
+
+        public AppInfo(String packageName, String publicLabel) {
+            this.packageName = packageName;
+            this.publicLabel = publicLabel;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if(o == null) {
+                return false;
+            }
+
+            if(o instanceof AppInfo) {
+                AppInfo i = (AppInfo) o;
+                return this.packageName.equals(i.packageName);
+            } else if(o instanceof String) {
+                return this.packageName.equals(o);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return packageName + " - " + publicLabel;
+        }
+
+        @Override
+        public int hashCode() {
+            return packageName.hashCode();
+        }
+    }
+
+    private class AppsHolder {
+
+        private List<AppInfo> infos;
+        private List<String> appLabels;
+        private AppInfo[] suggestedApps = new AppInfo[SUGGESTED_APPS_LENGTH];
+
+        Comparator<AppInfo> mostUsedComparator = new Comparator<AppInfo>() {
+            @Override
+            public int compare(AppInfo lhs, AppInfo rhs) {
+                return rhs.launchedTimes > lhs.launchedTimes ? -1 : rhs.launchedTimes == lhs.launchedTimes ? 0 : 1;
+            }
+        };
+
+        public AppsHolder(List<AppInfo> infos) {
+            this.infos = infos;
+            update(true);
+        }
+
+        public void add(AppInfo info) {
+            infos.add(info);
+            update(false);
+        }
+
+        public void remove(String packageName) {
+            infos.remove(packageName);
+            update(true);
+        }
+
+        public void updateSuggestion(AppInfo app) {
+            int index = suggestionIndex(app);
+            if(index != -1) {
+                for(int count = suggestedApps.length - 1; count > index; count--) {
+                    AppInfo cycleInfo = suggestedApps[count];
+                    if(cycleInfo == null) {
+//                        this should not happen
+                        throw new UnsupportedOperationException("suggestion is null");
+                    }
+
+                    if(app.launchedTimes > cycleInfo.launchedTimes) {
+                        suggestedApps[index] = cycleInfo;
+                        suggestedApps[count] = app;
+                        return;
+                    }
+                }
+            } else {
+                for(int count = suggestedApps.length - 1; count >= 0; count--) {
+                    AppInfo cycleInfo = suggestedApps[count];
+                    if(cycleInfo == null || app.launchedTimes > cycleInfo.launchedTimes) {
+                        System.arraycopy(suggestedApps, 1, suggestedApps, 0, count);
+                        suggestedApps[count] = app;
+                        return;
+                    }
+                }
+            }
+        }
+
+        private int suggestionIndex(AppInfo app) {
+            for(int count = 0; count < suggestedApps.length; count++) {
+                if(app.equals(suggestedApps[count])) {
+                    return count;
+                }
+            }
+            return -1;
+        }
+
+        private void sort() {
+            try {
+                Collections.sort(infos, mostUsedComparator);
+            } catch (NullPointerException e) {}
+        }
+
+        private void fillLabels() {
+            appLabels = AppUtils.labelList(infos);
+        }
+
+        private void fillSuggestions() {
+            for(AppInfo info : infos) {
+                if(info.launchedTimes == 0){
+                    continue;
+                }
+                for(int count = suggestedApps.length - 1; count >= 0; count--) {
+                    AppInfo i = suggestedApps[count];
+                    if(i == null) {
+                        suggestedApps[count] = info;
+                        break;
+                    } else if(i.launchedTimes < info.launchedTimes) {
+                        suggestedApps[count] = info;
+                        if(count < suggestedApps.length - 1) {
+                            suggestedApps[count + 1] = i;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void update(boolean refreshSuggestions) {
+            AppUtils.checkEquality(infos);
+            sort();
+            fillLabels();
+            if(refreshSuggestions) {
+                fillSuggestions();
+            }
+        }
+
+        public List<String> getAppLabels() {
+            return appLabels;
+        }
+
+        public List<AppInfo> getApps() {
+            return infos;
+        }
+
+        public String[] getSuggestedApps() {
+            return AppUtils.labelList(suggestedApps);
+        }
+
+    }
+
+    private static class AppUtils {
+
+        public static void checkEquality(List<AppInfo> list) {
+            for (AppInfo info : list) {
+                for (int count = 0; count < list.size(); count++) {
+                    AppInfo info2 = list.get(count);
+                    if (!info.equals(info2) && info.publicLabel.equals(info2.publicLabel)) {
+                        list.set(count, new AppInfo(info2.packageName, getNewLabel(info2.publicLabel, info2.packageName),
+                                info2.launchedTimes));
+                    }
+                }
+            }
+        }
+
+        public static String getNewLabel(String oldLabel, String packageName) {
+            try {
+                int firstDot = packageName.indexOf(Tuils.DOT) + 1;
+                int secondDot = packageName.substring(firstDot).indexOf(Tuils.DOT) + firstDot;
+
+                StringBuilder newLabel = new StringBuilder();
+                if (firstDot == -1) {
+                    newLabel.append(packageName);
+                    newLabel.append(Tuils.SPACE);
+                    newLabel.append(oldLabel);
+                } else if (secondDot == -1) {
+                    newLabel.append(packageName.substring(firstDot, packageName.length()));
+                    newLabel.append(Tuils.SPACE);
+                    newLabel.append(oldLabel);
+                } else {
+                    newLabel.append(packageName.substring(firstDot, secondDot));
+                    newLabel.append(Tuils.SPACE);
+                    newLabel.append(oldLabel);
+                }
+
+                String label = newLabel.toString();
+                return label.substring(0, 1).toUpperCase() + label.substring(1);
+            } catch (IndexOutOfBoundsException e) {
+                return packageName;
+            }
+        }
+
+        protected static AppInfo findAppInfo(String packageName, List<AppInfo> infos) {
+            for(AppInfo info : infos) {
+                if(info.packageName.equals(packageName)) {
+                    return info;
+                }
+            }
+            return null;
+        }
+
+        public static String printApps(List<String> apps) {
+            if(apps.size() == 0) {
+                return apps.toString();
+            }
+
+            List<String> list = new ArrayList<>(apps);
+
+            Collections.sort(list, new Comparator<String>() {
+                @Override
+                public int compare(String lhs, String rhs) {
+                    return Compare.alphabeticCompare(lhs, rhs);
+                }
+            });
+
+            Tuils.addPrefix(list, Tuils.DOUBLE_SPACE);
+            Tuils.insertHeaders(list, false);
+            return Tuils.toPlanString(list);
+        }
+
+        public static List<String> labelList(List<AppInfo> infos) {
+            List<String> labels = new ArrayList<>();
+            for (AppInfo info : infos) {
+                labels.add(info.publicLabel);
+            }
+            return labels;
+        }
+
+        public static String[] labelList(AppInfo[] infos) {
+            String[] labels = new String[infos.length];
+            for(int count = 0; count < infos.length; count++) {
+                if(infos[count] != null) {
+                    labels[count] = infos[count].publicLabel;
+                }
+            }
+            return labels;
+        }
     }
 
 }
