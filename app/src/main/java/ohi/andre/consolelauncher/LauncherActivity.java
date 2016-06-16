@@ -140,7 +140,9 @@ public class LauncherActivity extends Activity implements Reloadable {
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
         main = new MainManager(this, in, out, preferencesManager, policy, component, clearer);
-        ui = new UIManager(main.getInfo(), this, mainView, ex, policy, component, preferencesManager, getResources());
+        ui = new UIManager(main.getInfo(), this, mainView, ex, policy, component, preferencesManager);
+
+        in.in(Tuils.EMPTYSTRING);
 
         System.gc();
     }
@@ -149,14 +151,13 @@ public class LauncherActivity extends Activity implements Reloadable {
         final File tuiFolder = Tuils.getTuiFolder();
 
         while (true) {
-            if (tuiFolder.isDirectory() || tuiFolder.mkdir())
+            if (tuiFolder.isDirectory() || tuiFolder.mkdir()) {
                 break;
+            }
 
             try {
                 Thread.sleep(FILEUPDATE_DELAY);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            } catch (InterruptedException e) {}
         }
 
         return tuiFolder;
