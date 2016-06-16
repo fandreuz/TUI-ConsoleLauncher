@@ -43,9 +43,9 @@ public class MainManager {
     private final int LAST_COMMANDS_SIZE = 20;
 
     private CmdTrigger[] triggers = new CmdTrigger[]{
-            new TuiCommandTrigger(),
-            new AliasTrigger(),
             new AppTrigger(),
+            new AliasTrigger(),
+            new TuiCommandTrigger(),
 //            keep this as last trigger
             new SystemCommandTrigger()
     };
