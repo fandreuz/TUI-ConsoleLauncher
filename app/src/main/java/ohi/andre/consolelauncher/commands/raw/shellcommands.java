@@ -1,8 +1,14 @@
 package ohi.andre.consolelauncher.commands.raw;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
@@ -17,20 +23,36 @@ public class shellcommands implements CommandAbstraction {
 
     @Override
     public String exec(ExecInfo info) throws Exception {
-        List<String> cmds = Tuils.getOSCommands();
+        Collection<String> cmds = getOSCommands();
+        List<String> commands = new ArrayList<>(cmds);
 
-        Collections.sort(cmds, new Comparator<String>() {
+        Collections.sort(commands, new Comparator<String>() {
             @Override
             public int compare(String lhs, String rhs) {
                 return Compare.alphabeticCompare(lhs, rhs);
             }
         });
 
-        Tuils.addPrefix(cmds, Tuils.DOUBLE_SPACE);
-        Tuils.addSeparator(cmds, Tuils.TRIBLE_SPACE);
-        Tuils.insertHeaders(cmds, true);
+        Tuils.addPrefix(commands, Tuils.DOUBLE_SPACE);
+        Tuils.addSeparator(commands, Tuils.TRIBLE_SPACE);
+        Tuils.insertHeaders(commands, true);
 
-        return Tuils.toPlanString(cmds, "");
+        return Tuils.toPlanString(commands, Tuils.EMPTYSTRING);
+    }
+
+    private final String[] path = {
+            "/system/bin",
+            "/system/xbin"
+    };
+
+    private Set<String> getOSCommands() {
+        Set<String> commands = new HashSet<>();
+
+        for (String s : path) {
+            commands.addAll(Arrays.asList(new File(s).list()));
+        }
+
+        return commands;
     }
 
     @Override
