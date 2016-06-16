@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=4.3
+settingsVersion=4.4
 
 // when you are ready go back to t-ui and type "restart" to see changes
 
@@ -46,3 +46,4 @@ songsFolder=/sdcard/Music
 closeOnDbTap=true
 showSuggestions=true
 enableEnterInPhysicalKeyboard=false
+compareStringForApps=false

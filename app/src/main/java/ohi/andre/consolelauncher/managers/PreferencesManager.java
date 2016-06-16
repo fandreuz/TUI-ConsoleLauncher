@@ -57,6 +57,7 @@ public class PreferencesManager {
     public static final String NOTIFICATION = "keepAliveWithNotification";
     public static final String OPEN_KEYBOARD = "openKeyboardOnStart";
     public static final String ENTER_PHYSICAL_KEYBOARD = "enableEnterInPhysicalKeyboard";
+    public static final String COMPARESTRING_APPS = "compareStringForApps";
 
     public static final String ALIAS_FILENAME = "alias.txt";
     public static final int ALIAS = 11;
