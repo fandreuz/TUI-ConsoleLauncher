@@ -152,7 +152,7 @@ public class ExecInfo {
 
     public void destroy() {
         player.destroy(this.context);
-        appsManager.unregisterReceiver(context);
+        appsManager.onDestroy();
     }
 
     @SuppressWarnings("unchecked")

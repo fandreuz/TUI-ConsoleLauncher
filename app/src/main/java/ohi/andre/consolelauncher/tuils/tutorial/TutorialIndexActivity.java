@@ -1,5 +1,6 @@
 package ohi.andre.consolelauncher.tuils.tutorial;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,7 +10,6 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class TutorialIndexActivity extends AppCompatActivity {
 
@@ -20,8 +20,9 @@ public class TutorialIndexActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tutorial_index);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            Tuils.enableUpNavigation(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            enableUpNavigation();
+        }
 
         ListView listView = (ListView) findViewById(R.id.tutorial_index_view);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -37,6 +38,13 @@ public class TutorialIndexActivity extends AppCompatActivity {
         Intent intent = new Intent(this, TutorialActivity.class);
         intent.putExtra(ARGUMENT_KEY, position);
         startActivity(intent);
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void enableUpNavigation() {
+        try {
+            this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        } catch (NullPointerException e) {}
     }
 
 }

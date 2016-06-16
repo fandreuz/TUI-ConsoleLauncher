@@ -161,8 +161,7 @@ public class CommandTuils {
         CommandAbstraction abstraction = null;
         try {
             abstraction = active.getCommandByName(string);
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
 
         return new ArgInfo(abstraction, null, abstraction != null, 1);
     }
@@ -277,13 +276,11 @@ public class CommandTuils {
         return new ArgInfo(param, param != null ? input.substring(indexOfFirstSpace) : input, param != null, param != null ? 1 : 0);
     }
 
-    //	cant use more args
     private static ArgInfo packageName(String input, AppsManager apps) {
         String packageName = apps.findPackage(input);
         return new ArgInfo(packageName, null, packageName != null, 1);
     }
 
-    //	cant use more args
     private static ArgInfo contactNumber(String input, ContactManager contacts) {
         String number;
 
@@ -295,13 +292,11 @@ public class CommandTuils {
         return new ArgInfo(number, null, number != null, 1);
     }
 
-    //	cant use more args
     private static ArgInfo song(String input, MusicManager music) {
         String name = music.getSong(input, MIN_SONG_RATE);
         return new ArgInfo(name, null, name != null, 1);
     }
 
-    //	is SU request?
     public static boolean isSuRequest(String input) {
         return input.equals(ShellUtils.COMMAND_SU);
     }

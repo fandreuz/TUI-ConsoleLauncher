@@ -10,15 +10,11 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.Patterns;
 import android.widget.Toast;
 
@@ -27,17 +23,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
-import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.tuils.tutorial.TutorialIndexActivity;
 
@@ -50,35 +41,6 @@ public class Tuils {
     public static final String DOT = ".";
     public static final String EMPTYSTRING = "";
     private static final String TUI_FOLDER = "t-ui";
-    private static final String[] path = {
-            "/system/bin",
-            "/system/xbin"
-    };
-    private static final String METACHARACTERS = "\\?*+[](){}^$.|";
-
-    public static List<String> getOSCommands() {
-        List<String> commands = new ArrayList<>();
-
-        for (String s : path)
-            commands.addAll(Arrays.asList(new File(s).list()));
-
-        return commands;
-    }
-
-    public static Set<AppInfo> getApps(PackageManager mgr) {
-        Set<AppInfo> set = new HashSet<>();
-
-        Intent i = new Intent(Intent.ACTION_MAIN, null);
-        i.addCategory(Intent.CATEGORY_LAUNCHER);
-
-        List<ResolveInfo> infos = mgr.queryIntentActivities(i, 0);
-
-        for (ResolveInfo info : infos) {
-            set.add(new AppInfo(info.activityInfo.packageName, info.loadLabel(mgr).toString()));
-        }
-
-        return set;
-    }
 
     public static boolean arrayContains(int[] array, int value) {
         for(int i : array) {
@@ -108,28 +70,15 @@ public class Tuils {
         }
 
         for (File file : files) {
-            Log.e("andre", file.getAbsolutePath());
             if (file.isDirectory()) {
-                Log.e("andre", "dir");
                 songs.addAll(getSongsInFolder(file));
             }
             else if (containsExtension(MusicManager.MUSIC_EXTENSIONS, file.getName())) {
-                Log.e("andre", "song");
                 songs.add(file);
-            } else {
-                Log.e("andre", "nothing");
             }
         }
 
         return songs;
-    }
-
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static void enableUpNavigation(AppCompatActivity activity) {
-        try {
-            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        } catch (NullPointerException e) {
-        }
     }
 
     public static void showTutorial(Context context) {
@@ -177,18 +126,6 @@ public class Tuils {
         }
 
         return classes;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static CommandAbstraction getCommandInstance(String cmdName) {
-        Class<CommandAbstraction> clazz;
-        try {
-            clazz = (Class<CommandAbstraction>) Class.forName(cmdName);
-            Constructor<?> constructor = clazz.getConstructor();
-            return (CommandAbstraction) constructor.newInstance();
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     public static int findPrefix(List<String> list, String prefix) {
@@ -283,6 +220,17 @@ public class Tuils {
         return Tuils.toPlanString(strings, NEWLINE);
     }
 
+    public static String toPlanString(Object[] objs, String separator) {
+        StringBuilder output = new StringBuilder();
+        for(int count = 0; count < objs.length; count++) {
+            output.append(objs[count]);
+            if(count < objs.length - 1) {
+                output.append(separator);
+            }
+        }
+        return output.toString();
+    }
+
     public static CharSequence toPlanSequence(List<CharSequence> sequences, CharSequence separator) {
         return toPlanSequence(sequences.toArray(new CharSequence[sequences.size()]), separator);
     }
@@ -314,68 +262,10 @@ public class Tuils {
         return TextUtils.concat(sequences);
     }
 
-//    public static CharSequence[] split(CharSequence input, CharSequence re, int limit) {
-//        int len = re.length();
-//        if (len == 0) {
-//            return null;
-//        }
-//        char ch = re.charAt(0);
-//        if (len == 1 && METACHARACTERS.indexOf(ch) == -1) {
-//            // We're looking for a single non-metacharacter. Easy.
-//        } else if (len == 2 && ch == '\\') {
-//            // We're looking for a quoted character.
-//            // Quoted metacharacters are effectively single non-metacharacters.
-//            ch = re.charAt(1);
-//            if (METACHARACTERS.indexOf(ch) == -1) {
-//                return null;
-//            }
-//        } else {
-//            return null;
-//        }
-//        // We can do this cheaply...
-//        // Unlike Perl, which considers the result of splitting the empty string to be the empty
-//        // array, Java returns an array containing the empty string.
-//        if (input.length() == 0) {
-//            return new CharSequence[]{""};
-//        }
-//        // Count separators
-//        int separatorCount = 0;
-//        int begin = 0;
-//        int end;
-//        while (separatorCount + 1 != limit && (end = input.toString().indexOf(ch, begin)) != -1) {
-//            ++separatorCount;
-//            begin = end + 1;
-//        }
-//        int lastPartEnd = input.length();
-//        if (limit == 0 && begin == lastPartEnd) {
-//            // Last part is empty for limit == 0, remove all trailing empty matches.
-//            if (separatorCount == lastPartEnd) {
-//                // Input contains only separators.
-//                return new CharSequence[0];
-//            }
-//            // Find the beginning of trailing separators.
-//            do {
-//                --begin;
-//            } while (input.charAt(begin - 1) == ch);
-//            // Reduce separatorCount and fix lastPartEnd.
-//            separatorCount -= input.length() - begin;
-//            lastPartEnd = begin;
-//        }
-//        // Collect the result parts.
-//        CharSequence[] result = new CharSequence[separatorCount];
-//        begin = 0;
-//        for (int i = 0; i != separatorCount; ++i) {
-//            end = input.toString().indexOf(ch, begin);
-//            result[i] = input.subSequence(begin, end);
-//            begin = end + 1;
-//        }
-//
-//        return result;
-//    }
-
     public static String removeUnncesarySpaces(String string) {
-        while (string.contains(DOUBLE_SPACE))
+        while (string.contains(DOUBLE_SPACE)) {
             string = string.replace(DOUBLE_SPACE, SPACE);
+        }
         return string;
     }
 
@@ -399,23 +289,25 @@ public class Tuils {
     public static boolean isNumber(String s) {
         char[] chars = s.toCharArray();
 
-        for (char c : chars)
-            if (Character.isLetter(c))
+        for (char c : chars) {
+            if (Character.isLetter(c)) {
                 return false;
+            }
+        }
 
         return true;
     }
 
     public static CharSequence trimWhitespaces(CharSequence source) {
 
-        if(source == null)
-            return "";
+        if(source == null) {
+            return Tuils.EMPTYSTRING;
+        }
 
         int i = source.length();
 
         // loop back to the first non-whitespace character
-        while(--i >= 0 && Character.isWhitespace(source.charAt(i))) {
-        }
+        while(--i >= 0 && Character.isWhitespace(source.charAt(i))) {}
 
         return source.subSequence(0, i+1);
     }

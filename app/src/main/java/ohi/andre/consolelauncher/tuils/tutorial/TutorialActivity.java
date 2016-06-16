@@ -1,12 +1,12 @@
 package ohi.andre.consolelauncher.tuils.tutorial;
 
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class TutorialActivity extends AppCompatActivity {
 
@@ -26,8 +26,9 @@ public class TutorialActivity extends AppCompatActivity {
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-            Tuils.enableUpNavigation(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            enableUpNavigation();
+        }
 
         setContentView(R.layout.activity_tutorial);
 
@@ -54,5 +55,12 @@ public class TutorialActivity extends AppCompatActivity {
 
         TextView tutorialText = (TextView) findViewById(R.id.tutorial_text);
         tutorialText.setText(textResource);
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public void enableUpNavigation() {
+        try {
+            this.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        } catch (NullPointerException e) {}
     }
 }
