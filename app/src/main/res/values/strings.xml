@@ -32,6 +32,7 @@
     <!-- search-->
     <string name="output_searchingplaystore">Play Store search:</string>
     <string name="output_searchinggoogle">Google search:</string>
+    <string name="output_search_url">Opening URL:</string>
     <string name="output_search_youtube">YouTube search:</string>
     <string name="output_search_file">File Search here:</string>
     <string name="output_nothing_found">Nothing was found</string>
@@ -126,6 +127,10 @@
         \n\nExample:
         \nhelp search
     </string>
+    <string name="help_kill">Kill an application
+        \nUsage: kill [appName]
+        \n\nExample:
+        \nkill Settings</string>
     <string name="help_mv">Move one or more files to a folder
         \nUsage: [su] mv [files] [folder]
         \n\nsu mv fool.txt fool2.png myFolder
