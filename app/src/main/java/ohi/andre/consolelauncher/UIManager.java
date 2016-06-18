@@ -402,9 +402,9 @@ public class UIManager implements OnTouchListener {
     public void onStart() {
         mTerminalAdapter.requestInputFocus();
         openKeyboard();
+        mTerminalAdapter.scrollToEnd();
     }
 
-    //   accessor for input
     public void setInput(String s) {
         if (s == null)
             return;
@@ -413,7 +413,6 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.focusInputEnd();
     }
 
-    //   accessor for output
     public void setOutput(String string, int id) {
         mTerminalAdapter.setOutput(string, id);
     }
