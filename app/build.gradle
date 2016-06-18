@@ -13,7 +13,7 @@ android {
         applicationId "ohi.andre.consolelauncher"
         minSdkVersion 8
         targetSdkVersion 23
-        versionCode 73
+        versionCode 74
         versionName "4.4"
     }
 
