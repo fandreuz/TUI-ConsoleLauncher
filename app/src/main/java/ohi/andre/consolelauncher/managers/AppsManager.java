@@ -100,7 +100,12 @@ public class AppsManager {
                     map.remove(entry.getKey());
                 }
             } else {
-                map.get(entry.getKey()).launchedTimes = (Integer) entry.getValue();
+                AppInfo info = map.get(entry.getKey());
+                if(info == null) {
+                    continue;
+                } else {
+                    info.launchedTimes = (Integer) entry.getValue();
+                }
             }
         }
 
