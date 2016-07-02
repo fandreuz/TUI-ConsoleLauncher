@@ -8,13 +8,13 @@ android {
     }
 
     compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    buildToolsVersion '24.0.0'
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
         minSdkVersion 8
         targetSdkVersion 23
-        versionCode 74
-        versionName "4.4"
+        versionCode 75
+        versionName "4.5"
     }
 
     buildTypes {
