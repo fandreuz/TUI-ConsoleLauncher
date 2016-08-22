@@ -91,11 +91,6 @@ public class LauncherActivity extends Activity implements Reloadable {
         DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         ComponentName component = new ComponentName(this, PolicyReceiver.class);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Window w = getWindow();
-            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-        }
-
         SharedPreferences preferences = getPreferences(0);
         boolean firstAccess = preferences.getBoolean(FIRSTACCESS_KEY, true);
         if (firstAccess) {
