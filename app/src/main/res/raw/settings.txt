@@ -46,4 +46,4 @@ songsFolder=/sdcard/Music
 closeOnDbTap=true
 showSuggestions=true
 enableEnterInPhysicalKeyboard=false
-compareStringForApps=false
+compareStringForApps=true
