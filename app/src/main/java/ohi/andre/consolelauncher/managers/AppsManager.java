@@ -164,7 +164,7 @@ public class AppsManager {
             }
 
             for(AppInfo info : appList) {
-                if (info.publicLabel.equals(name)) {
+                if (label.equals(info.publicLabel)) {
                     return info.packageName;
                 }
             }
