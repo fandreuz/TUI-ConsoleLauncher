@@ -8,11 +8,14 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Patterns;
@@ -391,6 +394,37 @@ public class Tuils {
 
     public static File getTuiFolder() {
         return new File(Tuils.getInternalDirectoryPath(), TUI_FOLDER);
+    }
+
+    public static List<File> getMediastoreSongs(Context activity) {
+        ContentResolver cr = activity.getContentResolver();
+
+        List<File> paths = new ArrayList<>();
+
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+        Cursor cur = cr.query(uri, null, selection, null, sortOrder);
+        int count = 0;
+
+        if(cur != null)
+        {
+            count = cur.getCount();
+
+            if(count > 0)
+            {
+                while(cur.moveToNext())
+                {
+                    String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
+                    paths.add(new File(data));
+                }
+
+            }
+        }
+
+        cur.close();
+
+        return paths;
     }
 
 }

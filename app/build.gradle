@@ -1,20 +1,22 @@
 apply plugin: 'com.android.application'
-apply plugin: 'versionPlugin'
-
 android {
     signingConfigs {
         config {
+            keyAlias 'mykey'
+            keyPassword 'Dodici12'
+            storeFile file('/Users/francescoandreuzzi/Programming/Android/Build/my-release-key.keystore')
+            storePassword 'Dodici12'
         }
     }
 
-    compileSdkVersion 23
-    buildToolsVersion '24.0.0'
+    compileSdkVersion 25
+    buildToolsVersion '25.0.1'
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
         minSdkVersion 8
         targetSdkVersion 23
-        versionCode 75
-        versionName "4.5"
+        versionCode 77
+        versionName "4.7"
     }
 
     buildTypes {
@@ -22,16 +24,8 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
         }
-    }
-
-    versionPlugin {
-        buildTypesMatcher = 'release'
-
-        supportBuildNumber = true
-        buildNumberPrefix = 'b'
-
-        fileNameFormat = 't-ui-vrs_$versionName'
     }
 
     compileOptions {
@@ -45,4 +39,6 @@ android {
         compile 'commons-io:commons-io:2.4'
     }
 
+}
+dependencies {
 }

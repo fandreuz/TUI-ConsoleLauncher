@@ -23,13 +23,11 @@ public class MusicManager implements OnCompletionListener {
 
     public static final boolean USE_SCROLL_COMPARE = true;
 
-    private File songFolder;
+    private List<File> files;
     private MediaPlayer mp;
 
     private int currentSongIndex = 0;
     private File currentSong = null;
-
-    private boolean randomActive;
 
     //	headset broadcast
     private BroadcastReceiver headsetReceiver = new HeadsetBroadcast(new Runnable() {
@@ -46,9 +44,17 @@ public class MusicManager implements OnCompletionListener {
 
         c.registerReceiver(headsetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
-        randomActive = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.PLAY_RANDOM));
+        boolean randomActive = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.PLAY_RANDOM));
 
-        songFolder = new File(preferencesManager.getValue(PreferencesManager.SONGSFOLDER));
+        if(Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.FROM_MEDIASTORE))) {
+            files = Tuils.getMediastoreSongs(c);
+        } else {
+            files = Tuils.getSongsInFolder(new File(preferencesManager.getValue(PreferencesManager.SONGSFOLDER)));
+        }
+
+        if(randomActive) {
+            Collections.shuffle(files);
+        }
     }
 
     public boolean initPlayer() {
@@ -62,23 +68,22 @@ public class MusicManager implements OnCompletionListener {
 
     //	return the path by complete name
     public String getPath(String name) {
-        File file = new File(songFolder, name);
-        if (!file.exists()) {
-            return null;
+        int count = 0;
+        File file = files.get(count);
+        while(!file.getName().equals(name)) {
+            if(count == files.size()) {
+                return null;
+            }
+            file = files.get(++count);
         }
         return file.getAbsolutePath();
     }
 
     //	return names
     public List<String> getNames() {
-        List<File> songs = Tuils.getSongsInFolder(songFolder);
-        if(songs == null) {
-            return null;
-        }
-
         List<String> names = new ArrayList<>();
 
-        for (File file : songs)
+        for (File file : files)
             names.add(file.getName());
 
         Collections.sort(names);
@@ -88,10 +93,10 @@ public class MusicManager implements OnCompletionListener {
 
     //	return paths
     public List<String> getPaths() {
-        List<File> songs = Tuils.getSongsInFolder(songFolder);
+
         List<String> paths = new ArrayList<>();
 
-        for (File file : songs)
+        for (File file : files)
             paths.add(file.getAbsolutePath());
 
         return paths;
@@ -106,27 +111,20 @@ public class MusicManager implements OnCompletionListener {
     }
 
     private boolean prepareSong(int songIndex) {
-        if (songFolder == null)
+        if (files == null)
             return false;
 
         List<String> songs = getPaths();
-        if (randomActive) {
-            Random random = new Random();
-            int totalSongs = songs.size();
-
-            int newSong;
-            do {
-                newSong = random.nextInt(totalSongs);
-            } while (songIndex == newSong);
-            songIndex = newSong;
-        } else {
-            if (songIndex >= songs.size())
-                songIndex -= songs.size();
-            else if (songIndex < 0)
-                songIndex += songs.size();
-
-            currentSongIndex = songIndex;
+        if(songs == null) {
+            return false;
         }
+
+        if (songIndex >= songs.size())
+            songIndex -= songs.size();
+        else if (songIndex < 0)
+            songIndex += songs.size();
+
+        currentSongIndex = songIndex;
 
         return prepareSong(songs.get(songIndex));
     }

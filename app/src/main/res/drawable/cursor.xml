@@ -4,6 +4,5 @@
 
     <solid android:color="#FFFFFFFF" />
     <size
-        android:width="@dimen/cursor_width"
-        android:height="@dimen/input_height" />
+        android:width="@dimen/cursor_width"/>
 </shape>

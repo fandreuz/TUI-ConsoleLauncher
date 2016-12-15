@@ -4,10 +4,10 @@
     <string name="app_name">T-UI</string>
     <string name="separator_text">>></string>
     <string name="separator_text_su">$</string>
-    <string name="su">T-UI got SU permissions</string>
-    <string name="nosu">Seems that your device isn\'t properly rooted</string>
+    <string name="su">T-UI got SU permission</string>
+    <string name="nosu">Your device isn\'t rooted</string>
     <string name="permissions_toast">You have to grant at least Storage permission to make t-ui work</string>
-    <string name="permission_error">t-ui has not the permissions to do this</string>
+    <string name="permission_error">t-ui hasn\'t the permission to do that</string>
     <string name="version_label">Version:</string>
 
     <!-- app mgr -->
@@ -21,13 +21,13 @@
     <string name="error_label">Errors:</string>
 
     <!-- pending operation -->
-    <string name="starting_app">Starting:</string>
+    <string name="starting_app">Launching:</string>
     <string name="calling">Calling:</string>
     <string name="sharing">Sharing:</string>
 
     <!-- various outputs -->
     <string name="output_nothingfound">No matches</string>
-    <string name="output_nopermissions">You didn\'t grant the permission to do this</string>
+    <string name="output_nopermissions">You didn\'t grant the permission to do that</string>
 
     <!-- search-->
     <string name="output_searchingplaystore">Play Store search:</string>

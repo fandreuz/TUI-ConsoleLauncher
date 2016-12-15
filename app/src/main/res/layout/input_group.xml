@@ -2,23 +2,26 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
 
     <TextView
         android:id="@+id/prefix_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+
+        android:paddingTop="@dimen/input_padding"/>
 
     <EditText
         android:id="@+id/input_view"
         android:layout_width="0dp"
-        android:layout_height="@dimen/input_height"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-
-        android:paddingTop="@dimen/input_padding"
 
         android:background="@null"
         android:imeOptions="actionGo|flagNoFullscreen"
+
+        android:paddingTop="@dimen/input_padding"
 
         android:lines="1"
         android:singleLine="true"/>
@@ -26,10 +29,12 @@
     <Button
         android:id="@+id/submit_tv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginRight="20dp"
 
         android:background="@null"
-        android:text="&#8626;" />
+        android:text="&#8626;"
+
+        android:paddingTop="@dimen/input_padding"/>
 
 </LinearLayout>

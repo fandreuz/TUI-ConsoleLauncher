@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=4.4
+settingsVersion=4.7
 
 // when you are ready go back to t-ui and type "restart" to see changes
 
@@ -39,6 +39,7 @@ keepAliveWithNotification=true
 openKeyboardOnStart=true
 
 // music
+fromMediastore=true
 playRandom=true
 songsFolder=/sdcard/Music
 

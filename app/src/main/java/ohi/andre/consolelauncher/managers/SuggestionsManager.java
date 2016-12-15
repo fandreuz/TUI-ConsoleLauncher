@@ -1,5 +1,7 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.util.Log;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,13 +22,13 @@ public class SuggestionsManager {
     private static final int MIN_COMMAND_RATE = 1;
     private static final int MIN_COMMAND_PRIORITY = 5;
 
-    private static final int MIN_APPS_RATE = 3;
+    public static final int MIN_APPS_RATE = 3;
 
-    private static final int MIN_CONTACTS_RATE = 2;
+    public static final int MIN_CONTACTS_RATE = 2;
 
-    private static final int MIN_FILE_RATE = 2;
+    public static final int MIN_FILE_RATE = 2;
 
-    private static final int MIN_SONGS_RATE = 2;
+    public static final int MIN_SONGS_RATE = 2;
 
 //    use to place something at the top
     private static final int MAX_RATE = 100;
@@ -288,9 +290,6 @@ public class SuggestionsManager {
         public static final int TYPE_COMMAND = 13;
         public static final int TYPE_SONG = 14;
         public static final int TYPE_CONTACT = 15;
-
-        public static final int EXEC_ON_CLICK = 10;
-        public static final int NONE = 11;
 
         public String text;
         public boolean exec;

@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.Gravity;
@@ -28,8 +29,16 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.managers.AppsManager;
+import ohi.andre.consolelauncher.managers.ContactManager;
+import ohi.andre.consolelauncher.managers.FileManager;
+import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.managers.PreferencesManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.SuggestionsManager;
@@ -125,6 +134,9 @@ public class UIManager implements OnTouchListener {
             String lastWord = inputText.substring(lastSpace != -1 ? lastSpace + 1 : 0);
             String before = inputText.substring(0, lastSpace + 1);
 
+            boolean execOnClick = (boolean) v.getTag(R.id.exec_on_click_id);
+            int suggestionType = (int) v.getTag(R.id.suggestion_type_id);
+
             StringBuilder builder = new StringBuilder();
             if (suggestedText.equals(File.separator)) {
                 builder.append(before);
@@ -136,12 +148,64 @@ public class UIManager implements OnTouchListener {
                 builder.append(before);
                 builder.append(suggestedText);
             } else {
-                builder.append(before);
-                builder.append(suggestedText);
+                if(!suggestedText.contains(Tuils.SPACE)) {
+                    builder.append(before);
+                    builder.append(suggestedText);
+                } else {
+                    String[] suggestParts = suggestedText.split(Tuils.SPACE);
+                    String[] inputParts = inputText.split(Tuils.SPACE);
+
+                    boolean useScrollCompare;
+                    int minRate;
+                    switch (suggestionType) {
+                        case SuggestionsManager.Suggestion.TYPE_APP:
+                            useScrollCompare = AppsManager.USE_SCROLL_COMPARE;
+                            minRate = SuggestionsManager.MIN_APPS_RATE;
+                            break;
+                        case SuggestionsManager.Suggestion.TYPE_SONG:
+                            useScrollCompare = MusicManager.USE_SCROLL_COMPARE;
+                            minRate = SuggestionsManager.MIN_SONGS_RATE;
+                            break;
+                        case SuggestionsManager.Suggestion.TYPE_CONTACT:
+                            useScrollCompare = ContactManager.USE_SCROLL_COMPARE;
+                            minRate = SuggestionsManager.MIN_CONTACTS_RATE;
+                            break;
+                        case SuggestionsManager.Suggestion.TYPE_FILE:
+                            useScrollCompare = FileManager.USE_SCROLL_COMPARE;
+                            minRate = SuggestionsManager.MIN_FILE_RATE;
+                            break;
+                        default:
+                            builder.append(before);
+                            builder.append(suggestedText);
+                            return;
+                    }
+
+                    int count;
+                    for(count = 0; count < inputParts.length; count++) {
+                        int rate = useScrollCompare ? Compare.scrollComparison(inputParts[count], suggestParts[0]) :
+                                Compare.linearComparison(inputParts[count], suggestParts[0]);
+
+                        if(rate >= minRate) {
+                            break;
+                        }
+                    }
+
+                    List<String> finalText = new ArrayList<>(Arrays.asList(inputParts));
+                    for(int c = 0; c < suggestParts.length; c++) {
+                        if(finalText.size() > c + count) {
+                            finalText.set(c + count, suggestParts[c]);
+                        } else {
+                            finalText.add(suggestParts[c]);
+                        }
+                    }
+
+                    builder.append(Tuils.toPlanString(finalText, Tuils.SPACE));
+                }
             }
 
             mTerminalAdapter.setInput(builder.toString());
-            if (executeOnSuggestionClick && v.getId() == SuggestionsManager.Suggestion.EXEC_ON_CLICK) {
+
+            if (executeOnSuggestionClick && execOnClick) {
                 mTerminalAdapter.simulateEnter();
             } else {
                 mTerminalAdapter.focusInputEnd();

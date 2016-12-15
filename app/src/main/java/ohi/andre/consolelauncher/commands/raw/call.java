@@ -6,9 +6,12 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 
+import java.util.List;
+
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class call implements CommandAbstraction {
 
@@ -63,7 +66,14 @@ public class call implements CommandAbstraction {
 
     @Override
     public String onNotArgEnough(ExecInfo info, int nArgs) {
-        return info.res.getString(helpRes());
+        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            return info.res.getString(R.string.output_nopermissions);
+        }
+
+        List<String> contacts = info.contacts.listNamesAndNumbers();
+        Tuils.addPrefix(contacts, "  ");
+        Tuils.insertHeaders(contacts, false);
+        return Tuils.toPlanString(contacts);
     }
 
     @Override

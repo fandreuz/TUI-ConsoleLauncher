@@ -51,6 +51,7 @@ public class PreferencesManager {
 
     public static final String PLAY_RANDOM = "playRandom";
     public static final String SONGSFOLDER = "songsFolder";
+    public static final String FROM_MEDIASTORE = "fromMediastore";
 
     public static final String USE_SYSTEMWP = "useSystemWallpaper";
     public static final String FULLSCREEN = "fullscreen";

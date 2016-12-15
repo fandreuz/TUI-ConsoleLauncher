@@ -63,6 +63,9 @@ public class TerminalManager {
     };
     private SkinManager mSkinManager;
 
+    private String originalInput;
+    private List<InputText> propertyText = new ArrayList<>();
+
     private OnNewInputListener mInputListener;
 
     public TerminalManager(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager,
@@ -106,8 +109,8 @@ public class TerminalManager {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 
-                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE
-                        || (physicalEnter && actionId == EditorInfo.IME_ACTION_UNSPECIFIED)) {
+//                physical enter is temporary ignores
+                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                     onNewInput();
                     return true;
                 } else
@@ -118,6 +121,8 @@ public class TerminalManager {
 
     private void setupNewInput() {
         mInputView.setText(Tuils.EMPTYSTRING);
+        originalInput = Tuils.EMPTYSTRING;
+        propertyText = new ArrayList<>();
         mCurrentOutputId++;
         requestInputFocus();
     }
@@ -322,6 +327,19 @@ public class TerminalManager {
                 mCurrentOutputId = 0;
             }
         });
+    }
+
+    public static class InputText {
+
+        String original;
+        CharSequence shownText;
+        Runnable onClick;
+
+        public InputText(String original, CharSequence shownText, Runnable onClick) {
+            this.original = original;
+            this.shownText = shownText;
+            this.onClick = onClick;
+        }
     }
 
 }

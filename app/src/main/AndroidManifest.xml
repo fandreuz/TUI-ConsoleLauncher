@@ -52,6 +52,7 @@
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize"
             android:launchMode="singleTask"
             android:stateNotNeeded="true"
+            android:excludeFromRecents="true"
             android:windowSoftInputMode="stateAlwaysVisible|adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -14,11 +14,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
 
+import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
 import android.widget.TextView;
 
+import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.SuggestionsManager;
 
@@ -87,19 +90,21 @@ public class SuggestionRunnable implements Runnable {
             }
 
             String s = suggestions[count].text;
-            if (count < toRecycle.length) {
-                toRecycle[count].setId(suggestions[count].exec ? SuggestionsManager.Suggestion.EXEC_ON_CLICK :
-                        SuggestionsManager.Suggestion.NONE);
+            if (toRecycle != null && count < toRecycle.length) {
+                toRecycle[count].setTag(R.id.exec_on_click_id, suggestions[count].exec);
+                toRecycle[count].setTag(R.id.suggestion_type_id, suggestions[count].type);
+
                 toRecycle[count].setText(s);
-                toRecycle[count].setBackgroundDrawable(null);
                 toRecycle[count].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
             } else {
                 int space = suggestions.length - (count + 1);
                 if (toAdd != null && space < toAdd.length) {
-                    toAdd[space].setId(suggestions[count].exec ? SuggestionsManager.Suggestion.EXEC_ON_CLICK :
-                            SuggestionsManager.Suggestion.NONE);
+                    toAdd[space].setTag(R.id.exec_on_click_id, suggestions[count].exec);
+                    toAdd[space].setTag(R.id.suggestion_type_id, suggestions[count].type);
+
                     toAdd[space].setText(s);
                     toAdd[space].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
+
                     if(toAdd[space].getParent() == null) {
                         suggestionsView.addView(toAdd[space], suggestionViewParams);
                     } else {
