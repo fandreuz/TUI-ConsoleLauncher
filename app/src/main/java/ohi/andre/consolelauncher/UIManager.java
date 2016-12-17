@@ -43,6 +43,7 @@ import ohi.andre.consolelauncher.managers.PreferencesManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.SuggestionsManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.tuils.SuggestionRunnable;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
@@ -358,7 +359,7 @@ public class UIManager implements OnTouchListener {
             deviceInfo = null;
         }
 
-        boolean inputBottom = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.INPUTFIELD_BOTTOM));
+        final boolean inputBottom = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.INPUTFIELD_BOTTOM));
         int layoutId = inputBottom ? R.layout.input_down_layout : R.layout.input_up_layout;
 
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -419,8 +420,7 @@ public class UIManager implements OnTouchListener {
         } else
             initDetector();
 
-        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, skinManager, getHint(prefsMgr),
-                Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.ENTER_PHYSICAL_KEYBOARD)));
+        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, skinManager, getHint(prefsMgr), inputBottom);
         mTerminalAdapter.setInputListener(new OnNewInputListener() {
             @Override
             public void onNewInput(String input) {
@@ -430,6 +430,9 @@ public class UIManager implements OnTouchListener {
                 trigger.exec(input, mTerminalAdapter.getCurrentOutputId());
             }
         });
+//        if(Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOW_DONATE_MESSAGE))) {
+//            mTerminalAdapter.addMessager(new TerminalManager.Messager(65, context.getString(R.string.rate_donate_text)));
+//        }
 
         ViewTreeObserver observer = rootView.getViewTreeObserver();
         final TextView device = deviceInfo;
@@ -449,7 +452,8 @@ public class UIManager implements OnTouchListener {
                 int terminalHeight = rootHeight - deviceHeight - ramHeight - inputHeight - suggestionHeight;
 
                 View parent = (View) terminalView.getParent();
-                parent.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, terminalHeight));
+                parent.setLayoutParams(inputBottom ? new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, terminalHeight) :
+                    new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, terminalHeight));
             }
         });
     }
@@ -495,6 +499,10 @@ public class UIManager implements OnTouchListener {
         ram.setText("RAM: " + Tuils.ramDetails(activityManager, memory));
     }
 
+    public void focusTerminal() {
+        mTerminalAdapter.requestInputFocus();
+    }
+
     //	 get hint for input
     private String getHint(PreferencesManager preferencesManager) {
         boolean showUsername = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.SHOWUSERNAME));
@@ -534,15 +542,19 @@ public class UIManager implements OnTouchListener {
 
             @Override
             public boolean onDoubleTap(MotionEvent e) {
-                boolean admin = policy.isAdminActive(component);
+                if(Tuils.verifyRoot()) {
+                    ShellUtils.execCommand("input keyevent 26", true, null);
+                    return true;
+                } else {
+                    boolean admin = policy.isAdminActive(component);
 
-                if (!admin)
-                    Tuils.requestAdmin((Activity) mContext, component,
-                            mContext.getString(R.string.adminrequest_label));
-                else
-                    policy.lockNow();
+                    if (!admin)
+                        Tuils.requestAdmin((Activity) mContext, component, mContext.getString(R.string.adminrequest_label));
+                    else
+                        policy.lockNow();
 
-                return true;
+                    return true;
+                }
             }
         });
     }

@@ -1,10 +1,17 @@
 package ohi.andre.consolelauncher.commands.raw;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.hardware.Camera.Parameters;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
+import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 @SuppressWarnings("deprecation")
 public class flash implements CommandAbstraction {
@@ -13,6 +20,11 @@ public class flash implements CommandAbstraction {
     public String exec(ExecInfo info) {
         if (!info.canUseFlash)
             return info.res.getString(R.string.output_flashlightnotavailable);
+
+        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.CAMERA}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
+            return info.context.getString(R.string.output_waitingpermission);
+        }
 
         final ExecInfo execInfo = info;
         new Thread() {

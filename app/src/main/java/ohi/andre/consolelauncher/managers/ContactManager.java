@@ -1,8 +1,13 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.provider.ContactsContract;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -11,6 +16,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import ohi.andre.comparestring.Compare;
+import ohi.andre.consolelauncher.LauncherActivity;
 
 public class ContactManager {
 
@@ -24,6 +30,11 @@ public class ContactManager {
 
     private Map<String, String> getContacts() {
         Map<String, String> contacts = new TreeMap<>();
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_SUGGESTION_REQUEST_PERMISSION);
+            return contacts;
+        }
 
         Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
         while (phones != null && phones.moveToNext()) {

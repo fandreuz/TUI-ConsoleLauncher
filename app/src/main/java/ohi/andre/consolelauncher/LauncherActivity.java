@@ -1,7 +1,6 @@
 package ohi.andre.consolelauncher;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -12,15 +11,18 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 
+import ohi.andre.consolelauncher.commands.ExecInfo;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
@@ -32,6 +34,10 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 public class LauncherActivity extends Activity implements Reloadable {
 
     private final int FILEUPDATE_DELAY = 300;
+
+    public static final int COMMAND_REQUEST_PERMISSION = 10;
+    public static final int STORAGE_PERMISSION = 11;
+    public static final int COMMAND_SUGGESTION_REQUEST_PERMISSION = 12;
 
     private final String FIRSTACCESS_KEY = "firstAccess";
 
@@ -91,9 +97,6 @@ public class LauncherActivity extends Activity implements Reloadable {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        ComponentName component = new ComponentName(this, PolicyReceiver.class);
-
         SharedPreferences preferences = getPreferences(0);
         boolean firstAccess = preferences.getBoolean(FIRSTACCESS_KEY, true);
         if (firstAccess) {
@@ -104,13 +107,28 @@ public class LauncherActivity extends Activity implements Reloadable {
             Tuils.showTutorial(this);
         }
 
-        Resources res = getResources();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            checkPermission(res);
-        if (isFinishing())
+        if (isFinishing()) {
             return;
+        }
 
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED  &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, LauncherActivity.STORAGE_PERMISSION);
+                return;
+            }
+        }
+
+        finishOnCreate();
+    }
+
+    private void finishOnCreate() {
         File tuiFolder = getFolder();
+        Resources res = getResources();
+
+        DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        ComponentName component = new ComponentName(this, PolicyReceiver.class);
 
         try {
             preferencesManager = new PreferencesManager(res.openRawResource(R.raw.settings), res.openRawResource(R.raw.alias), tuiFolder);
@@ -171,14 +189,6 @@ public class LauncherActivity extends Activity implements Reloadable {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         else
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-    }
-
-    @TargetApi(23)
-    private void checkPermission(Resources res) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            this.finish();
-            Tuils.openSettingsPage(this, res.getString(R.string.permissions_toast));
-        }
     }
 
     @Override
@@ -244,8 +254,37 @@ public class LauncherActivity extends Activity implements Reloadable {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        if (hasFocus)
+        if (hasFocus) {
             hideStatusBar();
+            ui.focusTerminal();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case COMMAND_REQUEST_PERMISSION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    ExecInfo info = main.getInfo();
+                    main.onCommand(info.calledCommand, info.calledCommandOutputId);
+                } else {
+                    ui.setOutput(getString(R.string.output_nopermissions), main.getInfo().calledCommandOutputId);
+                }
+                break;
+            case STORAGE_PERMISSION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    finishOnCreate();
+                } else {
+                    Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
+                    finish();
+                }
+                break;
+            case COMMAND_SUGGESTION_REQUEST_PERMISSION:
+                if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    ui.setOutput(getString(R.string.output_nopermissions), main.getInfo().calledCommandOutputId);
+                }
+                break;
+        }
     }
 
 }

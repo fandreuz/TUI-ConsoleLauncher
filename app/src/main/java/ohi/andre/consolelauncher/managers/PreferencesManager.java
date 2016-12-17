@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -57,8 +58,8 @@ public class PreferencesManager {
     public static final String FULLSCREEN = "fullscreen";
     public static final String NOTIFICATION = "keepAliveWithNotification";
     public static final String OPEN_KEYBOARD = "openKeyboardOnStart";
-    public static final String ENTER_PHYSICAL_KEYBOARD = "enableEnterInPhysicalKeyboard";
     public static final String COMPARESTRING_APPS = "compareStringForApps";
+    public static final String SHOW_DONATE_MESSAGE = "showDonationMessage";
 
     public static final String ALIAS_FILENAME = "alias.txt";
     public static final int ALIAS = 11;
@@ -228,6 +229,10 @@ public class PreferencesManager {
 
     @SuppressLint("DefaultLocale")
     private String getValue(List<String> values, String key) {
+        if(values == null) {
+            return null;
+        }
+
         for (String s : values) {
             String k = obtainKey(s);
             if (k != null && k.equals(key))
@@ -240,6 +245,8 @@ public class PreferencesManager {
     private List<String> readAllInput(InputStream i) {
         BufferedReader br = null;
 
+        Log.e("andre", i.toString());
+
         List<String> list = new ArrayList<>();
         String line;
         try {
@@ -248,7 +255,7 @@ public class PreferencesManager {
                 list.add(line);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("andre", "", e);
         } finally {
             if (br != null)
                 try {

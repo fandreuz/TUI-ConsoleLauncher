@@ -238,6 +238,9 @@ public class MainManager {
                 public void run() {
                     super.run();
 
+                    info.calledCommand = input;
+                    info.calledCommandOutputId = id;
+
                     try {
                         Command command = CommandTuils.parse(input, info, false);
 
@@ -247,7 +250,10 @@ public class MainManager {
                         }
 
                         if (returnValue[0]) {
-                            out.onOutput(command.exec(info), id);
+                            String output = command.exec(info);
+                            if(output != null) {
+                                out.onOutput(output, id);
+                            }
                         }
                     } catch (Exception e) {
                         out.onOutput(e.toString(), id);

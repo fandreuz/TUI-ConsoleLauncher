@@ -82,6 +82,10 @@ public class ExecInfo {
     //	uses su
     private boolean canUseSu = false;
 
+//    output when permission is needed
+    public String calledCommand;
+    public int calledCommandOutputId;
+
     public ExecInfo(Context context, PreferencesManager prefsMgr, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
                     ContactManager c, DevicePolicyManager devicePolicyManager, ComponentName componentName,
                     Reloadable r, Runnable cl, CommandExecuter executeCommand) {

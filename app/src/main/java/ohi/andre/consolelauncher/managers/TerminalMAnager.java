@@ -7,8 +7,10 @@ import android.text.InputType;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -48,6 +50,7 @@ public class TerminalManager {
     public static final int OUTPUT = 11;
 
     private int mCurrentOutputId = 0;
+    private int globalId = 0;
 
     private ScrollView mScrollView;
     private TextView mTerminalView;
@@ -63,13 +66,14 @@ public class TerminalManager {
     };
     private SkinManager mSkinManager;
 
-    private String originalInput;
-    private List<InputText> propertyText = new ArrayList<>();
-
     private OnNewInputListener mInputListener;
 
+    private boolean inputUp;
+
+    private List<Messager> messagers = new ArrayList<>();
+
     public TerminalManager(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager,
-                           String hint, final boolean physicalEnter) {
+                           String hint, boolean inputUp) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
             throw new UnsupportedOperationException();
 
@@ -90,6 +94,8 @@ public class TerminalManager {
                 }
             });
         }
+
+        this.inputUp = inputUp;
 
         this.mTerminalView = terminalView;
         this.mTerminalView.setTypeface(mSkinManager.getGlobalTypeface());
@@ -119,11 +125,16 @@ public class TerminalManager {
         });
     }
 
+    public void addMessager(Messager messager) {
+        messagers.add(messager);
+    }
+
     private void setupNewInput() {
         mInputView.setText(Tuils.EMPTYSTRING);
-        originalInput = Tuils.EMPTYSTRING;
-        propertyText = new ArrayList<>();
+
         mCurrentOutputId++;
+        globalId++;
+
         requestInputFocus();
     }
 
@@ -151,6 +162,16 @@ public class TerminalManager {
             return;
 
         writeToView(output, OUTPUT, id);
+
+        int counter = 0;
+        for(Messager messager : messagers) {
+            if(globalId != 0 && globalId % messager.n == 0) {
+                counter++;
+                writeToView(messager.message, OUTPUT, ++mCurrentOutputId);
+            }
+        }
+        globalId += counter;
+
         scrollToEnd();
     }
 
@@ -159,22 +180,27 @@ public class TerminalManager {
     }
 
     private void writeToView(final String text, final int type, int id) {
-        if(type == INPUT || id == mCurrentOutputId) {
-            if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
-                mTerminalView.append(Tuils.NEWLINE);
-            }
-
+//        this is for when an input or a std (synchronous) output happens
+        if(type == INPUT || id >= mCurrentOutputId) {
             if(Looper.myLooper() == Looper.getMainLooper()) {
+                if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
+                    mTerminalView.append(Tuils.NEWLINE);
+                }
                 mTerminalView.append(getSpannable(text, type));
             } else {
                 ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
+                            mTerminalView.append(Tuils.NEWLINE);
+                        }
                         mTerminalView.append(getSpannable(text, type));
                     }
                 });
             }
-        } else if(type == OUTPUT) {
+        }
+//        this is for when a delayed output happens
+        else if(type == OUTPUT) {
             List<String> oldText = getLines(mTerminalView);
             List<Map.Entry<String, String>> wrappedOldText = splitInputOutput(oldText);
 
@@ -329,16 +355,14 @@ public class TerminalManager {
         });
     }
 
-    public static class InputText {
+    public static class Messager {
 
-        String original;
-        CharSequence shownText;
-        Runnable onClick;
+        int n;
+        String message;
 
-        public InputText(String original, CharSequence shownText, Runnable onClick) {
-            this.original = original;
-            this.shownText = shownText;
-            this.onClick = onClick;
+        public Messager(int n, String message) {
+            this.n = n;
+            this.message = message;
         }
     }
 

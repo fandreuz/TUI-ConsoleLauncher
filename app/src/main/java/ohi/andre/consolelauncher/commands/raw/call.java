@@ -1,13 +1,16 @@
 package ohi.andre.consolelauncher.commands.raw;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import java.util.List;
 
+import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
@@ -18,7 +21,15 @@ public class call implements CommandAbstraction {
     @Override
     public String exec(ExecInfo info) {
         if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            return info.res.getString(R.string.output_nopermissions);
+
+            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
+            return info.context.getString(R.string.output_waitingpermission);
+        }
+
+        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.CALL_PHONE}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
+            return info.context.getString(R.string.output_waitingpermission);
         }
 
         String number = info.get(String.class, 0);
@@ -28,7 +39,7 @@ public class call implements CommandAbstraction {
         try {
             info.context.startActivity(intent);
         } catch (SecurityException e) {
-            return info.res.getString(R.string.permission_error);
+            return info.res.getString(R.string.output_nopermissions);
         }
 
         return info.res.getString(R.string.calling) + " " + number;
@@ -67,11 +78,12 @@ public class call implements CommandAbstraction {
     @Override
     public String onNotArgEnough(ExecInfo info, int nArgs) {
         if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            return info.res.getString(R.string.output_nopermissions);
+            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
+            return info.context.getString(R.string.output_waitingpermission);
         }
 
         List<String> contacts = info.contacts.listNamesAndNumbers();
-        Tuils.addPrefix(contacts, "  ");
+        Tuils.addPrefix(contacts, Tuils.DOUBLE_SPACE);
         Tuils.insertHeaders(contacts, false);
         return Tuils.toPlanString(contacts);
     }

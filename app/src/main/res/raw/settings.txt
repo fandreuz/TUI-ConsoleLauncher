@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=4.7
+settingsVersion=4.8
 
 // when you are ready go back to t-ui and type "restart" to see changes
 
@@ -48,3 +48,4 @@ closeOnDbTap=true
 showSuggestions=true
 enableEnterInPhysicalKeyboard=false
 compareStringForApps=false
+showDonationMessage=true

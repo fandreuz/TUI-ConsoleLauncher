@@ -6,9 +6,10 @@
     <string name="separator_text_su">$</string>
     <string name="su">T-UI got SU permission</string>
     <string name="nosu">Your device isn\'t rooted</string>
-    <string name="permissions_toast">You have to grant at least Storage permission to make t-ui work</string>
-    <string name="permission_error">t-ui hasn\'t the permission to do that</string>
+    <string name="permissions_toast">You have to grant Storage permission at least</string>
     <string name="version_label">Version:</string>
+
+    <string name="rate_donate_text">Do you like my app? Rate T-UI on Play Store (command: >>rate) or offer me a coffee (command: >>donate)</string>
 
     <!-- app mgr -->
     <string name="output_appnotfound">Application or package not found</string>
@@ -27,7 +28,8 @@
 
     <!-- various outputs -->
     <string name="output_nothingfound">No matches</string>
-    <string name="output_nopermissions">You didn\'t grant the permission to do that</string>
+    <string name="output_nopermissions">You didn\'t grant the permission</string>
+    <string name="output_waitingpermission">Waiting for permission</string>
 
     <!-- search-->
     <string name="output_searchingplaystore">Play Store search:</string>
@@ -37,7 +39,7 @@
     <string name="output_search_file">File Search here:</string>
     <string name="output_nothing_found">Nothing was found</string>
 
-    <!-- telephony -->
+    <!-- phone -->
     <string name="output_wifi">WiFi active:</string>
     <string name="output_data">Mobile Data active:</string>
     <string name="output_numbernotfound">Contact not found</string>
@@ -108,7 +110,7 @@
         \napps -h whatsapp
     </string>
     <string name="help_clear">Clear the screen</string>
-    <string name="help_call">Perform a call to someone;
+    <string name="help_call">Perform a call to someone or get contacts;
         \nUsage: call number OR name
         \n\ncall MOTHER
     </string>
