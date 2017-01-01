@@ -6,9 +6,9 @@ android {
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
         minSdkVersion 8
-        targetSdkVersion 23
-        versionCode 78
-        versionName "4.8"
+        targetSdkVersion 25
+        versionCode 81
+        versionName "4.10"
     }
 
     buildTypes {

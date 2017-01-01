@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class PreferencesManager {
@@ -47,6 +48,7 @@ public class PreferencesManager {
     public static final String FILE_SUGGESTION_BG = "fileSuggestionBg";
 
     public static final String DOUBLETAP = "closeOnDbTap";
+    public static final String DOUBLETAP_SU = "doubleTapSU";
     public static final String SHOWSUGGESTIONS = "showSuggestions";
     public static final String EXECUTE_ON_SUGGESTION_CLICK = "executeOnSuggestionClick";
 
@@ -165,6 +167,7 @@ public class PreferencesManager {
             } else { // settings.txt doesn't exist
                 file.createNewFile();
             }
+            ShellUtils.execCommand("chmod 666 " + file.getAbsolutePath(), false, null);
         } else
             return false;
 
@@ -180,6 +183,8 @@ public class PreferencesManager {
             stream.write(Tuils.toPlanString(newValues, "\n").getBytes());
             stream.flush();
             stream.close();
+
+            ShellUtils.execCommand("chmod 666 " + file.getAbsolutePath(), false, null);
 
             return true;
         } catch (Exception e) {

@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -443,9 +444,22 @@ public class AppsManager {
     private static class AppUtils {
 
         public static void checkEquality(List<AppInfo> list) {
+
+            First:
             for (AppInfo info : list) {
+
+                Second:
                 for (int count = 0; count < list.size(); count++) {
                     AppInfo info2 = list.get(count);
+
+                    if(info == null || info.publicLabel == null) {
+                        continue First;
+                    }
+
+                    if(info2 == null || info2.publicLabel == null) {
+                        continue Second;
+                    }
+
                     if (!info.equals(info2) && info.publicLabel.equals(info2.publicLabel)) {
                         list.set(count, new AppInfo(info2.packageName, getNewLabel(info2.publicLabel, info2.packageName),
                                 info2.launchedTimes));
@@ -456,27 +470,55 @@ public class AppsManager {
 
         public static String getNewLabel(String oldLabel, String packageName) {
             try {
-                int firstDot = packageName.indexOf(Tuils.DOT) + 1;
-                int secondDot = packageName.substring(firstDot).indexOf(Tuils.DOT) + firstDot;
 
-                StringBuilder newLabel = new StringBuilder();
-                if (firstDot == -1) {
-                    newLabel.append(packageName);
-                    newLabel.append(Tuils.SPACE);
-                    newLabel.append(oldLabel);
-                } else if (secondDot == -1) {
-                    newLabel.append(packageName.substring(firstDot, packageName.length()));
-                    newLabel.append(Tuils.SPACE);
-                    newLabel.append(oldLabel);
+//                              OLD VERSION OF this method
+//
+//                int firstDot = packageName.indexOf(Tuils.DOT) + 1;
+//                int secondDot = packageName.substring(firstDot).indexOf(Tuils.DOT) + firstDot;
+//
+//                StringBuilder newLabel = new StringBuilder();
+//                if (firstDot == -1) {
+//                    newLabel.append(packageName);
+//                    newLabel.append(Tuils.SPACE);
+//                    newLabel.append(oldLabel);
+//                } else if (secondDot == -1) {
+//                    newLabel.append(packageName.substring(firstDot, packageName.length()));
+//                    newLabel.append(Tuils.SPACE);
+//                    newLabel.append(oldLabel);
+//                } else {
+//                    newLabel.append(packageName.substring(firstDot, secondDot));
+//                    newLabel.append(Tuils.SPACE);
+//                    newLabel.append(oldLabel);
+//                }
+//
+//                String label = newLabel.toString();
+//                return label.substring(0, 1).toUpperCase() + label.substring(1);
+
+                int firstDot = packageName.indexOf(Tuils.DOT);
+                if(firstDot == -1) {
+//                    no dots in package name (nearly impossible)
+                    return packageName;
+                }
+                firstDot++;
+
+                int secondDot = packageName.substring(firstDot).indexOf(Tuils.DOT);
+                String prefix;
+                if(secondDot == -1) {
+//                    only one dot, so two words. The first is most likely to be the company name
+//                    facebook.messenger
+//                    is better than
+//                    messenger.facebook
+                    prefix = packageName.substring(0, firstDot - 1);
+                    prefix = prefix.substring(0,1).toUpperCase() + prefix.substring(1).toLowerCase();
+                    return prefix + Tuils.SPACE + oldLabel;
                 } else {
-                    newLabel.append(packageName.substring(firstDot, secondDot));
-                    newLabel.append(Tuils.SPACE);
-                    newLabel.append(oldLabel);
+//                    two dots or more, the second word is the company name
+                    prefix = packageName.substring(firstDot, secondDot + firstDot);
+                    prefix = prefix.substring(0,1).toUpperCase() + prefix.substring(1).toLowerCase();
+                    return prefix + Tuils.SPACE + oldLabel;
                 }
 
-                String label = newLabel.toString();
-                return label.substring(0, 1).toUpperCase() + label.substring(1);
-            } catch (IndexOutOfBoundsException e) {
+            } catch (Exception e) {
                 return packageName;
             }
         }

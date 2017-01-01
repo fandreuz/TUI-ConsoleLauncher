@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
+import android.provider.Settings;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
@@ -33,13 +35,20 @@ public class status implements CommandAbstraction {
         }
         level *= 100;
 
-        ConnectivityManager cm = (ConnectivityManager) info.context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
+        boolean connected = false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                connected = Settings.Global.getInt(info.context.getContentResolver(), "mobile_data", 0) == 1;
+            }
+        } else {
+            ConnectivityManager cm = (ConnectivityManager) info.context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
+        }
 
         return info.res.getString(R.string.battery_charge) + Tuils.SPACE + (int) level + PERCENTAGE + Tuils.NEWLINE +
                 info.res.getString(R.string.wifi) + Tuils.SPACE + wifiConnected + Tuils.NEWLINE +
-                info.res.getString(R.string.mobile_data) + Tuils.SPACE + isMobile;
+                info.res.getString(R.string.mobile_data) + Tuils.SPACE + connected;
     }
 
     @Override

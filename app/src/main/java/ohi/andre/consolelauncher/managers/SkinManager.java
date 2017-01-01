@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.util.Log;
+import android.util.SparseIntArray;
 
 import java.util.HashMap;
 
@@ -48,15 +49,20 @@ public class SkinManager {
     private boolean useSystemWp;
     private boolean showSuggestions;
 
-    private HashMap<Integer, Integer> suggestionBgs = new HashMap<>();
-
     private int suggestionTextColor;
+
+    private int defaulSuggestionColor;
+    private int appSuggestionColor;
+    private int aliasSuggestionColor;
+    private int musicSuggestionColor;
+    private int contactsSuggestionColor;
+    private int commandSuggestionColor;
+    private int fileSuggestionColor;
 
     private boolean multicolorSuggestions;
     private boolean transparentSuggestions;
 
     public SkinManager(PreferencesManager prefs, Typeface lucidaConsole) {
-
         boolean systemFont = Boolean.parseBoolean(prefs.getValue(PreferencesManager.USE_SYSTEMFONT));
         globalTypeface = systemFont ? Typeface.DEFAULT : lucidaConsole;
 
@@ -125,71 +131,51 @@ public class SkinManager {
                 transparentSuggestions = false;
             }
 
-            if(transparentSuggestions) {
-                suggestionBgs.put(0, Color.TRANSPARENT);
-
-                if(suggestionTextColor == bgColor) {
-                    suggestionTextColor = Color.GREEN;
-                }
+            if(transparentSuggestions && suggestionTextColor == bgColor) {
+                suggestionTextColor = Color.GREEN;
             } else {
-                int defaultSuggestionBg;
                 try {
-                    defaultSuggestionBg = Color.parseColor(prefs.getValue(PreferencesManager.DEFAULT_SUGGESTION_BG));
+                    defaulSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.DEFAULT_SUGGESTION_BG));
                 } catch (Exception e) {
-                    defaultSuggestionBg = defaultSuggestionBgDefault;
+                    defaulSuggestionColor = defaultSuggestionBgDefault;
                 }
-                suggestionBgs.put(0, defaultSuggestionBg);
-
 
                 if(multicolorSuggestions) {
-
-                    int appSuggestionBg;
                     try {
-                        appSuggestionBg = Color.parseColor(prefs.getValue(PreferencesManager.APP_SUGGESTION_BG));
+                        appSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.APP_SUGGESTION_BG));
                     } catch (Exception e) {
-                        appSuggestionBg = appSuggestionBgDefault;
+                        appSuggestionColor = appSuggestionBgDefault;
                     }
-                    suggestionBgs.put(SuggestionsManager.Suggestion.TYPE_APP, appSuggestionBg);
 
-                    int contactSuggestionBg;
                     try {
-                        contactSuggestionBg = Color.parseColor(prefs.getValue(PreferencesManager.CONTACT_SUGGESTION_BG));
+                        contactsSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.CONTACT_SUGGESTION_BG));
                     } catch (Exception e) {
-                        contactSuggestionBg = contactSuggestionBgDefault;
+                        contactsSuggestionColor = contactSuggestionBgDefault;
                     }
-                    suggestionBgs.put(SuggestionsManager.Suggestion.TYPE_CONTACT, contactSuggestionBg);
 
-                    int commandSuggestionsBg;
                     try {
-                        commandSuggestionsBg = Color.parseColor(prefs.getValue(PreferencesManager.COMMAND_SUGGESTION_BG));
+                        commandSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.COMMAND_SUGGESTION_BG));
                     } catch (Exception e) {
-                        commandSuggestionsBg = commandSuggestionsBgDefault;
+                        commandSuggestionColor = commandSuggestionsBgDefault;
                     }
-                    suggestionBgs.put(SuggestionsManager.Suggestion.TYPE_COMMAND, commandSuggestionsBg);
 
-                    int songSuggestionBg;
                     try {
-                        songSuggestionBg = Color.parseColor(prefs.getValue(PreferencesManager.SONG_SUGGESTION_BG));
+                        musicSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.SONG_SUGGESTION_BG));
                     } catch (Exception e) {
-                        songSuggestionBg = songSuggestionBgDefault;
+                        musicSuggestionColor = songSuggestionBgDefault;
                     }
-                    suggestionBgs.put(SuggestionsManager.Suggestion.TYPE_SONG, songSuggestionBg);
 
-                    int fileSuggestionBg;
                     try {
-                        fileSuggestionBg = Color.parseColor(prefs.getValue(PreferencesManager.FILE_SUGGESTION_BG));
+                        fileSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.FILE_SUGGESTION_BG));
                     } catch (Exception e) {
-                        fileSuggestionBg = fileSuggestionBgDeafult;
+                        fileSuggestionColor = fileSuggestionBgDeafult;
                     }
-                    suggestionBgs.put(SuggestionsManager.Suggestion.TYPE_FILE, fileSuggestionBg);
 
-                    int aliasSuggestionBg;
                     try {
-                        aliasSuggestionBg = Color.parseColor(prefs.getValue(PreferencesManager.ALIAS_SIGGESTION_BG));
+                        aliasSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.ALIAS_SIGGESTION_BG));
                     } catch (Exception e) {
-                        aliasSuggestionBg = aliasSuggestionBgDefault;
+                        aliasSuggestionColor = aliasSuggestionBgDefault;
                     }
-                    suggestionBgs.put(SuggestionsManager.Suggestion.TYPE_ALIAS, aliasSuggestionBg);
                 }
             }
         }
@@ -197,10 +183,6 @@ public class SkinManager {
 
     public Typeface getGlobalTypeface() {
         return globalTypeface;
-    }
-
-    public int getGlobalFontSize() {
-        return globalFontSize;
     }
 
     public int getDeviceColor() {
@@ -236,7 +218,28 @@ public class SkinManager {
             type = 0;
         }
 
-        return new ColorDrawable(suggestionBgs.get(type));
+        if(transparentSuggestions) {
+            return new ColorDrawable(Color.TRANSPARENT);
+        } else if(!multicolorSuggestions) {
+            return new ColorDrawable(defaulSuggestionColor);
+        } else {
+            switch (type) {
+                case SuggestionsManager.Suggestion.TYPE_APP:
+                    return new ColorDrawable(appSuggestionColor);
+                case SuggestionsManager.Suggestion.TYPE_ALIAS:
+                    return new ColorDrawable(aliasSuggestionColor);
+                case SuggestionsManager.Suggestion.TYPE_COMMAND:
+                    return new ColorDrawable(commandSuggestionColor);
+                case SuggestionsManager.Suggestion.TYPE_CONTACT:
+                    return new ColorDrawable(contactsSuggestionColor);
+                case SuggestionsManager.Suggestion.TYPE_FILE:
+                    return new ColorDrawable(fileSuggestionColor);
+                case SuggestionsManager.Suggestion.TYPE_SONG:
+                    return new ColorDrawable(musicSuggestionColor);
+                default:
+                    return new ColorDrawable(defaulSuggestionColor);
+            }
+        }
     }
 
     public int getSuggestionTextColor() {

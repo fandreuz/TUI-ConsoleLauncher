@@ -27,7 +27,7 @@ public class airplane implements CommandAbstraction {
 
             return info.res.getString(R.string.output_airplane) + !isEnabled;
         } else
-            return info.res.getString(R.string.output_noairplane);
+            return info.res.getString(R.string.output_nofeature);
     }
 
     private boolean isEnabled(Context context) {

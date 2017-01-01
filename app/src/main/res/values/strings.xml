@@ -43,7 +43,7 @@
     <string name="output_wifi">WiFi active:</string>
     <string name="output_data">Mobile Data active:</string>
     <string name="output_numbernotfound">Contact not found</string>
-    <string name="output_noairplane">Can\'t toggle Airplane Mode on 4.2+ Android Version</string>
+    <string name="output_nofeature">Can\'t use this feature on your Android version</string>
     <string name="output_airplane">Airplane Mode active:</string>
 
     <!-- files -->
@@ -129,10 +129,6 @@
         \n\nExample:
         \nhelp search
     </string>
-    <string name="help_kill">Kill an application
-        \nUsage: kill [appName]
-        \n\nExample:
-        \nkill Settings</string>
     <string name="help_mv">Move one or more files to a folder
         \nUsage: [su] mv [files] [folder]
         \n\nsu mv fool.txt fool2.png myFolder

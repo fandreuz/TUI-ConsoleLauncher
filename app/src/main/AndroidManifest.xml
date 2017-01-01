@@ -23,6 +23,12 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
+    <permission android:name="android.permission.FLASHLIGHT"
+        android:permissionGroup="android.permission-group.HARDWARE_CONTROLS"
+        android:protectionLevel="normal"
+        android:label="@string/help_flash"
+        android:description="@string/help_flash" />
+
     <!-- features -->
     <uses-feature
         android:name="android.hardware.camera"
@@ -50,16 +56,13 @@
         <activity
             android:name=".LauncherActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize"
-            android:launchMode="singleTask"
+            android:launchMode="singleInstance"
             android:stateNotNeeded="true"
-            android:excludeFromRecents="true"
             android:windowSoftInputMode="stateAlwaysVisible|adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
@@ -98,6 +101,17 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".tuils.tutorial.TutorialIndexActivity" />
         </activity>
+
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
 
     </application>
 

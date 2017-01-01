@@ -8,6 +8,7 @@ import java.io.File;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class share implements CommandAbstraction {
 
@@ -17,12 +18,8 @@ public class share implements CommandAbstraction {
         if (f.isDirectory())
             return info.res.getString(R.string.output_isdirectory);
 
-        Intent sharingIntent = new Intent(Intent.ACTION_SEND);
-        Uri uri = Uri.fromFile(f);
-        sharingIntent.setType("*/*");
-        sharingIntent.putExtra(Intent.EXTRA_STREAM, uri);
-        info.context.startActivity(Intent.createChooser(sharingIntent,
-                info.res.getString(R.string.share_label)));
+        Intent sharingIntent = Tuils.shareFile(info.context, f);
+        info.context.startActivity(Intent.createChooser(sharingIntent, info.res.getString(R.string.share_label)));
 
         return info.res.getString(R.string.sharing) + " " + f.getName();
     }

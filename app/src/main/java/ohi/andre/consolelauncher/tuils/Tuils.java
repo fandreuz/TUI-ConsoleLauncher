@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.widget.Toast;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
+import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.tuils.tutorial.TutorialIndexActivity;
 
@@ -103,6 +105,7 @@ public class Tuils {
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component);
         intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, label);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         a.startActivityForResult(intent, 0);
     }
 
@@ -320,16 +323,20 @@ public class Tuils {
     }
 
     public static String getUsername(Context context) {
-        Pattern email = Patterns.EMAIL_ADDRESS;
-        Account[] accs = AccountManager.get(context).getAccounts();
-        for (Account a : accs)
-            if (email.matcher(a.name).matches())
-                return a.name;
+        try {
+            Pattern email = Patterns.EMAIL_ADDRESS;
+            Account[] accs = AccountManager.get(context).getAccounts();
+            for (Account a : accs)
+                if (email.matcher(a.name).matches())
+                    return a.name;
+        } catch (Exception e) {
+            return null;
+        }
         return null;
     }
 
-    public static Intent openFile(File url) {
-        Uri uri = Uri.fromFile(url);
+    public static Intent openFile(Context context, File url) {
+        Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", url);
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
         if (url.toString().contains(".doc") || url.toString().contains(".docx")) {
@@ -384,8 +391,75 @@ public class Tuils {
             intent.setDataAndType(uri, "*/*");
         }
 
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;
+    }
+
+    public static Intent shareFile(Context c, File url) {
+        Uri uri = FileProvider.getUriForFile(c, BuildConfig.APPLICATION_ID + ".provider", url);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+
+        if (url.toString().contains(".doc") || url.toString().contains(".docx")) {
+            // Word document
+            intent.setDataAndType(uri, "application/msword");
+        } else if (url.toString().contains(".apk")) {
+            // apk
+            intent.setDataAndType(uri,
+                    "application/vnd.android.package-archive");
+        } else if (url.toString().contains(".pdf")) {
+            // PDF file
+            intent.setDataAndType(uri, "application/pdf");
+        } else if (url.toString().contains(".ppt")
+                || url.toString().contains(".pptx")) {
+            // Powerpoint file
+            intent.setDataAndType(uri, "application/vnd.ms-powerpoint");
+        } else if (url.toString().contains(".xls")
+                || url.toString().contains(".xlsx")) {
+            // Excel file
+            intent.setDataAndType(uri, "application/vnd.ms-excel");
+        } else if (url.toString().contains(".zip")
+                || url.toString().contains(".rar")) {
+            // ZIP Files
+            intent.setDataAndType(uri, "application/zip");
+        } else if (url.toString().contains(".rtf")) {
+            // RTF file
+            intent.setDataAndType(uri, "application/rtf");
+        } else if (url.toString().contains(".wav")
+                || url.toString().contains(".mp3")) {
+            // WAV audio file
+            intent.setDataAndType(uri, "audio/x-wav");
+        } else if (url.toString().contains(".gif")) {
+            // GIF file
+            intent.setDataAndType(uri, "image/gif");
+        } else if (url.toString().contains(".jpg")
+                || url.toString().contains(".jpeg")
+                || url.toString().contains(".png")) {
+            // JPG file
+            intent.setDataAndType(uri, "image/jpeg");
+        } else if (url.toString().contains(".txt")) {
+            // Text file
+            intent.setDataAndType(uri, "text/plain");
+        } else if (url.toString().contains(".3gp")
+                || url.toString().contains(".mpg")
+                || url.toString().contains(".mpeg")
+                || url.toString().contains(".mpe")
+                || url.toString().contains(".mp4")
+                || url.toString().contains(".avi")) {
+            // Video files
+            intent.setDataAndType(uri, "video/*");
+        } else {
+            intent.setDataAndType(uri, "*/*");
+        }
+
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
+
     }
 
     public static String getInternalDirectoryPath() {

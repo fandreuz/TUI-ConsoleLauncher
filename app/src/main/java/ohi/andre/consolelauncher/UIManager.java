@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
@@ -97,6 +98,8 @@ public class UIManager implements OnTouchListener {
             suggestionsView.removeAllViews();
         }
     };
+
+    boolean doubleTapSU = false;
 
     protected TextWatcher textWatcher = new TextWatcher() {
 
@@ -417,8 +420,10 @@ public class UIManager implements OnTouchListener {
             policy = null;
             component = null;
             det = null;
-        } else
+        } else {
+            doubleTapSU = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.DOUBLETAP_SU));
             initDetector();
+        }
 
         mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, skinManager, getHint(prefsMgr), inputBottom);
         mTerminalAdapter.setInputListener(new OnNewInputListener() {
@@ -530,6 +535,8 @@ public class UIManager implements OnTouchListener {
 
         det.setOnDoubleTapListener(new OnDoubleTapListener() {
 
+            boolean hadSU = false;
+
             @Override
             public boolean onSingleTapConfirmed(MotionEvent e) {
                 return false;
@@ -542,9 +549,13 @@ public class UIManager implements OnTouchListener {
 
             @Override
             public boolean onDoubleTap(MotionEvent e) {
-                if(Tuils.verifyRoot()) {
+                if(doubleTapSU) {
+                    hadSU = Tuils.verifyRoot();
+                    doubleTapSU = hadSU;
+                }
+
+                if(hadSU) {
                     ShellUtils.execCommand("input keyevent 26", true, null);
-                    return true;
                 } else {
                     boolean admin = policy.isAdminActive(component);
 
@@ -552,9 +563,9 @@ public class UIManager implements OnTouchListener {
                         Tuils.requestAdmin((Activity) mContext, component, mContext.getString(R.string.adminrequest_label));
                     else
                         policy.lockNow();
-
-                    return true;
                 }
+
+                return true;
             }
         });
     }

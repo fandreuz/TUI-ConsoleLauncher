@@ -46,16 +46,19 @@ public class SuggestionsManager {
 //            lastword = 0 && before = 0
             if (before.length() == 0) {
                 String[] apps = info.appsManager.getSuggestedApps();
-                for(int count = 0; count < apps.length; count++) {
-                    if(apps[count] == null) {
-                        continue;
+                if (apps != null) {
+                    for(int count = 0; count < apps.length; count++) {
+                        if(apps[count] == null) {
+                            continue;
+                        }
+
+                        float shift = count + 1;
+                        float rate = 1f / shift;
+                        suggestionList.add(new Suggestion(apps[count], true, (int) Math.ceil(rate), Suggestion.TYPE_APP));
                     }
 
-                    float shift = count + 1;
-                    float rate = 1f / shift;
-                    suggestionList.add(new Suggestion(apps[count], true, (int) Math.ceil(rate), Suggestion.TYPE_APP));
+                    return suggestionList.toArray(new Suggestion[suggestionList.size()]);
                 }
-                return suggestionList.toArray(new Suggestion[suggestionList.size()]);
             }
 //            lastword = 0 && before > 0
             else {
@@ -123,7 +126,7 @@ public class SuggestionsManager {
         }
 
         int[] args = cmd.argType();
-        boolean exec = args[args.length - 1] == CommandAbstraction.PARAM;
+        boolean exec = args == null || (args[args.length - 1] == CommandAbstraction.PARAM);
         for (String s : cmd.parameters()) {
             suggestions.add(new Suggestion(s, exec, NO_RATE, 0));
         }

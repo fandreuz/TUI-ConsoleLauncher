@@ -192,7 +192,7 @@ public class FileManager {
         if (file.isDirectory())
             return FileManager.ISDIRECTORY;
 
-        Intent intent = Tuils.openFile(file);
+        Intent intent = Tuils.openFile(c, file);
 
         c.startActivity(intent);
         return 0;

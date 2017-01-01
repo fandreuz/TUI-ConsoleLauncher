@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -48,6 +49,8 @@ public class LauncherActivity extends Activity implements Reloadable {
     private boolean openKeyboardOnStart;
 
     private PreferencesManager preferencesManager;
+
+    private Intent starterIntent;
 
     private CommandExecuter ex = new CommandExecuter() {
 
@@ -126,6 +129,7 @@ public class LauncherActivity extends Activity implements Reloadable {
     private void finishOnCreate() {
         File tuiFolder = getFolder();
         Resources res = getResources();
+        starterIntent = getIntent();
 
         DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         ComponentName component = new ComponentName(this, PolicyReceiver.class);
@@ -245,9 +249,17 @@ public class LauncherActivity extends Activity implements Reloadable {
 
     @Override
     public void reload() {
-        Intent intent = getIntent();
-        startActivity(intent);
-        finish();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            reloadOver11();
+        } else {
+            finish();
+            startActivity(starterIntent);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    private void reloadOver11() {
+        recreate();
     }
 
     @Override
@@ -256,7 +268,9 @@ public class LauncherActivity extends Activity implements Reloadable {
 
         if (hasFocus) {
             hideStatusBar();
-            ui.focusTerminal();
+            if (ui != null) {
+                ui.focusTerminal();
+            }
         }
     }
 
