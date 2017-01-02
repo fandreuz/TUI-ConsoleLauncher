@@ -432,12 +432,12 @@ public class UIManager implements OnTouchListener {
                 if(suggestionsView != null) {
                     suggestionsView.removeAllViews();
                 }
-                trigger.exec(input, mTerminalAdapter.getCurrentOutputId());
+                trigger.exec(input);
             }
         });
-//        if(Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOW_DONATE_MESSAGE))) {
-//            mTerminalAdapter.addMessager(new TerminalManager.Messager(65, context.getString(R.string.rate_donate_text)));
-//        }
+        if(Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOW_DONATE_MESSAGE))) {
+            mTerminalAdapter.addMessager(new TerminalManager.Messager(20, context.getString(R.string.rate_donate_text)));
+        }
 
         ViewTreeObserver observer = rootView.getViewTreeObserver();
         final TextView device = deviceInfo;
@@ -473,7 +473,6 @@ public class UIManager implements OnTouchListener {
     }
 
     public void onStart() {
-        mTerminalAdapter.requestInputFocus();
         openKeyboard();
         mTerminalAdapter.scrollToEnd();
     }
@@ -486,8 +485,8 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.focusInputEnd();
     }
 
-    public void setOutput(String string, int id) {
-        mTerminalAdapter.setOutput(string, id);
+    public void setOutput(String string) {
+        mTerminalAdapter.setOutput(string);
     }
 
     //    get device name

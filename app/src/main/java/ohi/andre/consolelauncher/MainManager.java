@@ -78,23 +78,23 @@ public class MainManager {
 
         CommandExecuter executer = new CommandExecuter() {
             @Override
-            public String exec(String input, int id) {
-                onCommand(input, id);
+            public String exec(String input) {
+                onCommand(input);
                 return null;
             }
         };
 
-        MusicManager music = new MusicManager(mContext, prefsMgr);
+        MusicManager music = new MusicManager(mContext, prefsMgr, out);
 
-        AppsManager appsMgr = new AppsManager(c, Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.COMPARESTRING_APPS)));
+        AppsManager appsMgr = new AppsManager(c, Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.COMPARESTRING_APPS)), out);
         AliasManager aliasManager = new AliasManager(prefsMgr);
 
         info = new ExecInfo(mContext, prefsMgr, group, aliasManager, appsMgr, music, cont, devicePolicyManager, componentName,
-                c, clearer, executer);
+                c, executer);
     }
 
     //    command manager
-    public void onCommand(String input, int id) {
+    public void onCommand(String input) {
         if (lastCommands.size() == LAST_COMMANDS_SIZE)
             lastCommands.remove(0);
 
@@ -107,9 +107,9 @@ public class MainManager {
         for (CmdTrigger trigger : triggers) {
             boolean r;
             try {
-                r = trigger.trigger(info, out, input, id);
+                r = trigger.trigger(info, out, input);
             } catch (Exception e) {
-                out.onOutput(Tuils.getStackTrace(e), id);
+                out.onOutput(Tuils.getStackTrace(e));
                 return;
             }
             if (r) {
@@ -147,17 +147,17 @@ public class MainManager {
     }
 
     interface CmdTrigger {
-        boolean trigger(ExecInfo info, Outputable out, String input, int id) throws Exception;
+        boolean trigger(ExecInfo info, Outputable out, String input) throws Exception;
     }
 
     class AliasTrigger implements CmdTrigger {
         @Override
-        public boolean trigger(ExecInfo info, Outputable out, String input, int id) {
+        public boolean trigger(ExecInfo info, Outputable out, String input) {
             String alias = info.aliasManager.getAlias(input);
             if (alias == null)
                 return false;
 
-            info.executer.exec(alias, id);
+            info.executer.exec(alias);
 
             return true;
         }
@@ -169,11 +169,11 @@ public class MainManager {
         final int COMMAND_NOTFOUND = 127;
 
         @Override
-        public boolean trigger(final ExecInfo info, final Outputable out, String input, final int id) throws Exception {
+        public boolean trigger(final ExecInfo info, final Outputable out, String input) throws Exception {
 
             if (CommandTuils.isSuRequest(input)) {
                 boolean su = Tuils.verifyRoot();
-                out.onOutput(info.res.getString(su ? R.string.su : R.string.nosu), id);
+                out.onOutput(info.res.getString(su ? R.string.su : R.string.nosu));
             } else {
                 boolean su = false;
                 if (CommandTuils.isSuCommand(input)) {
@@ -193,9 +193,9 @@ public class MainManager {
 
                         ShellUtils.CommandResult result = ShellUtils.execCommand(cmd, useSU, info.currentDirectory.getAbsolutePath());
                         if (result.result == COMMAND_NOTFOUND) {
-                            out.onOutput(mContext.getString(R.string.output_commandnotfound), id);
+                            out.onOutput(mContext.getString(R.string.output_commandnotfound));
                         } else {
-                            out.onOutput(result.toString(), id);
+                            out.onOutput(result.toString());
                         }
                     }
                 }.start();
@@ -208,7 +208,7 @@ public class MainManager {
     class AppTrigger implements CmdTrigger {
 
         @Override
-        public boolean trigger(ExecInfo info, Outputable out, String input, int id) {
+        public boolean trigger(ExecInfo info, Outputable out, String input) {
             String packageName = info.appsManager.findPackage(input, AppsManager.SHOWN_APPS);
             if (packageName == null) {
                 return false;
@@ -219,7 +219,7 @@ public class MainManager {
                 return false;
             }
 
-            out.onOutput(info.res.getString(R.string.starting_app) + Tuils.SPACE + intent.getComponent().getClassName(), id);
+            out.onOutput(info.res.getString(R.string.starting_app) + Tuils.SPACE + intent.getComponent().getClassName());
 
             mContext.startActivity(intent);
 
@@ -230,7 +230,7 @@ public class MainManager {
     class TuiCommandTrigger implements CmdTrigger {
 
         @Override
-        public boolean trigger(final ExecInfo info, final Outputable out, final String input, final int id) throws Exception {
+        public boolean trigger(final ExecInfo info, final Outputable out, final String input) throws Exception {
 
             final boolean[] returnValue = new boolean[1];
             Thread t = new Thread() {
@@ -239,7 +239,6 @@ public class MainManager {
                     super.run();
 
                     info.calledCommand = input;
-                    info.calledCommandOutputId = id;
 
                     try {
                         Command command = CommandTuils.parse(input, info, false);
@@ -252,11 +251,11 @@ public class MainManager {
                         if (returnValue[0]) {
                             String output = command.exec(info);
                             if(output != null) {
-                                out.onOutput(output, id);
+                                out.onOutput(output);
                             }
                         }
                     } catch (Exception e) {
-                        out.onOutput(e.toString(), id);
+                        out.onOutput(e.toString());
                     }
                 }
             };

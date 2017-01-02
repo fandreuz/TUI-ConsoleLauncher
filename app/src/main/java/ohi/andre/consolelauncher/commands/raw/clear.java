@@ -3,16 +3,18 @@ package ohi.andre.consolelauncher.commands.raw;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by andre on 07/11/15.
  */
 public class clear implements CommandAbstraction {
 
+    public static final String CLEAR = "#clear#";
+
     @Override
     public String exec(ExecInfo info) throws Exception {
-        info.clearer.run();
-        return "";
+        return CLEAR;
     }
 
     @Override

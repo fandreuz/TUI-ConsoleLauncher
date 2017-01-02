@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 import ohi.andre.comparestring.Compare;
+import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
 public class AppsManager {
 
@@ -42,6 +44,8 @@ public class AppsManager {
     private AppsHolder appsHolder;
     private List<AppInfo> hiddenApps;
 
+    private Outputable outputable;
+
     private boolean useCompareString;
 
     private BroadcastReceiver appsBroadcast = new BroadcastReceiver() {
@@ -56,10 +60,12 @@ public class AppsManager {
         }
     };
 
-    public AppsManager(Context context, boolean useCompareString) {
+    public AppsManager(Context context, boolean useCompareString, Outputable outputable) {
         this.context = context;
         this.mgr = context.getPackageManager();
         this.useCompareString = useCompareString;
+
+        this.outputable = outputable;
 
         SharedPreferences preferences = context.getSharedPreferences(APPS_PREFERENCES, Context.MODE_PRIVATE);
         prefsEditor = preferences.edit();
@@ -139,6 +145,7 @@ public class AppsManager {
             ApplicationInfo info = mgr.getApplicationInfo(packageName, 0);
             AppInfo app = new AppInfo(packageName, info.loadLabel(mgr).toString(), 0);
             appsHolder.add(app);
+            outputable.onOutput(context.getString(R.string.app_installed) + Tuils.SPACE + packageName);
         } catch (NameNotFoundException e) {}
     }
 

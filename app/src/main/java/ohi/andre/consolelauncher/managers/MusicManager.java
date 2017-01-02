@@ -16,6 +16,7 @@ import java.util.Random;
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.broadcast.HeadsetBroadcast;
+import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
 public class MusicManager implements OnCompletionListener {
 
@@ -29,6 +30,8 @@ public class MusicManager implements OnCompletionListener {
     private int currentSongIndex = 0;
     private File currentSong = null;
 
+    private Outputable outputable;
+
     //	headset broadcast
     private BroadcastReceiver headsetReceiver = new HeadsetBroadcast(new Runnable() {
         @Override
@@ -38,9 +41,11 @@ public class MusicManager implements OnCompletionListener {
     });
 
     //	constructor
-    public MusicManager(Context c, PreferencesManager preferencesManager) {
+    public MusicManager(Context c, PreferencesManager preferencesManager, Outputable outputable) {
         this.mp = new MediaPlayer();
         this.mp.setOnCompletionListener(this);
+
+        this.outputable = outputable;
 
         c.registerReceiver(headsetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
@@ -185,7 +190,7 @@ public class MusicManager implements OnCompletionListener {
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        next();
+        outputable.onOutput(next());
     }
 
     public void onHeadsetUnplugged() {

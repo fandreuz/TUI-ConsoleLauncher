@@ -9,10 +9,10 @@
     <string name="permissions_toast">You have to grant Storage permission at least</string>
     <string name="version_label">Version:</string>
 
-    <string name="rate_donate_text">Do you like my app? Rate T-UI on Play Store (command: >>rate) or offer me a coffee (command: >>donate)</string>
+    <string name="rate_donate_text">\nDo you like T-UI? Rate T-UI on Play Store (command: >>rate) or offer me a coffee (command: >>donate).\n\nYou can disable this message with >>tuisettings</string>
 
     <!-- app mgr -->
-    <string name="output_appnotfound">Application or package not found</string>
+    <string name="output_appnotfound">Application not found</string>
     <string name="output_hideapp">state: hidden</string>
     <string name="output_unhideapp">state: shown</string>
 
@@ -42,9 +42,10 @@
     <!-- phone -->
     <string name="output_wifi">WiFi active:</string>
     <string name="output_data">Mobile Data active:</string>
+    <string name="output_bluetooth">Bluetooth active:</string>
+    <string name="output_airplane">Airplane Mode active:</string>
     <string name="output_numbernotfound">Contact not found</string>
     <string name="output_nofeature">Can\'t use this feature on your Android version</string>
-    <string name="output_airplane">Airplane Mode active:</string>
 
     <!-- files -->
     <string name="output_isfile">Cant\'t write here. It\'s a file</string>
@@ -56,8 +57,9 @@
     <string name="output_opening">Opening file:</string>
 
     <!-- install/uninstall -->
-    <string name="output_uninstalling">Uninstall triggered:</string>
+    <string name="output_uninstalling">Uninstall:</string>
     <string name="output_removetui">Uninstalling t-ui</string>
+    <string name="app_installed">App installed:</string>
 
     <!-- music -->
     <string name="output_playing">Playing:</string>
@@ -84,10 +86,10 @@
     <string name="wifi">WiFi:</string>
 
     <!-- infos -->
-    <string name="output_about">Francesco Andreuzzi, ITA, Programmer, andreuzzi.francesco@gmail.com
-        \n\nLuke Winward, USA, Designer
-        \n\nOpen Source Libraries:
-        \nandre1299-comparestring
+    <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> andreuzzi.francesco@gmail.com
+        \n\nLuke Winward, Design &amp; Testing
+        \n\n\nOpen Source Libraries:
+        \n(Francesco Andreuzzi) - CompareString
         \nApache commons-io
     </string>
     <string name="output_refresh">Refreshed: apps and alias</string>
@@ -109,6 +111,7 @@
         \n\nExample:
         \napps -h whatsapp
     </string>
+    <string name="help_bluetooth">Toggle Bluetooth</string>
     <string name="help_clear">Clear the screen</string>
     <string name="help_call">Perform a call to someone or get contacts;
         \nUsage: call number OR name

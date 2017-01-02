@@ -16,6 +16,7 @@ import android.os.Parcel;
 import java.io.File;
 import java.lang.reflect.Method;
 
+import ohi.andre.consolelauncher.commands.raw.flash;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
@@ -75,8 +76,6 @@ public class ExecInfo {
 
     //	execute a command
     public CommandExecuter executer;
-    //  clear
-    public Runnable clearer;
     //	current set of args
     private Object[] args;
     //	uses su
@@ -84,11 +83,10 @@ public class ExecInfo {
 
 //    output when permission is needed
     public String calledCommand;
-    public int calledCommandOutputId;
 
     public ExecInfo(Context context, PreferencesManager prefsMgr, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
                     ContactManager c, DevicePolicyManager devicePolicyManager, ComponentName componentName,
-                    Reloadable r, Runnable cl, CommandExecuter executeCommand) {
+                    Reloadable r, CommandExecuter executeCommand) {
         this.res = context.getResources();
         this.commandGroup = commandGroup;
 
@@ -112,8 +110,6 @@ public class ExecInfo {
         this.component = componentName;
 
         this.reloadable = r;
-
-        this.clearer = cl;
     }
 
     public ExecInfo(Parcel parcel) {
@@ -147,6 +143,10 @@ public class ExecInfo {
     public void dispose() {
         if (this.camera == null || this.isFlashOn)
             return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            flash.detachSurfaceTexture(null);
+        }
 
         this.camera.stopPreview();
         this.camera.release();

@@ -1,58 +1,111 @@
 package ohi.andre.consolelauncher.commands.raw;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.pm.PackageManager;
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.hardware.Camera;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera.Parameters;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.hardware.camera2.CameraManager;
+import android.os.Build;
 
-import ohi.andre.consolelauncher.LauncherActivity;
+import java.io.IOException;
+
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
-import ohi.andre.consolelauncher.tuils.Tuils;
 
 @SuppressWarnings("deprecation")
 public class flash implements CommandAbstraction {
 
     @Override
-    public String exec(ExecInfo info) {
-        if (!info.canUseFlash)
+    public String exec(final ExecInfo info) {
+        if (!info.canUseFlash) {
             return info.res.getString(R.string.output_flashlightnotavailable);
-
-        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.CAMERA}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
-            return info.context.getString(R.string.output_waitingpermission);
         }
 
         final ExecInfo execInfo = info;
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
+        final boolean flashOn = info.isFlashOn;
 
-                if (execInfo.camera == null)
-                    execInfo.initCamera();
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
 
-                if (!execInfo.isFlashOn) {
-                    execInfo.parameters.setFlashMode(Parameters.FLASH_MODE_TORCH);
-                    execInfo.camera.setParameters(execInfo.parameters);
-                    execInfo.camera.startPreview();
-                    execInfo.isFlashOn = true;
-                } else {
-                    execInfo.parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
-                    execInfo.camera.setParameters(execInfo.parameters);
-                    execInfo.camera.stopPreview();
-                    execInfo.isFlashOn = false;
+                    if (execInfo.camera == null)
+                        execInfo.initCamera();
+
+                    if (!flashOn) {
+                        execInfo.parameters.setFlashMode(Parameters.FLASH_MODE_TORCH);
+                        execInfo.camera.setParameters(execInfo.parameters);
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                            setSurfaceTexture(info.camera);
+                        }
+
+                        execInfo.camera.startPreview();
+                    } else {
+                        execInfo.parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
+                        execInfo.camera.setParameters(execInfo.parameters);
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                            detachSurfaceTexture(info.camera);
+                        }
+
+                        execInfo.camera.stopPreview();
+                    }
                 }
+            }.start();
+        } else {
+            if(!flashOn) {
+                flashOnMarshy(info.context);
+            } else {
+                flashOffMarshy(info.context);
             }
-        }.start();
+        }
 
-        if (!execInfo.isFlashOn)
+        execInfo.isFlashOn = !flashOn;
+        if (execInfo.isFlashOn) {
             return info.res.getString(R.string.output_flashon);
-        else
+        } else {
             return info.res.getString(R.string.output_flashoff);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static void setSurfaceTexture(Camera camera) {
+        try {
+            camera.setPreviewTexture(new SurfaceTexture(0));
+        } catch (IOException e) {}
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static void detachSurfaceTexture(Camera camera) {
+        try {
+            camera.setPreviewTexture(null);
+        } catch (IOException e) {}
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private boolean flashOnMarshy(Context context) {
+        try {
+            CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+            manager.setTorchMode(manager.getCameraIdList()[0], true);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private boolean flashOffMarshy(Context context) {
+        try {
+            CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+            manager.setTorchMode(manager.getCameraIdList()[0], false);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

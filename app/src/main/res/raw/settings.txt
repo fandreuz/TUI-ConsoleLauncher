@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=4.11
+settingsVersion=4.10
 
 // when you are ready go back to t-ui and type "restart" to see changes
 

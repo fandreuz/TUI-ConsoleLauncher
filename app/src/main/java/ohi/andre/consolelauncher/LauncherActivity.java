@@ -55,9 +55,9 @@ public class LauncherActivity extends Activity implements Reloadable {
     private CommandExecuter ex = new CommandExecuter() {
 
         @Override
-        public String exec(String input, int id) {
+        public String exec(String input) {
             try {
-                main.onCommand(input, id);
+                main.onCommand(input);
             } catch (NullPointerException e) {
                 e.printStackTrace();
             }
@@ -80,9 +80,9 @@ public class LauncherActivity extends Activity implements Reloadable {
     private Outputable out = new Outputable() {
 
         @Override
-        public void onOutput(String output, int id) {
+        public void onOutput(String output) {
             try {
-                ui.setOutput(output, id);
+                ui.setOutput(output);
             } catch (NullPointerException e) {
                 e.printStackTrace();
             }
@@ -266,39 +266,39 @@ public class LauncherActivity extends Activity implements Reloadable {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        if (hasFocus) {
-            hideStatusBar();
-            if (ui != null) {
-                ui.focusTerminal();
-            }
+        if (ui != null) {
+            ui.focusTerminal();
         }
+        hideStatusBar();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case COMMAND_REQUEST_PERMISSION:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    ExecInfo info = main.getInfo();
-                    main.onCommand(info.calledCommand, info.calledCommandOutputId);
-                } else {
-                    ui.setOutput(getString(R.string.output_nopermissions), main.getInfo().calledCommandOutputId);
-                }
-                break;
-            case STORAGE_PERMISSION:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    finishOnCreate();
-                } else {
-                    Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
-                    finish();
-                }
-                break;
-            case COMMAND_SUGGESTION_REQUEST_PERMISSION:
-                if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                    ui.setOutput(getString(R.string.output_nopermissions), main.getInfo().calledCommandOutputId);
-                }
-                break;
-        }
+        try {
+            switch (requestCode) {
+                case COMMAND_REQUEST_PERMISSION:
+                    if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        ExecInfo info = main.getInfo();
+                        main.onCommand(info.calledCommand);
+                    } else {
+                        ui.setOutput(getString(R.string.output_nopermissions));
+                    }
+                    break;
+                case STORAGE_PERMISSION:
+                    if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                        finishOnCreate();
+                    } else {
+                        Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                    break;
+                case COMMAND_SUGGESTION_REQUEST_PERMISSION:
+                    if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                        ui.setOutput(getString(R.string.output_nopermissions));
+                    }
+                    break;
+            }
+        } catch (Exception e) {}
     }
 
 }

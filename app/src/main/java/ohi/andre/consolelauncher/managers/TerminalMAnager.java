@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import ohi.andre.consolelauncher.commands.raw.clear;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
@@ -49,8 +50,11 @@ public class TerminalManager {
     public static final int INPUT = 10;
     public static final int OUTPUT = 11;
 
-    private int mCurrentOutputId = 0;
-    private int globalId = 0;
+//    private int globalId = 0;
+//    private int mCurrentOutputId = 0;
+
+    private boolean inputUp;
+    private int cmds = 0;
 
     private ScrollView mScrollView;
     private TextView mTerminalView;
@@ -58,22 +62,18 @@ public class TerminalManager {
     private Runnable mScrollRunnable = new Runnable() {
         @Override
         public void run() {
-            boolean inputHadFocus = mInputView.hasFocus();
             mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
-            if (inputHadFocus)
-                requestInputFocus();
+            mInputView.requestFocus();
         }
     };
+
     private SkinManager mSkinManager;
 
     private OnNewInputListener mInputListener;
 
-    private boolean inputUp;
-
     private List<Messager> messagers = new ArrayList<>();
 
-    public TerminalManager(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager,
-                           String hint, boolean inputUp) {
+    public TerminalManager(TextView terminalView, EditText inputView, TextView prefixView, TextView submitView, SkinManager skinManager, String hint, boolean inputUp) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
             throw new UnsupportedOperationException();
 
@@ -115,7 +115,7 @@ public class TerminalManager {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 
-//                physical enter is temporary ignores
+//                physical enter is temporary ignored
                 if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
                     onNewInput();
                     return true;
@@ -132,8 +132,8 @@ public class TerminalManager {
     private void setupNewInput() {
         mInputView.setText(Tuils.EMPTYSTRING);
 
-        mCurrentOutputId++;
-        globalId++;
+//        mCurrentOutputId++;
+//        globalId++;
 
         requestInputFocus();
     }
@@ -148,6 +148,8 @@ public class TerminalManager {
         }
         writeToView(PREFIX + input, INPUT);
 
+        cmds++;
+
         if (mInputListener != null) {
             mInputListener.onNewInput(input);
         }
@@ -157,77 +159,96 @@ public class TerminalManager {
         return true;
     }
 
-    public void setOutput(String output, int id) {
+    public void setOutput(String output) {
         if (output == null)
             return;
 
-        writeToView(output, OUTPUT, id);
+        if(output.equals(clear.CLEAR)) {
+            clear();
+            return;
+        }
+
+        writeToView(output, OUTPUT);
 
         int counter = 0;
         for(Messager messager : messagers) {
-            if(globalId != 0 && globalId % messager.n == 0) {
+            if(cmds != 0 && cmds % messager.n == 0) {
                 counter++;
-                writeToView(messager.message, OUTPUT, ++mCurrentOutputId);
+                writeToView(messager.message, OUTPUT);
             }
         }
-        globalId += counter;
 
         scrollToEnd();
     }
 
-    public void writeToView(String text, int type) {
-        writeToView(text, type, mCurrentOutputId);
-    }
+//    private void writeToView(final String text, final int type, int id) {
+//        Log.e("andre", "0");
+////        this is for when an input or a std (synchronous) output happens
+//        if(type == INPUT || id >= mCurrentOutputId) {
+//            Log.e("andre", "1");
+//            if(Looper.myLooper() == Looper.getMainLooper()) {
+//                if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
+//                    mTerminalView.append(Tuils.NEWLINE);
+//                }
+//                mTerminalView.append(getSpannable(text, type));
+//            } else {
+//                ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
+//                            mTerminalView.append(Tuils.NEWLINE);
+//                        }
+//                        mTerminalView.append(getSpannable(text, type));
+//                    }
+//                });
+//            }
+//        }
+////        this is for when a delayed output happens
+//        else if(type == OUTPUT) {
+//            Log.e("andre", "2");
+//            List<String> oldText = getLines(mTerminalView);
+//            List<Map.Entry<String, String>> wrappedOldText = splitInputOutput(oldText);
+//
+//            if(wrappedOldText.size() > id) {
+//                Log.e("andre", "3");
+//                SimpleMutableEntry selectedEntry = (SimpleMutableEntry) wrappedOldText.get(id);
+//                selectedEntry.setValue(getSpannable(text, type));
+//
+//                final List<String> newText = toFlatList(wrappedOldText);
+//
+//                ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mTerminalView.setText(Tuils.EMPTYSTRING);
+//                        for(CharSequence sequence : newText) {
+//                            sequence = Tuils.trimWhitespaces(sequence);
+//                            if(isInput(sequence)) {
+//                                mTerminalView.append(Tuils.NEWLINE);
+//                                mTerminalView.append(getSpannable(sequence.toString(), INPUT));
+//                                mTerminalView.append(Tuils.NEWLINE);
+//                            } else {
+//                                mTerminalView.append(getSpannable(sequence.toString(), OUTPUT));
+//                            }
+//                        }
+//                    }
+//                });
+//            } else {
+//                Log.e("andre", "4");
+//            }
+//        }
+//    }
 
-    private void writeToView(final String text, final int type, int id) {
-//        this is for when an input or a std (synchronous) output happens
-        if(type == INPUT || id >= mCurrentOutputId) {
-            if(Looper.myLooper() == Looper.getMainLooper()) {
-                if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
-                    mTerminalView.append(Tuils.NEWLINE);
-                }
-                mTerminalView.append(getSpannable(text, type));
-            } else {
-                ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(!mTerminalView.getText().toString().endsWith(Tuils.NEWLINE)) {
-                            mTerminalView.append(Tuils.NEWLINE);
-                        }
-                        mTerminalView.append(getSpannable(text, type));
-                    }
-                });
+    private void writeToView(final String text, final int type) {
+        mTerminalView.post(new Runnable() {
+            @Override
+            public void run() {
+                String txt = text;
+                txt = Tuils.NEWLINE.concat(txt);
+
+                SpannableString string = getSpannable(txt, type);
+                mTerminalView.append(string);
             }
-        }
-//        this is for when a delayed output happens
-        else if(type == OUTPUT) {
-            List<String> oldText = getLines(mTerminalView);
-            List<Map.Entry<String, String>> wrappedOldText = splitInputOutput(oldText);
-
-            if(wrappedOldText.size() > id) {
-                SimpleMutableEntry selectedEntry = (SimpleMutableEntry) wrappedOldText.get(id);
-                selectedEntry.setValue(getSpannable(text, type));
-
-                final List<String> newText = toFlatList(wrappedOldText);
-
-                ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTerminalView.setText(Tuils.EMPTYSTRING);
-                        for(CharSequence sequence : newText) {
-                            sequence = Tuils.trimWhitespaces(sequence);
-                            if(isInput(sequence)) {
-                                mTerminalView.append(Tuils.NEWLINE);
-                                mTerminalView.append(getSpannable(sequence.toString(), INPUT));
-                                mTerminalView.append(Tuils.NEWLINE);
-                            } else {
-                                mTerminalView.append(getSpannable(sequence.toString(), OUTPUT));
-                            }
-                        }
-                    }
-                });
-            }
-        }
+        });
     }
 
     public void simulateEnter() {
@@ -284,7 +305,7 @@ public class TerminalManager {
         } else {
             return null;
         }
-        spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(color), 0, spannableString.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
         return spannableString;
     }
 
@@ -340,17 +361,17 @@ public class TerminalManager {
         return mInputView;
     }
 
-    public int getCurrentOutputId() {
-        return mCurrentOutputId;
-    }
-
     public void clear() {
-        ((Activity) mTerminalView.getContext()).runOnUiThread(new Runnable() {
+        mTerminalView.post(new Runnable() {
             @Override
             public void run() {
                 mTerminalView.setText(Tuils.EMPTYSTRING);
+            }
+        });
+        mInputView.post(new Runnable() {
+            @Override
+            public void run() {
                 mInputView.setText(Tuils.EMPTYSTRING);
-                mCurrentOutputId = 0;
             }
         });
     }
