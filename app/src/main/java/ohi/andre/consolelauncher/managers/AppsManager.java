@@ -265,7 +265,18 @@ public class AppsManager {
     }
 
     public String[] getSuggestedApps() {
-        return appsHolder.getSuggestedApps();
+//        workaround
+        String[] temp = appsHolder.getSuggestedApps();
+        if(temp == null || temp.length == 0) {
+            return null;
+        }
+
+        String[] apps = new String[temp.length];
+        for(int countOnTemp = temp.length - 1, countOnApps = 0; countOnTemp >= 0 && countOnApps < apps.length; countOnApps++, countOnTemp--) {
+            apps[countOnApps] = temp[countOnTemp];
+        }
+
+        return apps;
     }
 
     public String printApps(int type) {

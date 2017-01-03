@@ -57,7 +57,7 @@ public class MusicManager implements OnCompletionListener {
             files = Tuils.getSongsInFolder(new File(preferencesManager.getValue(PreferencesManager.SONGSFOLDER)));
         }
 
-        if(randomActive) {
+        if(randomActive && files != null) {
             Collections.shuffle(files);
         }
     }

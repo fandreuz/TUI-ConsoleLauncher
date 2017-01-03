@@ -180,7 +180,7 @@ public class PreferencesManager {
         }
 
         try {
-            stream.write(Tuils.toPlanString(newValues, "\n").getBytes());
+            stream.write(Tuils.toPlanString(newValues, Tuils.NEWLINE).getBytes());
             stream.flush();
             stream.close();
 

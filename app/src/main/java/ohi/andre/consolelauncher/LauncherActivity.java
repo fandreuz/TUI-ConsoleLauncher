@@ -249,12 +249,17 @@ public class LauncherActivity extends Activity implements Reloadable {
 
     @Override
     public void reload() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            reloadOver11();
-        } else {
-            finish();
-            startActivity(starterIntent);
-        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    reloadOver11();
+                } else {
+                    finish();
+                    startActivity(starterIntent);
+                }
+            }
+        });
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)

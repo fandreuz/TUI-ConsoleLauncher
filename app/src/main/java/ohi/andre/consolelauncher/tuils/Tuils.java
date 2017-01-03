@@ -192,6 +192,10 @@ public class Tuils {
     }
 
     public static String toPlanString(String[] strings, String separator) {
+        if(strings == null) {
+            return Tuils.EMPTYSTRING;
+        }
+
         String output = "";
         for (int count = 0; count < strings.length; count++) {
             output = output.concat(strings[count]);
@@ -202,12 +206,18 @@ public class Tuils {
     }
 
     public static String toPlanString(String[] strings) {
-        return Tuils.toPlanString(strings, Tuils.NEWLINE);
+        if (strings != null) {
+            return Tuils.toPlanString(strings, Tuils.NEWLINE);
+        }
+        return Tuils.EMPTYSTRING;
     }
 
     public static String toPlanString(List<String> strings, String separator) {
-        String[] object = new String[strings.size()];
-        return Tuils.toPlanString(strings.toArray(object), separator);
+        if(strings != null) {
+            String[] object = new String[strings.size()];
+            return Tuils.toPlanString(strings.toArray(object), separator);
+        }
+        return Tuils.EMPTYSTRING;
     }
 
     public static String filesToPlanString(List<File> files, String separator) {
@@ -227,6 +237,10 @@ public class Tuils {
     }
 
     public static String toPlanString(Object[] objs, String separator) {
+        if(objs == null) {
+            return Tuils.EMPTYSTRING;
+        }
+
         StringBuilder output = new StringBuilder();
         for(int count = 0; count < objs.length; count++) {
             output.append(objs[count]);
@@ -237,36 +251,39 @@ public class Tuils {
         return output.toString();
     }
 
-    public static CharSequence toPlanSequence(List<CharSequence> sequences, CharSequence separator) {
-        return toPlanSequence(sequences.toArray(new CharSequence[sequences.size()]), separator);
-    }
-
-    public static CharSequence toPlanSequence(CharSequence[] sequences, CharSequence separator) {
-        if (sequences.length == 0)
-            return null;
-
-        CharSequence sequence = null;
-        int count;
-        for (count = 0; (sequence = sequences[count]) == null; count++) {
-        }
-
-        CharSequence output = sequences[count];
-        do {
-            count++;
-            CharSequence current = sequences[count];
-            if (current == null)
-                continue;
-
-            output = TextUtils.concat(output, current);
-            if (count < sequences.length - 1 && !current.toString().contains(separator))
-                output = TextUtils.concat(output, separator);
-        } while (count + 1 < sequences.length);
-        return output;
-    }
-
-    public static CharSequence toPlanSequence(CharSequence[] sequences) {
-        return TextUtils.concat(sequences);
-    }
+//    public static CharSequence toPlanSequence(List<CharSequence> sequences, CharSequence separator) {
+//        if(sequences != null) {
+//            return toPlanSequence(sequences.toArray(new CharSequence[sequences.size()]), separator);
+//        }
+//        return null;
+//    }
+//
+//    public static CharSequence toPlanSequence(CharSequence[] sequences, CharSequence separator) {
+//        if(sequences == null) {
+//            return null;
+//        }
+//
+//        if (sequences.length == 0)
+//            return null;
+//
+//        CharSequence sequence = null;
+//        int count;
+//        for (count = 0; (sequence = sequences[count]) == null; count++) {
+//        }
+//
+//        CharSequence output = sequences[count];
+//        do {
+//            count++;
+//            CharSequence current = sequences[count];
+//            if (current == null)
+//                continue;
+//
+//            output = TextUtils.concat(output, current);
+//            if (count < sequences.length - 1 && !current.toString().contains(separator))
+//                output = TextUtils.concat(output, separator);
+//        } while (count + 1 < sequences.length);
+//        return output;
+//    }
 
     public static String removeUnncesarySpaces(String string) {
         while (string.contains(DOUBLE_SPACE)) {
