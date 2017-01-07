@@ -4,6 +4,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,9 +44,9 @@ public class MainManager {
     private final int LAST_COMMANDS_SIZE = 20;
 
     private CmdTrigger[] triggers = new CmdTrigger[]{
-            new AppTrigger(),
             new AliasTrigger(),
             new TuiCommandTrigger(),
+            new AppTrigger(),
 //            keep this as last trigger
             new SystemCommandTrigger()
     };
@@ -154,8 +155,10 @@ public class MainManager {
         @Override
         public boolean trigger(ExecInfo info, Outputable out, String input) {
             String alias = info.aliasManager.getAlias(input);
-            if (alias == null)
+            if (alias == null) {
                 return false;
+            }
+            Log.e("andre", alias);
 
             info.executer.exec(alias);
 

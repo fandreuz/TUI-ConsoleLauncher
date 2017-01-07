@@ -42,10 +42,6 @@ public class AliasManager implements Reloadable {
         return alias.get(s);
     }
 
-    public Set<String> getAliass() {
-        return alias.keySet();
-    }
-
     @Override
     public void reload() {
         alias = new HashMap<>();

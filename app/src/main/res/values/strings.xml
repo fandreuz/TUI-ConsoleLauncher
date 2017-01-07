@@ -6,15 +6,17 @@
     <string name="separator_text_su">$</string>
     <string name="su">T-UI got SU permission</string>
     <string name="nosu">Your device isn\'t rooted</string>
-    <string name="permissions_toast">You have to grant Storage permission at least</string>
+    <string name="permissions_toast">You have to grant Storage permission</string>
     <string name="version_label">Version:</string>
 
-    <string name="rate_donate_text">\nDo you like T-UI? Rate T-UI on Play Store (command: >>rate) or offer me a coffee (command: >>donate).\n\nYou can disable this message with >>tuisettings</string>
+    <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.\n\nYou can disable this message in >>tuisettings</string>
 
     <!-- app mgr -->
     <string name="output_appnotfound">Application not found</string>
     <string name="output_hideapp">state: hidden</string>
     <string name="output_unhideapp">state: shown</string>
+    <string name="output_showplaystore">Play Store page:</string>
+    <string name="output_showsettings">Settings:</string>
 
     <!-- label -->
     <string name="share_label">Share</string>
@@ -92,7 +94,7 @@
         \n(Francesco Andreuzzi) - CompareString
         \nApache commons-io
     </string>
-    <string name="output_refresh">Refreshed: apps and alias</string>
+    <string name="output_refresh">Refresh: apps, alias, music, contacts</string>
     <string name="output_rate">Thank you!</string>
     <string name="output_lookfortutorial">Looking for Tutorial</string>
 
@@ -102,11 +104,15 @@
     <string name="help_aliases">Print alias that are currently saved in \"sdcard\"/t-ui/alias.txt</string>
     <string name="help_aliasfile">Open alias.txt</string>
     <string name="help_apps">Manage your apps
-        \nUsage apps [option] [app name]
+        \n\nUsage:
+        \napps [option] [app name]
         \n\n[option] can be:
         \n-h [app name] -> hide the app
         \n-uh [app name] -> unhide the app
         \n-sh -> show hidden apps
+        \n-ps [app name] -> show Google Play Store page for this app
+        \n-st [app name] -> show Settings details for this app
+        \n-f [app name] -> force t-ui to open this app
         \nno option -> list your apps
         \n\nExample:
         \napps -h whatsapp
@@ -119,7 +125,8 @@
     </string>
     <string name="help_contacts">Print your contacts</string>
     <string name="help_cp">Copy one or more files to a folder
-        \nUsage: [su] cp [files] [folder]
+        \nUsage:
+        \n[su] cp [files] [folder]
         \n\nExample:
         \nsu cp fool.txt fool2.png myFolder
         \ncp myFile.txt myFolder
@@ -128,18 +135,21 @@
     <string name="help_donate">Donate something to the developer</string>
     <string name="help_flash">Toggle the flashlight</string>
     <string name="help_help">Print a list of available commands at this moment, or informations about a command
-        \nUsage: help command
+        \nUsage:
+        \nhelp [command]
         \n\nExample:
         \nhelp search
     </string>
     <string name="help_mv">Move one or more files to a folder
-        \nUsage: [su] mv [files] [folder]
+        \nUsage:
+        \n[su] mv [files] [folder]
         \n\nsu mv fool.txt fool2.png myFolder
         \nmv fool.txt myFolder
     </string>
     <string name="help_next">Play the next track in the queue</string>
     <string name="help_listen">Play a specific track
-        \nUsage: listen trackname
+        \nUsage:
+        \nlisten trackname
         \n\nExample:
         \nplay back in black
         \n\n(The track has to be located in your Music Folder)
@@ -152,13 +162,15 @@
     </string>
     <string name="help_restart">Restart t-ui and load modified values</string>
     <string name="help_rm">Remove a file:
-        \nUsage: [su] rm [files]
+        \nUsage:
+        \n[su] rm [files]
         \n\nExample:
         \n\nsu rm fool.txt fool2.png
         \nrm Downloads/fool.txt
     </string>
     <string name="help_search">Search something somewhere
-        \nUsage: search [option] something
+        \nUsage:
+        \nsearch [option] something
         \n\n[option] can be:
         \n-g -> (Google Search)
         \n-p -> (Google Play Store)
@@ -168,7 +180,8 @@
         \nsearch -p T-UI
     </string>
     <string name="help_share">Share a file
-        \nUsage: share pathToFile
+        \nUsage:
+        \nshare pathToFile
         \n\nExample:
         \nshare fool.jpg
     </string>
@@ -181,7 +194,8 @@
     <string name="help_tuisettings">Open t-ui settings file</string>
     <string name="help_tutorial">Go to T-UI tutorial page</string>
     <string name="help_uninstall">Uninstall an application
-        \nUsage: uninstall appName OR packageName
+        \nUsage:
+        \nuninstall appName OR packageName
         \n\nExample:
         \nuninstall dropbox
     </string>
@@ -189,17 +203,20 @@
 
     <!-- linux -->
     <string name="help_cd">Change the current directory
-        \nUsage: cd path
+        \nUsage:
+        \ncd [path]
         \n\nExample:
         \ncd /storage/sdcard1/DCIM
     </string>
     <string name="help_open">Open a file with the default application
-        \nUsage: open pathToFile
+        \nUsage:
+        \nopen [pathToFile]
         \n\nExample:
         \nopen docs/fool.txt
     </string>
     <string name="help_ls">Print a list of the files in a directory
-        \nUsage: ls directory
+        \nUsage:
+        \nls [directory]
         \n\nExample:
         \nls Downloads
     </string>

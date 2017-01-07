@@ -30,6 +30,9 @@ public class MusicManager implements OnCompletionListener {
     private int currentSongIndex = 0;
     private File currentSong = null;
 
+    private boolean fromMediastore;
+    File songsFolder;
+
     private Outputable outputable;
 
     //	headset broadcast
@@ -50,12 +53,14 @@ public class MusicManager implements OnCompletionListener {
         c.registerReceiver(headsetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
         boolean randomActive = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.PLAY_RANDOM));
-
-        if(Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.FROM_MEDIASTORE))) {
-            files = Tuils.getMediastoreSongs(c);
+        fromMediastore = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.FROM_MEDIASTORE));
+        if(fromMediastore) {
+            songsFolder = null;
         } else {
-            files = Tuils.getSongsInFolder(new File(preferencesManager.getValue(PreferencesManager.SONGSFOLDER)));
+            songsFolder = new File(preferencesManager.getValue(PreferencesManager.SONGSFOLDER));
         }
+
+        refresh(c);
 
         if(randomActive && files != null) {
             Collections.shuffle(files);
@@ -88,8 +93,9 @@ public class MusicManager implements OnCompletionListener {
     public List<String> getNames() {
         List<String> names = new ArrayList<>();
 
-        for (File file : files)
+        for (File file : files) {
             names.add(file.getName());
+        }
 
         Collections.sort(names);
 
@@ -186,6 +192,15 @@ public class MusicManager implements OnCompletionListener {
         return currentSong.getName() +
                 Tuils.NEWLINE + (total / 60) + "." + (total % 60) + " / " + (position / 60) + "." + (position % 60) +
                 " (" + (100 * position / total) + "%)";
+    }
+
+    public void refresh(Context c) {
+        if(fromMediastore) {
+            files = Tuils.getMediastoreSongs(c);
+        } else {
+            files = Tuils.getSongsInFolder(songsFolder);
+        }
+
     }
 
     @Override

@@ -466,6 +466,7 @@ public class UIManager implements OnTouchListener {
     private void openKeyboard() {
         mTerminalAdapter.requestInputFocus();
         imm.showSoftInput(mTerminalAdapter.getInputView(), InputMethodManager.SHOW_IMPLICIT);
+        mTerminalAdapter.scrollToEnd();
     }
 
     private void closeKeyboard() {
@@ -500,7 +501,7 @@ public class UIManager implements OnTouchListener {
 
     //    update ram
     public void updateRamDetails() {
-        ram.setText("RAM: " + Tuils.ramDetails(activityManager, memory));
+        ram.setText("free ram: " + Tuils.ramDetails(activityManager, memory));
     }
 
     public void focusTerminal() {

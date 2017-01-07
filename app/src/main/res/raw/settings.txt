@@ -50,3 +50,6 @@ showSuggestions=true
 enableEnterInPhysicalKeyboard=false
 compareStringForApps=false
 showDonationMessage=true
+
+// commands
+defaultSearch=-g

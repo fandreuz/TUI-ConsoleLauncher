@@ -63,6 +63,8 @@ public class PreferencesManager {
     public static final String COMPARESTRING_APPS = "compareStringForApps";
     public static final String SHOW_DONATE_MESSAGE = "showDonationMessage";
 
+    public static final String DEFAULT_SEARCH = "defaultSearch";
+
     public static final String ALIAS_FILENAME = "alias.txt";
     public static final int ALIAS = 11;
 

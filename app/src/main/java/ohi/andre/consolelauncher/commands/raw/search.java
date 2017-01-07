@@ -12,6 +12,7 @@ import java.util.List;
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
+import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecInfo;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -33,10 +34,18 @@ public class search implements CommandAbstraction {
 
     @Override
     public String exec(ExecInfo info) {
-        String param = info.get(String.class, 0);
         List<String> args = info.get(ArrayList.class, 1);
-        if (args == null) {
-            return info.res.getString(R.string.output_nothing_found);
+
+        String param = info.get(String.class, 0);
+        if(param == null) {
+            return info.context.getString(R.string.output_nothing_found);
+        }
+        if(!param.startsWith("-")) {
+            if(args == null) {
+                args = new ArrayList<>();
+            }
+            args.add(0,param);
+            param = info.cmdPrefs.forCommand("search").get(CommandsPreferences.DEFAULT_PARAM);
         }
 
         switch (param) {
@@ -51,7 +60,7 @@ public class search implements CommandAbstraction {
             case URL_PARAM:
                 return url(args.get(0), info.context, info.res);
             default:
-                return info.res.getString(R.string.output_invalid_param);
+                return info.res.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
         }
     }
 

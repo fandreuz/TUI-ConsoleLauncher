@@ -14,6 +14,7 @@ import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -154,9 +155,12 @@ public class AppsManager {
     }
 
     public String findPackage(String name) {
-        List<AppInfo> allApps = new ArrayList<>(appsHolder.getApps());
-        allApps.addAll(hiddenApps);
-        return findPackage(allApps, null, name);
+        List<AppInfo> apps = appsHolder.getApps();
+        if(apps != null) {
+            apps.addAll(hiddenApps);
+            return findPackage(apps, null, name);
+        }
+        return null;
     }
 
     public String findPackage(List<AppInfo> appList, List<String> labels, String name) {
@@ -478,9 +482,8 @@ public class AppsManager {
                         continue Second;
                     }
 
-                    if (!info.equals(info2) && info.publicLabel.equals(info2.publicLabel)) {
-                        list.set(count, new AppInfo(info2.packageName, getNewLabel(info2.publicLabel, info2.packageName),
-                                info2.launchedTimes));
+                    if (info.publicLabel.toLowerCase().replace(Tuils.SPACE, Tuils.EMPTYSTRING).equals(info2.publicLabel.replace(Tuils.SPACE, Tuils.EMPTYSTRING))) {
+                        list.set(count, new AppInfo(info2.packageName, getNewLabel(info2.publicLabel, info2.packageName), info2.launchedTimes));
                     }
                 }
             }

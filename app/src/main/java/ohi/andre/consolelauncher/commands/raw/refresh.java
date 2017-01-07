@@ -5,6 +5,7 @@ import android.app.Activity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.PreferencesManager;
 
 public class refresh implements CommandAbstraction {
@@ -14,6 +15,8 @@ public class refresh implements CommandAbstraction {
         info.appsManager.fill(((Activity) info.context).getPreferences(0));
         info.preferencesManager.refresh(PreferencesManager.ALIAS);
         info.aliasManager.reload();
+        info.player.refresh(info.context);
+        info.contacts = new ContactManager(info.context);
 
         return info.res.getString(R.string.output_refresh);
     }

@@ -7,8 +7,8 @@ android {
         applicationId "ohi.andre.consolelauncher"
         minSdkVersion 8
         targetSdkVersion 25
-        versionCode 82
-        versionName "4.11"
+        versionCode 83
+        versionName "4.12"
     }
 
     buildTypes {

@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher.commands;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -129,6 +130,10 @@ public class CommandTuils {
     }
 
     private static ArgInfo textList(String input) {
+        if (input == null) {
+            return null;
+        }
+
         List<String> strings = new ArrayList<>();
 
         char[] chars = input.toCharArray();

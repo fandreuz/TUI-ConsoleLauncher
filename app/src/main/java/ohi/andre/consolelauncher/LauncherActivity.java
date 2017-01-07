@@ -37,7 +37,7 @@ public class LauncherActivity extends Activity implements Reloadable {
     private final int FILEUPDATE_DELAY = 300;
 
     public static final int COMMAND_REQUEST_PERMISSION = 10;
-    public static final int STORAGE_PERMISSION = 11;
+    public static final int STARTING_PERMISSION = 11;
     public static final int COMMAND_SUGGESTION_REQUEST_PERMISSION = 12;
 
     private final String FIRSTACCESS_KEY = "firstAccess";
@@ -100,6 +100,25 @@ public class LauncherActivity extends Activity implements Reloadable {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (isFinishing()) {
+            return;
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED  &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
+                        LauncherActivity.STARTING_PERMISSION);
+                return;
+            }
+        }
+
+        finishOnCreate();
+    }
+
+    private void finishOnCreate() {
+
         SharedPreferences preferences = getPreferences(0);
         boolean firstAccess = preferences.getBoolean(FIRSTACCESS_KEY, true);
         if (firstAccess) {
@@ -110,23 +129,6 @@ public class LauncherActivity extends Activity implements Reloadable {
             Tuils.showTutorial(this);
         }
 
-        if (isFinishing()) {
-            return;
-        }
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED  &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
-
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, LauncherActivity.STORAGE_PERMISSION);
-                return;
-            }
-        }
-
-        finishOnCreate();
-    }
-
-    private void finishOnCreate() {
         File tuiFolder = getFolder();
         Resources res = getResources();
         starterIntent = getIntent();
@@ -198,6 +200,8 @@ public class LauncherActivity extends Activity implements Reloadable {
     @Override
     protected void onStart() {
         super.onStart();
+
+        overridePendingTransition(0,0);
 
         if (ui != null && openKeyboardOnStart) {
             ui.onStart();
@@ -289,13 +293,18 @@ public class LauncherActivity extends Activity implements Reloadable {
                         ui.setOutput(getString(R.string.output_nopermissions));
                     }
                     break;
-                case STORAGE_PERMISSION:
-                    if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        finishOnCreate();
-                    } else {
-                        Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
-                        finish();
+                case STARTING_PERMISSION:
+                    int count = 0;
+                    while(count < permissions.length && count < grantResults.length) {
+                        if( (permissions[count].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) || permissions[count].equals(Manifest.permission.READ_EXTERNAL_STORAGE))
+                                && grantResults[count] == PackageManager.PERMISSION_DENIED) {
+                            Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
+                            finish();
+                            return;
+                        }
+                        count++;
                     }
+                    finishOnCreate();
                     break;
                 case COMMAND_SUGGESTION_REQUEST_PERMISSION:
                     if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {

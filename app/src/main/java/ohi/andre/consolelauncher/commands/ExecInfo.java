@@ -74,6 +74,8 @@ public class ExecInfo {
     //	reload field
     public Reloadable reloadable;
 
+    public CommandsPreferences cmdPrefs;
+
     //	execute a command
     public CommandExecuter executer;
     //	current set of args
@@ -102,6 +104,8 @@ public class ExecInfo {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR_MR1)
             initFlash(context);
+
+        this.cmdPrefs = new CommandsPreferences(prefsMgr);
 
         this.player = p;
         this.contacts = c;
