@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout android:id="@+id/tutorial_logo_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:orientation="vertical"
+        android:weightSum="2">
+
+        <LinearLayout android:id="@+id/tutorial_end_icons_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+
+            android:weightSum="@integer/tutorial_end_icon_weightsum">
+
+            <View style="@style/Tutorial.End.IconRow"/>
+
+            <ohi.andre.consolelauncher.tuils.SquareImageView style="@style/Tutorial.End.Icon"
+                android:id="@+id/tutorial_end_gmail"
+
+                android:src="@drawable/ic_email"/>
+
+            <View style="@style/Tutorial.End.IconRow"/>
+
+            <ohi.andre.consolelauncher.tuils.SquareImageView style="@style/Tutorial.End.Icon"
+                android:id="@+id/tutorial_end_github"
+
+                android:src="@drawable/ic_git"/>
+
+            <View style="@style/Tutorial.End.IconRow"/>
+
+            <ohi.andre.consolelauncher.tuils.SquareImageView style="@style/Tutorial.End.Icon"
+                android:id="@+id/tutorial_end_googlep"
+
+                android:src="@drawable/ic_googlep"/>
+
+            <View style="@style/Tutorial.End.IconRow"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+
+        android:layout_centerInParent="true">
+
+        <TextView style="@style/TextAppearance.AppCompat.Body1"
+            android:id="@+id/tutorial_end_label1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:textColor="@color/default_output_color"/>
+
+        <TextView style="@style/TextAppearance.AppCompat.Body1"
+            android:id="@+id/tutorial_end_label2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:textColor="@color/default_output_color"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

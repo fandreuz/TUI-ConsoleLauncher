@@ -122,18 +122,20 @@ public class MusicManager implements OnCompletionListener {
     }
 
     private boolean prepareSong(int songIndex) {
-        if (files == null)
+        if (files == null) {
             return false;
+        }
 
         List<String> songs = getPaths();
-        if(songs == null) {
+        if(songs == null || songs.size() == 0) {
             return false;
         }
 
         if (songIndex >= songs.size())
             songIndex -= songs.size();
-        else if (songIndex < 0)
+        else if (songIndex < 0) {
             songIndex += songs.size();
+        }
 
         currentSongIndex = songIndex;
 

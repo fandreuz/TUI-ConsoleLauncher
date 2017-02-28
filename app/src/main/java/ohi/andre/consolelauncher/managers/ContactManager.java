@@ -10,6 +10,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -50,8 +52,11 @@ public class ContactManager {
         return contacts;
     }
 
-    public Set<String> names() {
-        return getContacts().keySet();
+    public List<String> names() {
+        Set<String> strings = getContacts().keySet();
+        List<String> list = new ArrayList<>(strings);
+        Collections.sort(list);
+        return list;
     }
 
     public ArrayList<String> listNamesAndNumbers() {

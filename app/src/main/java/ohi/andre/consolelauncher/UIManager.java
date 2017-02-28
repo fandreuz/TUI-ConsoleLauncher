@@ -5,7 +5,6 @@ import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
@@ -20,32 +19,23 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import ohi.andre.comparestring.Compare;
-import ohi.andre.consolelauncher.commands.ExecInfo;
-import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.FileManager;
-import ohi.andre.consolelauncher.managers.MusicManager;
+import ohi.andre.consolelauncher.commands.ExecutePack;
+import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.PreferencesManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
-import ohi.andre.consolelauncher.managers.SuggestionsManager;
+import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.tuils.ShellUtils;
-import ohi.andre.consolelauncher.tuils.SuggestionRunnable;
+import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
@@ -64,13 +54,11 @@ public class UIManager implements OnTouchListener {
     private DevicePolicyManager policy;
     private ComponentName component;
     private GestureDetector det;
-    private ExecInfo info;
+    private MainPack info;
 
     private InputMethodManager imm;
     private CommandExecuter trigger;
     private TerminalManager mTerminalAdapter;
-
-    private int lastMeasuredHeight;
 
     private TextView ram;
 
@@ -88,9 +76,12 @@ public class UIManager implements OnTouchListener {
 
     private LinearLayout suggestionsView;
     private SuggestionViewDecorer suggestionViewDecorer;
-    private LinearLayout.LayoutParams suggestionViewParams;
-    private Thread lastSuggestionThread;
     private SuggestionRunnable suggestionRunnable;
+    private LinearLayout.LayoutParams suggestionViewParams;
+    private SuggestionsManager suggestionsManager;
+
+    private TextView terminalView;
+    private Thread lastSuggestionThread;
     private Handler activityHandler;
     private Runnable removeAllSuggestions = new Runnable() {
         @Override
@@ -109,8 +100,9 @@ public class UIManager implements OnTouchListener {
 
         @Override
         public void onTextChanged(CharSequence s, int st, int b, int c) {
-            if (suggestionsView == null)
+            if (suggestionsView == null || suggestionsManager == null) {
                 return;
+            }
 
             String text = s.toString();
             int lastSpace = text.lastIndexOf(Tuils.SPACE);
@@ -130,84 +122,15 @@ public class UIManager implements OnTouchListener {
     private View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            String suggestedText = ((TextView) v).getText().toString();
+            SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) v.getTag(R.id.suggestion_id);
+            boolean execOnClick = suggestion.exec;
 
-            String inputText = mTerminalAdapter.getInput();
-
-            int lastSpace = inputText.lastIndexOf(Tuils.SPACE);
-            String lastWord = inputText.substring(lastSpace != -1 ? lastSpace + 1 : 0);
-            String before = inputText.substring(0, lastSpace + 1);
-
-            boolean execOnClick = (boolean) v.getTag(R.id.exec_on_click_id);
-            int suggestionType = (int) v.getTag(R.id.suggestion_type_id);
-
-            StringBuilder builder = new StringBuilder();
-            if (suggestedText.equals(File.separator)) {
-                builder.append(before);
-                builder.append(lastWord);
-                builder.append(suggestedText);
-            } else if (lastWord.contains(File.separator)) {
-                int lastSlashIndex = inputText.lastIndexOf(File.separator);
-                before = inputText.substring(0, lastSlashIndex + 1);
-                builder.append(before);
-                builder.append(suggestedText);
+            if(suggestion.finalText == null) {
+//                this is for permanentsuggestions
+                mTerminalAdapter.setInput(mTerminalAdapter.getInput() + suggestion.text);
             } else {
-                if(!suggestedText.contains(Tuils.SPACE)) {
-                    builder.append(before);
-                    builder.append(suggestedText);
-                } else {
-                    String[] suggestParts = suggestedText.split(Tuils.SPACE);
-                    String[] inputParts = inputText.split(Tuils.SPACE);
-
-                    boolean useScrollCompare;
-                    int minRate;
-                    switch (suggestionType) {
-                        case SuggestionsManager.Suggestion.TYPE_APP:
-                            useScrollCompare = AppsManager.USE_SCROLL_COMPARE;
-                            minRate = SuggestionsManager.MIN_APPS_RATE;
-                            break;
-                        case SuggestionsManager.Suggestion.TYPE_SONG:
-                            useScrollCompare = MusicManager.USE_SCROLL_COMPARE;
-                            minRate = SuggestionsManager.MIN_SONGS_RATE;
-                            break;
-                        case SuggestionsManager.Suggestion.TYPE_CONTACT:
-                            useScrollCompare = ContactManager.USE_SCROLL_COMPARE;
-                            minRate = SuggestionsManager.MIN_CONTACTS_RATE;
-                            break;
-                        case SuggestionsManager.Suggestion.TYPE_FILE:
-                            useScrollCompare = FileManager.USE_SCROLL_COMPARE;
-                            minRate = SuggestionsManager.MIN_FILE_RATE;
-                            break;
-                        default:
-                            builder.append(before);
-                            builder.append(suggestedText);
-                            return;
-                    }
-
-                    int count;
-                    for(count = 0; count < inputParts.length; count++) {
-                        int rate = useScrollCompare ? Compare.scrollComparison(inputParts[count], suggestParts[0]) :
-                                Compare.linearComparison(inputParts[count], suggestParts[0]);
-
-                        if(rate >= minRate) {
-                            break;
-                        }
-                    }
-
-                    List<String> finalText = new ArrayList<>(Arrays.asList(inputParts));
-                    for(int c = 0; c < suggestParts.length; c++) {
-                        if(finalText.size() > c + count) {
-                            finalText.set(c + count, suggestParts[c]);
-                        } else {
-                            finalText.add(suggestParts[c]);
-                        }
-                    }
-
-                    builder.append(Tuils.toPlanString(finalText, Tuils.SPACE));
-                }
+                mTerminalAdapter.setInput(suggestion.finalText);
             }
-
-            mTerminalAdapter.setInput(builder.toString());
 
             if (executeOnSuggestionClick && execOnClick) {
                 mTerminalAdapter.simulateEnter();
@@ -224,6 +147,7 @@ public class UIManager implements OnTouchListener {
             suggestionViewParams.setMargins(SkinManager.SUGGESTION_MARGIN, 0, SkinManager.SUGGESTION_MARGIN, 0);
             suggestionViewParams.gravity = Gravity.CENTER_VERTICAL;
         }
+
 
         if(suggestionRunnable == null) {
             suggestionRunnable = new SuggestionRunnable(skinManager, suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent());
@@ -252,7 +176,7 @@ public class UIManager implements OnTouchListener {
             public void run() {
                 super.run();
 
-                final SuggestionsManager.Suggestion[] suggestions = SuggestionsManager.getSuggestions(info, before, lastWord);
+                final SuggestionsManager.Suggestion[] suggestions = suggestionsManager.getSuggestions(info, before, lastWord);
 
                 if(suggestions.length == 0) {
                     ((Activity) mContext).runOnUiThread(removeAllSuggestions);
@@ -309,8 +233,8 @@ public class UIManager implements OnTouchListener {
         lastSuggestionThread.start();
     }
 
-    protected UIManager(ExecInfo info, Context context, final ViewGroup rootView, final CommandExecuter tri, DevicePolicyManager mgr, ComponentName name,
-                        PreferencesManager prefsMgr) {
+    protected UIManager(ExecutePack info, Context context, final ViewGroup rootView, final CommandExecuter tri, DevicePolicyManager mgr, ComponentName name,
+                        PreferencesManager prefsMgr, MainPack mainPack) {
 
         rootView.setOnTouchListener(this);
 
@@ -318,13 +242,16 @@ public class UIManager implements OnTouchListener {
         component = name;
 
         mContext = context;
-        this.info = info;
+        this.info = (MainPack) info;
 
         trigger = tri;
 
+        final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-        Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-        skinManager = new SkinManager(prefsMgr, lucidaConsole);
+        skinManager = new SkinManager(prefsMgr);
+
+        this.info.skinManager = skinManager;
 
         if (!skinManager.getUseSystemWp()) {
             rootView.setBackgroundColor(skinManager.getBgColor());
@@ -336,7 +263,7 @@ public class UIManager implements OnTouchListener {
         if (showRam) {
             ram.setTextColor(skinManager.getRamColor());
             ram.setTextSize(skinManager.getRamSize());
-            ram.setTypeface(skinManager.getGlobalTypeface());
+            ram.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
 
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
@@ -356,7 +283,7 @@ public class UIManager implements OnTouchListener {
             deviceInfo.setTextColor(skinManager.getDeviceColor());
             deviceInfo.setTextSize(skinManager.getDeviceSize());
 
-            deviceInfo.setTypeface(skinManager.getGlobalTypeface());
+            deviceInfo.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
         } else {
             deviceInfo.setVisibility(View.GONE);
             deviceInfo = null;
@@ -369,7 +296,7 @@ public class UIManager implements OnTouchListener {
         View inputOutputView = inflater.inflate(layoutId, null);
         rootView.addView(inputOutputView);
 
-        final TextView terminalView = (TextView) inputOutputView.findViewById(R.id.terminal_view);
+        terminalView = (TextView) inputOutputView.findViewById(R.id.terminal_view);
         terminalView.setOnTouchListener(this);
         ((View) terminalView.getParent()).setOnTouchListener(this);
 
@@ -378,11 +305,27 @@ public class UIManager implements OnTouchListener {
 
         TextView prefixView = (TextView) inputOutputView.findViewById(R.id.prefix_view);
 
-        TextView submitView = (TextView) inputOutputView.findViewById(R.id.submit_tv);
+        ImageButton submitView = (ImageButton) inputOutputView.findViewById(R.id.submit_tv);
         boolean showSubmit = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOWSUBMIT));
         if (!showSubmit) {
             submitView.setVisibility(View.GONE);
             submitView = null;
+        }
+
+//        toolbar
+        boolean showToolbar = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOWTOOLBAR));
+        ImageButton backView = null;
+        ImageButton nextView = null;
+        ImageButton deleteView = null;
+        ImageButton pasteView = null;
+
+        if(!showToolbar) {
+            inputOutputView.findViewById(R.id.tools_view).setVisibility(View.GONE);
+        } else {
+            backView = (ImageButton) inputOutputView.findViewById(R.id.back_view);
+            nextView = (ImageButton) inputOutputView.findViewById(R.id.next_view);
+            deleteView = (ImageButton) inputOutputView.findViewById(R.id.delete_view);
+            pasteView = (ImageButton) inputOutputView.findViewById(R.id.paste_view);
         }
 
         if (skinManager.getShowSuggestions()) {
@@ -391,13 +334,15 @@ public class UIManager implements OnTouchListener {
             suggestionsView = (LinearLayout) rootView.findViewById(R.id.suggestions_group);
             inputView.addTextChangedListener(textWatcher);
 
+            suggestionsManager = new SuggestionsManager(prefsMgr);
+
             this.suggestionViewDecorer = new SuggestionViewDecorer() {
                 @Override
                 public TextView getSuggestionView(Context context) {
                     TextView textView = new TextView(mContext);
                     textView.setOnClickListener(clickListener);
 
-                    textView.setTypeface(skinManager.getGlobalTypeface());
+                    textView.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
                     textView.setTextColor(skinManager.getSuggestionTextColor());
                     textView.setTextSize(skinManager.getSuggestionSize());
 
@@ -425,51 +370,28 @@ public class UIManager implements OnTouchListener {
             initDetector();
         }
 
-        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, skinManager, getHint(prefsMgr), inputBottom);
+        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, skinManager, context, mainPack);
         mTerminalAdapter.setInputListener(new OnNewInputListener() {
             @Override
             public void onNewInput(String input) {
                 if(suggestionsView != null) {
                     suggestionsView.removeAllViews();
                 }
-                trigger.exec(input);
+                trigger.exec(input, null);
             }
         });
         if(Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOW_DONATE_MESSAGE))) {
             mTerminalAdapter.addMessager(new TerminalManager.Messager(20, context.getString(R.string.rate_donate_text)));
         }
-
-        ViewTreeObserver observer = rootView.getViewTreeObserver();
-        final TextView device = deviceInfo;
-        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int rootHeight = rootView.getMeasuredHeight();
-                if (rootHeight != 0 && rootHeight == lastMeasuredHeight)
-                    return;
-
-                lastMeasuredHeight = rootHeight;
-
-                int deviceHeight = device != null ? device.getMeasuredHeight() : 0;
-                int ramHeight = ram != null ? ram.getMeasuredHeight() : 0;
-                int inputHeight = inputView.getMeasuredHeight();
-                int suggestionHeight = suggestionsView != null ? suggestionsView.getMeasuredHeight() : 0;
-                int terminalHeight = rootHeight - deviceHeight - ramHeight - inputHeight - suggestionHeight;
-
-                View parent = (View) terminalView.getParent();
-                parent.setLayoutParams(inputBottom ? new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, terminalHeight) :
-                    new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, terminalHeight));
-            }
-        });
     }
 
-    private void openKeyboard() {
+    public void openKeyboard() {
         mTerminalAdapter.requestInputFocus();
         imm.showSoftInput(mTerminalAdapter.getInputView(), InputMethodManager.SHOW_IMPLICIT);
         mTerminalAdapter.scrollToEnd();
     }
 
-    private void closeKeyboard() {
+    public void closeKeyboard() {
         imm.hideSoftInputFromWindow(mTerminalAdapter.getInputWindowToken(), 0);
     }
 
@@ -493,40 +415,28 @@ public class UIManager implements OnTouchListener {
     //    get device name
     private String getDeviceName(PreferencesManager preferencesManager) {
         String name = preferencesManager.getValue(PreferencesManager.DEVICENAME);
-        if (name.length() == 0 || name.equals("null"))
+        if (name == null || name.length() == 0 || name.equals("null")) {
             return Build.MODEL;
-        else
+        } else {
             return name;
+        }
+    }
+
+    public void onBackPressed() {
+        mTerminalAdapter.onBackPressed();
     }
 
     //    update ram
     public void updateRamDetails() {
-        ram.setText("free ram: " + Tuils.ramDetails(activityManager, memory));
+        ram.setText("free RAM: " + Tuils.ramDetails(activityManager, memory));
     }
 
     public void focusTerminal() {
         mTerminalAdapter.requestInputFocus();
     }
 
-    //	 get hint for input
-    private String getHint(PreferencesManager preferencesManager) {
-        boolean showUsername = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.SHOWUSERNAME));
-
-        String hint = "";
-        if (showUsername) {
-            hint = preferencesManager.getValue(PreferencesManager.USERNAME);
-            if (hint == null || hint.length() == 0) {
-                String email = Tuils.getUsername(mContext);
-                if (email != null) {
-                    if (email.endsWith("@gmail.com"))
-                        email = email.substring(0, email.length() - 10);
-                    return "user@".concat(email);
-                } else
-                    return Tuils.getSDK();
-            } else
-                hint = "user@".concat(hint);
-        }
-        return hint;
+    public void scrollToEnd() {
+        mTerminalAdapter.scrollToEnd();
     }
 
     //	 init detector for double tap
@@ -555,14 +465,18 @@ public class UIManager implements OnTouchListener {
                 }
 
                 if(hadSU) {
-                    ShellUtils.execCommand("input keyevent 26", true, null);
+                    String input = mTerminalAdapter.getInput();
+                    mTerminalAdapter.setInput("su input keyevent KEYCODE_POWER");
+                    mTerminalAdapter.simulateEnter();
+                    mTerminalAdapter.setInput(input);
                 } else {
                     boolean admin = policy.isAdminActive(component);
 
-                    if (!admin)
+                    if (!admin) {
                         Tuils.requestAdmin((Activity) mContext, component, mContext.getString(R.string.adminrequest_label));
-                    else
+                    } else {
                         policy.lockNow();
+                    }
                 }
 
                 return true;
@@ -577,10 +491,6 @@ public class UIManager implements OnTouchListener {
     //	 on pause
     public void pause() {
         closeKeyboard();
-    }
-
-    public void clear() {
-        mTerminalAdapter.clear();
     }
 
     @Override

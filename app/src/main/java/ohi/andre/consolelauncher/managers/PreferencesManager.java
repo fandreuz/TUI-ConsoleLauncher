@@ -35,6 +35,10 @@ public class PreferencesManager {
     public static final String DEVICENAME = "deviceName";
     public static final String SHOWRAM = "showRam";
     public static final String SHOWDEVICE = "showDevice";
+    public static final String SHOWTOOLBAR = "showToolbar";
+    public static final String SHOWUSERNAMEWHENINPUTEMPTY = "showSessionInfoWhenInputEmpty";
+    public static final String LINUXAPPERARENCE = "linuxAppearance";
+    public static final String SHOWPATH_SESSIONINFO = "showPathInSessionInfo";
 
     public static final String SUGGESTIONTEXT_COLOR = "suggestionTextColor";
     public static final String TRANSPARENT_SUGGESTIONS = "transparentSuggestions";
@@ -47,6 +51,12 @@ public class PreferencesManager {
     public static final String CONTACT_SUGGESTION_BG = "contactSuggestionBg";
     public static final String FILE_SUGGESTION_BG = "fileSuggestionBg";
 
+    public static final String MINAPPSRATE = "minAppsRate";
+    public static final String MINFILESRATE = "minFilesRate";
+    public static final String MINSONGSRATE = "minSongsRate";
+    public static final String MINCONTACTSRATE = "minContactsRate";
+    public static final String MINCOMMANDSRATE = "minCommandsRate";
+
     public static final String DOUBLETAP = "closeOnDbTap";
     public static final String DOUBLETAP_SU = "doubleTapSU";
     public static final String SHOWSUGGESTIONS = "showSuggestions";
@@ -57,11 +67,11 @@ public class PreferencesManager {
     public static final String FROM_MEDIASTORE = "fromMediastore";
 
     public static final String USE_SYSTEMWP = "useSystemWallpaper";
-    public static final String FULLSCREEN = "fullscreen";
     public static final String NOTIFICATION = "keepAliveWithNotification";
     public static final String OPEN_KEYBOARD = "openKeyboardOnStart";
     public static final String COMPARESTRING_APPS = "compareStringForApps";
     public static final String SHOW_DONATE_MESSAGE = "showDonationMessage";
+    public static final String SHOW_ALIAS_VALUE = "showAliasValue";
 
     public static final String DEFAULT_SEARCH = "defaultSearch";
 
@@ -95,12 +105,7 @@ public class PreferencesManager {
 
         String line = reader.readLine();
         while (line != null) {
-            if (!line.startsWith("//") && !line.startsWith("\n") && line.length() > 0) {
-//                can't replace all spaces in aliases
-                if (n != ALIAS)
-                    line = line.replaceAll("\\s+", "");
-                else
-                    line = line.trim();
+            if (!line.startsWith("//") && !line.startsWith(Tuils.NEWLINE) && line.length() > 0) {
                 list.add(line);
             }
 
@@ -127,8 +132,9 @@ public class PreferencesManager {
         }
 
         File file = new File(folder, name);
-        if (createOrUpdateFile(file, n))
+        if (createOrUpdateFile(file, n)) {
             return file;
+        }
         return null;
     }
 
@@ -252,18 +258,17 @@ public class PreferencesManager {
     private List<String> readAllInput(InputStream i) {
         BufferedReader br = null;
 
-        Log.e("andre", i.toString());
-
         List<String> list = new ArrayList<>();
         String line;
         try {
             br = new BufferedReader(new InputStreamReader(i));
-            while ((line = br.readLine()) != null)
+            while ((line = br.readLine()) != null) {
                 list.add(line);
+            }
 
-        } catch (IOException e) {
-            Log.e("andre", "", e);
-        } finally {
+        }
+        catch (IOException e) {}
+        finally {
             if (br != null)
                 try {
                     br.close();
@@ -289,7 +294,7 @@ public class PreferencesManager {
     private String obtainValue(String line, int equalsIndex) {
         if (equalsIndex == -1)
             return null;
-        return line.substring(equalsIndex + 1).toLowerCase();
+        return line.substring(equalsIndex + 1);
     }
 
     public String obtainValue(String line) {

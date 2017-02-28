@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,30 +24,35 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 
-import ohi.andre.consolelauncher.commands.ExecInfo;
+import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
+import ohi.andre.consolelauncher.managers.PreferencesManager;
+import ohi.andre.consolelauncher.tuils.KeeperService;
+import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
-import ohi.andre.consolelauncher.managers.PreferencesManager;
-import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.tutorial.TutorialActivity;
 
 public class LauncherActivity extends Activity implements Reloadable {
 
+    private final String FIRSTACCESS_KEY = "x1";
     private final int FILEUPDATE_DELAY = 300;
 
     public static final int COMMAND_REQUEST_PERMISSION = 10;
     public static final int STARTING_PERMISSION = 11;
     public static final int COMMAND_SUGGESTION_REQUEST_PERMISSION = 12;
 
-    private final String FIRSTACCESS_KEY = "firstAccess";
+    public static final int TUIXT_REQUEST = 10;
+
+    View decorView;
 
     private UIManager ui;
     private MainManager main;
 
-    private boolean hideStatusBar;
-    private boolean openKeyboardOnStart;
+    private boolean openKeyboardOnStart, fullscreen;
 
     private PreferencesManager preferencesManager;
 
@@ -55,9 +61,9 @@ public class LauncherActivity extends Activity implements Reloadable {
     private CommandExecuter ex = new CommandExecuter() {
 
         @Override
-        public String exec(String input) {
+        public String exec(String input, String alias) {
             try {
-                main.onCommand(input);
+                main.onCommand(input, alias);
             } catch (NullPointerException e) {
                 e.printStackTrace();
             }
@@ -88,19 +94,24 @@ public class LauncherActivity extends Activity implements Reloadable {
             }
         }
     };
-    private Runnable clearer = new Runnable() {
-
-        @Override
-        public void run() {
-            ui.clear();
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (isFinishing()) {
+            return;
+        }
+
+        SharedPreferences preferences = getPreferences(0);
+        boolean firstAccess = preferences.getBoolean(FIRSTACCESS_KEY, true);
+        if (firstAccess) {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean(FIRSTACCESS_KEY, false);
+            editor.commit();
+
+            startActivity(new Intent(this, TutorialActivity.class));
+            this.finish();
             return;
         }
 
@@ -119,22 +130,9 @@ public class LauncherActivity extends Activity implements Reloadable {
 
     private void finishOnCreate() {
 
-        SharedPreferences preferences = getPreferences(0);
-        boolean firstAccess = preferences.getBoolean(FIRSTACCESS_KEY, true);
-        if (firstAccess) {
-            SharedPreferences.Editor editor = preferences.edit();
-            editor.putBoolean(FIRSTACCESS_KEY, false);
-            editor.commit();
-
-            Tuils.showTutorial(this);
-        }
-
         File tuiFolder = getFolder();
         Resources res = getResources();
         starterIntent = getIntent();
-
-        DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        ComponentName component = new ComponentName(this, PolicyReceiver.class);
 
         try {
             preferencesManager = new PreferencesManager(res.openRawResource(R.raw.settings), res.openRawResource(R.raw.alias), tuiFolder);
@@ -144,29 +142,36 @@ public class LauncherActivity extends Activity implements Reloadable {
         }
 
         boolean showNotification = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.NOTIFICATION));
+        Intent keeperIntent = new Intent(this, KeeperService.class);
         if (showNotification) {
-            Intent service = new Intent(this, KeeperService.class);
-            startService(service);
+            startService(keeperIntent);
+        } else {
+            stopService(keeperIntent);
         }
 
-        boolean useSystemWP = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.USE_SYSTEMWP));
-        if (useSystemWP)
-            setTheme(R.style.SystemWallpaperStyle);
+        DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        ComponentName component = new ComponentName(this, PolicyReceiver.class);
 
-        hideStatusBar = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.FULLSCREEN));
+        boolean useSystemWP = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.USE_SYSTEMWP));
+        if (useSystemWP) {
+            setTheme(R.style.Custom_SystemWP);
+        } else {
+            setTheme(R.style.Custom_Solid);
+        }
 
         openKeyboardOnStart = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.OPEN_KEYBOARD));
         if (!openKeyboardOnStart) {
-            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         }
 
-        setContentView(R.layout.main_view);
+        setContentView(R.layout.base_view);
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
-        main = new MainManager(this, in, out, preferencesManager, policy, component, clearer);
-        ui = new UIManager(main.getInfo(), this, mainView, ex, policy, component, preferencesManager);
+        main = new MainManager(this, in, out, preferencesManager, policy, component);
+        ui = new UIManager(main.getMainPack(), this, mainView, ex, policy, component, preferencesManager, main.getMainPack());
 
         in.in(Tuils.EMPTYSTRING);
+        ui.focusTerminal();
 
         System.gc();
     }
@@ -175,7 +180,7 @@ public class LauncherActivity extends Activity implements Reloadable {
         final File tuiFolder = Tuils.getTuiFolder();
 
         while (true) {
-            if (tuiFolder.isDirectory() || tuiFolder.mkdir()) {
+            if (tuiFolder != null && (tuiFolder.isDirectory() || tuiFolder.mkdir())) {
                 break;
             }
 
@@ -185,16 +190,6 @@ public class LauncherActivity extends Activity implements Reloadable {
         }
 
         return tuiFolder;
-    }
-
-    private void hideStatusBar() {
-        if (!hideStatusBar)
-            return;
-
-        if (Build.VERSION.SDK_INT < 16)
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        else
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
     @Override
@@ -209,15 +204,10 @@ public class LauncherActivity extends Activity implements Reloadable {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        hideStatusBar();
-    }
-
-    @Override
     protected void onPause() {
         super.onPause();
+
+        overridePendingTransition(0,0);
 
         if (ui != null && main != null) {
             ui.pause();
@@ -237,7 +227,7 @@ public class LauncherActivity extends Activity implements Reloadable {
     @Override
     public void onBackPressed() {
         if (main != null) {
-            main.onBackPressed();
+            ui.onBackPressed();
         }
     }
 
@@ -275,10 +265,22 @@ public class LauncherActivity extends Activity implements Reloadable {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
 
-        if (ui != null) {
+        if (hasFocus && ui != null) {
             ui.focusTerminal();
         }
-        hideStatusBar();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == TUIXT_REQUEST && resultCode != 0) {
+            if(resultCode == TuixtActivity.BACK_PRESSED) {
+                out.onOutput(getString(R.string.tuixt_back_pressed));
+            } else {
+                out.onOutput(data.getStringExtra(TuixtActivity.ERROR_KEY));
+            }
+        }
     }
 
     @Override
@@ -287,8 +289,8 @@ public class LauncherActivity extends Activity implements Reloadable {
             switch (requestCode) {
                 case COMMAND_REQUEST_PERMISSION:
                     if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        ExecInfo info = main.getInfo();
-                        main.onCommand(info.calledCommand);
+                        MainPack info = main.getMainPack();
+                        main.onCommand(info.lastCommand, null);
                     } else {
                         ui.setOutput(getString(R.string.output_nopermissions));
                     }
@@ -315,4 +317,10 @@ public class LauncherActivity extends Activity implements Reloadable {
         } catch (Exception e) {}
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        ui.scrollToEnd();
+    }
 }

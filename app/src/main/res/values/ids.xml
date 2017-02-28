@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <item name="tutorial_navigation_next" type="id"/>
+    <item name="tutorial_navigation_back" type="id"/>
+
+    <item name="tutorial_container" type="id"/>
+    <item name="tutorial_std_container" type="id"/>
+    <item name="tutorial_std_title" type="id"/>
+
+</resources>

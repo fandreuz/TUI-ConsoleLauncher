@@ -4,21 +4,91 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include
-        android:id="@+id/suggestion_container"
-        layout="@layout/suggestions_layout"
+    <include layout="@layout/suggestions_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <include
-        android:id="@id/input_group"
-        layout="@layout/input_group"
+    <LinearLayout android:id="@+id/input_group"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:weightSum="@integer/input_group_weightsum"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-    <include
-        layout="@layout/terminal_view"
+        <TextView
+            android:id="@+id/prefix_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:paddingTop="@dimen/input_padding"/>
+
+        <EditText
+            android:id="@+id/input_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="@integer/input_view_weight"
+
+            android:background="@null"
+            android:imeOptions="actionGo|flagNoFullscreen"
+            android:textCursorDrawable="@drawable/cursor"
+
+            android:paddingTop="@dimen/input_padding"
+
+            android:lines="1"
+            android:singleLine="true" />
+
+        <ImageButton
+            android:id="@+id/submit_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="@integer/enter_view_weight"
+
+            android:background="@null"
+            android:src="@drawable/ic_enter"
+
+            android:paddingTop="@dimen/input_padding"/>
+
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/tools_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="@dimen/tools_height"
+        android:orientation="horizontal"
+
+        android:weightSum="@integer/tools_view_weightsum">
+
+        <ImageButton android:id="@+id/delete_view"
+            style="@style/ToolsBar"
+            android:src="@drawable/ic_clear"/>
+
+        <ImageButton android:id="@+id/back_view"
+            style="@style/ToolsBar"
+            android:src="@drawable/ic_back"/>
+
+        <ImageButton android:id="@+id/next_view"
+            style="@style/ToolsBar"
+            android:src="@drawable/ic_next"/>
+
+        <ImageButton android:id="@+id/paste_view"
+            style="@style/ToolsBar"
+            android:src="@drawable/ic_paste"/>
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/terminal_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:gravity="bottom"
+            android:scrollHorizontally="false"
+            android:scrollbars="vertical"
+            android:textIsSelectable="true"/>
+
+    </ScrollView>
 
 </LinearLayout>

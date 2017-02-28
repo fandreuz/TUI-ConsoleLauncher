@@ -4,8 +4,10 @@
     <dimen name="input_padding">15dp</dimen>
     <dimen name="suggestion_height">40dp</dimen>
     <dimen name="cursor_width">8dp</dimen>
+    <dimen name="tools_height">15dp</dimen>
 
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="tutorial_end_icons_padding">10dp</dimen>
+    <dimen name="tutorial_navigation_padding">15dp</dimen>
+    <dimen name="tutorial_title_marginbottom">10dp</dimen>
 
 </resources>

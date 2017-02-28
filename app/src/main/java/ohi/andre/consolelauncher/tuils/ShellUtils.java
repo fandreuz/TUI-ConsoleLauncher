@@ -151,7 +151,6 @@ public class ShellUtils {
                     continue;
                 }
 
-                // donnot use os.writeBytes(commmand), avoid chinese charset error
                 os.write(command.getBytes());
                 os.writeBytes(COMMAND_LINE_END);
                 os.flush();
@@ -176,11 +175,9 @@ public class ShellUtils {
                     errorMsg.append(s);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
+        }
+        catch (Exception e) {}
+        finally {
             try {
                 if (os != null) {
                     os.close();

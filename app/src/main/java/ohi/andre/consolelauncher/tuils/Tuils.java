@@ -8,21 +8,28 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.admin.DevicePolicyManager;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
-import android.support.v4.content.FileProvider;
-import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Patterns;
-import android.widget.Toast;
+import android.util.TypedValue;
+import android.view.View;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -35,9 +42,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
-import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.managers.MusicManager;
-import ohi.andre.consolelauncher.tuils.tutorial.TutorialIndexActivity;
+import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.tuils.tutorial.TutorialActivity;
 
 public class Tuils {
 
@@ -59,13 +66,17 @@ public class Tuils {
     }
 
     public static boolean containsExtension(String[] array, String value) {
-        value = value.toLowerCase().trim();
-        for(String s : array) {
-            if(value.endsWith(s)) {
-                return true;
+        try {
+            value = value.toLowerCase().trim();
+            for (String s : array) {
+                if (value.endsWith(s)) {
+                    return true;
+                }
             }
+            return false;
+        } catch (Exception e) {
+            return false;
         }
-        return false;
     }
 
     public static List<File> getSongsInFolder(File folder) {
@@ -92,8 +103,7 @@ public class Tuils {
     }
 
     public static void showTutorial(Context context) {
-        Intent intent = new Intent(context, TutorialIndexActivity.class);
-        context.startActivity(intent);
+        context.startActivity(new Intent(context, TutorialActivity.class));
     }
 
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
@@ -109,12 +119,7 @@ public class Tuils {
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component);
         intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, label);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        a.startActivityForResult(intent, 0);
-    }
-
-    public static String removeExtension(String s) {
-        return s.substring(0, s.lastIndexOf("."));
+        a.startActivity(intent);
     }
 
     public static String ramDetails(ActivityManager mgr, MemoryInfo info) {
@@ -124,18 +129,60 @@ public class Tuils {
         return availableMegs + " MB";
     }
 
-    public static List<String> getClassesInPackage(String packageName, Context c)
-            throws IOException {
+    public static List<String> getClassesInPackage(String packageName, Context c) throws IOException {
         List<String> classes = new ArrayList<>();
         String packageCodePath = c.getPackageCodePath();
         DexFile df = new DexFile(packageCodePath);
         for (Enumeration<String> iter = df.entries(); iter.hasMoreElements(); ) {
             String className = iter.nextElement();
-            if (className.contains(packageName) && !className.contains("$"))
+            if (className.contains(packageName) && !className.contains("$")) {
                 classes.add(className.substring(className.lastIndexOf(".") + 1, className.length()));
+            }
         }
 
         return classes;
+    }
+
+    private static String getNicePath(String filePath) {
+        String home = Tuils.getInternalDirectoryPath();
+
+        if(filePath.equals(home)) {
+            return "~";
+        } else if(filePath.startsWith(home)) {
+            return "~" + filePath.replace(home, Tuils.EMPTYSTRING);
+        } else {
+            return filePath;
+        }
+    }
+
+    public static String getHint(SkinManager skinManager, String currentPath) {
+
+        if(!skinManager.showUsernameAndDeviceWhenEmpty()) {
+            return null;
+        }
+
+        boolean showUsername = skinManager.showUsername();
+
+        String username = null;
+        if (showUsername) {
+            username = skinManager.getUsername();
+            if (username == null || username.length() == 0) {
+                username = null;
+            }
+        }
+
+        String deviceName = Build.DEVICE;
+
+        String path = Tuils.EMPTYSTRING;
+        if(skinManager.showPath()) {
+            path = ":" + getNicePath(currentPath);
+        }
+
+        if(username == null) {
+            return deviceName + path;
+        } else {
+            return username + "@" + deviceName + path;
+        }
     }
 
     public static int findPrefix(List<String> list, String prefix) {
@@ -225,6 +272,10 @@ public class Tuils {
     }
 
     public static String filesToPlanString(List<File> files, String separator) {
+        if(files == null || files.size() == 0) {
+            return null;
+        }
+
         StringBuilder builder = new StringBuilder();
         int limit = files.size() - 1;
         for (int count = 0; count < files.size(); count++) {
@@ -254,40 +305,6 @@ public class Tuils {
         }
         return output.toString();
     }
-
-//    public static CharSequence toPlanSequence(List<CharSequence> sequences, CharSequence separator) {
-//        if(sequences != null) {
-//            return toPlanSequence(sequences.toArray(new CharSequence[sequences.size()]), separator);
-//        }
-//        return null;
-//    }
-//
-//    public static CharSequence toPlanSequence(CharSequence[] sequences, CharSequence separator) {
-//        if(sequences == null) {
-//            return null;
-//        }
-//
-//        if (sequences.length == 0)
-//            return null;
-//
-//        CharSequence sequence = null;
-//        int count;
-//        for (count = 0; (sequence = sequences[count]) == null; count++) {
-//        }
-//
-//        CharSequence output = sequences[count];
-//        do {
-//            count++;
-//            CharSequence current = sequences[count];
-//            if (current == null)
-//                continue;
-//
-//            output = TextUtils.concat(output, current);
-//            if (count < sequences.length - 1 && !current.toString().contains(separator))
-//                output = TextUtils.concat(output, separator);
-//        } while (count + 1 < sequences.length);
-//        return output;
-//    }
 
     public static String removeUnncesarySpaces(String string) {
         while (string.contains(DOUBLE_SPACE)) {
@@ -331,59 +348,53 @@ public class Tuils {
         return true;
     }
 
-    public static CharSequence trimWhitespaces(CharSequence source) {
-
-        if(source == null) {
-            return Tuils.EMPTYSTRING;
+    public static String getFileType(File url) {
+        if (url.toString().contains(".doc") || url.toString().contains(".docx")) {
+            return "application/msword";
+        } else if (url.toString().contains(".pdf")) {
+            return "application/pdf";
+        } else if (url.toString().contains(".ppt") || url.toString().contains(".pptx")) {
+            return "application/vnd.ms-powerpoint";
+        } else if (url.toString().contains(".xls") || url.toString().contains(".xlsx")) {
+            return "application/vnd.ms-excel";
+        } else if (url.toString().contains(".zip") || url.toString().contains(".rar")) {
+            return "application/x-wav";
+        } else if (url.toString().contains(".rtf")) {
+            return "application/rtf";
+        } else if (url.toString().contains(".wav") || url.toString().contains(".mp3")) {
+            return "audio/x-wav";
+        } else if (url.toString().contains(".gif")) {
+            return "image/gif";
+        } else if (url.toString().contains(".jpg") || url.toString().contains(".jpeg") || url.toString().contains(".png")) {
+            return "image/jpeg";
+        } else if (url.toString().contains(".txt")) {
+            return "text/plain";
+        } else if (url.toString().contains(".3gp") || url.toString().contains(".mpg") || url.toString().contains(".mpeg") || url.toString().contains(".mpe") || url.toString().contains(".mp4") ||
+                url.toString().contains(".avi")) {
+            return "video/*";
+        } else {
+            return "*/*";
         }
-
-        int i = source.length();
-
-        // loop back to the first non-whitespace character
-        while(--i >= 0 && Character.isWhitespace(source.charAt(i))) {}
-
-        return source.subSequence(0, i+1);
     }
 
-    public static String getSDK() {
-        return "android-sdk " + Build.VERSION.SDK_INT;
-    }
-
-    public static String getUsername(Context context) {
+    public static Intent openFile(File url) {
         try {
-            Pattern email = Patterns.EMAIL_ADDRESS;
-            Account[] accs = AccountManager.get(context).getAccounts();
-            for (Account a : accs)
-                if (email.matcher(a.name).matches())
-                    return a.name;
-        } catch (SecurityException e) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.fromFile(url), getFileType(url));
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            return intent;
+        } catch (ActivityNotFoundException e) {
             return null;
         }
-        return null;
     }
 
-    public static Intent openFile(Context context, File url) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
-        Uri uri = FileProvider.getUriForFile(context, "ohi.andre.consolelauncher.provider", url);
-        intent.setDataAndType(uri, context.getContentResolver().getType(uri));
-
-        return intent;
-    }
-
-    public static Intent shareFile(Context c, File url) {
+    public static Intent shareFile(File url) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
-        Uri uri = FileProvider.getUriForFile(c, "ohi.andre.consolelauncher.provider", url);
-        intent.setDataAndType(uri, c.getContentResolver().getType(uri));
+        intent.setDataAndType(Uri.fromFile(url), getFileType(url));
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(url));
 
         return intent;
     }
@@ -429,6 +440,100 @@ public class Tuils {
         }
 
         return paths;
+    }
+
+    public static double eval(final String str) {
+        return new Object() {
+            int pos = -1, ch;
+
+            void nextChar() {
+                ch = (++pos < str.length()) ? str.charAt(pos) : -1;
+            }
+
+            boolean eat(int charToEat) {
+                while (ch == ' ') nextChar();
+                if (ch == charToEat) {
+                    nextChar();
+                    return true;
+                }
+                return false;
+            }
+
+            double parse() {
+                nextChar();
+                double x = parseExpression();
+                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char)ch);
+                return x;
+            }
+
+            double parseExpression() {
+                double x = parseTerm();
+                for (;;) {
+                    if      (eat('+')) x += parseTerm(); // addition
+                    else if (eat('-')) x -= parseTerm(); // subtraction
+                    else return x;
+                }
+            }
+
+            double parseTerm() {
+                double x = parseFactor();
+                for (;;) {
+                    if      (eat('*')) x *= parseFactor(); // multiplication
+                    else if (eat('/')) x /= parseFactor(); // division
+                    else return x;
+                }
+            }
+
+            double parseFactor() {
+                if (eat('+')) return parseFactor(); // unary plus
+                if (eat('-')) return -parseFactor(); // unary minus
+
+                double x;
+                int startPos = this.pos;
+                if (eat('(')) { // parentheses
+                    x = parseExpression();
+                    eat(')');
+                } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
+                    while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
+                    x = Double.parseDouble(str.substring(startPos, this.pos));
+                } else if (ch >= 'a' && ch <= 'z') { // functions
+                    while (ch >= 'a' && ch <= 'z') nextChar();
+                    String func = str.substring(startPos, this.pos);
+                    x = parseFactor();
+                    if (func.equals("sqrt")) x = Math.sqrt(x);
+                    else if (func.equals("sin")) x = Math.sin(Math.toRadians(x));
+                    else if (func.equals("cos")) x = Math.cos(Math.toRadians(x));
+                    else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
+                    else throw new RuntimeException("Unknown function: " + func);
+                } else {
+                    throw new RuntimeException("Unexpected: " + (char)ch);
+                }
+
+                if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation
+
+                return x;
+            }
+        }.parse();
+    }
+
+    public static String getTextFromClipboard(Context context) {
+        try {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+                ClipboardManager manager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData.Item item = manager.getPrimaryClip().getItemAt(0);
+                return item.getText().toString();
+            } else {
+                android.text.ClipboardManager manager = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                return manager.getText().toString();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static int dpToPx(Resources resources, int dp) {
+        DisplayMetrics displayMetrics = resources.getDisplayMetrics();
+        return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
 }

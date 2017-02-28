@@ -32,7 +32,7 @@ public class AppsManager {
     public static final int HIDDEN_APPS = 11;
 
     public static final int MIN_RATE = 5;
-    public static final boolean USE_SCROLL_COMPARE = false;
+    public static final boolean USE_SCROLL_COMPARE = true;
 
     private final int SUGGESTED_APPS_LENGTH = 5;
 
@@ -151,7 +151,11 @@ public class AppsManager {
     }
 
     private void remove(String packageName) {
-        appsHolder.remove(packageName);
+        AppInfo info = AppUtils.findAppInfo(packageName, appsHolder.getApps());
+        if(info != null) {
+            appsHolder.remove(info);
+            appsHolder.update(true);
+        }
     }
 
     public String findPackage(String name) {
@@ -230,7 +234,8 @@ public class AppsManager {
             return null;
         }
 
-        appsHolder.remove(packageName);
+        appsHolder.remove(info);
+        appsHolder.update(true);
         hiddenApps.add(info);
         AppUtils.checkEquality(hiddenApps);
 
@@ -245,7 +250,6 @@ public class AppsManager {
     }
 
     public String unhideApp(String packageName) {
-
         AppInfo info = AppUtils.findAppInfo(packageName, hiddenApps);
         if(info == null) {
             return null;
@@ -253,6 +257,7 @@ public class AppsManager {
 
         hiddenApps.remove(info);
         appsHolder.add(info);
+        appsHolder.update(false);
 
         prefsEditor.putBoolean(packageName, false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
@@ -269,18 +274,7 @@ public class AppsManager {
     }
 
     public String[] getSuggestedApps() {
-//        workaround
-        String[] temp = appsHolder.getSuggestedApps();
-        if(temp == null || temp.length == 0) {
-            return null;
-        }
-
-        String[] apps = new String[temp.length];
-        for(int countOnTemp = temp.length - 1, countOnApps = 0; countOnTemp >= 0 && countOnApps < apps.length; countOnApps++, countOnTemp--) {
-            apps[countOnApps] = temp[countOnTemp];
-        }
-
-        return apps;
+        return appsHolder.getSuggestedApps();
     }
 
     public String printApps(int type) {
@@ -335,7 +329,7 @@ public class AppsManager {
 
         @Override
         public String toString() {
-            return packageName + " - " + publicLabel;
+            return packageName + " - " + publicLabel + ", n=" + launchedTimes;
         }
 
         @Override
@@ -363,37 +357,36 @@ public class AppsManager {
         }
 
         public void add(AppInfo info) {
-            infos.add(info);
-            update(false);
+            if(! infos.contains(info) ) {
+                infos.add(info);
+                update(false);
+            }
         }
 
-        public void remove(String packageName) {
-            infos.remove(packageName);
+        public void remove(AppInfo info) {
+            infos.remove(info);
             update(true);
         }
 
-        public void updateSuggestion(AppInfo app) {
-            int index = suggestionIndex(app);
-            if(index != -1) {
-                for(int count = suggestedApps.length - 1; count > index; count--) {
-                    AppInfo cycleInfo = suggestedApps[count];
-                    if(cycleInfo == null) {
-//                        this should not happen
-                        throw new UnsupportedOperationException("suggestion is null");
-                    }
+        public void updateSuggestion(AppInfo info) {
+            int index = suggestionIndex(info);
 
-                    if(app.launchedTimes > cycleInfo.launchedTimes) {
-                        suggestedApps[index] = cycleInfo;
-                        suggestedApps[count] = app;
-                        return;
-                    }
-                }
+            if(index == -1) {
+                attemptInsertSuggestion(info);
+            } else if(index == 0) {
+                return;
             } else {
-                for(int count = suggestedApps.length - 1; count >= 0; count--) {
-                    AppInfo cycleInfo = suggestedApps[count];
-                    if(cycleInfo == null || app.launchedTimes > cycleInfo.launchedTimes) {
-                        System.arraycopy(suggestedApps, 1, suggestedApps, 0, count);
-                        suggestedApps[count] = app;
+                for(int count = 0; count < index; count++) {
+                    if(suggestedApps[count] == null) {
+                        if(count == lastNull()) {
+                            suggestedApps[count] = info;
+                            return;
+                        }
+                    } else if(suggestedApps[count].launchedTimes < info.launchedTimes) {
+
+                        System.arraycopy(suggestedApps, count, suggestedApps, count + 1, index - count);
+                        suggestedApps[count] = info;
+
                         return;
                     }
                 }
@@ -421,23 +414,37 @@ public class AppsManager {
 
         private void fillSuggestions() {
             for(AppInfo info : infos) {
-                if(info.launchedTimes == 0){
-                    continue;
-                }
-                for(int count = suggestedApps.length - 1; count >= 0; count--) {
-                    AppInfo i = suggestedApps[count];
-                    if(i == null) {
+                attemptInsertSuggestion(info);
+            }
+        }
+
+        private void attemptInsertSuggestion(AppInfo info) {
+            if(info.launchedTimes == 0){
+                return;
+            }
+            for(int count = 0; count < suggestedApps.length; count++) {
+                if(suggestedApps[count] == null) {
+                    if(count == lastNull()) {
                         suggestedApps[count] = info;
-                        break;
-                    } else if(i.launchedTimes < info.launchedTimes) {
+                        return;
+                    }
+                } else {
+                    if(info.launchedTimes > suggestedApps[count].launchedTimes) {
+                        System.arraycopy(suggestedApps, count, suggestedApps, count + 1, suggestedApps.length - (count + 1));
                         suggestedApps[count] = info;
-                        if(count < suggestedApps.length - 1) {
-                            suggestedApps[count + 1] = i;
-                        }
-                        break;
+                        return;
                     }
                 }
             }
+        }
+
+        private int lastNull() {
+            for(int count = suggestedApps.length - 1; count >= 0; count--) {
+                if(suggestedApps[count] == null) {
+                    return count;
+                }
+            }
+            return -1;
         }
 
         private void update(boolean refreshSuggestions) {
@@ -467,22 +474,24 @@ public class AppsManager {
 
         public static void checkEquality(List<AppInfo> list) {
 
-            First:
             for (AppInfo info : list) {
 
-                Second:
+                if(info == null || info.publicLabel == null) {
+                    continue;
+                }
+
                 for (int count = 0; count < list.size(); count++) {
                     AppInfo info2 = list.get(count);
 
-                    if(info == null || info.publicLabel == null) {
-                        continue First;
-                    }
-
                     if(info2 == null || info2.publicLabel == null) {
-                        continue Second;
+                        continue;
                     }
 
-                    if (info.publicLabel.toLowerCase().replace(Tuils.SPACE, Tuils.EMPTYSTRING).equals(info2.publicLabel.replace(Tuils.SPACE, Tuils.EMPTYSTRING))) {
+                    if(info == info2) {
+                        continue;
+                    }
+
+                    if (info.publicLabel.toLowerCase().replace(Tuils.SPACE, Tuils.EMPTYSTRING).equals(info2.publicLabel.toLowerCase().replace(Tuils.SPACE, Tuils.EMPTYSTRING))) {
                         list.set(count, new AppInfo(info2.packageName, getNewLabel(info2.publicLabel, info2.packageName), info2.launchedTimes));
                     }
                 }
@@ -491,29 +500,6 @@ public class AppsManager {
 
         public static String getNewLabel(String oldLabel, String packageName) {
             try {
-
-//                              OLD VERSION OF this method
-//
-//                int firstDot = packageName.indexOf(Tuils.DOT) + 1;
-//                int secondDot = packageName.substring(firstDot).indexOf(Tuils.DOT) + firstDot;
-//
-//                StringBuilder newLabel = new StringBuilder();
-//                if (firstDot == -1) {
-//                    newLabel.append(packageName);
-//                    newLabel.append(Tuils.SPACE);
-//                    newLabel.append(oldLabel);
-//                } else if (secondDot == -1) {
-//                    newLabel.append(packageName.substring(firstDot, packageName.length()));
-//                    newLabel.append(Tuils.SPACE);
-//                    newLabel.append(oldLabel);
-//                } else {
-//                    newLabel.append(packageName.substring(firstDot, secondDot));
-//                    newLabel.append(Tuils.SPACE);
-//                    newLabel.append(oldLabel);
-//                }
-//
-//                String label = newLabel.toString();
-//                return label.substring(0, 1).toUpperCase() + label.substring(1);
 
                 int firstDot = packageName.indexOf(Tuils.DOT);
                 if(firstDot == -1) {
@@ -577,6 +563,7 @@ public class AppsManager {
             for (AppInfo info : infos) {
                 labels.add(info.publicLabel);
             }
+            Collections.sort(labels);
             return labels;
         }
 

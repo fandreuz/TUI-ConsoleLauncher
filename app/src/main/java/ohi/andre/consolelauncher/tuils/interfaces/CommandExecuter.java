@@ -5,5 +5,5 @@ package ohi.andre.consolelauncher.tuils.interfaces;
  */
 public interface CommandExecuter {
 
-    String exec(String input);
+    String exec(String input, String alias);
 }

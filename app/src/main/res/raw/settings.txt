@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=4.10
+settingsVersion=88
 
 // when you are ready go back to t-ui and type "restart" to see changes
 
@@ -12,12 +12,16 @@ useSystemFont=false
 fontSize=15
 ramColor=#fff44336
 inputFieldBottom=true
-username=edit_this_in_t-ui_folder
+username=user
 showUsername=true
 showSubmit=true
 deviceName=null
 showRam=true
 showDevice=true
+showToolbar=true
+showSessionInfoWhenInputEmpty=true
+linuxAppearance=true
+showPathInSessionInfo=true
 
 // suggestions
 suggestionTextColor=#ff000000
@@ -31,6 +35,13 @@ songSuggestionBg=#ffEEFF41
 contactSuggestionBg=#ff64FFDA
 fileSuggestionBg=#ff03A9F4
 defaultSuggestionBg=#ffFFFFFF
+
+// rates (change values if you want to show less or more result in suggestions)
+minAppsRate=4
+minFilesRate=2
+minSongsRate=4
+minContactsRate=4
+minCommandsRate=4
 
 // pre-load
 useSystemWallpaper=false
@@ -50,6 +61,8 @@ showSuggestions=true
 enableEnterInPhysicalKeyboard=false
 compareStringForApps=false
 showDonationMessage=true
+showAliasValue=true
 
 // commands
 defaultSearch=-g
+

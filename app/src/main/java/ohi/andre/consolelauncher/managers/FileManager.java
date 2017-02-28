@@ -3,9 +3,8 @@ package ohi.andre.consolelauncher.managers;
 import android.content.Context;
 import android.content.Intent;
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import ohi.andre.comparestring.Compare;
+import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class FileManager {
@@ -21,149 +21,146 @@ public class FileManager {
     public static final int ISDIRECTORY = 11;
     public static final int IOERROR = 12;
     public static final int ISFILE = 13;
+    public static final int NOT_WRITEABLE = 14;
+    public static final int NOT_READABLE = 15;
 
     public static final boolean USE_SCROLL_COMPARE = true;
 
     private static final String ASTERISK = "*";
     private static final String DOT = Tuils.DOT;
 
+    public static String writeOn(File file, String text) {
+        try {
+            ShellUtils.CommandResult result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), false, null);
+            if(result.result == 0) {
+                return null;
+            } else {
+//                  try again with su
+                result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), true, null);
+                if(result.result == 0) {
+                    return null;
+                }
+                return result.toString();
+            }
+        } catch (Exception e) {
+            return e.toString();
+        }
+    }
+
     public static int mv(File[] files, File where, boolean su) throws IOException {
-        if (files == null || files.length == 0 || where == null)
+        if (files == null || files.length == 0 || where == null) {
             return FileManager.FILE_NOTFOUND;
+        }
 
-        if (!where.isDirectory())
+        if (!where.isDirectory()) {
             return FileManager.ISFILE;
+        }
 
-        for (File f : files)
+        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + where.getAbsolutePath()+ "\"", su, null);
+        if(r.result != 0) {
+            return NOT_WRITEABLE;
+        }
+
+        for (File f : files) {
             mv(f, where, su);
+        }
 
         return 0;
     }
 
-    public static int mv(File f, File where, boolean su) throws IOException {
-//        if contains spaces, do this with java
-        if (!su && (f.getAbsolutePath().contains(" ") || where.getAbsolutePath().contains(" ")))
-            FileUtils.moveToDirectory(f, where, false);
-//        else to this with shell
-        else {
-            ArrayList<String> cmds = new ArrayList<>();
-            if (su) {
-                cmds.add("su");
-                cmds.add("-c");
-            }
-            cmds.add("mv");
-            cmds.add("-r");
-            cmds.add(f.getAbsolutePath());
-            cmds.add(where.getAbsolutePath());
-
-            String[] command = new String[cmds.size()];
-            cmds.toArray(command);
-
-            Process p;
-            int exit;
-            try {
-                p = Runtime.getRuntime().exec(command);
-                exit = p.waitFor();
-            } catch (IOException | InterruptedException e) {
-                return FileManager.IOERROR;
-            }
-
-            if (exit != 0)
-                return FileManager.IOERROR;
+    private static int mv(File f, File where, boolean su) throws IOException {
+        ShellUtils.CommandResult rw = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath()+ "\"", su, null);
+        if(rw.result != 0) {
+            return NOT_WRITEABLE;
         }
-        return 0;
+        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", su, null);
+        if(rr.result != 0) {
+            return NOT_READABLE;
+        }
+
+        ShellUtils.CommandResult result = ShellUtils.execCommand("mv " +
+                (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
+                Tuils.SPACE +
+                "\"" + f.getAbsolutePath() + "\"" + Tuils.SPACE +
+                "\"" + where.getAbsolutePath() + "\"", su, null);
+        return result.result;
     }
 
     public static int rm(File[] files, boolean su) {
-        if (files == null || files.length == 0)
+        if (files == null || files.length == 0) {
             return FileManager.FILE_NOTFOUND;
+        }
 
-        for (File f : files)
+        for (File f : files) {
             rm(f, su);
+        }
 
         return 0;
     }
 
     public static int rm(File f, boolean su) {
-        if (!su && f.getAbsolutePath().contains(" "))
-            FileUtils.deleteQuietly(f);
-        else {
-            ArrayList<String> cmds = new ArrayList<>();
-            if (su) {
-                cmds.add("su");
-                cmds.add("-c");
-            }
-            cmds.add("rm");
-            cmds.add("-r");
-            cmds.add(f.getAbsolutePath());
-
-            String[] command = new String[cmds.size()];
-            cmds.toArray(command);
-
-            Process p;
-            int exit;
-            try {
-                p = Runtime.getRuntime().exec(command);
-                exit = p.waitFor();
-            } catch (IOException | InterruptedException e) {
-                return FileManager.IOERROR;
-            }
-
-            if (exit != 0)
-                return FileManager.IOERROR;
+        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath() + "\"", su, null);
+        if(r.result != 0) {
+            return NOT_WRITEABLE;
         }
-        return 0;
+
+        ShellUtils.CommandResult result = ShellUtils.execCommand("rm " +
+                (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
+                Tuils.SPACE +
+                "\"" + f.getAbsolutePath() + "\"", su, null);
+        return result.result;
     }
 
     public static int cp(File[] files, File where, boolean su) throws IOException {
-        if (files == null || files.length == 0 || where == null)
+        if (files == null || files.length == 0 || where == null) {
             return FileManager.FILE_NOTFOUND;
+        }
 
-        if (!where.isDirectory())
+        if (!where.isDirectory()) {
             return FileManager.ISFILE;
+        }
 
-        for (File f : files)
+        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + where.getAbsolutePath()+ "\"", su, null);
+        if(r.result != 0) {
+            return NOT_WRITEABLE;
+        }
+
+        for (File f : files) {
             cp(f, where, su);
+        }
 
         return 0;
     }
 
-    public static int cp(File f, File where, boolean su) throws IOException {
-        if (!su && (f.getAbsolutePath().contains(" ") || where.getAbsolutePath().contains(" "))) {
-            if (f.isDirectory())
-                FileUtils.copyDirectoryToDirectory(f, where);
-            else
-                FileUtils.copyFileToDirectory(f, where);
-        } else {
-            ArrayList<String> cmds = new ArrayList<>();
-            if (su) {
-                cmds.add("su");
-                cmds.add("-c");
-            }
-            cmds.add("cp");
-            cmds.add("-r");
-            cmds.add(f.getAbsolutePath());
-            cmds.add(where.getAbsolutePath());
-
-            String[] command = new String[cmds.size()];
-            cmds.toArray(command);
-
-            Process p;
-            int exit;
-            try {
-                p = Runtime.getRuntime().exec(command);
-                exit = p.waitFor();
-            } catch (IOException | InterruptedException e) {
-                return FileManager.IOERROR;
-            }
-
-            if (exit != 0)
-                return FileManager.IOERROR;
+    private static int cp(File f, File where, boolean su) throws IOException {
+        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", su, null);
+        if(rr.result != 0) {
+            return NOT_READABLE;
         }
-        return 0;
+
+        ShellUtils.CommandResult result = ShellUtils.execCommand("cp " +
+                (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
+                Tuils.SPACE +
+                "\"" + f.getAbsolutePath() + "\"" + Tuils.SPACE +
+                "\"" + where.getAbsolutePath() + "\"", su, null);
+        return result.result;
     }
 
     public static List<File> lsFile(File f, boolean showHidden) {
+        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath()+ "\"", false, null);
+        if(r.result != 0) {
+            return null;
+        }
+
+        if(!f.isDirectory()) {
+            return null;
+        }
+
+        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", false, null);
+        if(rr.result != 0) {
+            return null;
+        }
+
         File[] content = f.listFiles();
 
         Arrays.sort(content, new Comparator<File>() {
@@ -179,20 +176,24 @@ public class FileManager {
         });
 
         List<File> files = new ArrayList<>();
-        for (File u : content)
-            if (!u.isHidden() || showHidden)
+        for (File u : content) {
+            if (!u.isHidden() || showHidden) {
                 files.add(u);
+            }
+        }
 
         return files;
     }
 
     public static int openFile(Context c, File file) {
-        if (file == null)
+        if (file == null) {
             return FileManager.FILE_NOTFOUND;
-        if (file.isDirectory())
+        }
+        if (file.isDirectory()) {
             return FileManager.ISDIRECTORY;
+        }
 
-        Intent intent = Tuils.openFile(c, file);
+        Intent intent = Tuils.openFile(file);
 
         c.startActivity(intent);
         return 0;
@@ -303,6 +304,10 @@ public class FileManager {
             this.file = f;
             this.notFound = nF;
         }
+
+        public String getCompletePath() {
+            return file.getAbsolutePath() + "/" + notFound;
+        }
     }
 
     public static class WildcardInfo {
@@ -325,6 +330,46 @@ public class FileManager {
                 this.allExtensions = all;
                 this.allNames = all;
             }
+        }
+    }
+
+    public static class SpecificNameFileFilter implements FilenameFilter {
+
+        private String name;
+
+        public void setName(String name) {
+            this.name = name.toLowerCase();
+        }
+
+        @Override
+        public boolean accept(File dir, String filename) {
+            int dot = filename.lastIndexOf(Tuils.DOT);
+            if(dot == -1) {
+                return false;
+            }
+
+            filename = filename.substring(0, dot);
+            return filename.toLowerCase().equals(name);
+        }
+    }
+
+    public static class SpecificExtensionFileFilter implements FilenameFilter {
+
+        private String extension;
+
+        public void setExtension(String extension) {
+            this.extension = extension.toLowerCase();
+        }
+
+        @Override
+        public boolean accept(File dir, String filename) {
+            int dot = filename.lastIndexOf(Tuils.DOT);
+            if(dot == -1) {
+                return false;
+            }
+
+            String fileExtension = filename.substring(dot + 1);
+            return fileExtension.toLowerCase().equals(extension);
         }
     }
 }

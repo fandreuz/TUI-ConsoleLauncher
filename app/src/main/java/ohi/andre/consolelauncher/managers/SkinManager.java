@@ -1,14 +1,13 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
-import android.util.Log;
-import android.util.SparseIntArray;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-import java.util.HashMap;
+import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 
-public class SkinManager {
+public class SkinManager implements Parcelable {
 
     public static final int SYSTEM_WALLPAPER = -1;
 
@@ -37,34 +36,22 @@ public class SkinManager {
     private static final int ramScale = 3;
     private static final int suggestionScale = 0;
 
-    private Typeface globalTypeface;
     private int globalFontSize;
 
-    private int deviceColor;
-    private int inputColor;
-    private int outputColor;
-    private int ramColor;
-    private int bgColor;
+    private int deviceColor, inputColor, outputColor, ramColor, bgColor;
 
-    private boolean useSystemWp;
-    private boolean showSuggestions;
+    private boolean useSystemWp, showSuggestions, systemFont, inputBottom, showSubmit;
 
-    private int suggestionTextColor;
+    private String username = null;
+    private boolean showUsernameAndDeviceWhenEmpty = true, showUsername = false, linuxAppearence = true, showPath = true;
 
-    private int defaulSuggestionColor;
-    private int appSuggestionColor;
-    private int aliasSuggestionColor;
-    private int musicSuggestionColor;
-    private int contactsSuggestionColor;
-    private int commandSuggestionColor;
-    private int fileSuggestionColor;
+    private int suggestionTextColor, defaulSuggestionColor, appSuggestionColor, aliasSuggestionColor, musicSuggestionColor, contactsSuggestionColor, commandSuggestionColor, fileSuggestionColor;
+    private boolean multicolorSuggestions, transparentSuggestions;
 
-    private boolean multicolorSuggestions;
-    private boolean transparentSuggestions;
-
-    public SkinManager(PreferencesManager prefs, Typeface lucidaConsole) {
-        boolean systemFont = Boolean.parseBoolean(prefs.getValue(PreferencesManager.USE_SYSTEMFONT));
-        globalTypeface = systemFont ? Typeface.DEFAULT : lucidaConsole;
+    public SkinManager(PreferencesManager prefs) {
+        systemFont = Boolean.parseBoolean(prefs.getValue(PreferencesManager.USE_SYSTEMFONT));
+        inputBottom = Boolean.parseBoolean(prefs.getValue(PreferencesManager.INPUTFIELD_BOTTOM));
+        showSubmit = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWSUBMIT));
 
         try {
             globalFontSize = Integer.parseInt(prefs.getValue(PreferencesManager.FONTSIZE));
@@ -104,6 +91,26 @@ public class SkinManager {
             ramColor = Color.parseColor(prefs.getValue(PreferencesManager.RAM));
         } catch (Exception e) {
             ramColor = ramDefault;
+        }
+
+        try {
+            showUsernameAndDeviceWhenEmpty = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWUSERNAMEWHENINPUTEMPTY));
+            if(showUsernameAndDeviceWhenEmpty) {
+                showUsername = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWUSERNAME));
+                if(showUsername) {
+                    username = prefs.getValue(PreferencesManager.USERNAME);
+                }
+
+                showPath = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWPATH_SESSIONINFO));
+            }
+        } catch (Exception e) {
+            showUsernameAndDeviceWhenEmpty = false;
+        }
+
+        try {
+            linuxAppearence = Boolean.parseBoolean(prefs.getValue(PreferencesManager.LINUXAPPERARENCE));
+        } catch (Exception e) {
+            linuxAppearence = true;
         }
 
         showSuggestions = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWSUGGESTIONS));
@@ -181,8 +188,8 @@ public class SkinManager {
         }
     }
 
-    public Typeface getGlobalTypeface() {
-        return globalTypeface;
+    public boolean getUseSystemFont() {
+        return systemFont;
     }
 
     public int getDeviceColor() {
@@ -211,6 +218,14 @@ public class SkinManager {
 
     public boolean getShowSuggestions() {
         return showSuggestions;
+    }
+
+    public boolean getInputBottom() {
+        return inputBottom;
+    }
+
+    public boolean getShowSubmit() {
+        return showSubmit;
     }
 
     public ColorDrawable getSuggestionBg(Integer type) {
@@ -262,4 +277,99 @@ public class SkinManager {
         return globalFontSize - suggestionScale;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public boolean showUsernameAndDeviceWhenEmpty() {
+        return showUsernameAndDeviceWhenEmpty;
+    }
+
+    public boolean linuxAppearence() {
+        return linuxAppearence;
+    }
+
+    public boolean showUsername() {
+        return showUsername;
+    }
+
+    public boolean showPath() {
+        return showPath;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.globalFontSize);
+        dest.writeInt(this.deviceColor);
+        dest.writeInt(this.inputColor);
+        dest.writeInt(this.outputColor);
+        dest.writeInt(this.ramColor);
+        dest.writeInt(this.bgColor);
+        dest.writeByte(this.useSystemWp ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.showSuggestions ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.systemFont ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.inputBottom ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.showSubmit ? (byte) 1 : (byte) 0);
+        dest.writeString(this.username);
+        dest.writeByte(this.showUsernameAndDeviceWhenEmpty ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.showUsername ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.linuxAppearence ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.showPath ? (byte) 1 : (byte) 0);
+        dest.writeInt(this.suggestionTextColor);
+        dest.writeInt(this.defaulSuggestionColor);
+        dest.writeInt(this.appSuggestionColor);
+        dest.writeInt(this.aliasSuggestionColor);
+        dest.writeInt(this.musicSuggestionColor);
+        dest.writeInt(this.contactsSuggestionColor);
+        dest.writeInt(this.commandSuggestionColor);
+        dest.writeInt(this.fileSuggestionColor);
+        dest.writeByte(this.multicolorSuggestions ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.transparentSuggestions ? (byte) 1 : (byte) 0);
+    }
+
+    protected SkinManager(Parcel in) {
+        this.globalFontSize = in.readInt();
+        this.deviceColor = in.readInt();
+        this.inputColor = in.readInt();
+        this.outputColor = in.readInt();
+        this.ramColor = in.readInt();
+        this.bgColor = in.readInt();
+        this.useSystemWp = in.readByte() != 0;
+        this.showSuggestions = in.readByte() != 0;
+        this.systemFont = in.readByte() != 0;
+        this.inputBottom = in.readByte() != 0;
+        this.showSubmit = in.readByte() != 0;
+        this.username = in.readString();
+        this.showUsernameAndDeviceWhenEmpty = in.readByte() != 0;
+        this.showUsername = in.readByte() != 0;
+        this.linuxAppearence = in.readByte() != 0;
+        this.showPath = in.readByte() != 0;
+        this.suggestionTextColor = in.readInt();
+        this.defaulSuggestionColor = in.readInt();
+        this.appSuggestionColor = in.readInt();
+        this.aliasSuggestionColor = in.readInt();
+        this.musicSuggestionColor = in.readInt();
+        this.contactsSuggestionColor = in.readInt();
+        this.commandSuggestionColor = in.readInt();
+        this.fileSuggestionColor = in.readInt();
+        this.multicolorSuggestions = in.readByte() != 0;
+        this.transparentSuggestions = in.readByte() != 0;
+    }
+
+    public static final Creator<SkinManager> CREATOR = new Creator<SkinManager>() {
+        @Override
+        public SkinManager createFromParcel(Parcel source) {
+            return new SkinManager(source);
+        }
+
+        @Override
+        public SkinManager[] newArray(int size) {
+            return new SkinManager[size];
+        }
+    };
 }

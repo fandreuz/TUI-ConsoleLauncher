@@ -7,15 +7,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
 import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.tuils.ShellUtils;
-import ohi.andre.consolelauncher.tuils.SpecificExtensionFileFilter;
-import ohi.andre.consolelauncher.tuils.SpecificNameFileFilter;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 @SuppressLint("DefaultLocale")
@@ -24,11 +24,11 @@ public class CommandTuils {
     private static final int MIN_CONTACT_RATE = 4;
     private static final int MIN_SONG_RATE = 5;
 
-    private static SpecificExtensionFileFilter extensionFileFilter = new SpecificExtensionFileFilter();
-    private static SpecificNameFileFilter nameFileFilter = new SpecificNameFileFilter();
+    private static FileManager.SpecificExtensionFileFilter extensionFileFilter = new FileManager.SpecificExtensionFileFilter();
+    private static FileManager.SpecificNameFileFilter nameFileFilter = new FileManager.SpecificNameFileFilter();
 
     //	parse a command
-    public static Command parse(String input, ExecInfo info, boolean suggestion) throws Exception {
+    public static Command parse(String input, ExecutePack info, boolean suggestion) throws Exception {
         Command command = new Command();
 
         boolean pendingSuVerification = false;
@@ -38,19 +38,22 @@ public class CommandTuils {
         }
 
         String name = CommandTuils.findName(input);
+        Log.e("andre", name);
         if (!Tuils.isAlpha(name))
             return null;
 
         CommandAbstraction cmd = info.commandGroup.getCommandByName(name);
-        if (cmd == null)
+        if (cmd == null) {
             return null;
-
-        if (pendingSuVerification)
-            info.setSu(Tuils.verifyRoot());
-
+        }
         command.cmd = cmd;
 
+        if (pendingSuVerification && info instanceof MainPack) {
+            ((MainPack) info).setSu(Tuils.verifyRoot());
+        }
+
         input = input.substring(name.length());
+        input = input.trim();
 
         int[] types = cmd.argType();
         ArrayList<Object> args = new ArrayList<>(cmd.maxArgs() == CommandAbstraction.UNDEFINIED ? 0 : cmd.maxArgs());
@@ -58,14 +61,18 @@ public class CommandTuils {
 
         if (types != null) {
             for (int type : types) {
-                input = input.trim();
-                if (input.length() <= 0)
+                if (input.length() <= 0) {
                     break;
+                }
 
                 ArgInfo arg = CommandTuils.getArg(info, input, type, suggestion);
+                if(arg == null) {
+                    return null;
+                }
 
                 if (!arg.found) {
                     command.nArgs = Command.ARG_NOTFOUND;
+                    command.mArgs = new String[] {input};
                     return command;
                 }
 
@@ -85,45 +92,74 @@ public class CommandTuils {
     private static String findName(String input) {
         int space = input.indexOf(Tuils.SPACE);
 
-        input = input.toLowerCase();
-
-        if (space == -1)
+        if (space == -1) {
             return input;
-        else
+        } else {
             return input.substring(0, space);
+        }
     }
 
     //	find args
-    public static ArgInfo getArg(ExecInfo info, String input, int type, boolean suggestion) {
-        if (type == CommandAbstraction.FILE)
-            return file(input, info.currentDirectory);
-        else if (type == CommandAbstraction.CONTACTNUMBER)
-            return contactNumber(input, info.contacts);
+    public static ArgInfo getArg(ExecutePack info, String input, int type, boolean suggestion) {
+        if (type == CommandAbstraction.FILE && info instanceof MainPack) {
+            MainPack pack = (MainPack) info;
+            return file(input, pack.currentDirectory);
+        }
+        else if (type == CommandAbstraction.CONTACTNUMBER && info instanceof MainPack) {
+            MainPack pack = (MainPack) info;
+            return contactNumber(input, pack.contacts);
+        }
 //        will always find a plain text
-        else if (type == CommandAbstraction.PLAIN_TEXT)
+        else if (type == CommandAbstraction.PLAIN_TEXT) {
             return plainText(input);
-        else if (type == CommandAbstraction.PACKAGE)
-            return packageName(input, info.appsManager);
+        }
+        else if (type == CommandAbstraction.PACKAGE && info instanceof MainPack) {
+            MainPack pack = (MainPack) info;
+            return packageName(input, pack.appsManager);
+        }
 //        will always find a textlist
-        else if (type == CommandAbstraction.TEXTLIST)
+        else if (type == CommandAbstraction.TEXTLIST) {
             return textList(input);
-        else if (type == CommandAbstraction.SONG)
-            return song(input, info.player);
-        else if (type == CommandAbstraction.FILE_LIST)
-            if(suggestion)
-                return file(input, info.currentDirectory);
+        }
+        else if (type == CommandAbstraction.SONG && info instanceof MainPack) {
+            MainPack pack = (MainPack) info;
+            return song(input, pack.player);
+        }
+        else if (type == CommandAbstraction.FILE_LIST && info instanceof MainPack) {
+            MainPack pack = (MainPack) info;
+
+            if (suggestion)
+                return file(input, pack.currentDirectory);
             else
-                return fileList(input, info.currentDirectory);
-        else if (type == CommandAbstraction.COMMAND)
+                return fileList(input, pack.currentDirectory);
+        } else if (type == CommandAbstraction.COMMAND)
             return command(input, info.commandGroup);
-        else if (type == CommandAbstraction.PARAM)
+        else if (type == CommandAbstraction.PARAM) {
             return param(input);
+        } else if(type == CommandAbstraction.BOOLEAN) {
+            return bln(input);
+        }
 
         return null;
     }
 
 
 //	args extractors {
+
+    private static ArgInfo bln(String input) {
+        String used, notUsed;
+        if(input.contains(Tuils.SPACE)) {
+            int space = input.indexOf(Tuils.SPACE);
+            used = input.substring(0, space);
+            notUsed = input.substring(space + 1);
+        } else {
+            used = input;
+            notUsed = null;
+        }
+
+        Object result = used.toLowerCase().equals("true");
+        return new ArgInfo(result, notUsed, used.length() > 0, used.length() > 0 ? 1 : 0);
+    }
 
     private static ArgInfo plainText(String input) {
         return new ArgInfo(input, "", true, 1);
@@ -217,11 +253,11 @@ public class CommandTuils {
             if (tempFiles != null) {
                 files.addAll(tempFiles);
 
-                toVerify = "";
+                toVerify = Tuils.EMPTYSTRING;
                 continue;
             }
 
-            toVerify = toVerify.concat(" ");
+            toVerify = toVerify.concat(Tuils.SPACE);
         }
 
         if (toVerify.length() > 0)

@@ -1,11 +1,14 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.util.Log;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
 public class AliasManager implements Reloadable {
@@ -21,11 +24,11 @@ public class AliasManager implements Reloadable {
     public String printAliases() {
         Iterator<Entry<String, String>> iterator = alias.entrySet().iterator();
 
-        String output = "";
+        String output = Tuils.EMPTYSTRING;
         Entry<String, String> entry;
         while (iterator.hasNext()) {
             entry = iterator.next();
-            output = output.concat(entry.getKey() + " = " + entry.getValue() + "\n");
+            output = output.concat(entry.getKey() + " = " + entry.getValue() + Tuils.NEWLINE);
         }
 
         return output;
@@ -36,15 +39,13 @@ public class AliasManager implements Reloadable {
     }
 
     public String getAlias(String s) {
-        if (!alias.containsKey(s))
-            return null;
-
         return alias.get(s);
     }
 
     @Override
     public void reload() {
         alias = new HashMap<>();
+        preferences.refresh(PreferencesManager.ALIAS);
         for (int count = 0; count < preferences.getLength(PreferencesManager.ALIAS); count++) {
             String line = preferences.getLine(PreferencesManager.ALIAS, count);
             String name = preferences.obtainKey(line);
