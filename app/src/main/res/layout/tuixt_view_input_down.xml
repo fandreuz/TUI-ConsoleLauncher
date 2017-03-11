@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout android:id="@+id/input_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="@integer/input_group_weightsum"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+
+        android:layout_alignParentBottom="true">
+
+        <TextView
+            android:id="@+id/prefix_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:paddingTop="@dimen/input_padding"/>
+
+        <EditText
+            android:id="@+id/input_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="@integer/input_view_weight"
+
+            android:background="@null"
+            android:imeOptions="actionGo|flagNoFullscreen"
+            android:textCursorDrawable="@drawable/cursor"
+
+            android:paddingTop="@dimen/input_padding"
+
+            android:lines="1"
+            android:singleLine="true" />
+
+        <ImageButton
+            android:id="@+id/submit_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="@integer/enter_view_weight"
+
+            android:background="@null"
+            android:src="@drawable/ic_enter"
+
+            android:paddingTop="@dimen/input_padding"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/output_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:layout_above="@id/input_group"
+
+        android:scrollHorizontally="false"
+        android:scrollbars="vertical"
+        android:textIsSelectable="true"/>
+
+    <EditText android:id="@+id/file_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:layout_above="@id/output_view"
+
+        android:inputType="textFilter|textMultiLine"
+        android:isScrollContainer="true"
+        android:textCursorDrawable="@drawable/cursor"
+
+        android:background="@null"/>
+
+</RelativeLayout>
