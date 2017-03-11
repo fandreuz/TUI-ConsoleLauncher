@@ -75,7 +75,7 @@ public class tuixt implements CommandAbstraction {
 
         File file = new File(dirInfo.getCompletePath());
         if(!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
-            return info.res.getString(R.string.output_ioerror);
+            return info.res.getString(R.string.output_error);
         }
 
         try {

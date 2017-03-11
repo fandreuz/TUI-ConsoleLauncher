@@ -2,6 +2,7 @@ package ohi.andre.consolelauncher.managers;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -30,23 +31,24 @@ public class SkinManager implements Parcelable {
     public static final int fileSuggestionBgDeafult = 0xff03A9F4;
     public static final int defaultSuggestionBgDefault = 0xffFFFFFF;
 
-    public static final int defaultSize = 15;
+    private static final int defaultSize = 15;
     private static final int deviceScale = 3;
     private static final int textScale = 2;
     private static final int ramScale = 3;
     private static final int suggestionScale = 0;
 
-    private int globalFontSize;
+    public int globalFontSize;
 
-    private int deviceColor, inputColor, outputColor, ramColor, bgColor;
+    public String deviceName;
+    public int deviceColor, inputColor, outputColor, ramColor, bgColor;
 
-    private boolean useSystemWp, showSuggestions, systemFont, inputBottom, showSubmit;
+    public boolean useSystemWp, showSuggestions, systemFont, inputBottom, showSubmit;
 
-    private String username = null;
-    private boolean showUsernameAndDeviceWhenEmpty = true, showUsername = false, linuxAppearence = true, showPath = true;
+    public String username = null;
+    public boolean showUsernameAndDeviceWhenEmpty = true, showUsername = false, showDeviceInSessionInfo = false, linuxAppearence = true, showPath = true;
 
-    private int suggestionTextColor, defaulSuggestionColor, appSuggestionColor, aliasSuggestionColor, musicSuggestionColor, contactsSuggestionColor, commandSuggestionColor, fileSuggestionColor;
-    private boolean multicolorSuggestions, transparentSuggestions;
+    public int suggestionTextColor, defaulSuggestionColor, appSuggestionColor, aliasSuggestionColor, musicSuggestionColor, contactsSuggestionColor, commandSuggestionColor, fileSuggestionColor;
+    public boolean multicolorSuggestions, transparentSuggestions;
 
     public SkinManager(PreferencesManager prefs) {
         systemFont = Boolean.parseBoolean(prefs.getValue(PreferencesManager.USE_SYSTEMFONT));
@@ -94,12 +96,23 @@ public class SkinManager implements Parcelable {
         }
 
         try {
+            deviceName = prefs.getValue(PreferencesManager.DEVICENAME);
+            if (deviceName == null || deviceName.length() == 0 || deviceName.equals("null")) {
+                deviceName = Build.DEVICE;
+            }
+        } catch (Exception e) {
+            deviceName = Build.DEVICE;
+        }
+
+        try {
             showUsernameAndDeviceWhenEmpty = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWUSERNAMEWHENINPUTEMPTY));
             if(showUsernameAndDeviceWhenEmpty) {
                 showUsername = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWUSERNAME));
                 if(showUsername) {
                     username = prefs.getValue(PreferencesManager.USERNAME);
                 }
+
+                showDeviceInSessionInfo = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWDEVICENAMEINSESSIONINFO));
 
                 showPath = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWPATH_SESSIONINFO));
             }
@@ -188,46 +201,6 @@ public class SkinManager implements Parcelable {
         }
     }
 
-    public boolean getUseSystemFont() {
-        return systemFont;
-    }
-
-    public int getDeviceColor() {
-        return deviceColor;
-    }
-
-    public int getInputColor() {
-        return inputColor;
-    }
-
-    public int getOutputColor() {
-        return outputColor;
-    }
-
-    public int getRamColor() {
-        return ramColor;
-    }
-
-    public int getBgColor() {
-        return bgColor;
-    }
-
-    public boolean getUseSystemWp() {
-        return useSystemWp;
-    }
-
-    public boolean getShowSuggestions() {
-        return showSuggestions;
-    }
-
-    public boolean getInputBottom() {
-        return inputBottom;
-    }
-
-    public boolean getShowSubmit() {
-        return showSubmit;
-    }
-
     public ColorDrawable getSuggestionBg(Integer type) {
         if(transparentSuggestions) {
             type = 0;
@@ -257,10 +230,6 @@ public class SkinManager implements Parcelable {
         }
     }
 
-    public int getSuggestionTextColor() {
-        return suggestionTextColor;
-    }
-
     public int getDeviceSize() {
         return globalFontSize - deviceScale;
     }
@@ -275,26 +244,6 @@ public class SkinManager implements Parcelable {
 
     public int getSuggestionSize() {
         return globalFontSize - suggestionScale;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public boolean showUsernameAndDeviceWhenEmpty() {
-        return showUsernameAndDeviceWhenEmpty;
-    }
-
-    public boolean linuxAppearence() {
-        return linuxAppearence;
-    }
-
-    public boolean showUsername() {
-        return showUsername;
-    }
-
-    public boolean showPath() {
-        return showPath;
     }
 
     @Override

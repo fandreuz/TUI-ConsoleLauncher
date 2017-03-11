@@ -15,8 +15,6 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class apps implements CommandAbstraction {
 
-    private final String HIDE_PARAM = "-h";
-    private final String UNHIDE_PARAM = "-uh";
     private final String SHOWHIDDEN_PARAM = "-sh";
     private final String PLAYSTORE_PARAM = "-ps";
     private final String SETTINGS_PARAM = "-st";
@@ -31,11 +29,7 @@ public class apps implements CommandAbstraction {
             return info.res.getString(helpRes());
         }
 
-        if (param.equals(HIDE_PARAM)) {
-            return hideApp(info, app);
-        } else if (param.equals(UNHIDE_PARAM)) {
-            return unHideApp(info, app);
-        } else if (param.equals(PLAYSTORE_PARAM)) {
+        if (param.equals(PLAYSTORE_PARAM)) {
             openPlaystore(info.context, app);
         } else if (param.equals(SETTINGS_PARAM)) {
             openSettings(info.context, app);
@@ -47,26 +41,6 @@ public class apps implements CommandAbstraction {
         }
 
         return Tuils.EMPTYSTRING;
-    }
-
-    private String hideApp(MainPack info, String app) {
-        SharedPreferences.Editor editor = ((Activity) info.context).getPreferences(0).edit();
-        String result = info.appsManager.hideApp(app);
-        if (result != null) {
-            editor.commit();
-            return result + Tuils.SPACE + info.res.getString(R.string.output_hideapp);
-        } else
-            return info.res.getString(R.string.output_appnotfound);
-    }
-
-    private String unHideApp(MainPack info, String app) {
-        SharedPreferences.Editor editor = ((Activity) info.context).getPreferences(0).edit();
-        String result = info.appsManager.unhideApp(app);
-        if (result != null) {
-            editor.commit();
-            return result + Tuils.SPACE + info.res.getString(R.string.output_unhideapp);
-        } else
-            return info.res.getString(R.string.output_appnotfound);
     }
 
     private String showHiddenApps(MainPack info) {
@@ -113,8 +87,6 @@ public class apps implements CommandAbstraction {
     @Override
     public String[] parameters() {
         return new String[]{
-                HIDE_PARAM,
-                UNHIDE_PARAM,
                 SHOWHIDDEN_PARAM,
                 SETTINGS_PARAM,
                 PLAYSTORE_PARAM,

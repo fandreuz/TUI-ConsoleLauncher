@@ -91,6 +91,10 @@ public class MusicManager implements OnCompletionListener {
 
     //	return names
     public List<String> getNames() {
+        if(files == null) {
+            return new ArrayList<>(0);
+        }
+
         List<String> names = new ArrayList<>();
 
         for (File file : files) {
@@ -104,6 +108,9 @@ public class MusicManager implements OnCompletionListener {
 
     //	return paths
     public List<String> getPaths() {
+        if(files == null) {
+            return new ArrayList<>();
+        }
 
         List<String> paths = new ArrayList<>();
 

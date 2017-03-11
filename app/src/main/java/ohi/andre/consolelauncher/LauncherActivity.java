@@ -2,7 +2,6 @@ package ohi.andre.consolelauncher;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,10 +10,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,18 +38,15 @@ import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 import ohi.andre.consolelauncher.tuils.tutorial.TutorialActivity;
 
-public class LauncherActivity extends Activity implements Reloadable {
+public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private final String FIRSTACCESS_KEY = "x1";
-    private final int FILEUPDATE_DELAY = 300;
 
     public static final int COMMAND_REQUEST_PERMISSION = 10;
     public static final int STARTING_PERMISSION = 11;
     public static final int COMMAND_SUGGESTION_REQUEST_PERMISSION = 12;
 
     public static final int TUIXT_REQUEST = 10;
-
-    View decorView;
 
     private UIManager ui;
     private MainManager main;
@@ -111,8 +110,6 @@ public class LauncherActivity extends Activity implements Reloadable {
             editor.commit();
 
             startActivity(new Intent(this, TutorialActivity.class));
-            this.finish();
-            return;
         }
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -130,7 +127,7 @@ public class LauncherActivity extends Activity implements Reloadable {
 
     private void finishOnCreate() {
 
-        File tuiFolder = getFolder();
+        File tuiFolder = Tuils.getFolder();
         Resources res = getResources();
         starterIntent = getIntent();
 
@@ -139,6 +136,7 @@ public class LauncherActivity extends Activity implements Reloadable {
         } catch (IOException e) {
             this.startActivity(new Intent(this, LauncherActivity.class));
             this.finish();
+            return;
         }
 
         boolean showNotification = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.NOTIFICATION));
@@ -152,16 +150,26 @@ public class LauncherActivity extends Activity implements Reloadable {
         DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         ComponentName component = new ComponentName(this, PolicyReceiver.class);
 
+        fullscreen = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.FULLSCREEN));
+
         boolean useSystemWP = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.USE_SYSTEMWP));
         if (useSystemWP) {
-            setTheme(R.style.Custom_SystemWP);
+            if(fullscreen) {
+                setTheme(R.style.Custom_SystemWP_Fullscreen);
+            } else {
+                setTheme(R.style.Custom_SystemWP);
+            }
         } else {
-            setTheme(R.style.Custom_Solid);
+            if(fullscreen) {
+                setTheme(R.style.Custom_Solid_Fullscreen);
+            } else {
+                setTheme(R.style.Custom_Solid);
+            }
         }
 
         openKeyboardOnStart = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.OPEN_KEYBOARD));
         if (!openKeyboardOnStart) {
-            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         }
 
         setContentView(R.layout.base_view);
@@ -169,6 +177,7 @@ public class LauncherActivity extends Activity implements Reloadable {
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
         main = new MainManager(this, in, out, preferencesManager, policy, component);
         ui = new UIManager(main.getMainPack(), this, mainView, ex, policy, component, preferencesManager, main.getMainPack());
+        main.setRedirectionListener(ui.buildRedirectionListener());
 
         in.in(Tuils.EMPTYSTRING);
         ui.focusTerminal();
@@ -176,27 +185,9 @@ public class LauncherActivity extends Activity implements Reloadable {
         System.gc();
     }
 
-    private File getFolder() {
-        final File tuiFolder = Tuils.getTuiFolder();
-
-        while (true) {
-            if (tuiFolder != null && (tuiFolder.isDirectory() || tuiFolder.mkdir())) {
-                break;
-            }
-
-            try {
-                Thread.sleep(FILEUPDATE_DELAY);
-            } catch (InterruptedException e) {}
-        }
-
-        return tuiFolder;
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
-
-        overridePendingTransition(0,0);
 
         if (ui != null && openKeyboardOnStart) {
             ui.onStart();
@@ -206,8 +197,6 @@ public class LauncherActivity extends Activity implements Reloadable {
     @Override
     protected void onPause() {
         super.onPause();
-
-        overridePendingTransition(0,0);
 
         if (ui != null && main != null) {
             ui.pause();
@@ -293,6 +282,7 @@ public class LauncherActivity extends Activity implements Reloadable {
                         main.onCommand(info.lastCommand, null);
                     } else {
                         ui.setOutput(getString(R.string.output_nopermissions));
+                        main.sendPermissionNotGrantedWarning();
                     }
                     break;
                 case STARTING_PERMISSION:
@@ -321,6 +311,7 @@ public class LauncherActivity extends Activity implements Reloadable {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        ui.scrollToEnd();
+        if(ui != null) ui.scrollToEnd();
     }
+
 }

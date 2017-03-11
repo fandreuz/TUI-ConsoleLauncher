@@ -1,5 +1,5 @@
 // do not edit the settingsVersion property!
-settingsVersion=88
+settingsVersion=89
 
 // when you are ready go back to t-ui and type "restart" to see changes
 
@@ -22,6 +22,7 @@ showToolbar=true
 showSessionInfoWhenInputEmpty=true
 linuxAppearance=true
 showPathInSessionInfo=true
+showDeviceNameInSessionInfo=true
 
 // suggestions
 suggestionTextColor=#ff000000

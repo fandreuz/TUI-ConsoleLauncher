@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.tuils;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -16,10 +14,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -27,9 +21,6 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.Patterns;
-import android.util.TypedValue;
-import android.view.View;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -39,7 +30,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.managers.MusicManager;
@@ -157,31 +147,36 @@ public class Tuils {
 
     public static String getHint(SkinManager skinManager, String currentPath) {
 
-        if(!skinManager.showUsernameAndDeviceWhenEmpty()) {
+        if(!skinManager.showUsernameAndDeviceWhenEmpty) {
             return null;
         }
 
-        boolean showUsername = skinManager.showUsername();
-
-        String username = null;
-        if (showUsername) {
-            username = skinManager.getUsername();
+        String username = Tuils.EMPTYSTRING;
+        if (skinManager.showUsername) {
+            username = skinManager.username;
             if (username == null || username.length() == 0) {
-                username = null;
+                username = Tuils.EMPTYSTRING;
             }
         }
 
-        String deviceName = Build.DEVICE;
+        String deviceName = Tuils.EMPTYSTRING;
+        if(skinManager.showDeviceInSessionInfo) {
+            deviceName = skinManager.deviceName;
+        }
 
         String path = Tuils.EMPTYSTRING;
-        if(skinManager.showPath()) {
+        if(skinManager.showPath) {
             path = ":" + getNicePath(currentPath);
         }
 
-        if(username == null) {
+        if(username == Tuils.EMPTYSTRING) {
             return deviceName + path;
         } else {
-            return username + "@" + deviceName + path;
+            if(deviceName == Tuils.EMPTYSTRING) {
+                return username + path;
+            } else {
+                return username + "@" + deviceName + path;
+            }
         }
     }
 
@@ -431,7 +426,11 @@ public class Tuils {
             if(count > 0) {
                 while(cur.moveToNext()) {
                     String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
-                    paths.add(new File(data));
+                    if(data != null) {
+                        try {
+                            paths.add(new File(data));
+                        } catch (Exception e) {}
+                    }
                 }
 
             }
@@ -536,4 +535,20 @@ public class Tuils {
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
+    private static final int FILEUPDATE_DELAY = 300;
+    public static File getFolder() {
+        final File tuiFolder = Tuils.getTuiFolder();
+
+        while (true) {
+            if (tuiFolder != null && (tuiFolder.isDirectory() || tuiFolder.mkdir())) {
+                break;
+            }
+
+            try {
+                Thread.sleep(FILEUPDATE_DELAY);
+            } catch (InterruptedException e) {}
+        }
+
+        return tuiFolder;
+    }
 }

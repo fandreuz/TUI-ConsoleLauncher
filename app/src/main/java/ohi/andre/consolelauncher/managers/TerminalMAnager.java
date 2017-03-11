@@ -1,12 +1,9 @@
 package ohi.andre.consolelauncher.managers;
 
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.os.IBinder;
 import android.text.InputType;
-import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
@@ -15,21 +12,16 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.clear;
-import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
 
@@ -55,10 +47,9 @@ public class TerminalManager {
     public static final int INPUT = 10;
     public static final int OUTPUT = 11;
 
-//    private int globalId = 0;
-//    private int mCurrentOutputId = 0;
-
     private int cmds = 0;
+
+    private long lastEnter;
 
     private CharSequence prefix;
 
@@ -85,6 +76,7 @@ public class TerminalManager {
 
     private MainPack mainPack;
 
+    private boolean defaultHint = true;
 
     public TerminalManager(TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
                            ImageButton pasteView, SkinManager skinManager, final Context context, MainPack mainPack) {
@@ -97,18 +89,18 @@ public class TerminalManager {
         this.mainPack = mainPack;
 
 
-        if(skinManager.linuxAppearence()) {
+        if(skinManager.linuxAppearence) {
             prefix = "$ ";
         } else {
             prefix = ">> ";
         }
-        prefixView.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
-        prefixView.setTextColor(this.mSkinManager.getInputColor());
+        prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        prefixView.setTextColor(this.mSkinManager.inputColor);
         prefixView.setTextSize(this.mSkinManager.getTextSize());
         prefixView.setText(prefix);
 
         if (submitView != null) {
-            submitView.setColorFilter(mSkinManager.getInputColor());
+            submitView.setColorFilter(mSkinManager.inputColor);
             submitView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -118,7 +110,7 @@ public class TerminalManager {
         }
 
         if (backView != null) {
-            backView.setColorFilter(this.mSkinManager.getInputColor());
+            backView.setColorFilter(this.mSkinManager.inputColor);
             backView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -128,7 +120,7 @@ public class TerminalManager {
         }
 
         if (nextView != null) {
-            nextView.setColorFilter(this.mSkinManager.getInputColor());
+            nextView.setColorFilter(this.mSkinManager.inputColor);
             nextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -138,7 +130,7 @@ public class TerminalManager {
         }
 
         if (pasteView != null) {
-            pasteView.setColorFilter(this.mSkinManager.getInputColor());
+            pasteView.setColorFilter(this.mSkinManager.inputColor);
             pasteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -151,7 +143,7 @@ public class TerminalManager {
         }
 
         if (deleteView != null) {
-            deleteView.setColorFilter(this.mSkinManager.getInputColor());
+            deleteView.setColorFilter(this.mSkinManager.inputColor);
             deleteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -161,7 +153,7 @@ public class TerminalManager {
         }
 
         this.mTerminalView = terminalView;
-        this.mTerminalView.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
+        this.mTerminalView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         this.mTerminalView.setTextSize(mSkinManager.getTextSize());
         this.mTerminalView.setFocusable(false);
         setupScroller();
@@ -170,20 +162,30 @@ public class TerminalManager {
 
         this.mInputView = inputView;
         this.mInputView.setTextSize(mSkinManager.getTextSize());
-        this.mInputView.setTextColor(mSkinManager.getInputColor());
-        this.mInputView.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
+        this.mInputView.setTextColor(mSkinManager.inputColor);
+        this.mInputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         this.mInputView.setHint(Tuils.getHint(skinManager, mainPack.currentDirectory.getAbsolutePath()));
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+//                physical enter
+                if(actionId == KeyEvent.ACTION_DOWN) {
+                    if(lastEnter == 0) {
+                        lastEnter = System.currentTimeMillis();
+                    } else {
+                        long difference = System.currentTimeMillis() - lastEnter;
+                        lastEnter = System.currentTimeMillis();
+                        if(difference < 350) {
+                            return true;
+                        }
+                    }
+                }
 
-//                physical enter is temporary ignored
-                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
+                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
                     onNewInput();
-                    return true;
-                } else
-                    return false;
+                }
+                return true;
             }
         });
     }
@@ -195,7 +197,7 @@ public class TerminalManager {
     private void setupNewInput() {
         mInputView.setText(Tuils.EMPTYSTRING);
 
-        if(mSkinManager.showPath()) {
+        if(defaultHint && mSkinManager.showPath) {
             mInputView.setHint(Tuils.getHint(mSkinManager, mainPack.currentDirectory.getAbsolutePath()));
         }
 
@@ -207,18 +209,19 @@ public class TerminalManager {
             return false;
         }
 
-        String input = mInputView.getText().toString();
-        if (input.length() == 0) {
-            return false;
-        }
-        writeToView((input.startsWith("su ") ? "# " : prefix) + input, INPUT);
+        String input = mInputView.getText().toString().trim();
 
-        cmds++;
-        if(cmdList.size() == CMD_LIST_SIZE) {
-            cmdList.remove(0);
+        if(input.length() > 0) {
+            writeToView((input.startsWith("su ") ? "# " : prefix) + input, INPUT);
+
+            cmds++;
+            if(cmdList.size() == CMD_LIST_SIZE) {
+                cmdList.remove(0);
+            }
+            cmdList.add(cmdList.size(), input);
+            howBack = -1;
         }
-        cmdList.add(cmdList.size(), input);
-        howBack = -1;
+
 
         if (mInputListener != null) {
             mInputListener.onNewInput(input);
@@ -230,7 +233,12 @@ public class TerminalManager {
     }
 
     public void setOutput(String output) {
-        if (output == null || output.trim().equals(Tuils.EMPTYSTRING)) {
+        if (output == null) {
+            return;
+        }
+
+        output = output.trim();
+        if(output.equals(Tuils.EMPTYSTRING)) {
             return;
         }
 
@@ -304,9 +312,9 @@ public class TerminalManager {
         SpannableString spannableString = new SpannableString(text);
         int color;
         if(type == INPUT) {
-            color = mSkinManager.getInputColor();
+            color = mSkinManager.inputColor;
         } else if(type == OUTPUT) {
-            color = mSkinManager.getOutputColor();
+            color = mSkinManager.outputColor;
         } else {
             return null;
         }
@@ -321,6 +329,22 @@ public class TerminalManager {
     public void setInput(String input) {
         mInputView.setText(input);
         focusInputEnd();
+    }
+
+    public void setHint(String hint) {
+        defaultHint = false;
+
+        if(mInputView != null) {
+            mInputView.setHint(hint);
+        }
+    }
+
+    public void setDefaultHint() {
+        defaultHint = true;
+
+        if(mInputView != null) {
+            mInputView.setHint(Tuils.getHint(mSkinManager, mainPack.currentDirectory.getAbsolutePath()));
+        }
     }
 
     public void setInputListener(OnNewInputListener listener) {

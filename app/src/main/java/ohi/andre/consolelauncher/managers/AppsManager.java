@@ -11,10 +11,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -40,7 +40,6 @@ public class AppsManager {
 
     private Context context;
     private SharedPreferences.Editor prefsEditor;
-    private PackageManager mgr;
 
     private AppsHolder appsHolder;
     private List<AppInfo> hiddenApps;
@@ -63,7 +62,6 @@ public class AppsManager {
 
     public AppsManager(Context context, boolean useCompareString, Outputable outputable) {
         this.context = context;
-        this.mgr = context.getPackageManager();
         this.useCompareString = useCompareString;
 
         this.outputable = outputable;
@@ -85,7 +83,7 @@ public class AppsManager {
     }
 
     public void fill(SharedPreferences preferences) {
-        Map<String, AppInfo> map = createAppMap(mgr);
+        Map<String, AppInfo> map = createAppMap(context.getPackageManager());
         List<AppInfo> shownApps = new ArrayList<>();
         hiddenApps = new ArrayList<>();
 
@@ -143,8 +141,9 @@ public class AppsManager {
 
     private void add(String packageName) {
         try {
-            ApplicationInfo info = mgr.getApplicationInfo(packageName, 0);
-            AppInfo app = new AppInfo(packageName, info.loadLabel(mgr).toString(), 0);
+            PackageManager manager = context.getPackageManager();
+            ApplicationInfo info = manager.getApplicationInfo(packageName, 0);
+            AppInfo app = new AppInfo(packageName, info.loadLabel(manager).toString(), 0);
             appsHolder.add(app);
             outputable.onOutput(context.getString(R.string.app_installed) + Tuils.SPACE + packageName);
         } catch (NameNotFoundException e) {}
@@ -158,13 +157,28 @@ public class AppsManager {
         }
     }
 
-    public String findPackage(String name) {
-        List<AppInfo> apps = appsHolder.getApps();
-        if(apps != null) {
-            apps.addAll(hiddenApps);
-            return findPackage(apps, null, name);
+//    this looks EVERYWHERE!
+//    public String findPackage(String name) {
+//        List<AppInfo> apps = appsHolder.getApps();
+//        if(apps != null) {
+//            apps.addAll(hiddenApps);
+//            return findPackage(apps, null, name);
+//        }
+//        return null;
+//    }
+
+    public String findPackage(String name, int type) {
+        List<AppInfo> appList;
+        List<String> labelList;
+        if(type == SHOWN_APPS) {
+            appList = appsHolder.getApps();
+            labelList = appsHolder.getAppLabels();
+        } else {
+            appList = hiddenApps;
+            labelList = AppUtils.labelList(appList);
         }
-        return null;
+
+        return findPackage(appList, labelList, name);
     }
 
     public String findPackage(List<AppInfo> appList, List<String> labels, String name) {
@@ -195,20 +209,6 @@ public class AppsManager {
         return null;
     }
 
-    public String findPackage(String name, int type) {
-        List<AppInfo> appList;
-        List<String> labelList;
-        if(type == SHOWN_APPS) {
-            appList = appsHolder.getApps();
-            labelList = appsHolder.getAppLabels();
-        } else {
-            appList = hiddenApps;
-            labelList = AppUtils.labelList(appList);
-        }
-
-        return findPackage(appList, labelList, name);
-    }
-
     public Intent getIntent(String packageName) {
         AppInfo info = AppUtils.findAppInfo(packageName, appsHolder.getApps());
         if(info == null) {
@@ -225,7 +225,7 @@ public class AppsManager {
             prefsEditor.commit();
         }
 
-        return mgr.getLaunchIntentForPackage(packageName);
+        return context.getPackageManager().getLaunchIntentForPackage(packageName);
     }
 
     public String hideApp(String packageName) {
@@ -271,6 +271,10 @@ public class AppsManager {
 
     public List<String> getAppLabels() {
         return appsHolder.getAppLabels();
+    }
+
+    public List<String> getHiddenAppsLabels() {
+        return AppUtils.labelList(hiddenApps);
     }
 
     public String[] getSuggestedApps() {
@@ -351,9 +355,33 @@ public class AppsManager {
             }
         };
 
+//        workaround to check if in suggested apps there are duplicates
+        private Handler handler = new Handler();
+        private Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                if(suggestedApps != null) {
+                    if(duplicates()) {
+                        fillSuggestions();
+                    }
+                }
+                handler.postDelayed(runnable, 1000 * 60 * 2);
+            }
+
+            private boolean duplicates() {
+                for (int count =0; count < suggestedApps.length; count++)
+                    for (int count2 = count+1 ; count2 < suggestedApps.length; count2++)
+                        if (count != count2 && suggestedApps[count] == suggestedApps[count2])
+                            return true;
+                return false;
+            }
+        };
+
         public AppsHolder(List<AppInfo> infos) {
             this.infos = infos;
             update(true);
+
+            handler.postDelayed(runnable, 1000 * 60 * 5);
         }
 
         public void add(AppInfo info) {
@@ -413,6 +441,7 @@ public class AppsManager {
         }
 
         private void fillSuggestions() {
+            suggestedApps = new AppInfo[SUGGESTED_APPS_LENGTH];
             for(AppInfo info : infos) {
                 attemptInsertSuggestion(info);
             }
@@ -424,10 +453,8 @@ public class AppsManager {
             }
             for(int count = 0; count < suggestedApps.length; count++) {
                 if(suggestedApps[count] == null) {
-                    if(count == lastNull()) {
-                        suggestedApps[count] = info;
-                        return;
-                    }
+                    suggestedApps[count] = info;
+                    return;
                 } else {
                     if(info.launchedTimes > suggestedApps[count].launchedTimes) {
                         System.arraycopy(suggestedApps, count, suggestedApps, count + 1, suggestedApps.length - (count + 1));

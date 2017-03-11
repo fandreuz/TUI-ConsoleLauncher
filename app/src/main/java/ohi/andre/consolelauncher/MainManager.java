@@ -4,6 +4,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Looper;
 import android.util.Log;
 
 import ohi.andre.consolelauncher.commands.Command;
@@ -11,6 +12,7 @@ import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
@@ -20,7 +22,9 @@ import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
+import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
+import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 
 /*Copyright Francesco Andreuzzi
 
@@ -37,6 +41,36 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 
 public class MainManager {
+
+    private RedirectCommand redirect;
+    private Redirectator redirectator = new Redirectator() {
+        @Override
+        public void prepareRedirection(RedirectCommand cmd) {
+            redirect = cmd;
+
+            if(redirectionListener != null) {
+                redirectionListener.onRedirectionRequest(cmd);
+            }
+        }
+
+        @Override
+        public void cleanup() {
+            if(redirect != null) {
+                redirect.beforeObjects.clear();
+                redirect.afterObjects.clear();
+
+                if(redirectionListener != null) {
+                    redirectionListener.onRedirectionEnd(redirect);
+                }
+
+                redirect = null;
+            }
+        }
+    };
+    private OnRedirectionListener redirectionListener;
+    public void setRedirectionListener(OnRedirectionListener redirectionListener) {
+        this.redirectionListener = redirectionListener;
+    }
 
     private final String COMMANDS_PKG = "ohi.andre.consolelauncher.commands.main.raw";
 
@@ -84,13 +118,23 @@ public class MainManager {
         AppsManager appsMgr = new AppsManager(c, Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.COMPARESTRING_APPS)), out);
         AliasManager aliasManager = new AliasManager(prefsMgr);
 
-        mainPack = new MainPack(mContext, prefsMgr, group, aliasManager, appsMgr, music, cont, devicePolicyManager, componentName, c, executer, out);
+        mainPack = new MainPack(mContext, prefsMgr, group, aliasManager, appsMgr, music, cont, devicePolicyManager, componentName, c, executer, out, redirectator);
     }
 
     //    command manager
     public void onCommand(String input, String alias) {
 
         input = Tuils.removeUnncesarySpaces(input);
+
+        if(redirect != null) {
+            if(!redirect.isWaitingPermission()) {
+                redirect.afterObjects.add(input);
+            }
+            String output = redirect.onRedirect(mainPack);
+            out.onOutput(output);
+
+            return;
+        }
 
         if(alias != null && showAliasValue) {
             out.onOutput(alias + " --> " + "[" + input + "]");
@@ -112,6 +156,10 @@ public class MainManager {
 
     public void onLongBack() {
         in.in(Tuils.EMPTYSTRING);
+    }
+
+    public void sendPermissionNotGrantedWarning() {
+        redirectator.cleanup();
     }
 
     //    dispose
@@ -225,6 +273,8 @@ public class MainManager {
                 public void run() {
                     super.run();
 
+                    Looper.prepare();
+
                     mainPack.lastCommand = input;
 
                     try {
@@ -243,6 +293,7 @@ public class MainManager {
                             }
                         }
                     } catch (Exception e) {
+                        Log.e("andre", "", e);
                         out.onOutput(e.toString());
                     }
                 }

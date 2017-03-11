@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.commands;
 
-import java.util.Objects;
-
 @SuppressWarnings("deprecation")
 public abstract class ExecutePack {
 

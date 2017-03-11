@@ -18,6 +18,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import ohi.andre.consolelauncher.BuildConfig;
+import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.tuils.Animator;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -50,6 +51,7 @@ public class TutorialActivity extends AppCompatActivity {
                 update();
             } else {
                 TutorialActivity.this.finish();
+                startActivity(new Intent(TutorialActivity.this, LauncherActivity.class));
             }
         }
     };

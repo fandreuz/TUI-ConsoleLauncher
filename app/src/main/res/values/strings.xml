@@ -8,6 +8,7 @@
     <string name="nosu">Your device isn\'t rooted</string>
     <string name="permissions_toast">You have to grant Storage permission</string>
     <string name="version_label">Version:</string>
+    <string name="output_error">An unknown error has occurred</string>
 
     <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.\n\nYou can disable this message in >>tuisettings</string>
 
@@ -43,6 +44,7 @@
     <string name="tuixt_back_pressed">You pressed back key</string>
     <string name="tuixt_saved">Saved</string>
     <string name="tuixt_reading">Reading</string>
+    <string name="tuixt_label">TUIXT</string>
 
     <!-- search-->
     <string name="output_nothing_found">Nothing was found</string>
@@ -52,14 +54,12 @@
     <string name="output_data">Mobile Data active:</string>
     <string name="output_bluetooth">Bluetooth active:</string>
     <string name="output_airplane">Airplane Mode active:</string>
-    <string name="output_numbernotfound">Contact not found</string>
     <string name="output_nofeature">Can\'t use this feature on your Android version</string>
 
     <!-- files -->
     <string name="output_isfile">Cant\'t write here. It\'s a file</string>
     <string name="output_isdirectory">This is a directory</string>
     <string name="output_filenotfound">File not found</string>
-    <string name="output_ioerror">An unknown I/O error has occurred</string>
     <string name="output_noreadable">This file is not readable</string>
     <string name="output_nowriteable">You can\'t write or delete this file</string>
 
@@ -92,14 +92,19 @@
     <string name="wifi">WiFi:</string>
 
     <!-- infos -->
-    <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> andreuzzi.francesco@gmail.com
-        \n\nLuke Winward, Design &amp; Testing
+    <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
+        \n\nLuke Winward\n\t-> Design &amp; Testing
         \n\n\nOpen Source Libraries:
-        \n(Francesco Andreuzzi) - CompareString
-        \nApache commons-io
+        \nCompareString
     </string>
     <string name="output_refresh">Refresh: apps, alias, music, contacts</string>
     <string name="output_rate">Thank you!</string>
+
+    <!-- contacts -->
+    <string name="sms_hint">write your SMS or nothing to abort</string>
+    <string name="output_numbernotfound">Contact not found</string>
+    <string name="output_smsnotsent">SMS not sent</string>
+    <string name="output_smssent">SMS sent</string>
 
 
     <string name="help_about">Informations about the app</string>
@@ -110,16 +115,24 @@
         \n\nUsage:
         \n>>apps [option] [app name]
         \n\n[option] can be:
-        \n-h [app name] -> hide the app
-        \n-uh [app name] -> unhide the app
         \n-sh -> show hidden apps
         \n-ps [app name] -> show Google Play Store page for this app
         \n-st [app name] -> show Settings details for this app
         \n-f [app name] -> force t-ui to open this app
         \nno option -> list your apps
         \n\nExample:
-        \n>>apps -h whatsapp
+        \n>>apps -st T-UI
     </string>
+    <string name="help_appshide">Hide an app
+        \n\nUsage:
+        \n>>apps_hide [app]
+        \n\nExample:
+        \n>>apps_hide Settings</string>
+    <string name="help_appsunhide">Unhide an hidden app
+        \n\nUsage:
+        \n>>apps_unhide [app]
+        \n\nExample:
+        \n>>apps_unhide Settings</string>
     <string name="help_bluetooth">Toggle Bluetooth</string>
     <string name="help_clear">Clear the screen</string>
     <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
@@ -233,30 +246,16 @@
         \n\nExample:
         \n>>ls Downloads
     </string>
+    <string name="help_sms">Send an SMS.
+        \nUsage:
+        \n>>sms [contact name] OR [phone number] {newline}
+        \n>>[text]
+        \n\nExample:
+        \n>>sms John Smith
+        \n>>Hi John, I need to talk you about T-UI, it\'s a fantastic launcher!</string>
 
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
-
-    <string name="tutorial_actionbar">T-UI Tutorial</string>
-    <string name="tutorial_header">Tap anywhere to learn how to use T-UI</string>
-    <string-array name="tutorial_index">
-        <item>Launch Applications</item>
-        <item>Commands</item>
-        <item>Settings</item>
-        <item>Alias</item>
-        <item>Playing music</item>
-    </string-array>
-
-    <string name="tutorial">Hi, I\'m T-UI, an Android launcher inspired by Linux Shell. You can see again this tutorial whenever you want, just type \"tutorial\" and hit enter.
-        \n\nThe first command you will want to use is "help". It will show you the command you can use. You should take a look.\nIf you want to know something about a command: \"help [command]\" (this is like
-        Linux\'s man).
-        \n\nYou can launch your apps just typing their name and clicking on one of those colorful rect below (they\'re called \"suggestions\").
-        \n\nIf you want to change some settings type "tuisettings" and edit the file which appears (but this is for advanced users only, I think..).
-        \n\nYou can also create \"alias\", which are sequences of characters that means a longer sequence. You can change them using \"aliasfile\".
-        \n\nDo you want to go back to your previous launcher? Just use "remove", this will uninstall T-UI from your phone.
-        \n\nThis is all, have fun!
-        \n\n\t- Francesco Andreuzzi
-    </string>
 
     <!-- tutorial -->
     <string name="tutorial_title">A brief introduction</string>

@@ -6,11 +6,8 @@ import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;

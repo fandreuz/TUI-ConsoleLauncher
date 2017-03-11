@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.managers.suggestions;
 
-import android.util.Log;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +10,7 @@ import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandTuils;
-import ohi.andre.consolelauncher.commands.PermanentSuggestionCommand;
+import ohi.andre.consolelauncher.commands.specific.PermanentSuggestionCommand;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
@@ -205,6 +203,9 @@ public class SuggestionsManager {
             case CommandAbstraction.BOOLEAN:
                 suggestBoolean(suggestions, before);
                 break;
+            case CommandAbstraction.HIDDEN_PACKAGE:
+                suggestHiddenApp(info, suggestions, prev, before);
+                break;
         }
     }
 
@@ -372,20 +373,42 @@ public class SuggestionsManager {
     }
 
     private void suggestApp(MainPack info, List<Suggestion> suggestions, String prev, String before) {
+        List<String> names = info.appsManager.getAppLabels();
         if (prev == null || prev.length() == 0) {
-            for (String s : info.appsManager.getAppLabels()) {
+            for (String s : names) {
                 suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_APP));
             }
         } else if(prev.length() <= FIRST_INTERVAL) {
             prev = prev.trim().toLowerCase();
-            List<String> names = info.appsManager.getAppLabels();
             for (String n : names) {
                 if(n.toLowerCase().trim().startsWith(prev)) {
                     suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
                 }
             }
         } else {
-            List<Compare.CompareInfo> infos = Compare.compareInfo(info.appsManager.getAppLabels(), prev, min_apps_rate,
+            List<Compare.CompareInfo> infos = Compare.compareInfo(names, prev, min_apps_rate,
+                    AppsManager.USE_SCROLL_COMPARE);
+            for(Compare.CompareInfo i : infos) {
+                suggestions.add(new Suggestion(before, i.s, true, i.rate, Suggestion.TYPE_APP));
+            }
+        }
+    }
+
+    private void suggestHiddenApp(MainPack info, List<Suggestion> suggestions, String prev, String before) {
+        List<String> names = info.appsManager.getHiddenAppsLabels();
+        if (prev == null || prev.length() == 0) {
+            for (String s : names) {
+                suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_APP));
+            }
+        } else if(prev.length() <= FIRST_INTERVAL) {
+            prev = prev.trim().toLowerCase();
+            for (String n : names) {
+                if(n.toLowerCase().trim().startsWith(prev)) {
+                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
+                }
+            }
+        } else {
+            List<Compare.CompareInfo> infos = Compare.compareInfo(names, prev, min_apps_rate,
                     AppsManager.USE_SCROLL_COMPARE);
             for(Compare.CompareInfo i : infos) {
                 suggestions.add(new Suggestion(before, i.s, true, i.rate, Suggestion.TYPE_APP));

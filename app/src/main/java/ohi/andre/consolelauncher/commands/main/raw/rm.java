@@ -27,7 +27,7 @@ public class rm implements CommandAbstraction {
             case FileManager.ISFILE:
                 return info.res.getString(R.string.output_isfile);
             case FileManager.IOERROR:
-                return info.res.getString(R.string.output_ioerror);
+                return info.res.getString(R.string.output_error);
             case FileManager.NOT_WRITEABLE:
                 return info.res.getString(R.string.output_nowriteable);
         }

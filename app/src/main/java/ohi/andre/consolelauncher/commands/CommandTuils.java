@@ -1,13 +1,11 @@
 package ohi.andre.consolelauncher.commands;
 
 import android.annotation.SuppressLint;
-import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.AppsManager;
@@ -38,7 +36,6 @@ public class CommandTuils {
         }
 
         String name = CommandTuils.findName(input);
-        Log.e("andre", name);
         if (!Tuils.isAlpha(name))
             return null;
 
@@ -116,6 +113,9 @@ public class CommandTuils {
         else if (type == CommandAbstraction.PACKAGE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return packageName(input, pack.appsManager);
+        } else if (type == CommandAbstraction.HIDDEN_PACKAGE && info instanceof MainPack) {
+            MainPack pack = (MainPack) info;
+            return hiddenPackage(input, pack.appsManager);
         }
 //        will always find a textlist
         else if (type == CommandAbstraction.TEXTLIST) {
@@ -318,7 +318,12 @@ public class CommandTuils {
     }
 
     private static ArgInfo packageName(String input, AppsManager apps) {
-        String packageName = apps.findPackage(input);
+        String packageName = apps.findPackage(input, AppsManager.SHOWN_APPS);
+        return new ArgInfo(packageName, null, packageName != null, 1);
+    }
+
+    private static ArgInfo hiddenPackage(String input, AppsManager apps) {
+        String packageName = apps.findPackage(input, AppsManager.HIDDEN_APPS);
         return new ArgInfo(packageName, null, packageName != null, 1);
     }
 

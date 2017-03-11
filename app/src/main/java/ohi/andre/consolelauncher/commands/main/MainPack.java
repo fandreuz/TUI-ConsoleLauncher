@@ -11,9 +11,11 @@ import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Parcel;
+import android.util.Size;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Objects;
 
 import ohi.andre.consolelauncher.commands.CommandGroup;
@@ -29,6 +31,7 @@ import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
+import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
 /**
@@ -92,9 +95,11 @@ public class MainPack extends ExecutePack {
 
     public String lastCommand;
 
+    public Redirectator redirectator;
+
     public MainPack(Context context, PreferencesManager prefsMgr, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
-                       ContactManager c, DevicePolicyManager devicePolicyManager, ComponentName componentName,
-                       Reloadable r, CommandExecuter executeCommand, Outputable outputable) {
+                    ContactManager c, DevicePolicyManager devicePolicyManager, ComponentName componentName,
+                    Reloadable r, CommandExecuter executeCommand, Outputable outputable, Redirectator redirectator) {
         super(commandGroup);
 
         this.outputable = outputable;
@@ -122,6 +127,8 @@ public class MainPack extends ExecutePack {
         this.component = componentName;
 
         this.reloadable = r;
+
+        this.redirectator = redirectator;
     }
 
     public boolean getSu() {
@@ -138,6 +145,10 @@ public class MainPack extends ExecutePack {
         try {
             this.camera = Camera.open();
             this.parameters = this.camera.getParameters();
+            List<Camera.Size> sizes = this.parameters.getSupportedPreviewSizes();
+            if(sizes != null && sizes.size() > 0) {
+                this.parameters.setPreviewSize(sizes.get(0).width, sizes.get(0).height);
+            }
         } catch (Exception e) {
             this.camera = null;
             this.parameters = null;

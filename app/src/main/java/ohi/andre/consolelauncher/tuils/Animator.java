@@ -1,16 +1,9 @@
 package ohi.andre.consolelauncher.tuils;
 
-import android.app.Application;
-import android.content.Context;
-import android.media.MediaPlayer;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.TextView;
-
-import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.commands.Command;
 
 /**
  * Created by francescoandreuzzi on 17/02/2017.

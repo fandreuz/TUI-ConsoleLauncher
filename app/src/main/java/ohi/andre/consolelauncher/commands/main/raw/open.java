@@ -21,7 +21,7 @@ public class open implements CommandAbstraction {
         if (result == FileManager.ISDIRECTORY)
             return info.res.getString(R.string.output_isdirectory);
         if (result == FileManager.IOERROR)
-            return info.res.getString(R.string.output_ioerror);
+            return info.res.getString(R.string.output_error);
 
         return Tuils.EMPTYSTRING;
     }

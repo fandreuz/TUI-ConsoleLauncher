@@ -25,17 +25,14 @@ public class flash implements CommandAbstraction {
             return info.res.getString(R.string.output_flashlightnotavailable);
         }
 
-        if (info.camera == null) {
-            info.initCamera();
-        }
-
-        if(info.camera == null) {
-            return info.res.getString(R.string.output_problemcamera);
-        }
-
         final boolean flashOn = info.isFlashOn;
-
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            info.initCamera();
+
+            if(info.camera == null) {
+                return info.res.getString(R.string.output_problemcamera);
+            }
+
             new Thread() {
                 @Override
                 public void run() {
@@ -49,7 +46,11 @@ public class flash implements CommandAbstraction {
                             setSurfaceTexture(info.camera);
                         }
 
-                        info.camera.startPreview();
+                        try {
+                            info.camera.startPreview();
+                        } catch (Exception e) {
+                            info.camera.release();
+                        }
                     } else {
                         info.parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
                         info.camera.setParameters(info.parameters);
@@ -58,7 +59,11 @@ public class flash implements CommandAbstraction {
                             detachSurfaceTexture(info.camera);
                         }
 
-                        info.camera.stopPreview();
+                        try {
+                            info.camera.stopPreview();
+                        } catch (Exception e) {
+                            info.camera.release();
+                        }
                     }
                 }
             }.start();
@@ -82,14 +87,14 @@ public class flash implements CommandAbstraction {
     public static void setSurfaceTexture(Camera camera) {
         try {
             camera.setPreviewTexture(new SurfaceTexture(0));
-        } catch (IOException e) {}
+        } catch (Exception e) {}
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static void detachSurfaceTexture(Camera camera) {
         try {
             camera.setPreviewTexture(null);
-        } catch (IOException e) {}
+        } catch (Exception e) {}
     }
 
     @TargetApi(Build.VERSION_CODES.M)

@@ -9,8 +9,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 86
-        versionName "5.1"
+        versionCode 88
+        versionName "5.2.1"
     }
 
     buildTypes {
@@ -28,7 +28,7 @@ android {
     }
 
     dependencies {
-        compile 'com.android.support:appcompat-v7:23.2.0'
+        compile 'com.android.support:appcompat-v7:23.4.0'
         compile 'com.github.Andre1299:CompareString:1.4.2'
     }
 

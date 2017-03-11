@@ -1,10 +1,6 @@
 package ohi.andre.consolelauncher.commands;
 
-import android.content.Context;
 import android.content.res.Resources;
-import android.util.Log;
-
-import java.util.Arrays;
 
 import ohi.andre.consolelauncher.R;
 

@@ -30,15 +30,16 @@ import java.lang.reflect.Field;
 
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.PreferencesManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
-import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
+import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
+import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
 import ohi.andre.consolelauncher.tuils.interfaces.SuggestionViewDecorer;
 import ohi.andre.consolelauncher.tuils.stuff.TrashInterfaces;
 
@@ -74,6 +75,7 @@ public class UIManager implements OnTouchListener {
         }
     };
 
+    private boolean showSuggestions;
     private LinearLayout suggestionsView;
     private SuggestionViewDecorer suggestionViewDecorer;
     private SuggestionRunnable suggestionRunnable;
@@ -100,7 +102,7 @@ public class UIManager implements OnTouchListener {
 
         @Override
         public void onTextChanged(CharSequence s, int st, int b, int c) {
-            if (suggestionsView == null || suggestionsManager == null) {
+            if (suggestionsView == null || suggestionsManager == null || !showSuggestions) {
                 return;
             }
 
@@ -114,8 +116,7 @@ public class UIManager implements OnTouchListener {
         }
 
         @Override
-        public void afterTextChanged(Editable s) {
-        }
+        public void afterTextChanged(Editable s) {}
     };
 
     private boolean executeOnSuggestionClick;
@@ -253,17 +254,17 @@ public class UIManager implements OnTouchListener {
 
         this.info.skinManager = skinManager;
 
-        if (!skinManager.getUseSystemWp()) {
-            rootView.setBackgroundColor(skinManager.getBgColor());
+        if (!skinManager.useSystemWp) {
+            rootView.setBackgroundColor(skinManager.bgColor);
         }
 
         ram = (TextView) rootView.findViewById(R.id.ram_tv);
         TextView deviceInfo = (TextView) rootView.findViewById(R.id.deviceinfo_tv);
         boolean showRam = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOWRAM));
         if (showRam) {
-            ram.setTextColor(skinManager.getRamColor());
+            ram.setTextColor(skinManager.ramColor);
             ram.setTextSize(skinManager.getRamSize());
-            ram.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
+            ram.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
 
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
@@ -277,16 +278,15 @@ public class UIManager implements OnTouchListener {
 
         boolean showDevice = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOWDEVICE));
         if (showDevice) {
-            String deviceName = getDeviceName(prefsMgr);
+            String deviceName = skinManager.deviceName;
 
             deviceInfo.setText(deviceName);
-            deviceInfo.setTextColor(skinManager.getDeviceColor());
+            deviceInfo.setTextColor(skinManager.deviceColor);
             deviceInfo.setTextSize(skinManager.getDeviceSize());
 
-            deviceInfo.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
+            deviceInfo.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         } else {
             deviceInfo.setVisibility(View.GONE);
-            deviceInfo = null;
         }
 
         final boolean inputBottom = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.INPUTFIELD_BOTTOM));
@@ -328,10 +328,24 @@ public class UIManager implements OnTouchListener {
             pasteView = (ImageButton) inputOutputView.findViewById(R.id.paste_view);
         }
 
-        if (skinManager.getShowSuggestions()) {
+        if (skinManager.showSuggestions) {
+            showSuggestions = true;
+
+            HorizontalScrollView sv = (HorizontalScrollView) rootView.findViewById(R.id.suggestions_container);
+            sv.setFocusable(false);
+            sv.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if(hasFocus) {
+                        v.clearFocus();
+                    }
+                }
+            });
+
             executeOnSuggestionClick = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.EXECUTE_ON_SUGGESTION_CLICK));
 
             suggestionsView = (LinearLayout) rootView.findViewById(R.id.suggestions_group);
+
             inputView.addTextChangedListener(textWatcher);
 
             suggestionsManager = new SuggestionsManager(prefsMgr);
@@ -342,8 +356,12 @@ public class UIManager implements OnTouchListener {
                     TextView textView = new TextView(mContext);
                     textView.setOnClickListener(clickListener);
 
-                    textView.setTypeface(skinManager.getUseSystemFont() ? Typeface.DEFAULT : lucidaConsole);
-                    textView.setTextColor(skinManager.getSuggestionTextColor());
+                    textView.setFocusable(false);
+                    textView.setLongClickable(false);
+                    textView.setClickable(true);
+
+                    textView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+                    textView.setTextColor(skinManager.suggestionTextColor);
                     textView.setTextSize(skinManager.getSuggestionSize());
 
                     textView.setPadding(SkinManager.SUGGESTION_PADDING_HORIZONTAL, SkinManager.SUGGESTION_PADDING_VERTICAL,
@@ -355,6 +373,7 @@ public class UIManager implements OnTouchListener {
                 }
             };
         } else {
+            showSuggestions = false;
             rootView.findViewById(R.id.suggestions_group).setVisibility(View.GONE);
             this.textWatcher = null;
             this.clickListener = null;
@@ -412,13 +431,17 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.setOutput(string);
     }
 
-    //    get device name
-    private String getDeviceName(PreferencesManager preferencesManager) {
-        String name = preferencesManager.getValue(PreferencesManager.DEVICENAME);
-        if (name == null || name.length() == 0 || name.equals("null")) {
-            return Build.MODEL;
-        } else {
-            return name;
+    public void disableSuggestions() {
+        if(suggestionsView != null) {
+            showSuggestions = false;
+            suggestionsView.setVisibility(View.GONE);
+        }
+    }
+
+    public void enableSuggestions() {
+        if(suggestionsView != null) {
+            showSuggestions = true;
+            suggestionsView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -506,6 +529,32 @@ public class UIManager implements OnTouchListener {
             return true;
         } else
             return v.onTouchEvent(event);
+    }
+
+    public OnRedirectionListener buildRedirectionListener() {
+        return new OnRedirectionListener() {
+            @Override
+            public void onRedirectionRequest(final RedirectCommand cmd) {
+                ((Activity) mContext).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTerminalAdapter.setHint(mContext.getString(cmd.getHint()));
+                        disableSuggestions();
+                    }
+                });
+            }
+
+            @Override
+            public void onRedirectionEnd(RedirectCommand cmd) {
+                ((Activity) mContext).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mTerminalAdapter.setDefaultHint();
+                        enableSuggestions();
+                    }
+                });
+            }
+        };
     }
 
 }

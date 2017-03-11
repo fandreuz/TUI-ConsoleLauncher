@@ -29,7 +29,7 @@ public class mv implements CommandAbstraction {
             case FileManager.ISFILE:
                 return info.res.getString(R.string.output_isfile);
             case FileManager.IOERROR:
-                return info.res.getString(R.string.output_ioerror);
+                return info.res.getString(R.string.output_error);
             case FileManager.NOT_READABLE:
                 return info.res.getString(R.string.output_noreadable);
             case FileManager.NOT_WRITEABLE:

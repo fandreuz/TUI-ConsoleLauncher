@@ -1,7 +1,6 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.annotation.SuppressLint;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,6 +38,7 @@ public class PreferencesManager {
     public static final String SHOWUSERNAMEWHENINPUTEMPTY = "showSessionInfoWhenInputEmpty";
     public static final String LINUXAPPERARENCE = "linuxAppearance";
     public static final String SHOWPATH_SESSIONINFO = "showPathInSessionInfo";
+    public static final String SHOWDEVICENAMEINSESSIONINFO = "showDeviceNameInSessionInfo";
 
     public static final String SUGGESTIONTEXT_COLOR = "suggestionTextColor";
     public static final String TRANSPARENT_SUGGESTIONS = "transparentSuggestions";
@@ -67,6 +67,7 @@ public class PreferencesManager {
     public static final String FROM_MEDIASTORE = "fromMediastore";
 
     public static final String USE_SYSTEMWP = "useSystemWallpaper";
+    public static final String FULLSCREEN = "fullscreen";
     public static final String NOTIFICATION = "keepAliveWithNotification";
     public static final String OPEN_KEYBOARD = "openKeyboardOnStart";
     public static final String COMPARESTRING_APPS = "compareStringForApps";
@@ -100,6 +101,9 @@ public class PreferencesManager {
         List<String> list = new ArrayList<>();
 
         File f = open(n);
+        if(f == null) {
+            return new ArrayList<>();
+        }
         FileInputStream fis = new FileInputStream(f);
         BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
 

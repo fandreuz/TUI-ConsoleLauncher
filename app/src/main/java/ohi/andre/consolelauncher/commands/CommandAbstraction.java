@@ -11,6 +11,7 @@ public interface CommandAbstraction {
     int PLAIN_TEXT = 10;
     int FILE = 11;
     int PACKAGE = 12;
+    int HIDDEN_PACKAGE = 20;
     int CONTACTNUMBER = 13;
     int TEXTLIST = 14;
     int SONG = 15;
