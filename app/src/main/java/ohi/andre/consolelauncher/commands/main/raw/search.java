@@ -26,12 +26,14 @@ public class search implements CommandAbstraction {
     private final String GOOGLE_PREFIX = "http://www.google.com/#q=";
     private final String PLAYSTORE_PREFIX = "market://search?q=";
     private final String PLAYSTORE_BROWSER_PREFIX = "https://play.google.com/store/search?q=";
+    private final String DUCK_DUCK_GO_PREFIX = "https://duckduck.com/?q=";
 
     private final String PLAYSTORE_PARAM = "-p";
     private final String FILE_PARAM = "-f";
     private final String GOOGLE_PARAM = "-g";
     private final String YOUTUBE_PARAM = "-y";
     private final String URL_PARAM = "-u";
+    private final String DUCK_DUCK_GO_PARAM = "-d";
 
     private final int MIN_FILE_RATE = 4;
 
@@ -53,9 +55,21 @@ public class search implements CommandAbstraction {
                 return google(args, info.context);
             case URL_PARAM:
                 return url(args.get(0), info.context);
+            case DUCK_DUCK_GO_PARAM:
+                return duckduckgo(args, info.context);
             default:
                 return info.res.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
         }
+    }
+
+    private String duckduckgo(List<String> args, Context c) {
+        String toSearch = Tuils.toPlanString(args, "+");
+
+        Uri uri = Uri.parse(DUCK_DUCK_GO_PREFIX + toSearch);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        c.startActivity(intent);
+
+        return Tuils.EMPTYSTRING;
     }
 
     private String google(List<String> args, Context c) {
@@ -179,6 +193,7 @@ public class search implements CommandAbstraction {
                 FILE_PARAM,
                 GOOGLE_PARAM,
                 YOUTUBE_PARAM,
+                DUCK_DUCK_GO_PARAM,
                 URL_PARAM
         };
     }
@@ -206,6 +221,8 @@ public class search implements CommandAbstraction {
                 return google(toSearch, info.context);
             case URL_PARAM:
                 return url(toSearch.get(0), info.context);
+            case DUCK_DUCK_GO_PARAM:
+                return duckduckgo(toSearch, info.context);
             default:
                 return info.res.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
         }
