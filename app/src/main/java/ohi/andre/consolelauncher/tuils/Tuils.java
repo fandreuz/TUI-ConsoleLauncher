@@ -59,11 +59,8 @@ public class Tuils {
         try {
             value = value.toLowerCase().trim();
             for (String s : array) {
-                if (value.endsWith(s)) {
-                    return true;
-                }
+                return value.endsWith(s);
             }
-            return false;
         } catch (Exception e) {
             return false;
         }
