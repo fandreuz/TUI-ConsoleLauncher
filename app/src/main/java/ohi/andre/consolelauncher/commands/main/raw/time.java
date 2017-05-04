@@ -16,8 +16,11 @@ public class time implements CommandAbstraction {
         Calendar c = Calendar.getInstance();
         int hours = c.get(Calendar.HOUR_OF_DAY);
         int minutes = c.get(Calendar.MINUTE);
-
-        return hours + ":" + minutes;
+		
+		if(minutes < 10)
+			return hours + ":0" + minutes;
+		else
+			return hours + ":" + minutes;
     }
 
     @Override
