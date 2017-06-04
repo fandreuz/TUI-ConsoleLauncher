@@ -31,7 +31,6 @@ public class search implements CommandAbstraction {
     private final String FILE_PARAM = "-f";
     private final String GOOGLE_PARAM = "-g";
     private final String YOUTUBE_PARAM = "-y";
-    private final String URL_PARAM = "-u";
 
     private final int MIN_FILE_RATE = 4;
 
@@ -51,8 +50,6 @@ public class search implements CommandAbstraction {
                 return file(args, info.currentDirectory, info.res, info.outputable);
             case GOOGLE_PARAM:
                 return google(args, info.context);
-            case URL_PARAM:
-                return url(args.get(0), info.context);
             default:
                 return info.res.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
         }
@@ -76,18 +73,6 @@ public class search implements CommandAbstraction {
         } catch (android.content.ActivityNotFoundException anfe) {
             c.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(PLAYSTORE_BROWSER_PREFIX + toSearch)));
         }
-
-        return Tuils.EMPTYSTRING;
-    }
-
-    private String url(String url, Context c) {
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            url = "http://" + url;
-        }
-
-        Uri uri = Uri.parse(url);
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        c.startActivity(intent);
 
         return Tuils.EMPTYSTRING;
     }
@@ -179,7 +164,6 @@ public class search implements CommandAbstraction {
                 FILE_PARAM,
                 GOOGLE_PARAM,
                 YOUTUBE_PARAM,
-                URL_PARAM
         };
     }
 
@@ -204,8 +188,7 @@ public class search implements CommandAbstraction {
                 return file(toSearch, info.currentDirectory, info.res, info.outputable);
             case GOOGLE_PARAM:
                 return google(toSearch, info.context);
-            case URL_PARAM:
-                return url(toSearch.get(0), info.context);
+
             default:
                 return info.res.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
         }
