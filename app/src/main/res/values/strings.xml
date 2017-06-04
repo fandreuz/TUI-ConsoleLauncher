@@ -1,117 +1,122 @@
 <resources>
 
-    <!-- various text -->
-    <string name="app_name">T-UI</string>
-    <string name="separator_text">>></string>
-    <string name="separator_text_su">$</string>
-    <string name="su">T-UI got SU permission</string>
-    <string name="nosu">Your device isn\'t rooted</string>
-    <string name="permissions_toast">You have to grant Storage permission</string>
-    <string name="version_label">Version:</string>
-    <string name="output_error">An unknown error has occurred</string>
+	<!-- various text -->
+	<string name="app_name">T-UI</string>
+	<string name="separator_text">>></string>
+	<string name="separator_text_su">$</string>
+	<string name="su">T-UI got SU permission</string>
+	<string name="nosu">Your device isn\'t rooted</string>
+	<string name="permissions_toast">You have to grant Storage permission</string>
+	<string name="version_label">Version:</string>
+	<string name="output_error">An unknown error has occurred</string>
 
-    <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.\n\nYou can disable this message in >>tuisettings</string>
+	<string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.\n\nYou can disable this message in >>tuisettings</string>
 
-    <!-- app mgr -->
-    <string name="output_appnotfound">Application not found</string>
-    <string name="output_hideapp">state: hidden</string>
-    <string name="output_unhideapp">state: shown</string>
+	<!-- app mgr -->
+	<string name="output_appnotfound">Application not found</string>
+	<string name="output_hideapp">state: hidden</string>
+	<string name="output_unhideapp">state: shown</string>
 
-    <!-- label -->
-    <string name="share_label">Share</string>
-    <string name="adminrequest_label">Lock the screen on double tap</string>
-    <string name="error_label">Errors:</string>
+	<!-- label -->
+	<string name="share_label">Share</string>
+	<string name="adminrequest_label">Lock the screen on double tap</string>
+	<string name="error_label">Errors:</string>
 
-    <!-- pending operation -->
-    <string name="calling">Calling:</string>
+	<!-- pending operation -->
+	<string name="calling">Calling:</string>
 
-    <!-- various outputs -->
-    <string name="output_nothingfound">No matches</string>
-    <string name="output_nopermissions">You didn\'t grant the permission</string>
-    <string name="output_waitingpermission">Waiting permission</string>
-    <string name="output_invalidcalc">calc encountered this error:</string>
-    <string name="output_problemcamera">There was a problem while connecting to your device camera</string>
+	<!-- various outputs -->
+	<string name="output_nothingfound">No matches</string>
+	<string name="output_nopermissions">You didn\'t grant the permission</string>
+	<string name="output_waitingpermission">Waiting permission</string>
+	<string name="output_invalidcalc">calc encountered this error:</string>
+	<string name="output_problemcamera">There was a problem while connecting to your device camera</string>
 
-    <!-- tuixt -->
-    <string name="help_tuixt_help">Print the list of commands, or info about a command
+	<!-- tuixt -->
+	<string name="help_tuixt_help">Print the list of commands, or info about a command
         \nUsage:
         \nhelp [command]
         \n\nExample:
         \nhelp exit
     </string>
-    <string name="help_tuixt_exit">Exit from tuixt (changes won\'t be saved)</string>
-    <string name="help_tuixt_save">Save changes</string>
-    <string name="tuixt_back_pressed">You pressed back key</string>
-    <string name="tuixt_saved">Saved</string>
-    <string name="tuixt_reading">Reading</string>
-    <string name="tuixt_label">TUIXT</string>
+	<string name="help_tuixt_exit">Exit from tuixt (changes won\'t be saved)</string>
+	<string name="help_tuixt_save">Save changes</string>
+	<string name="tuixt_back_pressed">You pressed back key</string>
+	<string name="tuixt_saved">Saved</string>
+	<string name="tuixt_reading">Reading</string>
+	<string name="tuixt_label">TUIXT</string>
 
-    <!-- search-->
-    <string name="output_nothing_found">Nothing was found</string>
+	<!-- search-->
+	<string name="output_nothing_found">Nothing was found</string>
 
-    <!-- phone -->
-    <string name="output_wifi">WiFi active:</string>
-    <string name="output_data">Mobile Data active:</string>
-    <string name="output_bluetooth">Bluetooth active:</string>
-    <string name="output_airplane">Airplane Mode active:</string>
-    <string name="output_nofeature">Can\'t use this feature on your Android version</string>
+	<!-- keepn-->
+	<string name="keep_not_installed">Keep is not installed</string>
+	<!-- translaten-->
+	<string name="translate_not_installed">Translate is not installed</string>
 
-    <!-- files -->
-    <string name="output_isfile">Cant\'t write here. It\'s a file</string>
-    <string name="output_isdirectory">This is a directory</string>
-    <string name="output_filenotfound">File not found</string>
-    <string name="output_noreadable">This file is not readable</string>
-    <string name="output_nowriteable">You can\'t write or delete this file</string>
+	<!-- phone -->
+	<string name="output_wifi">WiFi active:</string>
+	<string name="output_data">Mobile Data active:</string>
+	<string name="output_bluetooth">Bluetooth active:</string>
+	<string name="output_airplane">Airplane Mode active:</string>
+	<string name="output_nofeature">Can\'t use this feature on your Android version</string>
 
-    <!-- install/uninstall -->
-    <string name="app_installed">\nApp installed:</string>
+	<!-- files -->
+	<string name="output_isfile">Cant\'t write here. It\'s a file</string>
+	<string name="output_isdirectory">This is a directory</string>
+	<string name="output_filenotfound">File not found</string>
+	<string name="output_noreadable">This file is not readable</string>
+	<string name="output_nowriteable">You can\'t write or delete this file</string>
 
-    <!-- music -->
-    <string name="output_playing">Playing:</string>
-    <string name="output_stopped">Player stopped</string>
-    <string name="output_nomusic">Player wasn\'t started</string>
-    <string name="output_cantstop">Couldn\'t stop the player. Force stop t-ui from settings</string>
-    <string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain audio files.\nYou should set the right path
+	<!-- install/uninstall -->
+	<string name="app_installed">\nApp installed:</string>
+
+	<!-- music -->
+	<string name="output_playing">Playing:</string>
+	<string name="output_stopped">Player stopped</string>
+	<string name="output_nomusic">Player wasn\'t started</string>
+	<string name="output_cantstop">Couldn\'t stop the player. Force stop t-ui from settings</string>
+	<string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain audio files.\nYou should set the right path
         in settings.txt
     </string>
 
-    <!-- command/args -->
-    <string name="output_commandnotfound">Command not found.\nTry to use \">>help\" or \">>tutorial\"</string>
-    <string name="output_toomanyargs">More arguments than expected</string>
-    <string name="output_invalid_param">Invalid parameter</string>
-    <string name="output_commandexitvalue">Command returned </string>
+	<!-- command/args -->
+	<string name="output_commandnotfound">Command not found.\nTry to use \">>help\" or \">>tutorial\"</string>
+	<string name="output_toomanyargs">More arguments than expected</string>
+	<string name="output_invalid_param">Invalid parameter</string>
+	<string name="output_commandexitvalue">Command returned </string>
 
-    <!-- flash -->
-    <string name="output_flashon">Flashlight ON</string>
-    <string name="output_flashoff">Flashlight OFF</string>
-    <string name="output_flashlightnotavailable">Your device doesn\'t support flashlight</string>
+	<!-- flash -->
+	<string name="output_flashon">Flashlight ON</string>
+	<string name="output_flashoff">Flashlight OFF</string>
+	<string name="output_flashlightnotavailable">Your device doesn\'t support flashlight</string>
 
-    <!-- status -->
-    <string name="battery_charge">Battery charge:</string>
-    <string name="mobile_data">Mobile data:</string>
-    <string name="wifi">WiFi:</string>
+	<!-- status -->
+	<string name="battery_charge">Battery charge:</string>
+	<string name="mobile_data">Mobile data:</string>
+	<string name="wifi">WiFi:</string>
 
-    <!-- infos -->
-    <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
+	<!-- infos -->
+	<string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
         \n\nLuke Winward\n\t-> Design &amp; Testing
         \n\n\nOpen Source Libraries:
         \nCompareString
     </string>
-    <string name="output_refresh">Refresh: apps, alias, music, contacts</string>
-    <string name="output_rate">Thank you!</string>
+	<string name="output_refresh">Refresh: apps, alias, music, contacts</string>
+	<string name="output_rate">Thank you!</string>
 
-    <!-- contacts -->
-    <string name="sms_hint">write your SMS or nothing to abort</string>
-    <string name="output_numbernotfound">Contact not found</string>
-    <string name="output_smsnotsent">SMS not sent</string>
-    <string name="output_smssent">SMS sent</string>
+	<!-- contacts -->
+	<string name="sms_hint">write your SMS or nothing to abort</string>
+	<string name="output_numbernotfound">Contact not found</string>
+	<string name="output_smsnotsent">SMS not sent</string>
+	<string name="output_smssent">SMS sent</string>
 
 
-    <string name="help_about">Informations about the app</string>
-    <string name="help_airplane">Toggle Airplane Mode</string>
-    <string name="help_aliases">Print alias that are currently saved in \"sdcard\"/t-ui/alias.txt</string>
-    <string name="help_aliasfile">Open alias.txt</string>
-    <string name="help_apps">Manage your apps
+	<string name="help_about">Informations about the app</string>
+	<string name="help_airplane">Toggle Airplane Mode</string>
+	<string name="help_aliases">Print alias that are currently saved in \"sdcard\"/t-ui/alias.txt</string>
+	<string name="help_aliasfile">Open alias.txt</string>
+	<string name="help_apps">Manage your apps
         \n\nUsage:
         \n>>apps [option] [app name]
         \n\n[option] can be:
@@ -123,19 +128,19 @@
         \n\nExample:
         \n>>apps -st T-UI
     </string>
-    <string name="help_appshide">Hide an app
+	<string name="help_appshide">Hide an app
         \n\nUsage:
         \n>>apps_hide [app]
         \n\nExample:
         \n>>apps_hide Settings</string>
-    <string name="help_appsunhide">Unhide an hidden app
+	<string name="help_appsunhide">Unhide an hidden app
         \n\nUsage:
         \n>>apps_unhide [app]
         \n\nExample:
         \n>>apps_unhide Settings</string>
-    <string name="help_bluetooth">Toggle Bluetooth</string>
-    <string name="help_clear">Clear the screen</string>
-    <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
+	<string name="help_bluetooth">Toggle Bluetooth</string>
+	<string name="help_clear">Clear the screen</string>
+	<string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
         \nExample:
         \n\n>>calc 4+2-5
         \n1
@@ -146,51 +151,51 @@
         \n\n>>calc sqrt25
         \n5
     </string>
-    <string name="help_call">Perform a call to someone or print your contacts
+	<string name="help_call">Perform a call to someone or print your contacts
         \nUsage: call [number] OR [name] (if you don\'t specify a number or a name you will get the list of your contacts)
         \n\n>>call James
     </string>
-    <string name="help_contacts">Print your contacts</string>
-    <string name="help_cp">Copy one or more files to a folder
+	<string name="help_contacts">Print your contacts</string>
+	<string name="help_cp">Copy one or more files to a folder
         \nUsage:
         \n>>[su] cp [files] [folder]
         \n\nExample:
         \n>>su cp fool.txt fool2.png myFolder
         \n>>cp myFile.txt myFolder
     </string>
-    <string name="help_data">Toggle mobile data. Will always turn off if WiFi is active</string>
-    <string name="help_donate">Donate something to the developer</string>
-    <string name="help_flash">Toggle the flashlight</string>
-    <string name="help_help">Print the list of commands, or info about a command
+	<string name="help_data">Toggle mobile data. Will always turn off if WiFi is active</string>
+	<string name="help_donate">Donate something to the developer</string>
+	<string name="help_flash">Toggle the flashlight</string>
+	<string name="help_help">Print the list of commands, or info about a command
         \nUsage:
         \n>>help [command]
     </string>
-    <string name="help_mv">Move one or more files to a folder
+	<string name="help_mv">Move one or more files to a folder
         \nUsage:
         \n>>[su] mv [files] [folder]
         \n\n>>su mv fool.txt fool2.png myFolder
         \n>>mv fool.txt myFolder
     </string>
-    <string name="help_next">Play the next track in the queue</string>
-    <string name="help_listen">Play a specific track
+	<string name="help_next">Play the next track in the queue</string>
+	<string name="help_listen">Play a specific track
         \nUsage:
         \n>>listen trackname
     </string>
-    <string name="help_previous">Play the last track played</string>
-    <string name="help_rate">Help T-UI with a positive rate (or negative, I don\'t know)\t;)</string>
-    <string name="help_refresh">Refresh apps and alias</string>
-    <string name="help_remove">Uninstall t-ui automatically.
+	<string name="help_previous">Play the last track played</string>
+	<string name="help_rate">Help T-UI with a positive rate (or negative, I don\'t know)\t;)</string>
+	<string name="help_refresh">Refresh apps and alias</string>
+	<string name="help_remove">Uninstall t-ui automatically.
         \n\nMake sure you have another Launcher!
     </string>
-    <string name="help_restart">Restart t-ui and load modified values</string>
-    <string name="help_rm">Remove a file:
+	<string name="help_restart">Restart t-ui and load modified values</string>
+	<string name="help_rm">Remove a file:
         \nUsage:
         \n>>[su] rm [files]
         \n\nExample:
         \n\n>>su rm fool.txt fool2.png
         \n>>rm Downloads/fool.txt
     </string>
-    <string name="help_search">Search something somewhere
+	<string name="help_search">Search something somewhere
         \nUsage:
         \nsearch [option] something
         \n\n[option] can be:
@@ -201,52 +206,74 @@
         \n\nExample:
         \n>>search -p T-UI
     </string>
-    <string name="help_share">Share a file
+
+	//added
+	<string name="help_visit">visit a web page
+        \nUsage:
+        \n>>visit address
+        \n\nExample:
+        \n>>visit google.com
+    </string>
+
+	<string name="help_keepn">add a note to Google Keep
+	\nUsage:
+	\nkeepn text
+	\nExample:
+	\nkeepn buy milk today</string>
+
+	<string name="help_translaten">translates passed text
+	\nUsage:
+	\ntranslaten text
+	\nExample:
+	\ntranslaten cat</string>
+	//--------------------
+
+	<string name="help_share">Share a file
         \nUsage:
         \n>>share pathToFile
         \n\nExample:
         \n>>share fool.jpg
     </string>
-    <string name="help_shellcommands">Print Terminal Emulator commands</string>
-    <string name="help_status">Get infos about battery charge, wifi status and mobile data</string>
-    <string name="help_stop">Stop the player</string>
-    <string name="help_time">Print current time</string>
-    <string name="help_track">Print informations about the current track</string>
-    <string name="help_tracks">Print all of the tracks in your music folder</string>
-    <string name="help_tuisettings">Open t-ui settings file</string>
-    <string name="help_tuixt">Open tuixt, the T-UI text editor.
+	<string name="help_shellcommands">Print Terminal Emulator commands</string>
+	<string name="help_status">Get infos about battery charge, wifi status and mobile data</string>
+	<string name="help_stop">Stop the player</string>
+	<string name="help_time">Print current time</string>
+	<string name="help_track">Print informations about the current track</string>
+	<string name="help_tracks">Print all of the tracks in your music folder</string>
+	<string name="help_tuisettings">Open t-ui settings file</string>
+	<string name="help_tuixt">Open tuixt, the T-UI text editor.
         \nUsage:
         \n>>tuixt [text file]
     </string>
-    <string name="help_tutorial">Go to T-UI tutorial page</string>
-    <string name="help_uninstall">Uninstall an application
+	<string name="help_tutorial">Go to T-UI tutorial page</string>
+	<string name="help_uninstall">Uninstall an application
         \nUsage:
         \n>>uninstall appName OR packageName
         \n\nExample:
         \n>>uninstall dropbox
     </string>
-    <string name="help_wifi">Toggle wifi</string>
+	<string name="help_wifi">Toggle wifi</string>
 
-    <!-- linux -->
-    <string name="help_cd">Change the current directory
+	<!-- linux -->
+	<string name="help_cd">Change the current directory
         \nUsage:
         \n>>cd [path]
         \n\nExample:
         \n>>cd /storage/sdcard1/DCIM
     </string>
-    <string name="help_open">Open a file with the default application
+	<string name="help_open">Open a file with the default application
         \nUsage:
         \n>>open [pathToFile]
         \n\nExample:
         \n>>open docs/fool.txt
     </string>
-    <string name="help_ls">Print a list of the files in a directory
+	<string name="help_ls">Print a list of the files in a directory
         \nUsage:
         \n>>ls [directory]
         \n\nExample:
         \n>>ls Downloads
     </string>
-    <string name="help_sms">Send an SMS.
+	<string name="help_sms">Send an SMS.
         \nUsage:
         \n>>sms [contact name] OR [phone number] {newline}
         \n>>[text]
@@ -254,108 +281,107 @@
         \n>>sms John Smith
         \n>>Hi John, I need to talk you about T-UI, it\'s a fantastic launcher!</string>
 
-    <string name="start_notification">T-UI started</string>
-    <string name="tui_running">T-UI is running</string>
+	<string name="start_notification">T-UI started</string>
+	<string name="tui_running">T-UI is running</string>
 
-    <!-- tutorial -->
-    <string name="tutorial_title">A brief introduction</string>
+	<!-- tutorial -->
+	<string name="tutorial_title">A brief introduction</string>
 
-    <string name="tutorial_navigation_right">- - &gt;</string>
-    <string name="tutorial_navigation_left">&lt; - -</string>
-    <string name="tutorial_navigation">End</string>
-    
-    <string-array name="tutorial_help">
-        <item>the command \"help\"</item>
-        <item>11help gives you information about commands that comes with T-UI. click on the input area on the bottom of the screen and type \"help\".</item>
-        <item>10$ help</item>
-        <item>01A\nabout airplane alias aliasfile apps\nB\n...</item>
-        <item>11\"help\" has also an other important feature: it works like Linux\'s man, therefore it tells you how to use a command. For example:</item>
-        <item>10$ help search</item>
-        <item>11will prints this:</item>
-        <item>@string/help_search</item>
-    </string-array>
-    
-    <string-array name="tutorial_apps">
-        <item>how to use your apps</item>
-        <item>11you can launch an app typing its name (or package name) in the input area. For example</item>
-        <item>10$ Chrome</item>
-        <item>01--> com.google.android.apps.chrome.Main</item>
-        <item>11you should also know something about the command \"apps\", which lets you know what apps are installed on your device and provides some shortcuts (mostly to Play Store and Settings)
+	<string name="tutorial_navigation_right">- - &gt;</string>
+	<string name="tutorial_navigation_left">&lt; - -</string>
+	<string name="tutorial_navigation">End</string>
+
+	<string-array name="tutorial_help">
+		<item>the command \"help\"</item>
+		<item>11help gives you information about commands that comes with T-UI. click on the input area on the bottom of the screen and type \"help\".</item>
+		<item>10$ help</item>
+		<item>01A\nabout airplane alias aliasfile apps\nB\n...</item>
+		<item>11\"help\" has also an other important feature: it works like Linux\'s man, therefore it tells you how to use a command. For example:</item>
+		<item>10$ help search</item>
+		<item>11will prints this:</item>
+		<item>@string/help_search</item>
+	</string-array>
+
+	<string-array name="tutorial_apps">
+		<item>how to use your apps</item>
+		<item>11you can launch an app typing its name (or package name) in the input area. For example</item>
+		<item>10$ Chrome</item>
+		<item>01--> com.google.android.apps.chrome.Main</item>
+		<item>11you should also know something about the command \"apps\", which lets you know what apps are installed on your device and provides some shortcuts (mostly to Play Store and Settings)
             \nTherefore, to learn something about this command:</item>
-        <item>10$ help apps</item>
-        <item>@string/help_apps</item>
-    </string-array>
-    
-    <string-array name="tutorial_usefulcommands">
-        <item>some useful commands</item>
-        <item>11you can call a contact of yours with the command \"call\"</item>
-        <item>00$ call Francesco Andreuzzi</item>
-        <item>11if you want to remove an app from your device use the command \"uninstall\"</item>
-        <item>00$ uninstall AwfulAppName</item>
-        <item>11use \"calc\" for quick math operations</item>
-        <item>00$ calc sqrt(4 * 6 + (189 % 3))</item>
-        <item>11you can also use rm, cp and mv for file-management</item>
-        <item>00$ mv /storage/sdcard0/Downloads/file.txt /storage/sdcard1/Docs</item>
-        <item>11use \"open\" to view files saved on your phone</item>
-        <item>00$ open /storage/sdcard0/Downloads/file.txt</item>
-        <item>11use the command \"clear\" to clean the screen, and \"restart\" to reboot T-UI (and apply setting changes)</item>
-        <item>10$ clear</item>
-        <item>10$ restart</item>
-    </string-array>
-    
-    <string-array name="tutorial_oscommands">
-        <item>control your device</item>
-        <item>11you can toggle your WI-FI connection with the command \"wifi\"</item>
-        <item>00$ wifi</item>
-        <item>11the command \"flash\" lets you turn on or off the flashlight in no time</item>
-        <item>00$ flash</item>
-        <item>11there are many commands like these, for example:</item>
-        <item>10$ airplane</item>
-        <item>10$ bluetooth</item>
-        <item>10$ data true</item>
-        <item>10$ data false</item>
-    </string-array>
-    
-    <string-array name="tutorial_tuixt">
-        <item>tuixt - text editor</item>
-        <item>11the release 5.0 introduced tuixt, the built-in text editor of T-UI. you can start it with this command</item>
-        <item>10$ tuixt [path to file]</item>
-        <item>01the file can also be non existent, in that case tuixt will create it</item>
-        <item>11use the command \"save\" to apply changes on the file, or you will lose them</item>
-        <item>00$ save</item>
-        <item>11the command \"exit\" closes tuixt (without saving!) and brings you to your home screen</item>
-        <item>00$ exit</item>
-    </string-array>
-    
-    <string-array name="tutorial_settings">
-        <item>settings and aliases</item>
-        <item>11T-UI is an highly customizable launcher. you can start using the command \"tuisettings\" which opens a text file called \"settings.txt\"</item>
-        <item>10$ tuisettings</item>
-        <item>11as you will see it contains many lines of \"properties\" written with the scheme \"propertyName=propertyValue\".
+		<item>10$ help apps</item>
+		<item>@string/help_apps</item>
+	</string-array>
+
+	<string-array name="tutorial_usefulcommands">
+		<item>some useful commands</item>
+		<item>11you can call a contact of yours with the command \"call\"</item>
+		<item>00$ call Francesco Andreuzzi</item>
+		<item>11if you want to remove an app from your device use the command \"uninstall\"</item>
+		<item>00$ uninstall AwfulAppName</item>
+		<item>11use \"calc\" for quick math operations</item>
+		<item>00$ calc sqrt(4 * 6 + (189 % 3))</item>
+		<item>11you can also use rm, cp and mv for file-management</item>
+		<item>00$ mv /storage/sdcard0/Downloads/file.txt /storage/sdcard1/Docs</item>
+		<item>11use \"open\" to view files saved on your phone</item>
+		<item>00$ open /storage/sdcard0/Downloads/file.txt</item>
+		<item>11use the command \"clear\" to clean the screen, and \"restart\" to reboot T-UI (and apply setting changes)</item>
+		<item>10$ clear</item>
+		<item>10$ restart</item>
+	</string-array>
+
+	<string-array name="tutorial_oscommands">
+		<item>control your device</item>
+		<item>11you can toggle your WI-FI connection with the command \"wifi\"</item>
+		<item>00$ wifi</item>
+		<item>11the command \"flash\" lets you turn on or off the flashlight in no time</item>
+		<item>00$ flash</item>
+		<item>11there are many commands like these, for example:</item>
+		<item>10$ airplane</item>
+		<item>10$ bluetooth</item>
+		<item>10$ data true</item>
+		<item>10$ data false</item>
+	</string-array>
+
+	<string-array name="tutorial_tuixt">
+		<item>tuixt - text editor</item>
+		<item>11the release 5.0 introduced tuixt, the built-in text editor of T-UI. you can start it with this command</item>
+		<item>10$ tuixt [path to file]</item>
+		<item>01the file can also be non existent, in that case tuixt will create it</item>
+		<item>11use the command \"save\" to apply changes on the file, or you will lose them</item>
+		<item>00$ save</item>
+		<item>11the command \"exit\" closes tuixt (without saving!) and brings you to your home screen</item>
+		<item>00$ exit</item>
+	</string-array>
+
+	<string-array name="tutorial_settings">
+		<item>settings and aliases</item>
+		<item>11T-UI is an highly customizable launcher. you can start using the command \"tuisettings\" which opens a text file called \"settings.txt\"</item>
+		<item>10$ tuisettings</item>
+		<item>11as you will see it contains many lines of \"properties\" written with the scheme \"propertyName=propertyValue\".
             \ndo not ever edit propertyName, or you\'ll break that feature. just change propertyValue
             \nfor example:</item>
-        <item>11backgroundColor=#ff000000</item>
-        <item>01if you change #ff000000 (hexadecimal code) to #ffff0000 your background will become red</item>
-        <item>11aliases are one of the most powerful features of T-UI. you can assign a name to a command you use frequently and make it quicker to use
+		<item>11backgroundColor=#ff000000</item>
+		<item>01if you change #ff000000 (hexadecimal code) to #ffff0000 your background will become red</item>
+		<item>11aliases are one of the most powerful features of T-UI. you can assign a name to a command you use frequently and make it quicker to use
             \nstart using the command \"aliasfile\"</item>
-        <item>10$ aliasfile</item>
-        <item>11this will open a file called \"alias.txt\" which already contains two aliases I created to show you how they work.
+		<item>10$ aliasfile</item>
+		<item>11this will open a file called \"alias.txt\" which already contains two aliases I created to show you how they work.
             \nthe scheme is easy to understand: aliasName=command
             \nyou can now create your personal aliases appending them to the file (one per line)</item>
-        <item>11you can use an alias typing its name in the input area and clicking enter. for example</item>
-        <item>10$ st</item>
-        <item>01--> com.android.settings.Settings</item>
-    </string-array>
-    
-    <array name="tutorial">
-        <item>@array/tutorial_help</item>
-        <item>@array/tutorial_apps</item>
-        <item>@array/tutorial_usefulcommands</item>
-        <item>@array/tutorial_oscommands</item>
-        <item>@array/tutorial_tuixt</item>
-        <item>@array/tutorial_settings</item>
-    </array>
+		<item>11you can use an alias typing its name in the input area and clicking enter. for example</item>
+		<item>10$ st</item>
+		<item>01--> com.android.settings.Settings</item>
+	</string-array>
 
+	<array name="tutorial">
+		<item>@array/tutorial_help</item>
+		<item>@array/tutorial_apps</item>
+		<item>@array/tutorial_usefulcommands</item>
+		<item>@array/tutorial_oscommands</item>
+		<item>@array/tutorial_tuixt</item>
+		<item>@array/tutorial_settings</item>
+	</array>
 
 
 </resources>
