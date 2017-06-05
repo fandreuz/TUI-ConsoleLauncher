@@ -91,6 +91,15 @@
     <string name="mobile_data">Mobile data:</string>
     <string name="wifi">WiFi:</string>
 
+    <!-- todocmd -->
+    <string name="add_success">Add successful.</string>
+    <string name="remove_success">Remove successful.</string>
+    <string name="empty_todo">Nothing left to do!</string>
+    <string name="todo_no_such_param">No such parameter.</string>
+    <string name="index_out_of_bounds">Index out of bounds.</string>
+    <string name="remove_example">todo -r 0</string>
+    <string name="add_example">todo -a task</string>
+
     <!-- infos -->
     <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
         \n\nLuke Winward\n\t-> Design &amp; Testing
@@ -211,6 +220,22 @@
     <string name="help_status">Get infos about battery charge, wifi status and mobile data</string>
     <string name="help_stop">Stop the player</string>
     <string name="help_time">Print current time</string>
+    <string name="help_todo">ToDo list
+        \nUsage:
+        \n>>todo [option] [additional]
+        \n\n[option] can be:
+        \n-a -> (add)
+        \n-r -> (remove)
+        \n\nInfo:
+        \nIf [option] is "-a", [additional] should be the task.
+        \nIf [option] is "-r", [additional] should be the index to remove.
+        \n\nExample:
+        \ntodo -a foo
+        \nor
+        \ntodo -r 0
+        \nor
+        \ntodo
+    </string>
     <string name="help_track">Print informations about the current track</string>
     <string name="help_tracks">Print all of the tracks in your music folder</string>
     <string name="help_tuisettings">Open t-ui settings file</string>
@@ -359,3 +384,4 @@
 
 
 </resources>
+
