@@ -45,7 +45,12 @@ public class Tuils {
     public static final String DOT = ".";
     public static final String EMPTYSTRING = "";
     private static final String TUI_FOLDER = "t-ui";
+    private static List<String> TODO_LIST = new ArrayList<>();
 
+    public static List<String> getTodoList() {
+        return TODO_LIST;
+    }
+    
     public static boolean arrayContains(int[] array, int value) {
         for(int i : array) {
             if(i == value) {
