@@ -15,23 +15,7 @@ public class SkinManager implements Parcelable {
     public static final int SUGGESTION_PADDING_VERTICAL = 15;
     public static final int SUGGESTION_PADDING_HORIZONTAL = 15;
     public static final int SUGGESTION_MARGIN = 20;
-    //	default
-    public static final int deviceDefault = 0xffff9800;
-    public static final int inputDefault = 0xff00ff00;
-    public static final int outputDefault = 0xffffffff;
-    public static final int ramDefault = 0xfff44336;
-    public static final int bgDefault = 0xff000000;
 
-    public static final int suggestionTextColorDefault = 0xff000000;
-    public static final int aliasSuggestionBgDefault = 0xffFF5722;
-    public static final int appSuggestionBgDefault = 0xff00897B;
-    public static final int commandSuggestionsBgDefault = 0xff76FF03;
-    public static final int songSuggestionBgDefault = 0xffEEFF41;
-    public static final int contactSuggestionBgDefault = 0xff64FFDA;
-    public static final int fileSuggestionBgDeafult = 0xff03A9F4;
-    public static final int defaultSuggestionBgDefault = 0xffFFFFFF;
-
-    private static final int defaultSize = 15;
     private static final int deviceScale = 3;
     private static final int textScale = 2;
     private static final int ramScale = 3;
@@ -40,194 +24,128 @@ public class SkinManager implements Parcelable {
     public int globalFontSize;
 
     public String deviceName;
-    public int deviceColor, inputColor, outputColor, ramColor, bgColor;
+    public int deviceColor, inputColor, outputColor, ramColor, bgColor, overlayColor;
 
     public boolean useSystemWp, showSuggestions, systemFont, inputBottom, showSubmit;
 
     public String username = null;
     public boolean showUsernameAndDeviceWhenEmpty = true, showUsername = false, showDeviceInSessionInfo = false, linuxAppearence = true, showPath = true;
 
-    public int suggestionTextColor, defaulSuggestionColor, appSuggestionColor, aliasSuggestionColor, musicSuggestionColor, contactsSuggestionColor, commandSuggestionColor, fileSuggestionColor;
-    public boolean multicolorSuggestions, transparentSuggestions;
+    private int suggDefaultText, suggDefaultBg, suggAliasText, suggAliasBg, suggSongText, suggSongBg, suggContactText, suggContactBg, suggAppText, suggAppBg, suggCmdText, suggCmdBg, suggFileText, suggFileBg;
+    private boolean transparentSuggestions;
 
-    public SkinManager(PreferencesManager prefs) {
-        systemFont = Boolean.parseBoolean(prefs.getValue(PreferencesManager.USE_SYSTEMFONT));
-        inputBottom = Boolean.parseBoolean(prefs.getValue(PreferencesManager.INPUTFIELD_BOTTOM));
-        showSubmit = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWSUBMIT));
+    public SkinManager() {
+        systemFont = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_font);
+        inputBottom = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.input_bottom);
+        showSubmit = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_enter_button);
 
-        try {
-            globalFontSize = Integer.parseInt(prefs.getValue(PreferencesManager.FONTSIZE));
-        } catch (Exception e) {
-            globalFontSize = SkinManager.defaultSize;
+        globalFontSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.font_size);
+
+        useSystemWp = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_wallpaper);
+        if (useSystemWp) {
+            bgColor = SYSTEM_WALLPAPER;
+            overlayColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.overlay_color);
         }
+        else bgColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.bg_color);
 
-        try {
-            useSystemWp = Boolean.parseBoolean(prefs.getValue(PreferencesManager.USE_SYSTEMWP));
-            if (useSystemWp)
-                bgColor = SYSTEM_WALLPAPER;
-            else
-                bgColor = Color.parseColor(prefs.getValue(PreferencesManager.BG));
-        } catch (Exception e) {
-            bgColor = bgDefault;
-        }
+        deviceColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.device_color);
+        ramColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.ram_color);
+        inputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color);
+        outputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
 
-        try {
-            deviceColor = Color.parseColor(prefs.getValue(PreferencesManager.DEVICE));
-        } catch (Exception e) {
-            deviceColor = deviceDefault;
-        }
-
-        try {
-            inputColor = Color.parseColor(prefs.getValue(PreferencesManager.INPUT));
-        } catch (Exception e) {
-            inputColor = inputDefault;
-        }
-
-        try {
-            outputColor = Color.parseColor(prefs.getValue(PreferencesManager.OUTPUT));
-        } catch (Exception e) {
-            outputColor = outputDefault;
-        }
-
-        try {
-            ramColor = Color.parseColor(prefs.getValue(PreferencesManager.RAM));
-        } catch (Exception e) {
-            ramColor = ramDefault;
-        }
-
-        try {
-            deviceName = prefs.getValue(PreferencesManager.DEVICENAME);
-            if (deviceName == null || deviceName.length() == 0 || deviceName.equals("null")) {
-                deviceName = Build.DEVICE;
-            }
-        } catch (Exception e) {
+        deviceName = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.deviceName);
+        if (deviceName.length() == 0 || deviceName.equals("null")) {
             deviceName = Build.DEVICE;
         }
 
-        try {
-            showUsernameAndDeviceWhenEmpty = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWUSERNAMEWHENINPUTEMPTY));
-            if(showUsernameAndDeviceWhenEmpty) {
-                showUsername = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWUSERNAME));
-                if(showUsername) {
-                    username = prefs.getValue(PreferencesManager.USERNAME);
-                }
-
-                showDeviceInSessionInfo = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWDEVICENAMEINSESSIONINFO));
-
-                showPath = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWPATH_SESSIONINFO));
+        showUsernameAndDeviceWhenEmpty = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ssninfo);
+        if(showUsernameAndDeviceWhenEmpty) {
+            showUsername = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_username_ssninfo);
+            if(showUsername) {
+                username = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.username);
             }
-        } catch (Exception e) {
-            showUsernameAndDeviceWhenEmpty = false;
+
+            showDeviceInSessionInfo = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_devicename_ssninfo);
+            showPath = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_path_ssninfo);
         }
 
-        try {
-            linuxAppearence = Boolean.parseBoolean(prefs.getValue(PreferencesManager.LINUXAPPERARENCE));
-        } catch (Exception e) {
-            linuxAppearence = true;
-        }
+        linuxAppearence = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.linux_like);
 
-        showSuggestions = Boolean.parseBoolean(prefs.getValue(PreferencesManager.SHOWSUGGESTIONS));
+        showSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.enabled);
         if (showSuggestions) {
 
-            try {
-                suggestionTextColor = Color.parseColor(prefs.getValue(PreferencesManager.SUGGESTIONTEXT_COLOR));
-            } catch (Exception e) {
-                suggestionTextColor = suggestionTextColorDefault;
-            }
+            suggDefaultText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_text_color);
+            suggDefaultBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_bg_color);
+            transparentSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.transparent);
 
-            try {
-                transparentSuggestions = Boolean.parseBoolean(prefs.getValue(PreferencesManager.TRANSPARENT_SUGGESTIONS));
-            } catch (Exception e) {
-                transparentSuggestions = false;
-            }
-
-            try {
-                multicolorSuggestions = Boolean.parseBoolean(prefs.getValue(PreferencesManager.USE_MULTICOLOR_SUGGESTIONS));
-            } catch (Exception e) {
-                multicolorSuggestions = false;
-            }
-
-            if(multicolorSuggestions) {
-                transparentSuggestions = false;
-            }
-
-            if(transparentSuggestions && suggestionTextColor == bgColor) {
-                suggestionTextColor = Color.GREEN;
+            if(transparentSuggestions && suggDefaultText == bgColor) {
+                suggDefaultText = Color.GREEN;
             } else {
-                try {
-                    defaulSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.DEFAULT_SUGGESTION_BG));
-                } catch (Exception e) {
-                    defaulSuggestionColor = defaultSuggestionBgDefault;
-                }
+                suggAppText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.apps_text_color);
+                suggAppBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.apps_bg_color);
 
-                if(multicolorSuggestions) {
-                    try {
-                        appSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.APP_SUGGESTION_BG));
-                    } catch (Exception e) {
-                        appSuggestionColor = appSuggestionBgDefault;
-                    }
+                suggAliasText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.alias_text_color);
+                suggAliasBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.alias_bg_color);
 
-                    try {
-                        contactsSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.CONTACT_SUGGESTION_BG));
-                    } catch (Exception e) {
-                        contactsSuggestionColor = contactSuggestionBgDefault;
-                    }
+                suggCmdText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.cmd_text_color);
+                suggCmdBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.cmd_bg_color);
 
-                    try {
-                        commandSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.COMMAND_SUGGESTION_BG));
-                    } catch (Exception e) {
-                        commandSuggestionColor = commandSuggestionsBgDefault;
-                    }
+                suggContactText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.contact_text_color);
+                suggContactBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.contact_bg_color);
 
-                    try {
-                        musicSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.SONG_SUGGESTION_BG));
-                    } catch (Exception e) {
-                        musicSuggestionColor = songSuggestionBgDefault;
-                    }
+                suggFileText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.file_text_color);
+                suggFileBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.file_bg_color);
 
-                    try {
-                        fileSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.FILE_SUGGESTION_BG));
-                    } catch (Exception e) {
-                        fileSuggestionColor = fileSuggestionBgDeafult;
-                    }
-
-                    try {
-                        aliasSuggestionColor = Color.parseColor(prefs.getValue(PreferencesManager.ALIAS_SIGGESTION_BG));
-                    } catch (Exception e) {
-                        aliasSuggestionColor = aliasSuggestionBgDefault;
-                    }
-                }
+                suggSongText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_text_color);
+                suggSongBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_bg_color);
             }
         }
     }
 
     public ColorDrawable getSuggestionBg(Integer type) {
         if(transparentSuggestions) {
-            type = 0;
-        }
-
-        if(transparentSuggestions) {
             return new ColorDrawable(Color.TRANSPARENT);
-        } else if(!multicolorSuggestions) {
-            return new ColorDrawable(defaulSuggestionColor);
         } else {
             switch (type) {
                 case SuggestionsManager.Suggestion.TYPE_APP:
-                    return new ColorDrawable(appSuggestionColor);
+                    return new ColorDrawable(suggAppBg);
                 case SuggestionsManager.Suggestion.TYPE_ALIAS:
-                    return new ColorDrawable(aliasSuggestionColor);
+                    return new ColorDrawable(suggAliasBg);
                 case SuggestionsManager.Suggestion.TYPE_COMMAND:
-                    return new ColorDrawable(commandSuggestionColor);
+                    return new ColorDrawable(suggCmdBg);
                 case SuggestionsManager.Suggestion.TYPE_CONTACT:
-                    return new ColorDrawable(contactsSuggestionColor);
+                    return new ColorDrawable(suggContactBg);
                 case SuggestionsManager.Suggestion.TYPE_FILE:
-                    return new ColorDrawable(fileSuggestionColor);
+                    return new ColorDrawable(suggFileBg);
                 case SuggestionsManager.Suggestion.TYPE_SONG:
-                    return new ColorDrawable(musicSuggestionColor);
+                    return new ColorDrawable(suggSongBg);
                 default:
-                    return new ColorDrawable(defaulSuggestionColor);
+                    return new ColorDrawable(suggDefaultBg);
             }
         }
+    }
+
+    public int getSuggestionTextColor(Integer type) {
+        int choosen;
+        switch (type) {
+            case SuggestionsManager.Suggestion.TYPE_APP:
+                choosen = suggAppText;
+            case SuggestionsManager.Suggestion.TYPE_ALIAS:
+                choosen = suggAliasText;
+            case SuggestionsManager.Suggestion.TYPE_COMMAND:
+                choosen = suggCmdText;
+            case SuggestionsManager.Suggestion.TYPE_CONTACT:
+                choosen = suggContactText;
+            case SuggestionsManager.Suggestion.TYPE_FILE:
+                choosen = suggFileText;
+            case SuggestionsManager.Suggestion.TYPE_SONG:
+                choosen = suggSongText;
+            default:
+                choosen = suggDefaultText;
+        }
+
+        if(choosen == -1) choosen = suggDefaultText;
+        return choosen;
     }
 
     public int getDeviceSize() {
@@ -254,6 +172,7 @@ public class SkinManager implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(this.globalFontSize);
+        dest.writeString(this.deviceName);
         dest.writeInt(this.deviceColor);
         dest.writeInt(this.inputColor);
         dest.writeInt(this.outputColor);
@@ -267,22 +186,29 @@ public class SkinManager implements Parcelable {
         dest.writeString(this.username);
         dest.writeByte(this.showUsernameAndDeviceWhenEmpty ? (byte) 1 : (byte) 0);
         dest.writeByte(this.showUsername ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.showDeviceInSessionInfo ? (byte) 1 : (byte) 0);
         dest.writeByte(this.linuxAppearence ? (byte) 1 : (byte) 0);
         dest.writeByte(this.showPath ? (byte) 1 : (byte) 0);
-        dest.writeInt(this.suggestionTextColor);
-        dest.writeInt(this.defaulSuggestionColor);
-        dest.writeInt(this.appSuggestionColor);
-        dest.writeInt(this.aliasSuggestionColor);
-        dest.writeInt(this.musicSuggestionColor);
-        dest.writeInt(this.contactsSuggestionColor);
-        dest.writeInt(this.commandSuggestionColor);
-        dest.writeInt(this.fileSuggestionColor);
-        dest.writeByte(this.multicolorSuggestions ? (byte) 1 : (byte) 0);
+        dest.writeInt(this.suggDefaultText);
+        dest.writeInt(this.suggDefaultBg);
+        dest.writeInt(this.suggAliasText);
+        dest.writeInt(this.suggAliasBg);
+        dest.writeInt(this.suggSongText);
+        dest.writeInt(this.suggSongBg);
+        dest.writeInt(this.suggContactText);
+        dest.writeInt(this.suggContactBg);
+        dest.writeInt(this.suggAppText);
+        dest.writeInt(this.suggAppBg);
+        dest.writeInt(this.suggCmdText);
+        dest.writeInt(this.suggCmdBg);
+        dest.writeInt(this.suggFileText);
+        dest.writeInt(this.suggFileBg);
         dest.writeByte(this.transparentSuggestions ? (byte) 1 : (byte) 0);
     }
 
     protected SkinManager(Parcel in) {
         this.globalFontSize = in.readInt();
+        this.deviceName = in.readString();
         this.deviceColor = in.readInt();
         this.inputColor = in.readInt();
         this.outputColor = in.readInt();
@@ -296,17 +222,23 @@ public class SkinManager implements Parcelable {
         this.username = in.readString();
         this.showUsernameAndDeviceWhenEmpty = in.readByte() != 0;
         this.showUsername = in.readByte() != 0;
+        this.showDeviceInSessionInfo = in.readByte() != 0;
         this.linuxAppearence = in.readByte() != 0;
         this.showPath = in.readByte() != 0;
-        this.suggestionTextColor = in.readInt();
-        this.defaulSuggestionColor = in.readInt();
-        this.appSuggestionColor = in.readInt();
-        this.aliasSuggestionColor = in.readInt();
-        this.musicSuggestionColor = in.readInt();
-        this.contactsSuggestionColor = in.readInt();
-        this.commandSuggestionColor = in.readInt();
-        this.fileSuggestionColor = in.readInt();
-        this.multicolorSuggestions = in.readByte() != 0;
+        this.suggDefaultText = in.readInt();
+        this.suggDefaultBg = in.readInt();
+        this.suggAliasText = in.readInt();
+        this.suggAliasBg = in.readInt();
+        this.suggSongText = in.readInt();
+        this.suggSongBg = in.readInt();
+        this.suggContactText = in.readInt();
+        this.suggContactBg = in.readInt();
+        this.suggAppText = in.readInt();
+        this.suggAppBg = in.readInt();
+        this.suggCmdText = in.readInt();
+        this.suggCmdBg = in.readInt();
+        this.suggFileText = in.readInt();
+        this.suggFileBg = in.readInt();
         this.transparentSuggestions = in.readByte() != 0;
     }
 

@@ -11,7 +11,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -44,27 +43,33 @@ public class MusicManager implements OnCompletionListener {
     });
 
     //	constructor
-    public MusicManager(Context c, PreferencesManager preferencesManager, Outputable outputable) {
-        this.mp = new MediaPlayer();
-        this.mp.setOnCompletionListener(this);
+    public MusicManager(Context c, Outputable outputable) {
+        try {
+            this.mp = new MediaPlayer();
+            this.mp.setOnCompletionListener(this);
 
-        this.outputable = outputable;
+            this.outputable = outputable;
 
-        c.registerReceiver(headsetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
+            c.registerReceiver(headsetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
-        boolean randomActive = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.PLAY_RANDOM));
-        fromMediastore = Boolean.parseBoolean(preferencesManager.getValue(PreferencesManager.FROM_MEDIASTORE));
-        if(fromMediastore) {
-            songsFolder = null;
-        } else {
-            songsFolder = new File(preferencesManager.getValue(PreferencesManager.SONGSFOLDER));
-        }
+            boolean randomActive = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.random_play);
+            fromMediastore = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.songs_from_mediastore);
+            if (fromMediastore) {
+                songsFolder = null;
+            } else {
+                String path = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.songs_folder);
+                if (path == null || path.length() == 0 || path.equals("null")) {
+                    return;
+                }
+                songsFolder = new File(path);
+            }
 
-        refresh(c);
+            refresh(c);
 
-        if(randomActive && files != null) {
-            Collections.shuffle(files);
-        }
+            if (randomActive && files != null) {
+                Collections.shuffle(files);
+            }
+        } catch (Exception e) {}
     }
 
     public boolean initPlayer() {
@@ -89,7 +94,7 @@ public class MusicManager implements OnCompletionListener {
         return file.getAbsolutePath();
     }
 
-    //	return names
+    //	return listNames
     public List<String> getNames() {
         if(files == null) {
             return new ArrayList<>(0);

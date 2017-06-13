@@ -38,7 +38,7 @@ public class save implements CommandAbstraction {
 
     @Override
     public int[] argType() {
-        return null;
+        return new int[0];
     }
 
     @Override
@@ -52,17 +52,12 @@ public class save implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack info) {
+    public String onArgNotFound(ExecutePack info, int index) {
         return null;
     }
 
     @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
-        return null;
-    }
-
-    @Override
-    public String[] parameters() {
         return null;
     }
 }

@@ -5,7 +5,6 @@ import android.content.res.Resources;
 import android.widget.EditText;
 
 import java.io.File;
-import java.util.Objects;
 
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.ExecutePack;
@@ -19,7 +18,6 @@ public class TuixtPack extends ExecutePack {
     public File editFile;
     public EditText editText;
 
-    public Context context;
     public Resources resources;
 
     public TuixtPack(CommandGroup group, File file, Context context, EditText editText) {

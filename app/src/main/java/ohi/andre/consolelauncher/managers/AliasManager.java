@@ -1,34 +1,44 @@
 package ohi.andre.consolelauncher.managers;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.io.File;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
+import static ohi.andre.consolelauncher.managers.XMLPrefsManager.resetFile;
+
 public class AliasManager implements Reloadable {
 
-    private Map<String, String> alias;
-    private PreferencesManager preferences;
+    private final String NAME = "ALIAS";
+    private final String PATH = "alias.xml";
 
-    public AliasManager(PreferencesManager prefs) {
-        this.preferences = prefs;
+    private final String VALUE_ATTRIBUTE = "value";
+
+    private XMLPrefsManager.XMLPrefsList alias;
+
+    public AliasManager() {
         reload();
     }
 
     public String printAliases() {
-        Iterator<Entry<String, String>> iterator = alias.entrySet().iterator();
+        List<XMLPrefsManager.XMLPrefsEntry> list = alias.list;
 
         String output = Tuils.EMPTYSTRING;
-        Entry<String, String> entry;
-        while (iterator.hasNext()) {
-            entry = iterator.next();
-            output = output.concat(entry.getKey() + " = " + entry.getValue() + Tuils.NEWLINE);
+        for (XMLPrefsManager.XMLPrefsEntry entry : list) {
+            output = output.concat(entry.key + " --> " + entry.value + Tuils.NEWLINE);
         }
 
-        return output;
+        return output.trim();
     }
 
     public int getNum() {
@@ -36,19 +46,56 @@ public class AliasManager implements Reloadable {
     }
 
     public String getAlias(String s) {
-        return alias.get(s);
+        XMLPrefsManager.XMLPrefsEntry entry = alias.get(s);
+        if(entry != null) return entry.value;
+        return null;
     }
 
     @Override
     public void reload() {
-        alias = new HashMap<>();
-        preferences.refresh(PreferencesManager.ALIAS);
-        for (int count = 0; count < preferences.getLength(PreferencesManager.ALIAS); count++) {
-            String line = preferences.getLine(PreferencesManager.ALIAS, count);
-            String name = preferences.obtainKey(line);
-            String value = preferences.obtainValue(line);
+        if(alias != null) alias.list.clear();
+        alias = new XMLPrefsManager.XMLPrefsList();
 
-            alias.put(name, value);
+        File file = new File(Tuils.getFolder(), PATH);
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = null;
+        try {
+            builder = factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            return;
+        }
+
+        Document d;
+        try {
+            d = builder.parse(file);
+        } catch (Exception e) {
+            resetFile(file, NAME);
+
+            try {
+                d = builder.parse(file);
+            } catch (Exception e1) {return;}
+        }
+
+        Element root = (Element) d.getElementsByTagName(NAME).item(0);
+        if(root == null) {
+            resetFile(file, NAME);
+
+            try {
+                d = builder.parse(file);
+            } catch (Exception e) {
+                return;
+            }
+
+            root = (Element) d.getElementsByTagName(NAME).item(0);
+        }
+        NodeList nodes = root.getElementsByTagName("*");
+
+        for(int count = 0; count < nodes.getLength(); count++) {
+            Node node = nodes.item(count);
+
+            String nn = node.getNodeName();
+            alias.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
         }
     }
 }

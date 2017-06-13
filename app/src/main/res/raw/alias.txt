@@ -1,6 +1,0 @@
-// do not insert random spaces!
-
-root=cd /
-st=settings
-mp3=mv Downloads/*.mp3 Music
-pdf=mv Downloads/*.pdf Docs

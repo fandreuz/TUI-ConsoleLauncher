@@ -47,7 +47,7 @@ public class unhideapp implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
         return info.res.getString(R.string.output_appnotfound);
     }
@@ -56,11 +56,6 @@ public class unhideapp implements CommandAbstraction {
     public String onNotArgEnough(ExecutePack pack, int nArgs) {
         MainPack info = (MainPack) pack;
         return info.res.getString(helpRes());
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
     }
 
     private String unHideApp(MainPack info, String app) {

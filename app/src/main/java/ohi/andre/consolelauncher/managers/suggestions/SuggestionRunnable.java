@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.*/
 
+import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
@@ -95,6 +96,14 @@ public class SuggestionRunnable implements Runnable {
 
                 toRecycle[count].setText(s);
                 toRecycle[count].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
+                toRecycle[count].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
+
+                if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_CONTACT) {
+                    toRecycle[count].setLongClickable(true);
+                    ((Activity) toRecycle[count].getContext()).registerForContextMenu(toRecycle[count]);
+                } else {
+                    ((Activity) toRecycle[count].getContext()).unregisterForContextMenu(toRecycle[count]);
+                }
 
             } else {
                 int space = suggestions.length - (count + 1);
@@ -103,9 +112,17 @@ public class SuggestionRunnable implements Runnable {
 
                     toAdd[space].setText(s);
                     toAdd[space].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
+                    toAdd[space].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
 
                     if(toAdd[space].getParent() == null) {
                         suggestionsView.addView(toAdd[space], suggestionViewParams);
+                    }
+
+                    if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_CONTACT) {
+                        toAdd[space].setLongClickable(true);
+                        ((Activity) toAdd[space].getContext()).registerForContextMenu(toAdd[space]);
+                    } else {
+                        ((Activity) toAdd[space].getContext()).unregisterForContextMenu(toAdd[space]);
                     }
                 } else {
                     throw new UnsupportedOperationException("no views enough");

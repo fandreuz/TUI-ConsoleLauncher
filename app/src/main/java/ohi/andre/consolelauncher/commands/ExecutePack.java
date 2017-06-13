@@ -1,9 +1,13 @@
 package ohi.andre.consolelauncher.commands;
 
+import android.content.Context;
+
 @SuppressWarnings("deprecation")
 public abstract class ExecutePack {
 
     public Object[] args;
+
+    public Context context;
 
     public CommandGroup commandGroup;
 

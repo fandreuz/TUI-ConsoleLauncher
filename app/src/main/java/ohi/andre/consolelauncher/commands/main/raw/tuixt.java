@@ -30,6 +30,7 @@ public class tuixt implements CommandAbstraction {
         }
 
         Intent intent = new Intent(info.context, TuixtActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(TuixtActivity.PATH, file.getAbsolutePath());
         intent.putExtra(TuixtActivity.SKIN, info.skinManager);
         ((Activity) info.context).startActivityForResult(intent, LauncherActivity.TUIXT_REQUEST);
@@ -63,7 +64,7 @@ public class tuixt implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
 
         String path = info.get(String.class, 0);
@@ -96,10 +97,5 @@ public class tuixt implements CommandAbstraction {
     public String onNotArgEnough(ExecutePack pack, int nArgs) {
         MainPack info = (MainPack) pack;
         return info.res.getString(R.string.help_tuixt);
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
     }
 }

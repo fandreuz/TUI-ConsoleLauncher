@@ -48,7 +48,7 @@ public class calc extends PermanentSuggestionCommand {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
         return null;
     }
 
@@ -56,11 +56,6 @@ public class calc extends PermanentSuggestionCommand {
     public String onNotArgEnough(ExecutePack pack, int nArgs) {
         MainPack info = (MainPack) pack;
         return info.res.getString(helpRes());
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
     }
 
     @Override

@@ -1,6 +1,8 @@
 package ohi.andre.consolelauncher.commands;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
+import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -8,12 +10,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
 import ohi.andre.consolelauncher.managers.MusicManager;
-import ohi.andre.consolelauncher.tuils.ShellUtils;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 @SuppressLint("DefaultLocale")
@@ -24,6 +28,9 @@ public class CommandTuils {
 
     private static FileManager.SpecificExtensionFileFilter extensionFileFilter = new FileManager.SpecificExtensionFileFilter();
     private static FileManager.SpecificNameFileFilter nameFileFilter = new FileManager.SpecificNameFileFilter();
+
+    public static List<XMLPrefsManager.XMLPrefsSave> xmlPrefsEntrys;
+    public static List<String> xmlPrefsFiles;
 
     //	parse a command
     public static Command parse(String input, ExecutePack info, boolean suggestion) throws Exception {
@@ -52,32 +59,53 @@ public class CommandTuils {
         input = input.substring(name.length());
         input = input.trim();
 
-        int[] types = cmd.argType();
-        ArrayList<Object> args = new ArrayList<>(cmd.maxArgs() == CommandAbstraction.UNDEFINIED ? 0 : cmd.maxArgs());
+        ArrayList<Object> args = new ArrayList<>();
         int nArgs = 0;
+        int[] types;
 
-        if (types != null) {
-            for (int type : types) {
-                if (input.length() <= 0) {
-                    break;
-                }
+        try {
+            if(cmd instanceof ParamCommand) {
+                ArgInfo arg = param(input);
+                if(arg == null || !arg.found) return command;
 
-                ArgInfo arg = CommandTuils.getArg(info, input, type, suggestion);
-                if(arg == null) {
-                    return null;
-                }
-
-                if (!arg.found) {
-                    command.nArgs = Command.ARG_NOTFOUND;
-                    command.mArgs = new String[] {input};
-                    return command;
-                }
-
-                nArgs += arg.n;
-                args.add(arg.arg);
                 input = arg.residualString;
+                String param = (String) arg.arg;
+                types = ((ParamCommand) cmd).argsForParam(param);
+
+                nArgs++;
+                args.add(param);
+            } else {
+                types = cmd.argType();
             }
-        }
+
+            if (types != null) {
+                for (int count = 0; count < types.length; count++) {
+                    if (input == null) break;
+
+                    input = input.trim();
+                    if(input.length() == 0) {
+                        break;
+                    }
+
+                    ArgInfo arg = CommandTuils.getArg(info, input, types[count], suggestion);
+                    if(arg == null) {
+                        return null;
+                    }
+
+                    if (!arg.found) {
+                        command.indexNotFound = cmd instanceof ParamCommand ? count + 1 : count;
+                        args.add(input);
+                        command.mArgs = args.toArray(new Object[args.size()]);
+                        command.nArgs = nArgs;
+                        return command;
+                    }
+
+                    nArgs += arg.n;
+                    args.add(arg.arg);
+                    input = arg.residualString;
+                }
+            }
+        } catch (Exception e) {}
 
         command.mArgs = args.toArray(new Object[args.size()]);
         command.nArgs = nArgs;
@@ -106,18 +134,16 @@ public class CommandTuils {
             MainPack pack = (MainPack) info;
             return contactNumber(input, pack.contacts);
         }
-//        will always find a plain text
         else if (type == CommandAbstraction.PLAIN_TEXT) {
             return plainText(input);
         }
-        else if (type == CommandAbstraction.PACKAGE && info instanceof MainPack) {
+        else if (type == CommandAbstraction.VISIBLE_PACKAGE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return packageName(input, pack.appsManager);
         } else if (type == CommandAbstraction.HIDDEN_PACKAGE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return hiddenPackage(input, pack.appsManager);
         }
-//        will always find a textlist
         else if (type == CommandAbstraction.TEXTLIST) {
             return textList(input);
         }
@@ -138,6 +164,12 @@ public class CommandTuils {
             return param(input);
         } else if(type == CommandAbstraction.BOOLEAN) {
             return bln(input);
+        } else if(type == CommandAbstraction.COLOR) {
+            return color(input);
+        } else if(type == CommandAbstraction.CONFIG_ENTRY) {
+            return configEntry(input);
+        } else if(type == CommandAbstraction.CONFIG_FILE) {
+            return configFile(input);
         }
 
         return null;
@@ -145,6 +177,21 @@ public class CommandTuils {
 
 
 //	args extractors {
+
+    private static ArgInfo color(String input) {
+        input = input.trim();
+
+        int space = input.indexOf(Tuils.SPACE);
+        String cl = input.substring(0, space == -1 ? input.length() : space);
+        input = space == -1 ? Tuils.EMPTYSTRING : input.substring(space + 1);
+
+        try {
+            Color.parseColor(cl);
+            return new ArgInfo(cl, input, true, 1);
+        } catch (Exception e) {
+            return new ArgInfo(null, input, false, 0);
+        }
+    }
 
     private static ArgInfo bln(String input) {
         String used, notUsed;
@@ -343,12 +390,47 @@ public class CommandTuils {
         return new ArgInfo(name, null, name != null, 1);
     }
 
+    private static ArgInfo configEntry(String input) {
+        int index = input.indexOf(Tuils.SPACE);
+        if(index == -1) return new ArgInfo(input, null, true, 1);
+
+        if(xmlPrefsEntrys == null) {
+            xmlPrefsEntrys = new ArrayList<>();
+            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values())
+                for(XMLPrefsManager.XMLPrefsSave save : element.copy)
+                    xmlPrefsEntrys.add(save);
+            for(XMLPrefsManager.XMLPrefsSave save : AppsManager.Options.values()) xmlPrefsEntrys.add(save);
+            for(XMLPrefsManager.XMLPrefsSave save : NotificationManager.Options.values()) xmlPrefsEntrys.add(save);
+        }
+
+        String candidate = input.substring(0,index);
+        for(XMLPrefsManager.XMLPrefsSave xs : xmlPrefsEntrys) {
+            if(xs.is(candidate)) return new ArgInfo(xs, input.substring(index + 1,input.length()), true, 1);
+        }
+        return new ArgInfo(null, input, false, 0);
+    }
+
+    private static ArgInfo configFile(String input) {
+        if(xmlPrefsFiles == null) {
+            xmlPrefsFiles = new ArrayList<>();
+            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values())
+                xmlPrefsFiles.add(element.path);
+            xmlPrefsFiles.add(AppsManager.PATH);
+            xmlPrefsFiles.add(NotificationManager.PATH);
+        }
+
+        for(String xs : xmlPrefsFiles) {
+            if(xs.equalsIgnoreCase(input)) return new ArgInfo(xs, null, true, 1);
+        }
+        return new ArgInfo(null, input, false, 0);
+    }
+
     public static boolean isSuRequest(String input) {
-        return input.equals(ShellUtils.COMMAND_SU);
+        return input.equals("su");
     }
 
     public static boolean isSuCommand(String input) {
-        return input.startsWith(ShellUtils.COMMAND_SU + Tuils.SPACE);
+        return input.startsWith("su ");
     }
 
     public static class ArgInfo {
@@ -357,11 +439,11 @@ public class CommandTuils {
         public int n;
         public boolean found;
 
-        public ArgInfo(Object a, String s, boolean f, int i) {
-            this.arg = a;
-            this.residualString = s;
-            this.found = f;
-            this.n = i;
+        public ArgInfo(Object arg, String residualString, boolean found, int nFound) {
+            this.arg = arg;
+            this.residualString = residualString;
+            this.found = found;
+            this.n = nFound;
         }
     }
 

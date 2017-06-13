@@ -100,11 +100,6 @@ public class data implements CommandAbstraction {
     }
 
     @Override
-    public String[] parameters() {
-        return null;
-    }
-
-    @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
         MainPack pack = (MainPack) info;
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -116,7 +111,7 @@ public class data implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack info) {
+    public String onArgNotFound(ExecutePack info, int index) {
         return onNotArgEnough(info, 0);
     }
 

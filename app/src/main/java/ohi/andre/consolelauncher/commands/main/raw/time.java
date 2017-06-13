@@ -5,7 +5,6 @@ import java.util.Calendar;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.commands.main.MainPack;
 
 /**
  * Created by andre on 03/12/15.
@@ -37,12 +36,7 @@ public class time implements CommandAbstraction {
 
     @Override
     public int[] argType() {
-        return null;
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
+        return new int[0];
     }
 
     @Override
@@ -51,7 +45,7 @@ public class time implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack info) {
+    public String onArgNotFound(ExecutePack info, int index) {
         return null;
     }
 

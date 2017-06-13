@@ -14,7 +14,6 @@ import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -82,17 +81,12 @@ public class shellcommands implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack info) {
+    public String onArgNotFound(ExecutePack info, int index) {
         return null;
     }
 
     @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
         return null;
-    }
-
-    @Override
-    public String[] parameters() {
-        return new String[0];
     }
 }

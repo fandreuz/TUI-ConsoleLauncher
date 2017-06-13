@@ -2,15 +2,15 @@ apply plugin: 'com.android.application'
 android {
 
     compileSdkVersion 25
-    buildToolsVersion '25.0.1'
+    buildToolsVersion '25.0.2'
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
 
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 88
-        versionName "5.2.1"
+        versionCode 90
+        versionName "5.3b"
     }
 
     buildTypes {

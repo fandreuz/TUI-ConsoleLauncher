@@ -8,7 +8,6 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -20,10 +19,10 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.clear;
 import ohi.andre.consolelauncher.tuils.Tuils;
-import ohi.andre.consolelauncher.tuils.interfaces.OnNewInputListener;
 
 /*Copyright Francesco Andreuzzi
 
@@ -70,7 +69,8 @@ public class TerminalManager {
 
     private SkinManager mSkinManager;
 
-    private OnNewInputListener mInputListener;
+    private UIManager.OnNewInputListener mInputListener;
+    private UIManager.SuggestionNavigator mSuggestionNavigator;
 
     private List<Messager> messagers = new ArrayList<>();
 
@@ -87,7 +87,6 @@ public class TerminalManager {
 
         this.mSkinManager = skinManager;
         this.mainPack = mainPack;
-
 
         if(skinManager.linuxAppearence) {
             prefix = "$ ";
@@ -158,7 +157,11 @@ public class TerminalManager {
         this.mTerminalView.setFocusable(false);
         setupScroller();
 
-        this.mScrollView = (ScrollView) this.mTerminalView.getParent();
+        View v = mTerminalView;
+        do {
+            v = (View) v.getParent();
+        } while (!(v instanceof ScrollView));
+        this.mScrollView = (ScrollView) v;
 
         this.mInputView = inputView;
         this.mInputView.setTextSize(mSkinManager.getTextSize());
@@ -167,8 +170,11 @@ public class TerminalManager {
         this.mInputView.setHint(Tuils.getHint(skinManager, mainPack.currentDirectory.getAbsolutePath()));
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(!mInputView.hasFocus()) mInputView.requestFocus();
+
 //                physical enter
                 if(actionId == KeyEvent.ACTION_DOWN) {
                     if(lastEnter == 0) {
@@ -185,6 +191,10 @@ public class TerminalManager {
                 if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
                     onNewInput();
                 }
+
+//                if(event == null && actionId == EditorInfo.IME_NULL) onNewInput();
+//                if (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) onNewInput();
+
                 return true;
             }
         });
@@ -256,6 +266,30 @@ public class TerminalManager {
         }
     }
 
+    public void setOutput(String output, int color) {
+        if (output == null) {
+            return;
+        }
+
+        output = output.trim();
+        if(output.equals(Tuils.EMPTYSTRING)) {
+            return;
+        }
+
+        if(output.equals(clear.CLEAR)) {
+            clear();
+            return;
+        }
+
+        writeToView(color, output);
+
+        for(Messager messager : messagers) {
+            if(cmds != 0 && cmds % messager.n == 0) {
+                writeToView(messager.message, OUTPUT);
+            }
+        }
+    }
+
     public void onBackPressed() {
         if(cmdList.size() > 0) {
 
@@ -300,6 +334,21 @@ public class TerminalManager {
         });
     }
 
+    private void writeToView(final int color, final String text) {
+        mTerminalView.post(new Runnable() {
+            @Override
+            public void run() {
+                String txt = text;
+                txt = Tuils.NEWLINE.concat(txt);
+
+                SpannableString string = getSpannable(color, txt);
+                mTerminalView.append(string);
+
+                scrollToEnd();
+            }
+        });
+    }
+
     public void simulateEnter() {
         onNewInput();
     }
@@ -309,7 +358,6 @@ public class TerminalManager {
     }
 
     private SpannableString getSpannable(String text, int type) {
-        SpannableString spannableString = new SpannableString(text);
         int color;
         if(type == INPUT) {
             color = mSkinManager.inputColor;
@@ -318,6 +366,11 @@ public class TerminalManager {
         } else {
             return null;
         }
+        return getSpannable(color, text);
+    }
+
+    private SpannableString getSpannable(int color, String text) {
+        SpannableString spannableString = new SpannableString(text);
         spannableString.setSpan(new ForegroundColorSpan(color), 0, spannableString.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
         return spannableString;
     }
@@ -347,8 +400,12 @@ public class TerminalManager {
         }
     }
 
-    public void setInputListener(OnNewInputListener listener) {
+    public void setInputListener(UIManager.OnNewInputListener listener) {
         this.mInputListener = listener;
+    }
+
+    public void setSuggestionNavigator(UIManager.SuggestionNavigator navigator) {
+        this.mSuggestionNavigator = navigator;
     }
 
     public void focusInputEnd() {
@@ -384,6 +441,7 @@ public class TerminalManager {
                 mInputView.setText(Tuils.EMPTYSTRING);
             }
         });
+        cmdList.clear();
     }
 
     public static class Messager {

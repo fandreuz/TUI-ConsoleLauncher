@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,25 +26,38 @@ public class FileManager {
     public static final int NOT_WRITEABLE = 14;
     public static final int NOT_READABLE = 15;
 
+    public static final int MIN_FILE_RATE = 4;
+
     public static final boolean USE_SCROLL_COMPARE = true;
 
     private static final String ASTERISK = "*";
     private static final String DOT = Tuils.DOT;
 
     public static String writeOn(File file, String text) {
+//        try {
+//            ShellUtils.CommandResult result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), false, null);
+//            if(result.result == 0) {
+//                return null;
+//            } else {
+//                result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), true, null);
+//                if(result.result == 0) {
+//                    return null;
+//                }
+//                return result.toString();
+//            }
+//        } catch (Exception e) {
+//            return e.toString();
+//        }
+
         try {
-            ShellUtils.CommandResult result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), false, null);
-            if(result.result == 0) {
-                return null;
-            } else {
-//                  try again with su
-                result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), true, null);
-                if(result.result == 0) {
-                    return null;
-                }
-                return result.toString();
-            }
-        } catch (Exception e) {
+            FileOutputStream stream = new FileOutputStream(file);
+            stream.write(text.getBytes());
+            stream.flush();
+            stream.close();
+            return null;
+        } catch (FileNotFoundException e) {
+            return e.toString();
+        } catch (IOException e) {
             return e.toString();
         }
     }
@@ -147,19 +162,19 @@ public class FileManager {
     }
 
     public static List<File> lsFile(File f, boolean showHidden) {
-        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath()+ "\"", false, null);
-        if(r.result != 0) {
-            return null;
-        }
+//        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath()+ "\"", false, null);
+//        if(r.result != 0) {
+//            return null;
+//        }
 
         if(!f.isDirectory()) {
             return null;
         }
 
-        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", false, null);
-        if(rr.result != 0) {
-            return null;
-        }
+//        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", false, null);
+//        if(rr.result != 0) {
+//            return null;
+//        }
 
         File[] content = f.listFiles();
 

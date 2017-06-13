@@ -40,7 +40,6 @@ public class KeeperService extends Service {
                 .setContentIntent(resultPendingIntent)
                 .build();
 
-
         startForeground(ONGOING_NOTIFICATION_ID, notification);
     }
 

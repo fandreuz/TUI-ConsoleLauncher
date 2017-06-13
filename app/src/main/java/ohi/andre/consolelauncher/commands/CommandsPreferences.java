@@ -2,7 +2,7 @@ package ohi.andre.consolelauncher.commands;
 
 import java.util.HashMap;
 
-import ohi.andre.consolelauncher.managers.PreferencesManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 
 /**
  * Created by francescoandreuzzi on 06/01/2017.
@@ -14,12 +14,12 @@ public class CommandsPreferences {
 
     private HashMap<String, Preference> preferenceHashMap;
 
-    public CommandsPreferences(PreferencesManager preferencesManager) {
+    public CommandsPreferences() {
         preferenceHashMap = new HashMap<>();
 
 //        search
         Preference searchP = new Preference();
-        searchP.add(preferencesManager.getValue(PreferencesManager.DEFAULT_SEARCH), DEFAULT_PARAM);
+        searchP.add(XMLPrefsManager.get(String.class, XMLPrefsManager.Cmd.default_search), DEFAULT_PARAM);
         preferenceHashMap.put("search", searchP);
     }
 

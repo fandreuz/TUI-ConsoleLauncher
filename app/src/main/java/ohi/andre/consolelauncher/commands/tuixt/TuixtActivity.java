@@ -25,12 +25,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
-import ohi.andre.consolelauncher.managers.PreferencesManager;
+import ohi.andre.consolelauncher.managers.FileManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -81,9 +81,8 @@ public class TuixtActivity extends Activity {
         if(skinManager == null) {
             try {
                 Resources res = getResources();
-                PreferencesManager preferencesManager = new PreferencesManager(res.openRawResource(R.raw.settings), res.openRawResource(R.raw.alias), Tuils.getFolder());
-                skinManager = new SkinManager(preferencesManager);
-            } catch (IOException e) {
+                skinManager = new SkinManager();
+            } catch (Exception e) {
                 return;
             }
         }
@@ -244,6 +243,14 @@ public class TuixtActivity extends Activity {
     public void onBackPressed() {
         setResult(BACK_PRESSED);
         finish();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        FileManager.writeOn(pack.editFile, fileView.getText().toString());
+        this.finish();
     }
 
     private void onNewInput() {

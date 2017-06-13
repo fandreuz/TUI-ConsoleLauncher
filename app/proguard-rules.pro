@@ -7,3 +7,7 @@
 -keepclassmembers class * extends com.stephentuso.welcome.WelcomeActivity {
     public static java.lang.String welcomeKey();
 }
+
+-dontwarn javax.annotation.**
+-dontwarn javax.inject.**
+-dontwarn sun.misc.Unsafe

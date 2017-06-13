@@ -12,6 +12,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
@@ -19,6 +20,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -32,8 +34,11 @@ import java.util.Enumeration;
 import java.util.List;
 
 import dalvik.system.DexFile;
+import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 import ohi.andre.consolelauncher.tuils.tutorial.TutorialActivity;
 
 public class Tuils {
@@ -45,6 +50,7 @@ public class Tuils {
     public static final String DOT = ".";
     public static final String EMPTYSTRING = "";
     private static final String TUI_FOLDER = "t-ui";
+    public static final String MINUS = "-";
 
     public static boolean arrayContains(int[] array, int value) {
         for(int i : array) {
@@ -92,6 +98,36 @@ public class Tuils {
         return songs;
     }
 
+    public static boolean hasNotificationAccess(Context context) {
+        String pkgName = BuildConfig.APPLICATION_ID;
+        final String flat = Settings.Secure.getString(context.getContentResolver(), "enabled_notification_listeners");
+        if (!TextUtils.isEmpty(flat)) {
+            final String[] names = flat.split(":");
+            for (int i = 0; i < names.length; i++) {
+                final ComponentName cn = ComponentName.unflattenFromString(names[i]);
+                if (cn != null) {
+                    if (TextUtils.equals(pkgName, cn.getPackageName())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void resetPreferredLauncherAndOpenChooser(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        ComponentName componentName = new ComponentName(context, FakeLauncherActivity.class);
+        packageManager.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+
+        Intent selector = new Intent(Intent.ACTION_MAIN);
+        selector.addCategory(Intent.CATEGORY_HOME);
+        selector.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(selector);
+
+        packageManager.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
+    }
+
     public static void showTutorial(Context context) {
         context.startActivity(new Intent(context, TutorialActivity.class));
     }
@@ -133,6 +169,12 @@ public class Tuils {
         return classes;
     }
 
+    public static String[] toString(Enum[] enums) {
+        String[] arr = new String[enums.length];
+        for(int count = 0; count < enums.length; count++) arr[count] = enums[count].name();
+        return arr;
+    }
+
     private static String getNicePath(String filePath) {
         String home = Tuils.getInternalDirectoryPath();
 
@@ -143,6 +185,33 @@ public class Tuils {
         } else {
             return filePath;
         }
+    }
+
+    public static int find(Object o, Object[] array) {
+        for(int count = 0; count < array.length; count++) {
+            if(o.equals(array[count])) return count;
+        }
+        return -1;
+    }
+
+    public static int find(Object o, List<Object> list) {
+        for(int count = 0; count < list.size(); count++) {
+            Object x = list.get(count);
+            if(o instanceof XMLPrefsManager.XMLPrefsSave) {
+                try {
+                    if(((XMLPrefsManager.XMLPrefsSave) o).is((String) x)) return count;
+                } catch (Exception e) {}
+            }
+
+            if(o instanceof String && x instanceof XMLPrefsManager.XMLPrefsSave) {
+                try {
+                    if(((XMLPrefsManager.XMLPrefsSave) x).is((String) o)) return count;
+                } catch (Exception e) {}
+            }
+
+            if(o.equals(list.get(count))) return count;
+        }
+        return -1;
     }
 
     public static String getHint(SkinManager skinManager, String currentPath) {
@@ -169,10 +238,10 @@ public class Tuils {
             path = ":" + getNicePath(currentPath);
         }
 
-        if(username == Tuils.EMPTYSTRING) {
+        if(username.equals(Tuils.EMPTYSTRING)) {
             return deviceName + path;
         } else {
-            if(deviceName == Tuils.EMPTYSTRING) {
+            if(deviceName.equals(Tuils.EMPTYSTRING)) {
                 return username + path;
             } else {
                 return username + "@" + deviceName + path;
@@ -402,7 +471,7 @@ public class Tuils {
         return null;
     }
 
-    public static File getTuiFolder() {
+    private static File getTuiFolder() {
         String internalDir = Tuils.getInternalDirectoryPath();
         if(internalDir == null) {
             return null;
@@ -536,7 +605,10 @@ public class Tuils {
     }
 
     private static final int FILEUPDATE_DELAY = 300;
+    private static File folder = null;
     public static File getFolder() {
+        if(folder != null) return folder;
+
         final File tuiFolder = Tuils.getTuiFolder();
 
         while (true) {
@@ -549,6 +621,7 @@ public class Tuils {
             } catch (InterruptedException e) {}
         }
 
-        return tuiFolder;
+        folder = tuiFolder;
+        return folder;
     }
 }
