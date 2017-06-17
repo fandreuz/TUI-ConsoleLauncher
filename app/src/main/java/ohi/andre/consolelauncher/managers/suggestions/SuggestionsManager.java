@@ -15,6 +15,7 @@ import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.commands.specific.PermanentSuggestionCommand;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
@@ -67,11 +68,13 @@ public class SuggestionsManager {
                         float rate = 1f / shift;
                         suggestionList.add(new Suggestion(before, apps[count], true, (int) Math.ceil(rate), Suggestion.TYPE_APP));
                     }
-
-                    return suggestionList.toArray(new Suggestion[suggestionList.size()]);
                 }
+
+                suggestAlias(info.aliasManager, suggestionList, lastWord);
+
+                return suggestionList.toArray(new Suggestion[suggestionList.size()]);
             }
-//            lastword = 0 && before > 0
+//            lastword == 0 && before > 0
             else {
 //                check if this is a command
                 Command cmd = null;
@@ -98,7 +101,7 @@ public class SuggestionsManager {
 //                        suggestArgs(info, cmd.cmd instanceof ParamCommand ? ((ParamCommand) cmd.cmd).argsForParam((String) cmd.mArgs[0])[cmd.nArgs - 1] : cmd.cmd.argType()[cmd.nArgs], suggestionList, lastWord, before);
 //                    }
 
-                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) suggestParams(suggestionList, (ParamCommand) cmd.cmd, before);
+                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) suggestParams(suggestionList, (ParamCommand) cmd.cmd, before, null);
                     else suggestArgs(info, cmd.nextArg(), suggestionList, before);
 
                 } else {
@@ -129,7 +132,9 @@ public class SuggestionsManager {
                         lastWord = before.substring(index) + lastWord;
                     }
 
-                    suggestArgs(info, cmd.nextArg(), suggestionList, lastWord, before);
+                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) {
+                        suggestParams(suggestionList, (ParamCommand) cmd.cmd, before, lastWord);
+                    } else suggestArgs(info, cmd.nextArg(), suggestionList, lastWord, before);
                 } else {
 //                    not a command
 //                    ==> app
@@ -138,6 +143,7 @@ public class SuggestionsManager {
             } else {
 //                lastword > 0 && before = 0
                 suggestCommand(info, suggestionList, lastWord);
+                suggestAlias(info.aliasManager, suggestionList, lastWord);
                 suggestApp(info, suggestionList, lastWord, Tuils.EMPTYSTRING);
             }
         }
@@ -154,16 +160,20 @@ public class SuggestionsManager {
         }
     }
 
-    private void suggestParams(List<Suggestion> suggestions, ParamCommand cmd, String before) {
+    private void suggestAlias(AliasManager aliasManager, List<Suggestion> suggestions, String lastWord) {
+        if(lastWord.length() == 0) for(String s : aliasManager.getAliases()) suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, true, NO_RATE, Suggestion.TYPE_ALIAS));
+        else for(String s : aliasManager.getAliases()) if(s.startsWith(lastWord)) suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, true, NO_RATE, Suggestion.TYPE_ALIAS));
+    }
+
+    private void suggestParams(List<Suggestion> suggestions, ParamCommand cmd, String before, String lastWord) {
         String[] params = cmd.params();
         if (params == null) {
             return;
         }
 
         boolean exec = false;
-        for (String s : cmd.params()) {
-            suggestions.add(new Suggestion(before, s, exec, NO_RATE, 0));
-        }
+        if(lastWord == null || lastWord.length() == 0) for (String s : cmd.params()) suggestions.add(new Suggestion(before, s, exec, NO_RATE, 0));
+        else for (String s : cmd.params()) if (s.startsWith(lastWord)) suggestions.add(new Suggestion(before, s, exec, NO_RATE, 0));
     }
 
     private void suggestArgs(MainPack info, int type, List<Suggestion> suggestions, String prev, String before) {
@@ -198,6 +208,7 @@ public class SuggestionsManager {
                 break;
             case CommandAbstraction.CONFIG_FILE:
                 suggestConfigFile(suggestions, prev, before);
+                break;
         }
     }
 
@@ -453,7 +464,6 @@ public class SuggestionsManager {
             xmlPrefsFiles.add(AppsManager.PATH);
             xmlPrefsFiles.add(NotificationManager.PATH);
         }
-        Log.e("andre", xmlPrefsFiles.toString());
 
         if(prev == null || prev.length() == 0) {
             for(String s : xmlPrefsFiles) {

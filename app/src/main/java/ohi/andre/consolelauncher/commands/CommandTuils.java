@@ -2,7 +2,6 @@ package ohi.andre.consolelauncher.commands;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
-import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -217,32 +216,10 @@ public class CommandTuils {
             return null;
         }
 
-        List<String> strings = new ArrayList<>();
+        String[] strings = input.split(Tuils.SPACE + "+");
+        List<String> arg = new ArrayList<>(Arrays.asList(strings));
 
-        char[] chars = input.toCharArray();
-        String arg = "";
-        int index;
-
-        for (index = 0; index < chars.length; index++) {
-            char c = chars[index];
-            if (c == ' ') {
-                if (arg.length() > 0) {
-                    strings.add(arg);
-                    arg = "";
-                    continue;
-                } else {
-//                	prevent double space
-                    continue;
-                }
-            }
-
-            arg = arg.concat(c + Tuils.EMPTYSTRING);
-        }
-
-        if (arg.length() > 0)
-            strings.add(arg);
-
-        return new ArgInfo(strings, input.substring(index), true, strings.size());
+        return new ArgInfo(arg, null, true, arg.size());
     }
 
     private static ArgInfo command(String string, CommandGroup active) {
@@ -267,7 +244,7 @@ public class CommandTuils {
                 while (count-- >= 0)
                     strings.remove(0);
 
-                String residual = Tuils.toPlanString(strings, " ");
+                String residual = Tuils.toPlanString(strings, Tuils.SPACE);
                 return new ArgInfo(info.file, residual, true, 1);
             }
 

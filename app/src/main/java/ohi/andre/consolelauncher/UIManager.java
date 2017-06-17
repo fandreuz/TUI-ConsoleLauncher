@@ -112,38 +112,38 @@ public class UIManager implements OnTouchListener {
                 return;
             }
 
-            if(st == s.length() - 1 && b == 0 && c == 1 && s.subSequence(st, s.length()).toString().equals(Tuils.SPACE)) {
-                nOfSpace++;
-                originalText = s.toString();
-            } else {
-                nOfSpace = -1;
-                originalText = null;
-                navigatingWithSpace = false;
-            }
-
-            if(nOfSpace == suggestionsView.getChildCount() + 1) {
-                nOfSpace = -2;
-                navigatingWithSpace = false;
-            }
-
-            if(nOfSpace >= 0) {
-                if(nOfSpace == 1 && suggestionsView.getChildCount() == 1) {
-                    nOfSpace = -1;
-                    originalText = null;
-                    navigatingWithSpace = false;
-                } else {
-                    for(int count = 0; count < suggestionsView.getChildCount(); count++) {
-                        SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) suggestionsView.getChildAt(count).getTag(R.id.suggestion_id);
-                        if(originalText.trim().endsWith(suggestion.text)) {
-                            nOfSpace = -1;
-                            originalText = null;
-                            navigatingWithSpace = false;
-                            break;
-                        }
-                        if(count == suggestionsView.getChildCount() - 1) return;
-                    }
-                }
-            }
+//            if(st == s.length() - 1 && b == 0 && c == 1 && s.subSequence(st, s.length()).toString().equals(Tuils.SPACE) && !navigatingWithSpace) {
+//                nOfSpace++;
+//                originalText = s.toString();
+//            } else if(!navigatingWithSpace) {
+//                nOfSpace = -1;
+//                originalText = null;
+//                navigatingWithSpace = false;
+//            }
+//
+//            if(nOfSpace == suggestionsView.getChildCount() + 1) {
+//                nOfSpace = -2;
+//                navigatingWithSpace = false;
+//            }
+//
+//            if(nOfSpace >= 0) {
+//                if(nOfSpace == 1 && suggestionsView.getChildCount() == 1) {
+//                    nOfSpace = -1;
+//                    originalText = null;
+//                    navigatingWithSpace = false;
+//                } else {
+//                    for(int count = 0; count < suggestionsView.getChildCount(); count++) {
+//                        SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) suggestionsView.getChildAt(count).getTag(R.id.suggestion_id);
+//                        if(originalText.trim().endsWith(suggestion.text)) {
+//                            nOfSpace = -1;
+//                            originalText = null;
+//                            navigatingWithSpace = false;
+//                            break;
+//                        }
+//                        if(count == suggestionsView.getChildCount() - 1) return;
+//                    }
+//                }
+//            }
 
             String text = s.toString();
             int lastSpace = text.lastIndexOf(Tuils.SPACE);
@@ -156,53 +156,53 @@ public class UIManager implements OnTouchListener {
 
         @Override
         public void afterTextChanged(Editable s) {
-            if(nOfSpace == -2) {
-                s.replace(0,s.length(),originalText);
-                originalText = null;
-                return;
-            }
-
-            if(nOfSpace > 0 && s.length() > 0 && call) {
-
-                if(nOfSpace == 1) {
-                    call = false;
-                    s.replace(s.length() - 1, s.length(), Tuils.EMPTYSTRING);
-                    call = true;
-                }
-
-                navigatingWithSpace = true;
-
-                call = false;
-                s.replace(s.length() - 1, s.length(), Tuils.EMPTYSTRING);
-                call = true;
-
-//                int count = suggestionsView.getChildCount();
-                int index = nOfSpace - 1;
-//                if(nOfSpace <= count) {
-//                    index = nOfSpace - 1;
+//            if(nOfSpace == -2) {
+//                s.replace(0,s.length(),originalText);
+//                originalText = null;
+//                return;
+//            }
+//
+//            if(nOfSpace > 0 && s.length() > 0 && call) {
+//                if(nOfSpace == 1) {
+//                    call = false;
+//                    s.replace(s.length() - 1, s.length(), Tuils.EMPTYSTRING);
+//                    call = true;
 //                }
-//                else {
-//                    index = nOfSpace % (count + 1) - 1;
+//
+//                navigatingWithSpace = true;
+//
+//                call = false;
+//                s.replace(s.length() - 1, s.length(), Tuils.EMPTYSTRING);
+//                call = true;
+//
+////                int count = suggestionsView.getChildCount();
+//                int index = nOfSpace - 1;
+////                if(nOfSpace <= count) {
+////                    index = nOfSpace - 1;
+////                }
+////                else {
+////                    index = nOfSpace % (count + 1) - 1;
+////                }
+//
+//                call = false;
+//                if(index != -1) {
+//                    View view = suggestionsView.getChildAt(index);
+//                    SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) view.getTag(R.id.suggestion_id);
+//
+//                    String text = suggestion.getText() + Tuils.SPACE;
+//
+//                    if(originalText.length() < s.length() && suggestion.type == SuggestionsManager.Suggestion.TYPE_PERMANENT) {
+//                        s.replace(originalText.length(), s.length(), text);
+//                    }  else {
+//                        s.replace(0, s.length(), text);
+//                    }
+//                } else {
+//                    Log.e("andre", "4");
+//                    s.replace(0, s.length(), originalText);
+//                    navigatingWithSpace = false;
 //                }
-
-                call = false;
-                if(index != -1) {
-                    View view = suggestionsView.getChildAt(index);
-                    SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) view.getTag(R.id.suggestion_id);
-
-                    String text = suggestion.getText() + Tuils.SPACE;
-
-                    if(originalText.length() < s.length() && suggestion.type == SuggestionsManager.Suggestion.TYPE_PERMANENT) {
-                        s.replace(originalText.length(), s.length(), text);
-                    }  else {
-                        s.replace(0, s.length(), text);
-                    }
-                } else {
-                    s.replace(0, s.length(), originalText);
-                    navigatingWithSpace = false;
-                }
-                call = true;
-            }
+//                call = true;
+//            }
         }
     };
 
@@ -518,12 +518,12 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.setDefaultHint();
     }
 
-    public void setOutput(String string) {
-        mTerminalAdapter.setOutput(string);
+    public void setOutput(String string, boolean fromUser) {
+        mTerminalAdapter.setOutput(string, fromUser);
     }
 
-    public void setOutput(String s, int color) {
-        mTerminalAdapter.setOutput(s, color);
+    public void setOutput(String s, int color, boolean fromUser) {
+        mTerminalAdapter.setOutput(s, color, fromUser);
     }
 
     public void disableSuggestions() {

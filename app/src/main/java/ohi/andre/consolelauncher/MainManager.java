@@ -8,6 +8,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import java.util.Arrays;
+
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
@@ -98,6 +100,7 @@ public class MainManager {
 
     private Thread thread;
     private boolean busy = false;
+    private boolean ctrlced = false;
     private void busy() {
         busy = true;
 
@@ -148,10 +151,12 @@ public class MainManager {
 
 //    command manager
     public void onCommand(String input, String alias) {
-
         if(busy) {
             if(input.equalsIgnoreCase("ctrlc")) {
                 thread.interrupt();
+
+                ctrlced = true;
+
                 notBusy();
                 return;
             }
@@ -239,15 +244,6 @@ public class MainManager {
 
 //            this is the last trigger, it has to say "command not found"
 
-//            boolean su = false;
-//            if (CommandTuils.isSuCommand(input)) {
-//                su = true;
-//                input = input.substring(3);
-//                if (input.startsWith(ShellUtils.COMMAND_SU_ADD + Tuils.SPACE)) {
-//                    input = input.substring(3);
-//                }
-//            }
-
             final String cmd = input;
             final boolean useSU = false;
 
@@ -262,13 +258,18 @@ public class MainManager {
                     ShellUtils.CommandResult result = ShellUtils.execCommand(new String[] {cmd}, useSU, mainPack.currentDirectory.getAbsolutePath(), out);
                     if(Thread.interrupted()) return;
 
+                    if(ctrlced) {
+                        ctrlced = false;
+                        return;
+                    }
+
                     if (result == null || result.result == COMMAND_NOTFOUND || result.result == -1) {
                         out.onOutput(mContext.getString(R.string.output_commandnotfound));
                     } else {
                         String output = result.toString();
                         if(output != null) {
                             output = output.trim();
-                            if(output.length() == 0 ) {
+                            if(output.length() == 0 && result.result > 0) {
                                 output = mainPack.res.getString(R.string.output_commandexitvalue) + Tuils.SPACE + result.result;
                             }
                         }
@@ -336,7 +337,7 @@ public class MainManager {
                             String output = command.exec(mContext.getResources(), info);
                             if(Thread.interrupted()) return;
 
-                            if(output != null) {
+                            if(output != null && !ctrlced) {
                                 out.onOutput(output);
                             }
                         }

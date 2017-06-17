@@ -6,6 +6,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.Param;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by francescoandreuzzi on 01/05/2017.
@@ -23,11 +24,11 @@ public abstract class ParamCommand implements CommandAbstraction {
         String o = doThings(pack);
         if(o != null) return o;
 
-        try {
-            return paramForString(pack.get(String.class, 0)).exec(pack);
-        } catch (NullPointerException e) {
-            return pack.context.getString(R.string.output_invalid_param);
+        Param param = paramForString(pack.get(String.class, 0));
+        if(param == null) {
+            return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + pack.get(String.class, 0);
         }
+        return param.exec(pack);
     }
 
     public final int[] argsForParam(String param) {

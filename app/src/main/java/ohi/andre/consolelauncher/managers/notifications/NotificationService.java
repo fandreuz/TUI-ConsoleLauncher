@@ -48,7 +48,7 @@ public class NotificationService extends NotificationListenerService {
 
         NotificationManager.create();
 
-        if(NotificationManager.colorsLength() == 0) {
+        if(NotificationManager.apps() == 0) {
 //            some nice apps
             NotificationManager.notificationsChangeFor(new ArrayList<>(Arrays.asList(
                     new NotificatedApp("com.whatsapp", Color.parseColor("#25D366"), true),
@@ -94,8 +94,12 @@ public class NotificationService extends NotificationListenerService {
         }
 
         String pack = sbn.getPackageName();
+
         NotificatedApp nApp = NotificationManager.getAppState(pack);
-        if(nApp == null || !nApp.enabled) {
+        if( (nApp != null && !nApp.enabled)) {
+            return;
+        }
+        if(nApp == null && !NotificationManager.default_app_state) {
             return;
         }
 
@@ -116,6 +120,8 @@ public class NotificationService extends NotificationListenerService {
         if(titleSequence != null) {
             title = titleSequence.toString();
         }
+
+        if(NotificationManager.textMatches(text) || NotificationManager.titleMatches(title)) return;
 
         Intent msgrcv = new Intent("Msg");
         msgrcv.putExtra("package", pack);

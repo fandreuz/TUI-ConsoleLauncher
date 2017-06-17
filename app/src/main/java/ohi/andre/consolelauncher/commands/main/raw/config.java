@@ -1,11 +1,13 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.util.Log;
+
 import java.io.File;
+import java.util.Arrays;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -39,8 +41,8 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                File file = pack.get(File.class, 1);
-                Tuils.openFile(file);
+                File file = new File(Tuils.getFolder(), pack.get(String.class, 1));
+                pack.context.startActivity(Tuils.openFile(file));
                 return null;
             }
         };
@@ -48,9 +50,7 @@ public class config extends ParamCommand {
         static Param get(String p) {
             p = p.toLowerCase();
             Param[] ps = values();
-            for (Param p1 : ps)
-                if (p.endsWith(p1.label()))
-                    return p1;
+            for (Param p1 : ps) if (p.endsWith(p1.label())) return p1;
             return null;
         }
 
@@ -108,7 +108,6 @@ public class config extends ParamCommand {
 
     @Override
     public String onArgNotFound(ExecutePack pack, int indexNotFound) {
-        if(indexNotFound == 0) return pack.context.getString(R.string.output_invalid_param);
         return pack.context.getString(R.string.output_invalidarg);
     }
 

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
+import java.io.File;
+
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
@@ -87,6 +89,18 @@ public class apps extends ParamCommand {
                 Intent intent = ((MainPack) pack).appsManager.getIntent(pack.get(String.class, 1));
                 pack.context.startActivity(intent);
 
+                return null;
+            }
+        },
+        file {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.openFile(new File(Tuils.getFolder(), AppsManager.PATH)));
                 return null;
             }
         };

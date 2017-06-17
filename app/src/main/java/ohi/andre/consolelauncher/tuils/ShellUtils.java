@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
@@ -63,91 +64,64 @@ public class ShellUtils {
 //            return new CommandResult(0, e.toString());
 //        }
 
-        if(cmds.length > 1) return null;
+        if(cmds.length > 1 || cmds.length == 0) return null;
 
         int result = -1;
-        if (cmds == null || cmds.length == 0) {
-            return null;
-        }
 
         BufferedReader errorResult = null;
         StringBuilder errorMsg = null;
         final StringBuilder output = new StringBuilder();
 
-//        DataOutputStream os = null;
         try {
-//            process = Runtime.getRuntime().exec(root ? "su" : "sh");
-//            os = new DataOutputStream(process.getOutputStream());
-//
-//            if (path != null) {
-//                String cdCommand = "cd " + path;
-//                os.write(cdCommand.getBytes());
-//                os.writeBytes(Tuils.NEWLINE);
-//                os.flush();
-//            }
-
-//            for (String command : cmds) {
-//                if (command == null) {
-//                    continue;
-//                }
-//
-//                os.write(command.getBytes());
-//                os.writeBytes(Tuils.NEWLINE);
-//            }
-//            os.flush();
 
             final Process process = Runtime.getRuntime().exec((root ? "su -c " : "") + cmds[0], null, path != null ? new File(path) : null);
             final Thread externalThread = Thread.currentThread();
 
-            Thread thread = new StoppableThread() {
+            Thread readerThread = new StoppableThread() {
 
                 @Override
                 public void run() {
                     super.run();
 
-                    if(Thread.interrupted() || externalThread.isInterrupted()) return;
+                    if (Thread.interrupted() || externalThread.isInterrupted()) return;
 
                     BufferedReader successResult = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String s;
                     try {
                         while ((s = successResult.readLine()) != null) {
-                            if(Thread.currentThread().isInterrupted() || externalThread.isInterrupted()) return;
+                            if (Thread.currentThread().isInterrupted() || externalThread.isInterrupted())
+                                return;
 
-                            if(outputable != null) outputable.onOutput(Tuils.NEWLINE + s);
-
-                            output.append(Tuils.NEWLINE);
-                            output.append(s);
+                            if (outputable != null) outputable.onOutput(Tuils.NEWLINE + s);
+                            else {
+                                output.append(Tuils.NEWLINE);
+                                output.append(s);
+                            }
                         }
-                    } catch (IOException e) {
-                        Log.e("andre", "", e);
-                    }
 
-                    try {
-                        sleep(50);
-                    } catch (InterruptedException e) {
-                        Log.e("andre", "", e);
+                        sleep(25);
+                    } catch (StackOverflowError | Exception e) {
+                        if(outputable != null && ! (e instanceof InterruptedException)) outputable.onOutput(e.toString());
+
+                        try {
+                            successResult.close();
+                        } catch (IOException e1) {}
+
                         return;
                     }
-
-                    run();
                 }
             };
-            thread.start();
+            readerThread.start();
 
             result = process.waitFor();
-            thread.interrupt();
+            readerThread.interrupt();
 
             if(output.length() == 0) {
                 errorMsg = new StringBuilder();
 
-//                successResult = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 errorResult = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
                 String s;
-//                while ((s = successResult.readLine()) != null) {
-//                    successMsg.append(Tuils.NEWLINE);
-//                    successMsg.append(s);
-//                }
                 while ((s = errorResult.readLine()) != null) {
                     if(errorMsg.length() > 0) errorMsg.append(Tuils.NEWLINE);
                     errorMsg.append(s);
@@ -159,18 +133,10 @@ public class ShellUtils {
         catch (Exception e) {}
         finally {
             try {
-//                if (os != null) {
-//                    os.close();
-//                }
-//                if (successResult != null) {
-//                    successResult.close();
-//                }
                 if (errorResult != null) {
                     errorResult.close();
                 }
-            } catch (IOException e) {
-                Log.e("andre", "", e);
-            }
+            } catch (IOException e) {}
         }
 
         if(output.length() > 0) {

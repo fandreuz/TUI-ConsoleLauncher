@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -61,6 +62,8 @@ public class TuixtActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.e("andre", "0");
+
         final Typeface lucidaConsole = Typeface.createFromAsset(getAssets(), "lucida_console.ttf");
         final LinearLayout rootView = new LinearLayout(this);
 
@@ -73,6 +76,7 @@ public class TuixtActivity extends Activity {
             path = file.getAbsolutePath();
         }
 
+        Log.e("andre", "1");
         final File file = new File(path);
 
         CommandGroup group = new CommandGroup(this, "ohi.andre.consolelauncher.commands.tuixt.raw");
@@ -86,6 +90,8 @@ public class TuixtActivity extends Activity {
                 return;
             }
         }
+
+        Log.e("andre", "2");
 
         if (!skinManager.useSystemWp) {
             rootView.setBackgroundColor(skinManager.bgColor);
@@ -106,6 +112,8 @@ public class TuixtActivity extends Activity {
 
         TextView prefixView = (TextView) inputOutputView.findViewById(R.id.prefix_view);
 
+        Log.e("andre", "3");
+
         ImageButton submitView = (ImageButton) inputOutputView.findViewById(R.id.submit_tv);
         boolean showSubmit = skinManager.showSubmit;
         if (!showSubmit) {
@@ -124,6 +132,7 @@ public class TuixtActivity extends Activity {
         prefixView.setTextSize(skinManager.getTextSize());
         prefixView.setText(prefix);
 
+        Log.e("andre", "4");
 
         if (submitView != null) {
             submitView.setColorFilter(skinManager.inputColor);
@@ -149,6 +158,8 @@ public class TuixtActivity extends Activity {
                 return false;
             }
         });
+
+        Log.e("andre", "5");
 
         outputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         outputView.setTextSize(skinManager.getTextSize());
@@ -187,6 +198,8 @@ public class TuixtActivity extends Activity {
 
         setContentView(rootView);
 
+        Log.e("andre", "6");
+
 //
 //
 //        end setup part, now start
@@ -220,6 +233,7 @@ public class TuixtActivity extends Activity {
                         }
                     });
                 } catch (Exception e) {
+                    Log.e("andre", "", e);
                     intent.putExtra(ERROR_KEY, e.toString());
                     setResult(1, intent);
                     finish();
@@ -237,6 +251,8 @@ public class TuixtActivity extends Activity {
             inputView.setText("help");
             inputView.setSelection(inputView.getText().length());
         }
+
+        Log.e("andre", "7");
     }
 
     @Override

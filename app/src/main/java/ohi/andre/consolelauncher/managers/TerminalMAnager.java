@@ -242,52 +242,30 @@ public class TerminalManager {
         return true;
     }
 
-    public void setOutput(String output) {
-        if (output == null) {
-            return;
-        }
-
-        output = output.trim();
-        if(output.equals(Tuils.EMPTYSTRING)) {
-            return;
-        }
-
-        if(output.equals(clear.CLEAR)) {
-            clear();
-            return;
-        }
-
-        writeToView(output, OUTPUT);
-
-        for(Messager messager : messagers) {
-            if(cmds != 0 && cmds % messager.n == 0) {
-                writeToView(messager.message, OUTPUT);
-            }
-        }
+    public void setOutput(String output, boolean fromUser) {
+        setOutput(output, -1, OUTPUT, fromUser);
     }
 
-    public void setOutput(String output, int color) {
-        if (output == null) {
-            return;
-        }
+    public void setOutput(String output, int color, boolean fromUser) {
+        setOutput(output, color, -1, fromUser);
+    }
+
+    public void setOutput(String output, int color, int type, boolean fromUser) {
+        if (output == null) return;
 
         output = output.trim();
-        if(output.equals(Tuils.EMPTYSTRING)) {
-            return;
-        }
+        if(output.equals(Tuils.EMPTYSTRING)) return;
 
         if(output.equals(clear.CLEAR)) {
             clear();
             return;
         }
 
-        writeToView(color, output);
+        if(color == -1) writeToView(output, type);
+        else writeToView(color, output);
 
-        for(Messager messager : messagers) {
-            if(cmds != 0 && cmds % messager.n == 0) {
-                writeToView(messager.message, OUTPUT);
-            }
-        }
+        if(fromUser)
+            for (Messager messager : messagers) if (cmds != 0 && cmds % messager.n == 0) writeToView(messager.message, OUTPUT);
     }
 
     public void onBackPressed() {

@@ -1,6 +1,9 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import java.io.File;
+
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
@@ -14,10 +17,6 @@ import ohi.andre.consolelauncher.tuils.Tuils;
  */
 
 public class notifications extends ParamCommand {
-
-    private final String INCLUDE_PARAM = "-inc";
-    private final String EXCLUDE_PARAM = "-exc";
-    private final String COLOR_PARAM = "-clr";
 
     private enum Param implements ohi.andre.consolelauncher.commands.main.Param {
 
@@ -33,7 +32,7 @@ public class notifications extends ParamCommand {
                 return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
             }
         },
-        exc{
+        exc {
             @Override
             public String exec(ExecutePack pack) {
                 NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 1), -1, false));
@@ -45,7 +44,7 @@ public class notifications extends ParamCommand {
                 return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
             }
         },
-        clr{
+        clr {
             @Override
             public String exec(ExecutePack pack) {
                 if(pack.args.length < 3) return ((MainPack) pack).context.getString(R.string.help_notifications);
@@ -58,6 +57,42 @@ public class notifications extends ParamCommand {
             @Override
             public int[] args() {
                 return new int[] {CommandAbstraction.COLOR, CommandAbstraction.VISIBLE_PACKAGE};
+            }
+        },
+        title_regex {
+            @Override
+            public String exec(ExecutePack pack) {
+                NotificationManager.excludeRegex(pack.get(String.class, 1), "title");
+                return null;
+            }
+
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.PLAIN_TEXT};
+            }
+        },
+        text_regex {
+            @Override
+            public String exec(ExecutePack pack) {
+                NotificationManager.excludeRegex(pack.get(String.class, 1), "text");
+                return null;
+            }
+
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.PLAIN_TEXT};
+            }
+        },
+        file {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.openFile(new File(Tuils.getFolder(), NotificationManager.PATH)));
+                return null;
             }
         };
 
@@ -104,7 +139,7 @@ public class notifications extends ParamCommand {
 
     @Override
     public int minArgs() {
-        return 2;
+        return 0;
     }
 
     @Override

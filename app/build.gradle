@@ -9,8 +9,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 90
-        versionName "5.3b"
+        versionCode 91
+        versionName "5.3e"
     }
 
     buildTypes {

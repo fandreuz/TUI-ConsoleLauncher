@@ -14,7 +14,7 @@
 
     <!-- busy -->
     <string name="busy">T-UI is busy, wait until the execution finishes or use the command \"ctrlc\"</string>
-    <string name="busy_hint">type "ctrlc" to stop</string>
+    <string name="busy_hint">type \"ctrlc\" to stop</string>
 
     <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.\n\nYou can disable this message in >>tuisettings</string>
 
@@ -39,6 +39,8 @@
     <string name="output_problemcamera">There was a problem while connecting to your device camera</string>
     <string name="output_numberformat">Wrong number format</string>
     <string name="output_invalidarg">Invalid argument</string>
+    <string name="output_lessarg">Less arguments than expected</string>
+    <string name="output_aliasnotfound">Alias not found:</string>
 
     <!-- tuixt -->
     <string name="help_tuixt_help">Print the list of commands, or info about a command
@@ -116,8 +118,15 @@
 
 
     <string name="help_airplane">Toggle Airplane Mode</string>
-    <string name="help_aliases">Print alias that are currently saved in \"sdcard\"/t-ui/alias.txt</string>
-    <string name="help_aliasfile">Open alias.txt</string>
+    <string name="help_aliases">Manager your aliases
+        \n\nUsage:
+        \n-add -> add a new alias
+        \n-rm -> remove an existing alias
+        \n-ls -> list your aliases
+        \n-file -> open alias.xml
+        \n\nExample:
+        \n>>alias -add bip echo beeeeeep
+        \n>>alias -rm bip</string>
     <string name="help_apps">Manage your apps
         \n\nUsage:
         \n>>apps [option] [app name]
@@ -127,20 +136,11 @@
         \n-ps -> show Google Play Store page for this app
         \n-st -> show Settings details for this app
         \n-frc -> force t-ui to open this app
+        \n-file -> open apps.xml
         \nno option -> list your apps
         \n\nExample:
         \n>>apps -st T-UI
     </string>
-    <string name="help_appshide">Hide an app
-        \n\nUsage:
-        \n>>apps_hide [app]
-        \n\nExample:
-        \n>>apps_hide Settings</string>
-    <string name="help_appsunhide">Unhide an hidden app
-        \n\nUsage:
-        \n>>apps_unhide [app]
-        \n\nExample:
-        \n>>apps_unhide Settings</string>
     <string name="help_bluetooth">Toggle Bluetooth</string>
     <string name="help_clear">Clear the screen</string>
     <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
@@ -262,6 +262,7 @@
         \n\n-inc -> include an application
         \n-exc -> exclude an appliation
         \n-clr -> set the color to be used for the application
+        \n-file -> open notifications.xml
         \n\nExample:
         \n\nnotifications -inc Clock
         \nnotifications -clr Settings #FF0000</string>

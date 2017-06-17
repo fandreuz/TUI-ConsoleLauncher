@@ -117,7 +117,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         @Override
         public void onOutput(String output) {
             try {
-                ui.setOutput(output);
+                ui.setOutput(output, true);
             } catch (NullPointerException e) {
                 e.printStackTrace();
             }
@@ -199,7 +199,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         }
 
         NotificationManager.create();
-        boolean notifications = NotificationManager.get(boolean.class, NotificationManager.Options.enabled);
+        boolean notifications = XMLPrefsManager.get(boolean.class, NotificationManager.Options.enabled);
         if(notifications) {
             LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
             if(!Tuils.hasNotificationAccess(this)) {
@@ -366,7 +366,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                         MainPack info = main.getMainPack();
                         main.onCommand(info.lastCommand, null);
                     } else {
-                        ui.setOutput(getString(R.string.output_nopermissions));
+                        ui.setOutput(getString(R.string.output_nopermissions), false);
                         main.sendPermissionNotGrantedWarning();
                     }
                     break;
@@ -385,7 +385,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                     break;
                 case COMMAND_SUGGESTION_REQUEST_PERMISSION:
                     if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                        ui.setOutput(getString(R.string.output_nopermissions));
+                        ui.setOutput(getString(R.string.output_nopermissions), false);
                     }
                     break;
             }
@@ -403,14 +403,12 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-//            Log.e("andre", "received");
-
             String pack = intent.getStringExtra("package");
             String title = intent.getStringExtra("title");
             String text = intent.getStringExtra("text");
 
             if(ui != null) {
-                ui.setOutput(pack + ": " + (title == null ? Tuils.EMPTYSTRING : title + (text == null ? Tuils.EMPTYSTRING : " --- ")) + (text == null ? Tuils.EMPTYSTRING : text), intent.getIntExtra("color", Color.RED));
+                ui.setOutput(pack + ": " + (title == null ? Tuils.EMPTYSTRING : title + (text == null ? Tuils.EMPTYSTRING : " --- ")) + (text == null ? Tuils.EMPTYSTRING : text), intent.getIntExtra("color", Color.RED), false);
             }
         }
     };

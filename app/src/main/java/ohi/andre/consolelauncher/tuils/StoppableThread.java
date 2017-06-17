@@ -1,5 +1,7 @@
 package ohi.andre.consolelauncher.tuils;
 
+import android.util.Log;
+
 /**
  * Created by francescoandreuzzi on 27/04/2017.
  */
@@ -12,11 +14,17 @@ public class StoppableThread extends Thread {
     public void interrupt() {
         super.interrupt();
 
-        stopped = true;
+        synchronized (this) {
+            stopped = true;
+        }
     }
 
     @Override
     public boolean isInterrupted() {
-        return stopped || super.isInterrupted();
+        boolean b;
+        synchronized (this) {
+            b = stopped;
+        }
+        return b || super.isInterrupted();
     }
 }

@@ -66,6 +66,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
+    private static XMLPrefsManager.XmlPrefsElement instance = null;
+
     public enum Options implements XMLPrefsManager.XMLPrefsSave {
 
         default_app_n1 {
@@ -108,8 +110,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         }
 
         @Override
-        public XMLPrefsManager.XMLPrefsRoot parent() {
-            return null;
+        public XMLPrefsManager.XmlPrefsElement parent() {
+            return instance;
         }
 
         @Override
@@ -141,6 +143,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     };
 
     public AppsManager(Context context, Outputable outputable) {
+        instance = this;
+
         this.context = context;
         this.outputable = outputable;
 

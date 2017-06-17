@@ -395,7 +395,7 @@ public class XMLPrefsManager {
         show_alias_content {
             @Override
             public String defaultValue() {
-                return "true";
+                return "false";
             }
         },
         show_launch_history {
@@ -465,8 +465,6 @@ public class XMLPrefsManager {
         public List<XMLPrefsSave> copy;
 
         XMLPrefsRoot(String path, XMLPrefsSave[] en) {
-            Log.e("andre", Arrays.toString(en));
-
             this.path = path;
             this.values = new XMLPrefsList();
 
@@ -520,8 +518,14 @@ public class XMLPrefsManager {
         }
 
         public XMLPrefsEntry get(Object o) {
+            if(o instanceof Integer) return at((Integer) o);
+
             for(XMLPrefsEntry e : list) if(e.equals(o)) return e;
             return null;
+        }
+
+        public XMLPrefsEntry at(int index) {
+            return list.get(index);
         }
 
         public int size() {
@@ -655,14 +659,14 @@ public class XMLPrefsManager {
         } catch (Exception e) {}
     }
 
-    public static void set(File file, String rootName, String elementName, String[] attributeNames, String[] attributeValues) {
+    public static String set(File file, String rootName, String elementName, String[] attributeNames, String[] attributeValues) {
         String[][] values = new String[1][attributeValues.length];
         values[0] = attributeValues;
 
-        setMany(file, rootName, new String[] {elementName}, attributeNames, values);
+        return setMany(file, rootName, new String[] {elementName}, attributeNames, values);
     }
 
-    public static void setMany(File file, String rootName, String elementNames[], String[] attributeNames, String[][] attributeValues) {
+    public static String setMany(File file, String rootName, String elementNames[], String[] attributeNames, String[][] attributeValues) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -671,7 +675,7 @@ public class XMLPrefsManager {
             try {
                 d = builder.parse(file);
             } catch (Exception e) {
-                return;
+                return e.toString();
             }
 
             Element root = (Element) d.getElementsByTagName(rootName).item(0);
@@ -687,7 +691,7 @@ public class XMLPrefsManager {
                     for(int c = 0; c < attributeNames.length; c++) e.setAttribute(attributeNames[c], attributeValues[index][c]);
 
                     writeTo(d, file);
-                    return;
+                    return null;
                 }
             }
 
@@ -699,10 +703,42 @@ public class XMLPrefsManager {
             }
 
             writeTo(d, file);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            return e.toString();
+        }
+        return null;
     }
 
-    public static String[] getAttrValues(File file, String rootName, String elementName, String[] attrNames) {
+    public static boolean removeNode(File file, String rootName, String nodeName) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+
+            Document d;
+            try {
+                d = builder.parse(file);
+            } catch (Exception e) {
+                return false;
+            }
+
+            Element root = (Element) d.getElementsByTagName(rootName).item(0);
+            NodeList nodes = root.getElementsByTagName("*");
+
+            for(int count = 0; count < nodes.getLength(); count++) {
+                Node node = nodes.item(count);
+
+                if(node.getNodeName().equalsIgnoreCase(nodeName)) {
+                    root.removeChild(node);
+                    writeTo(d, file);
+                    return true;
+                }
+            }
+        } catch (Exception e) {}
+
+        return false;
+    }
+
+    public static String[] getAttrValues(File file, String rootName, String nodeName, String[] attrNames) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -720,7 +756,7 @@ public class XMLPrefsManager {
             for(int count = 0; count < nodes.getLength(); count++) {
                 Node node = nodes.item(count);
 
-                if(node.getNodeName().equals(elementName)) {
+                if(node.getNodeName().equals(nodeName)) {
                     Element e = (Element) node;
 
                     String[] values = new String[attrNames.length];

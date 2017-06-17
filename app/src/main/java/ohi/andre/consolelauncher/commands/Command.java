@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher.commands;
 
 import android.content.res.Resources;
+import android.util.Log;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
@@ -17,6 +18,9 @@ public class Command {
     public String exec(Resources resources, ExecutePack info) throws Exception {
         info.set(mArgs);
 
+        if(cmd instanceof ParamCommand && mArgs != null && (mArgs.length == 0 || ((ParamCommand) cmd).argsForParam((String) mArgs[0]) == null)) {
+            return info.context.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
+        }
         if (indexNotFound != -1) {
             return cmd.onArgNotFound(info, indexNotFound);
         }
@@ -24,9 +28,6 @@ public class Command {
                 (cmd instanceof ParamCommand && mArgs != null && mArgs.length > 0 && ((ParamCommand) cmd).argsForParam((String) mArgs[0]) != null &&
                         ((ParamCommand) cmd).argsForParam((String) mArgs[0]).length + 1 > nArgs)) {
             return cmd.onNotArgEnough(info, nArgs);
-        }
-        if(cmd instanceof ParamCommand && ((ParamCommand) cmd).argsForParam((String) mArgs[0]) == null) {
-            return info.context.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
         }
         if (cmd.maxArgs() != CommandAbstraction.UNDEFINIED && nArgs > cmd.maxArgs()) {
             return resources.getString(R.string.output_toomanyargs);
