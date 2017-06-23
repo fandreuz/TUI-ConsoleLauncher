@@ -12,7 +12,7 @@
         android:layout_alignParentBottom="true">
         <LinearLayout
             android:id="@+id/suggestions_group"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="@dimen/suggestion_height"
             android:gravity="left|center_vertical"
             android:orientation="horizontal">
@@ -76,7 +76,7 @@
             android:paddingTop="@dimen/input_padding"
 
             android:lines="1"
-            android:singleLine="true" />
+            android:singleLine="true"/>
 
         <ImageButton
             android:id="@+id/submit_tv"
@@ -93,18 +93,33 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
 
-        android:layout_above="@id/input_group">
-        <TextView
-            android:id="@+id/terminal_view"
+        android:layout_above="@id/input_group"
+
+        android:fillViewport="true">
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
 
-            android:gravity="bottom"
-            android:scrollHorizontally="false"
-            android:scrollbars="vertical"
-            android:textIsSelectable="true"/>
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
+
+            <TextView
+                android:id="@+id/terminal_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:scrollHorizontally="false"
+                android:scrollbars="vertical"/>
+
+        </LinearLayout>
+
     </ScrollView>
 
 </RelativeLayout>

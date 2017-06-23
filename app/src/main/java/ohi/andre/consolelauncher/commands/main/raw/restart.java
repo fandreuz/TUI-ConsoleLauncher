@@ -26,7 +26,7 @@ public class restart implements CommandAbstraction {
 
     @Override
     public int[] argType() {
-        return null;
+        return new int[0];
     }
 
     @Override
@@ -35,17 +35,12 @@ public class restart implements CommandAbstraction {
     }
 
     @Override
-    public String[] parameters() {
-        return null;
-    }
-
-    @Override
     public int helpRes() {
         return R.string.help_restart;
     }
 
     @Override
-    public String onArgNotFound(ExecutePack info) {
+    public String onArgNotFound(ExecutePack info, int index) {
         return null;
     }
 

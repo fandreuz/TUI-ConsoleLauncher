@@ -4,8 +4,11 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
+import java.util.Arrays;
 
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
@@ -17,8 +20,10 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.MusicManager;
-import ohi.andre.consolelauncher.managers.PreferencesManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.ShellUtils;
+import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
@@ -89,14 +94,37 @@ public class MainManager {
     private Outputable out;
 
     private boolean showAliasValue;
+    private boolean showAppHistory;
 
-    protected MainManager(LauncherActivity c, Inputable i, Outputable o, PreferencesManager prefsMgr, DevicePolicyManager devicePolicyManager, ComponentName componentName) {
+    private Handler handler = new Handler();
+
+    private Thread thread;
+    private boolean busy = false;
+    private boolean ctrlced = false;
+    private void busy() {
+        busy = true;
+
+//        i do this because i don't want to change the hint every single time (users would complain)
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(busy) in.changeHint(mContext.getString(R.string.busy_hint));
+            }
+        }, 650);
+    }
+    private void notBusy() {
+        busy = false;
+        in.resetHint();
+    }
+
+    protected MainManager(LauncherActivity c, Inputable i, Outputable o, DevicePolicyManager devicePolicyManager, ComponentName componentName) {
         mContext = c;
 
         in = i;
         out = o;
 
-        showAliasValue = Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.SHOW_ALIAS_VALUE));
+        showAliasValue = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_alias_content);
+        showAppHistory = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_launch_history);
 
         CommandGroup group = new CommandGroup(mContext, COMMANDS_PKG);
 
@@ -113,16 +141,29 @@ public class MainManager {
             }
         };
 
-        MusicManager music = new MusicManager(mContext, prefsMgr, out);
+        MusicManager music = new MusicManager(mContext, out);
 
-        AppsManager appsMgr = new AppsManager(c, Boolean.parseBoolean(prefsMgr.getValue(PreferencesManager.COMPARESTRING_APPS)), out);
-        AliasManager aliasManager = new AliasManager(prefsMgr);
+        AppsManager appsMgr = new AppsManager(c, out);
+        AliasManager aliasManager = new AliasManager();
 
-        mainPack = new MainPack(mContext, prefsMgr, group, aliasManager, appsMgr, music, cont, devicePolicyManager, componentName, c, executer, out, redirectator);
+        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, devicePolicyManager, componentName, c, executer, out, redirectator);
     }
 
-    //    command manager
+//    command manager
     public void onCommand(String input, String alias) {
+        if(busy) {
+            if(input.equalsIgnoreCase("ctrlc")) {
+                thread.interrupt();
+
+                ctrlced = true;
+
+                notBusy();
+                return;
+            }
+
+            out.onOutput(mContext.getString(R.string.busy));
+            return;
+        }
 
         input = Tuils.removeUnncesarySpaces(input);
 
@@ -199,42 +240,46 @@ public class MainManager {
         final int COMMAND_NOTFOUND = 127;
 
         @Override
-        public boolean trigger(final ExecutePack info, String input) throws Exception {
+        public boolean trigger(final ExecutePack info, final String input) throws Exception {
 
 //            this is the last trigger, it has to say "command not found"
 
-            boolean su = false;
-            if (CommandTuils.isSuCommand(input)) {
-                su = true;
-                input = input.substring(3);
-                if (input.startsWith(ShellUtils.COMMAND_SU_ADD + Tuils.SPACE)) {
-                    input = input.substring(3);
-                }
-            }
-
             final String cmd = input;
-            final boolean useSU = su;
+            final boolean useSU = false;
 
-            new Thread() {
+            thread = new StoppableThread() {
                 @Override
                 public void run() {
                     super.run();
 
-                    ShellUtils.CommandResult result = ShellUtils.execCommand(cmd, useSU, mainPack.currentDirectory.getAbsolutePath());
-                    if (result.result == COMMAND_NOTFOUND) {
+                    busy();
+
+                    if(Thread.interrupted()) return;
+                    ShellUtils.CommandResult result = ShellUtils.execCommand(new String[] {cmd}, useSU, mainPack.currentDirectory.getAbsolutePath(), out);
+                    if(Thread.interrupted()) return;
+
+                    if(ctrlced) {
+                        ctrlced = false;
+                        return;
+                    }
+
+                    if (result == null || result.result == COMMAND_NOTFOUND || result.result == -1) {
                         out.onOutput(mContext.getString(R.string.output_commandnotfound));
                     } else {
                         String output = result.toString();
                         if(output != null) {
                             output = output.trim();
-                            if(output.length() == 0 ) {
+                            if(output.length() == 0 && result.result > 0) {
                                 output = mainPack.res.getString(R.string.output_commandexitvalue) + Tuils.SPACE + result.result;
                             }
                         }
                         out.onOutput(output);
                     }
+
+                    notBusy();
                 }
-            }.start();
+            };
+            thread.start();
 
             return true;
         }
@@ -254,7 +299,7 @@ public class MainManager {
                 return false;
             }
 
-            out.onOutput("-->" + Tuils.SPACE + intent.getComponent().getClassName());
+            if(showAppHistory) out.onOutput("-->" + Tuils.SPACE + intent.getComponent().getClassName());
 
             mContext.startActivity(intent);
 
@@ -268,10 +313,12 @@ public class MainManager {
         public boolean trigger(final ExecutePack info, final String input) throws Exception {
 
             final boolean[] returnValue = new boolean[1];
-            Thread t = new Thread() {
+            thread = new StoppableThread() {
                 @Override
                 public void run() {
                     super.run();
+
+                    busy();
 
                     Looper.prepare();
 
@@ -286,20 +333,24 @@ public class MainManager {
                         }
 
                         if (returnValue[0]) {
-
+                            if(Thread.interrupted()) return;
                             String output = command.exec(mContext.getResources(), info);
-                            if(output != null) {
+                            if(Thread.interrupted()) return;
+
+                            if(output != null && !ctrlced) {
                                 out.onOutput(output);
                             }
                         }
                     } catch (Exception e) {
-                        Log.e("andre", "", e);
                         out.onOutput(e.toString());
+                        Log.e("andre", "", e);
                     }
+
+                    notBusy();
                 }
             };
 
-            t.start();
+            thread.start();
 
             synchronized (returnValue) {
                 returnValue.wait();

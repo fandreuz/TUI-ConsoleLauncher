@@ -7,15 +7,15 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.PreferencesManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 
 public class refresh implements CommandAbstraction {
 
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
-        info.appsManager.fill(((Activity) info.context).getPreferences(0));
-        info.preferencesManager.refresh(PreferencesManager.ALIAS);
+        info.appsManager.fill();
+//        info.preferencesManager.refresh(XMLPrefsManager.ALIAS);
         info.aliasManager.reload();
         info.player.refresh(info.context);
         info.contacts = new ContactManager(info.context);
@@ -40,7 +40,7 @@ public class refresh implements CommandAbstraction {
 
     @Override
     public int[] argType() {
-        return null;
+        return new int[0];
     }
 
     @Override
@@ -49,17 +49,12 @@ public class refresh implements CommandAbstraction {
     }
 
     @Override
-    public String[] parameters() {
-        return null;
-    }
-
-    @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
         return null;
     }
 
     @Override
-    public String onArgNotFound(ExecutePack info) {
+    public String onArgNotFound(ExecutePack info, int index) {
         return null;
     }
 }

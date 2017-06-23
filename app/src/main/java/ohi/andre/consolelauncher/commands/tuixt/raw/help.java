@@ -10,7 +10,6 @@ import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtPack;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -55,7 +54,7 @@ public class help implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack info) {
+    public String onArgNotFound(ExecutePack info, int index) {
         return onNotArgEnough(info, 0);
     }
 
@@ -76,10 +75,5 @@ public class help implements CommandAbstraction {
         Tuils.insertHeaders(toPrint, true);
 
         return Tuils.toPlanString(toPrint, Tuils.EMPTYSTRING);
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
     }
 }

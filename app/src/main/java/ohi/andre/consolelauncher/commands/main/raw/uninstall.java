@@ -3,8 +3,6 @@ package ohi.andre.consolelauncher.commands.main.raw;
 import android.content.Intent;
 import android.net.Uri;
 
-import java.io.IOException;
-
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
@@ -49,17 +47,12 @@ public class uninstall implements CommandAbstraction {
 
     @Override
     public int[] argType() {
-        return new int[]{CommandAbstraction.PACKAGE};
+        return new int[]{CommandAbstraction.VISIBLE_PACKAGE};
     }
 
     @Override
     public int priority() {
         return 3;
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
     }
 
     @Override
@@ -69,7 +62,7 @@ public class uninstall implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
         return info.res.getString(R.string.output_appnotfound);
     }

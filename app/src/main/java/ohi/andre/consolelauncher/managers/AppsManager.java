@@ -1,52 +1,134 @@
 package ohi.andre.consolelauncher.managers;
 
-import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.Handler;
-import android.util.Log;
+import android.support.annotation.NonNull;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
-public class AppsManager {
+import static ohi.andre.consolelauncher.managers.XMLPrefsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.XMLPrefsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.XMLPrefsManager.set;
+import static ohi.andre.consolelauncher.managers.XMLPrefsManager.writeTo;
+
+public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
     public static final int SHOWN_APPS = 10;
     public static final int HIDDEN_APPS = 11;
 
-    public static final int MIN_RATE = 5;
-    public static final boolean USE_SCROLL_COMPARE = true;
+    public static final boolean USE_SCROLL_COMPARE = false;
 
-    private final int SUGGESTED_APPS_LENGTH = 5;
+    public static final String PATH = "apps.xml";
+    private final String NAME = "APPS";
 
-    private final String APPS_PREFERENCES = "appsPreferences";
+    private final String SHOW_ATTRIBUTE = "show";
 
     private Context context;
-    private SharedPreferences.Editor prefsEditor;
+    private File folder;
 
     private AppsHolder appsHolder;
     private List<AppInfo> hiddenApps;
 
     private Outputable outputable;
 
-    private boolean useCompareString;
+    private final String PREFS = "apps";
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
+
+    private static XMLPrefsManager.XmlPrefsElement instance = null;
+
+    public enum Options implements XMLPrefsManager.XMLPrefsSave {
+
+        default_app_n1 {
+            @Override
+            public String defaultValue() {
+                return MOST_USED;
+            }
+        },
+        default_app_n2 {
+            @Override
+            public String defaultValue() {
+                return MOST_USED;
+            }
+        },
+        default_app_n3 {
+            @Override
+            public String defaultValue() {
+                return "com.android.vending";
+            }
+        },
+        default_app_n4 {
+            @Override
+            public String defaultValue() {
+                return NULL;
+            }
+        },
+        default_app_n5 {
+            @Override
+            public String defaultValue() {
+                return NULL;
+            }
+        };
+
+        static final String MOST_USED = "most_used";
+        static final String NULL = "null";
+
+        @Override
+        public String label() {
+            return name();
+        }
+
+        @Override
+        public XMLPrefsManager.XmlPrefsElement parent() {
+            return instance;
+        }
+
+        @Override
+        public boolean is(String s) {
+            return name().equals(s);
+        }
+    }
+
+    @Override
+    public void write(XMLPrefsManager.XMLPrefsSave save, String value) {
+        set(new File(Tuils.getFolder(), PATH), NAME, save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
+    }
+
+    @Override
+    public XMLPrefsManager.XMLPrefsList getValues() {
+        return null;
+    }
 
     private BroadcastReceiver appsBroadcast = new BroadcastReceiver() {
         @Override
@@ -60,15 +142,18 @@ public class AppsManager {
         }
     };
 
-    public AppsManager(Context context, boolean useCompareString, Outputable outputable) {
-        this.context = context;
-        this.useCompareString = useCompareString;
+    public AppsManager(Context context, Outputable outputable) {
+        instance = this;
 
+        this.context = context;
         this.outputable = outputable;
 
-        SharedPreferences preferences = context.getSharedPreferences(APPS_PREFERENCES, Context.MODE_PRIVATE);
-        prefsEditor = preferences.edit();
-        fill(preferences);
+        this.preferences = context.getSharedPreferences(PREFS, 0);
+        this.editor = preferences.edit();
+
+        this.folder = Tuils.getFolder();
+
+        fill();
 
         initAppListener(context);
     }
@@ -82,37 +167,79 @@ public class AppsManager {
         c.registerReceiver(appsBroadcast, intentFilter);
     }
 
-    public void fill(SharedPreferences preferences) {
+    public void fill() {
         Map<String, AppInfo> map = createAppMap(context.getPackageManager());
         List<AppInfo> shownApps = new ArrayList<>();
         hiddenApps = new ArrayList<>();
 
-        Map<String, ?> values;
-        try {
-            values = preferences.getAll();
-        } catch (Exception e) {
-            for(Map.Entry<String, AppInfo> entry : map.entrySet()) {
-                shownApps.add(entry.getValue());
-            }
-            appsHolder = new AppsHolder(shownApps);
-            return;
-        }
+        XMLPrefsManager.XMLPrefsList values = new XMLPrefsManager.XMLPrefsList();
 
-        for(Map.Entry<String, ?> entry : values.entrySet()) {
-            if(entry.getValue() instanceof Boolean) {
-                if((Boolean) entry.getValue()) {
-                    AppInfo info = map.get(entry.getKey());
-                    hiddenApps.add(info);
-                    map.remove(entry.getKey());
-                }
-            } else {
-                AppInfo info = map.get(entry.getKey());
-                if(info == null) {
-                    continue;
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+
+            File file = new File(folder, PATH);
+            if(!file.exists() && !file.createNewFile()) return;
+
+            Document d;
+            try {
+                d = builder.parse(file);
+            } catch (Exception e) {
+                resetFile(file, NAME);
+                d = builder.parse(file);
+            }
+
+            List<AppsManager.Options> enums = new ArrayList<>(Arrays.asList(AppsManager.Options.values()));
+
+            Element root = (Element) d.getElementsByTagName(NAME).item(0);
+            if(root == null) {
+                resetFile(file, NAME);
+
+                d = builder.parse(file);
+                root = (Element) d.getElementsByTagName(NAME).item(0);
+            }
+
+            NodeList nodes = root.getElementsByTagName("*");
+            for(int count = 0; count < nodes.getLength(); count++) {
+                Node node = nodes.item(count);
+
+                String nn = node.getNodeName();
+                int nodeIndex = Tuils.find(nn, (List) enums);
+                if(nodeIndex != -1) {
+                    values.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
+
+                    for(int en = 0; en < enums.size(); en++) {
+                        if(enums.get(en).label().equals(nn)) {
+                            enums.remove(en);
+                            break;
+                        }
+                    }
                 } else {
-                    info.launchedTimes = (Integer) entry.getValue();
+                    if(node.getNodeType() == Node.ELEMENT_NODE) {
+                        Element e = (Element) node;
+
+                        boolean shown = !e.hasAttribute(SHOW_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(SHOW_ATTRIBUTE));
+                        if(!shown) {
+                            hiddenApps.add(map.remove(nn));
+                        }
+                    }
                 }
             }
+
+            if(enums.size() > 0) {
+                for(XMLPrefsManager.XMLPrefsSave s : enums) {
+                    Element em = d.createElement(s.label());
+                    em.setAttribute(VALUE_ATTRIBUTE, s.defaultValue());
+                    root.appendChild(em);
+
+                    values.add(s.label(), s.defaultValue());
+                }
+                writeTo(d, file);
+            }
+        } catch (Exception e) {}
+
+        for(Map.Entry<String, ?> entry : this.preferences.getAll().entrySet()) {
+            if (entry.getValue() instanceof Integer) map.get(entry.getKey()).launchedTimes = (Integer) entry.getValue();
         }
 
         for (Map.Entry<String, AppInfo> stringAppInfoEntry : map.entrySet()) {
@@ -120,20 +247,46 @@ public class AppsManager {
             shownApps.add(app);
         }
 
-        appsHolder = new AppsHolder(shownApps);
+        appsHolder = new AppsHolder(shownApps, values);
         AppUtils.checkEquality(hiddenApps);
     }
 
     private Map<String, AppInfo> createAppMap(PackageManager mgr) {
         Map<String, AppInfo> map = new HashMap<>();
 
-        Intent i = new Intent(Intent.ACTION_MAIN, null);
-        i.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> infos = mgr.queryIntentActivities(i, 0);
+//        Intent i = new Intent(Intent.ACTION_MAIN, null);
+//        i.addCategory(Intent.CATEGORY_LAUNCHER);
+//        List<ResolveInfo> infos = mgr.queryIntentActivities(i, 0);
+//
+//        for (ResolveInfo info : infos) {
+//            AppInfo app = new AppInfo(info.activityInfo.packageName, info.loadLabel(mgr).toString());
+//            map.put(info.activityInfo.packageName, app);
+//        }
+//
+//        return map;
 
-        for (ResolveInfo info : infos) {
-            AppInfo app = new AppInfo(info.activityInfo.packageName, info.loadLabel(mgr).toString());
-            map.put(info.activityInfo.packageName, app);
+        for(ApplicationInfo info : mgr.getInstalledApplications(0)){
+            Intent intent = new Intent();
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            intent.setAction(Intent.ACTION_MAIN);
+            intent.setPackage(info.packageName);
+            List<ResolveInfo> list = mgr.queryIntentActivities(intent, 0);
+
+            for(ResolveInfo rInfo:list) {
+                ActivityInfo activity = rInfo.activityInfo;
+
+                Intent i = new Intent();
+                i.addCategory(Intent.CATEGORY_LAUNCHER);
+                i.setAction(Intent.ACTION_MAIN);
+                i.setPackage(activity.packageName);
+                i.setComponent(new ComponentName(activity.packageName, activity.name));
+                ResolveInfo in = mgr.resolveActivity(i, 0);
+
+                ActivityInfo aInfo = in.activityInfo;
+
+                AppInfo app = new AppInfo(aInfo.packageName, aInfo.loadLabel(mgr).toString());
+                map.put(aInfo.packageName, app);
+            }
         }
 
         return map;
@@ -182,29 +335,29 @@ public class AppsManager {
     }
 
     public String findPackage(List<AppInfo> appList, List<String> labels, String name) {
-        name = Compare.removeSpaces(name).toLowerCase();
-        if(labels == null) {
-            labels = AppUtils.labelList(appList);
-        }
+        name = Compare.removeSpaces(name);
+//        if(labels == null) {
+//            labels = AppUtils.labelList(appList);
+//        }
 
-        if(useCompareString) {
-            String label = Compare.similarString(labels, name, MIN_RATE, USE_SCROLL_COMPARE);
-            if (label == null) {
-                return null;
-            }
-
+//        if(useCompareString) {
+//            String label = Compare.similarString(labels, name, MIN_RATE, USE_SCROLL_COMPARE);
+//            if (label == null) {
+//                return null;
+//            }
+//
+//            for(AppInfo info : appList) {
+//                if (info.publicLabel.equals(name)) {
+//                    return info.packageName;
+//                }
+//            }
+//        } else {
             for(AppInfo info : appList) {
-                if (info.publicLabel.equals(name)) {
+                if(name.equalsIgnoreCase(Compare.removeSpaces(Compare.removeSpaces(info.publicLabel)))) {
                     return info.packageName;
                 }
             }
-        } else {
-            for(AppInfo info : appList) {
-                if(name.equals(Compare.removeSpaces(info.publicLabel.toLowerCase()))) {
-                    return info.packageName;
-                }
-            }
-        }
+//        }
 
         return null;
     }
@@ -216,13 +369,13 @@ public class AppsManager {
         }
 
         info.launchedTimes++;
-        appsHolder.updateSuggestion(info);
+        appsHolder.requestSuggestionUpdate(info);
 
-        prefsEditor.putInt(packageName, info.launchedTimes);
+        editor.putInt(packageName, info.launchedTimes);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            applyPrefs();
+            editor.apply();
         } else {
-            prefsEditor.commit();
+            editor.commit();
         }
 
         return context.getPackageManager().getLaunchIntentForPackage(packageName);
@@ -234,17 +387,12 @@ public class AppsManager {
             return null;
         }
 
+        set(new File(folder, PATH), NAME, info.packageName, new String[] {SHOW_ATTRIBUTE}, new String[] {false + Tuils.EMPTYSTRING});
+
         appsHolder.remove(info);
         appsHolder.update(true);
         hiddenApps.add(info);
         AppUtils.checkEquality(hiddenApps);
-
-        prefsEditor.putBoolean(packageName, true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            applyPrefs();
-        } else {
-            prefsEditor.commit();
-        }
 
         return info.publicLabel;
     }
@@ -255,16 +403,11 @@ public class AppsManager {
             return null;
         }
 
+        set(new File(folder, PATH), NAME, info.packageName, new String[] {SHOW_ATTRIBUTE}, new String[] {true + Tuils.EMPTYSTRING});
+
         hiddenApps.remove(info);
         appsHolder.add(info);
         appsHolder.update(false);
-
-        prefsEditor.putBoolean(packageName, false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            applyPrefs();
-        } else {
-            prefsEditor.commit();
-        }
 
         return info.publicLabel;
     }
@@ -278,6 +421,7 @@ public class AppsManager {
     }
 
     public String[] getSuggestedApps() {
+        if(appsHolder == null) return new String[0];
         return appsHolder.getSuggestedApps();
     }
 
@@ -292,11 +436,6 @@ public class AppsManager {
 
     public void onDestroy() {
         unregisterReceiver(context);
-    }
-
-    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
-    private void applyPrefs() {
-        prefsEditor.apply();
     }
 
     public static class AppInfo {
@@ -324,10 +463,8 @@ public class AppsManager {
 
             if(o instanceof AppInfo) {
                 AppInfo i = (AppInfo) o;
-                return this.packageName.equals(i.packageName);
-            } else if(o instanceof String) {
-                return this.packageName.equals(o);
-            }
+                return (this.packageName == null && i.packageName == null) || (this.packageName != null && i.packageName != null && this.packageName.equals(i.packageName));
+            } else if(o instanceof String) return this.packageName != null && this.packageName.equals(o);
             return false;
         }
 
@@ -344,9 +481,192 @@ public class AppsManager {
 
     private class AppsHolder {
 
+        int MOST_USED = 10, NULL = 11, USER_DEFINIED = 12;
+
         private List<AppInfo> infos;
         private List<String> appLabels;
-        private AppInfo[] suggestedApps = new AppInfo[SUGGESTED_APPS_LENGTH];
+        private XMLPrefsManager.XMLPrefsList values;
+
+        private SuggestedAppMgr suggestedAppMgr;
+
+        private class SuggestedAppMgr {
+            private List<SuggestedApp> suggested;
+            private int lastWriteable = -1;
+
+            public SuggestedAppMgr(XMLPrefsManager.XMLPrefsList values) {
+                suggested = new ArrayList<>();
+
+                final String PREFIX = "default_app_n";
+                for(int count = 0; count < Options.values().length; count++) {
+                    String vl = values.get(Options.valueOf(PREFIX + (count + 1))).value;
+
+                    if(vl.equals(Options.NULL)) suggested.add(new SuggestedApp(NULL));
+                    if(vl.equals(Options.MOST_USED)) suggested.add(new SuggestedApp(MOST_USED));
+                    else {
+                        AppInfo info = AppUtils.findAppInfo(vl, infos);
+                        if(info == null) suggested.add(new SuggestedApp(NULL));
+                        else suggested.add(new SuggestedApp(info, USER_DEFINIED));
+                    }
+                }
+
+                sort();
+
+                handler.postDelayed(runnable, 1000 * 60 * 5);
+            }
+
+            public int size() {
+                return suggested.size();
+            }
+
+            private void sort() {
+                Collections.sort(suggested);
+                for(int count = 0; count < suggested.size(); count++) {
+                    if(suggested.get(count).type != MOST_USED) {
+                        lastWriteable = count - 1;
+                        return;
+                    }
+                }
+            }
+
+            public SuggestedApp get(int index) {
+                return suggested.get(index);
+            }
+
+            public void set(int index, AppInfo info) {
+                suggested.get(index).change(info);
+            }
+
+            public int indexOf(AppInfo info) {
+                return suggested.indexOf(info);
+            }
+
+            private void remove(int index) {
+                suggested.remove(index);
+            }
+
+            public void attemptInsertSuggestion(AppInfo info) {
+                if (info.launchedTimes == 0) {
+                    return;
+                }
+
+                if(lastWriteable == -1) return;
+
+                int index = indexOf(info);
+                if (index == -1) {
+                    for (int count = 0; count <= lastWriteable; count++) {
+                        SuggestedApp app = get(count);
+                        if (app.app == null || info.launchedTimes > app.app.launchedTimes) {
+                            this.remove(lastWriteable);
+                            SuggestedApp s = suggested.remove(0);
+                            s.change(info);
+                            suggested.add(0, s);
+                        }
+                    }
+                }
+                sort();
+            }
+
+//            public void updateSuggestion(AppInfo info) {
+//                int index = indexOf(info);
+//
+//                if(index == -1) {
+//                    attemptInsertSuggestion(info);
+//                } else if(index == 0) {
+//                    return;
+//                } else {
+//                    for(int count = 0; count < index; count++) {
+//                        if(get(count).type == NULL ) {
+//                            if(count == lastNull()) {
+//                                suggestedApps[count] = info;
+//                                return;
+//                            }
+//                        } else if(suggestedApps[count].launchedTimes < info.launchedTimes) {
+//
+//                            System.arraycopy(suggestedApps, count, suggestedApps, count + 1, index - count);
+//                            suggestedApps[count] = info;
+//
+//                            return;
+//                        }
+//                    }
+//                }
+//            }
+
+            public List<String> labels() {
+                List<AppInfo> list = new ArrayList<>();
+                for(int count = 0; count < suggested.size(); count++) {
+                    SuggestedApp app = suggested.get(count);
+                    if(app.type != NULL && app.app != null) list.add(app.app);
+                }
+                return AppUtils.labelList(list);
+            }
+
+            private Handler handler = new Handler();
+            private Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    if(duplicates()) {
+                        fillSuggestions();
+                    }
+                    handler.postDelayed(runnable, 1000 * 60 * 2);
+                }
+
+                private boolean duplicates() {
+                    for (int count =0; count < size(); count++)
+                        for (int count2 = count+1 ; count2 < size(); count2++)
+                            if (count != count2 && get(count) == get(count2))
+                                return true;
+                    return false;
+                }
+            };
+
+            private class SuggestedApp implements Comparable {
+                int type;
+                AppInfo app;
+
+                public SuggestedApp(int type) {
+                    this(null, type);
+                }
+
+                public SuggestedApp(AppInfo info, int type) {
+                    this.app = info;
+                    this.type = type;
+                }
+
+                public SuggestedApp change(AppInfo info) {
+                    this.app = info;
+                    return this;
+                }
+
+                @Override
+                public boolean equals(Object o) {
+                    return this.app != null && o instanceof SuggestedApp && ((SuggestedApp) o).app != null && this.app.equals(((SuggestedApp) o).app);
+                }
+
+                @Override
+                public int compareTo(@NonNull Object o) {
+                    SuggestedApp other = (SuggestedApp) o;
+                    if(this.type == NULL || other.type == NULL) {
+                        if(this.type == NULL && other.type == NULL) return 0;
+                        if(this.type == NULL) return 1;
+                        return -1;
+                    }
+
+                    if(this.type == USER_DEFINIED || other.type == USER_DEFINIED) {
+                        if(this.type == USER_DEFINIED && other.type == USER_DEFINIED) return other.app.launchedTimes - this.app.launchedTimes;
+                        if(this.type == USER_DEFINIED) return 1;
+                        return -1;
+                    }
+
+//                    most_used
+                    if(this.app == null || other.app == null) {
+                        if(this.app == null && other.app == null) return 0;
+                        if(this.app == null) return -1;
+                        return 1;
+                    }
+                    return other.app.launchedTimes - this.app.launchedTimes;
+                }
+            }
+        }
 
         Comparator<AppInfo> mostUsedComparator = new Comparator<AppInfo>() {
             @Override
@@ -355,33 +675,10 @@ public class AppsManager {
             }
         };
 
-//        workaround to check if in suggested apps there are duplicates
-        private Handler handler = new Handler();
-        private Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if(suggestedApps != null) {
-                    if(duplicates()) {
-                        fillSuggestions();
-                    }
-                }
-                handler.postDelayed(runnable, 1000 * 60 * 2);
-            }
-
-            private boolean duplicates() {
-                for (int count =0; count < suggestedApps.length; count++)
-                    for (int count2 = count+1 ; count2 < suggestedApps.length; count2++)
-                        if (count != count2 && suggestedApps[count] == suggestedApps[count2])
-                            return true;
-                return false;
-            }
-        };
-
-        public AppsHolder(List<AppInfo> infos) {
+        public AppsHolder(List<AppInfo> infos, XMLPrefsManager.XMLPrefsList values) {
             this.infos = infos;
+            this.values = values;
             update(true);
-
-            handler.postDelayed(runnable, 1000 * 60 * 5);
         }
 
         public void add(AppInfo info) {
@@ -396,40 +693,6 @@ public class AppsManager {
             update(true);
         }
 
-        public void updateSuggestion(AppInfo info) {
-            int index = suggestionIndex(info);
-
-            if(index == -1) {
-                attemptInsertSuggestion(info);
-            } else if(index == 0) {
-                return;
-            } else {
-                for(int count = 0; count < index; count++) {
-                    if(suggestedApps[count] == null) {
-                        if(count == lastNull()) {
-                            suggestedApps[count] = info;
-                            return;
-                        }
-                    } else if(suggestedApps[count].launchedTimes < info.launchedTimes) {
-
-                        System.arraycopy(suggestedApps, count, suggestedApps, count + 1, index - count);
-                        suggestedApps[count] = info;
-
-                        return;
-                    }
-                }
-            }
-        }
-
-        private int suggestionIndex(AppInfo app) {
-            for(int count = 0; count < suggestedApps.length; count++) {
-                if(app.equals(suggestedApps[count])) {
-                    return count;
-                }
-            }
-            return -1;
-        }
-
         private void sort() {
             try {
                 Collections.sort(infos, mostUsedComparator);
@@ -441,38 +704,24 @@ public class AppsManager {
         }
 
         private void fillSuggestions() {
-            suggestedApps = new AppInfo[SUGGESTED_APPS_LENGTH];
+            suggestedAppMgr = new SuggestedAppMgr(values);
             for(AppInfo info : infos) {
-                attemptInsertSuggestion(info);
+                suggestedAppMgr.attemptInsertSuggestion(info);
             }
         }
 
-        private void attemptInsertSuggestion(AppInfo info) {
-            if(info.launchedTimes == 0){
-                return;
-            }
-            for(int count = 0; count < suggestedApps.length; count++) {
-                if(suggestedApps[count] == null) {
-                    suggestedApps[count] = info;
-                    return;
-                } else {
-                    if(info.launchedTimes > suggestedApps[count].launchedTimes) {
-                        System.arraycopy(suggestedApps, count, suggestedApps, count + 1, suggestedApps.length - (count + 1));
-                        suggestedApps[count] = info;
-                        return;
-                    }
-                }
-            }
+        public void requestSuggestionUpdate(AppInfo info) {
+            suggestedAppMgr.attemptInsertSuggestion(info);
         }
 
-        private int lastNull() {
-            for(int count = suggestedApps.length - 1; count >= 0; count--) {
-                if(suggestedApps[count] == null) {
-                    return count;
-                }
-            }
-            return -1;
-        }
+//        private int lastNull() {
+//            for(int count = suggestedApps.length - 1; count >= 0; count--) {
+//                if(suggestedApps[count] == null) {
+//                    return count;
+//                }
+//            }
+//            return -1;
+//        }
 
         private void update(boolean refreshSuggestions) {
             AppUtils.checkEquality(infos);
@@ -492,9 +741,9 @@ public class AppsManager {
         }
 
         public String[] getSuggestedApps() {
-            return AppUtils.labelList(suggestedApps);
+            List<String> ls = suggestedAppMgr.labels();
+            return ls.toArray(new String[ls.size()]);
         }
-
     }
 
     private static class AppUtils {

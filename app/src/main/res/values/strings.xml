@@ -2,6 +2,7 @@
 
     <!-- various text -->
     <string name="app_name">T-UI</string>
+    <string name="notification_reader">Notification Reader</string>
     <string name="separator_text">>></string>
     <string name="separator_text_su">$</string>
     <string name="su">T-UI got SU permission</string>
@@ -9,6 +10,11 @@
     <string name="permissions_toast">You have to grant Storage permission</string>
     <string name="version_label">Version:</string>
     <string name="output_error">An unknown error has occurred</string>
+    <string name="location_off">Turn on GPS or network location</string>
+
+    <!-- busy -->
+    <string name="busy">T-UI is busy, wait until the execution finishes or use the command \"ctrlc\"</string>
+    <string name="busy_hint">type \"ctrlc\" to stop</string>
 
     <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.\n\nYou can disable this message in >>tuisettings</string>
 
@@ -31,6 +37,10 @@
     <string name="output_waitingpermission">Waiting permission</string>
     <string name="output_invalidcalc">calc encountered this error:</string>
     <string name="output_problemcamera">There was a problem while connecting to your device camera</string>
+    <string name="output_numberformat">Wrong number format</string>
+    <string name="output_invalidarg">Invalid argument</string>
+    <string name="output_lessarg">Less arguments than expected</string>
+    <string name="output_aliasnotfound">Alias not found:</string>
 
     <!-- tuixt -->
     <string name="help_tuixt_help">Print the list of commands, or info about a command
@@ -78,7 +88,7 @@
     <!-- command/args -->
     <string name="output_commandnotfound">Command not found.\nTry to use \">>help\" or \">>tutorial\"</string>
     <string name="output_toomanyargs">More arguments than expected</string>
-    <string name="output_invalid_param">Invalid parameter</string>
+    <string name="output_invalid_param">Invalid option:</string>
     <string name="output_commandexitvalue">Command returned </string>
 
     <!-- flash -->
@@ -116,32 +126,30 @@
     <string name="output_smssent">SMS sent</string>
 
 
-    <string name="help_about">Informations about the app</string>
     <string name="help_airplane">Toggle Airplane Mode</string>
-    <string name="help_aliases">Print alias that are currently saved in \"sdcard\"/t-ui/alias.txt</string>
-    <string name="help_aliasfile">Open alias.txt</string>
+    <string name="help_aliases">Manager your aliases
+        \n\nUsage:
+        \n-add -> add a new alias
+        \n-rm -> remove an existing alias
+        \n-ls -> list your aliases
+        \n-file -> open alias.xml
+        \n\nExample:
+        \n>>alias -add bip echo beeeeeep
+        \n>>alias -rm bip</string>
     <string name="help_apps">Manage your apps
         \n\nUsage:
         \n>>apps [option] [app name]
-        \n\n[option] can be:
-        \n-sh -> show hidden apps
-        \n-ps [app name] -> show Google Play Store page for this app
-        \n-st [app name] -> show Settings details for this app
-        \n-f [app name] -> force t-ui to open this app
+        \n\n-lshidden -> show hidden apps
+        \n-show -> show an hidden application
+        \n-hide -> hide an application
+        \n-ps -> show Google Play Store page for this app
+        \n-st -> show Settings details for this app
+        \n-frc -> force t-ui to open this app
+        \n-file -> open apps.xml
         \nno option -> list your apps
         \n\nExample:
         \n>>apps -st T-UI
     </string>
-    <string name="help_appshide">Hide an app
-        \n\nUsage:
-        \n>>apps_hide [app]
-        \n\nExample:
-        \n>>apps_hide Settings</string>
-    <string name="help_appsunhide">Unhide an hidden app
-        \n\nUsage:
-        \n>>apps_unhide [app]
-        \n\nExample:
-        \n>>apps_unhide Settings</string>
     <string name="help_bluetooth">Toggle Bluetooth</string>
     <string name="help_clear">Clear the screen</string>
     <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
@@ -160,6 +168,14 @@
         \n\n>>call James
     </string>
     <string name="help_contacts">Print your contacts</string>
+    <string name="help_config">Manage your config files.
+        \nUsage:
+        \n>>config [option] [file OR config_entry] [*value]
+        \n\n-set -> set the value of a config node
+        \n-open -> open a config file
+        \n\nExample:
+        \n>>config -set bg_color #ff0000aa
+        \n>>config -open suggestions.xml</string>
     <string name="help_cp">Copy one or more files to a folder
         \nUsage:
         \n>>[su] cp [files] [folder]
@@ -188,9 +204,6 @@
     <string name="help_previous">Play the last track played</string>
     <string name="help_rate">Help T-UI with a positive rate (or negative, I don\'t know)\t;)</string>
     <string name="help_refresh">Refresh apps and alias</string>
-    <string name="help_remove">Uninstall t-ui automatically.
-        \n\nMake sure you have another Launcher!
-    </string>
     <string name="help_restart">Restart t-ui and load modified values</string>
     <string name="help_rm">Remove a file:
         \nUsage:
@@ -202,8 +215,7 @@
     <string name="help_search">Search something somewhere
         \nUsage:
         \nsearch [option] something
-        \n\n[option] can be:
-        \n-g -> (Google Search)
+        \n\n-g -> (Google Search)
         \n-p -> (Google Play Store)
         \n-f -> (Files)
         \n-y -> (YouTube)
@@ -238,11 +250,14 @@
     </string>
     <string name="help_track">Print informations about the current track</string>
     <string name="help_tracks">Print all of the tracks in your music folder</string>
-    <string name="help_tuisettings">Open t-ui settings file</string>
-    <string name="help_tuixt">Open tuixt, the T-UI text editor.
+    <string name="help_tuixt">Open the text editor.
         \nUsage:
         \n>>tuixt [text file]
     </string>
+    <string name="help_tui">Usage:
+        \nt>>tui [option]
+        \n\n-rm -> remove t-ui
+        \n-about -> show info about the developer and the current version</string>
     <string name="help_tutorial">Go to T-UI tutorial page</string>
     <string name="help_uninstall">Uninstall an application
         \nUsage:
@@ -251,6 +266,44 @@
         \n>>uninstall dropbox
     </string>
     <string name="help_wifi">Toggle wifi</string>
+    <string name="help_sms">Send an SMS.
+        \nUsage:
+        \n>>sms [contact name] OR [phone number] {newline}
+        \n>>[text]
+        \n\nExample:
+        \n>>sms John Smith
+        \n>>Hi John, I need to talk you about T-UI, it\'s a fantastic launcher!</string>
+    <string name="help_vibrate">Vibrates your device.
+        \nUsage:
+        \n>>vibrate [ms]
+        \n\nExample:
+        \n\nvibrate 2000</string>
+    <string name="help_beep">Emits a beep.
+        \nUsage:
+        \n>>beep</string>
+    <string name="help_notifications">Manage your notifications.
+        \nUsage:
+        \nnotifications [option] [appName] [*optional* color]
+        \n\n-inc -> include an application
+        \n-exc -> exclude an appliation
+        \n-clr -> set the color to be used for the application
+        \n-file -> open notifications.xml
+        \n\nExample:
+        \n\nnotifications -inc Clock
+        \nnotifications -clr Settings #FF0000</string>
+    <string name="help_location">Show the current location</string>
+    <string name="help_cntcts">Manage your contacts.
+        \nUsage:
+        \ncntcts [option] [*optional* contact]
+        \n\n-ls -> list your contacts
+        \n-show -> show details about a contact
+        \n-new -> create a new contact
+        \n-edit -> edit an existing contact
+        \n-rm -> remove a contact
+        \n\nExample:
+        \n\ncntcts -edit James Pike
+        \ncntcts -new</string>
+    <string name="help_exit">Close T-UI and reset launcher preferences</string>
 
     <!-- linux -->
     <string name="help_cd">Change the current directory
@@ -271,13 +324,6 @@
         \n\nExample:
         \n>>ls Downloads
     </string>
-    <string name="help_sms">Send an SMS.
-        \nUsage:
-        \n>>sms [contact name] OR [phone number] {newline}
-        \n>>[text]
-        \n\nExample:
-        \n>>sms John Smith
-        \n>>Hi John, I need to talk you about T-UI, it\'s a fantastic launcher!</string>
 
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>

@@ -7,15 +7,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.telephony.SmsManager;
 
-import java.util.List;
-
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
-import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by francescoandreuzzi on 02/03/2017.
@@ -70,27 +67,13 @@ public class sms extends RedirectCommand {
 
     @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
-        MainPack pack = (MainPack) info;
-        if (ContextCompat.checkSelfPermission(pack.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) pack.context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
-            return pack.context.getString(R.string.output_waitingpermission);
-        }
-
-        List<String> contacts = pack.contacts.listNamesAndNumbers();
-        Tuils.addPrefix(contacts, Tuils.DOUBLE_SPACE);
-        Tuils.insertHeaders(contacts, false);
-        return Tuils.toPlanString(contacts);
+        return info.context.getString(helpRes());
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
         return info.res.getString(R.string.output_numbernotfound);
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
     }
 
     @Override

@@ -16,49 +16,115 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.main.Param;
+import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
-public class search implements CommandAbstraction {
+import static ohi.andre.consolelauncher.managers.FileManager.MIN_FILE_RATE;
 
-    private final String YOUTUBE_PREFIX = "https://www.youtube.com/results?search_query=";
-    private final String GOOGLE_PREFIX = "http://www.google.com/#q=";
-    private final String PLAYSTORE_PREFIX = "market://search?q=";
-    private final String PLAYSTORE_BROWSER_PREFIX = "https://play.google.com/store/search?q=";
+public class search extends ParamCommand {
 
-    private final String PLAYSTORE_PARAM = "-p";
-    private final String FILE_PARAM = "-f";
-    private final String GOOGLE_PARAM = "-g";
-    private final String YOUTUBE_PARAM = "-y";
-    private final String URL_PARAM = "-u";
+    private static final String YOUTUBE_PREFIX = "https://www.youtube.com/results?search_query=";
+    private static final String GOOGLE_PREFIX = "http://www.google.com/#q=";
+    private static final String PLAYSTORE_PREFIX = "market://search?q=";
+    private static final String PLAYSTORE_BROWSER_PREFIX = "https://play.google.com/store/search?q=";
+    private static final String DUCKDUCKGO_PREFIX = "https://duckduckgo.com/?q=";
 
-    private final int MIN_FILE_RATE = 4;
+    private enum Param implements ohi.andre.consolelauncher.commands.main.Param {
 
-    @Override
-    public String exec(ExecutePack pack) {
-        MainPack info = (MainPack) pack;
+        ps {
+            @Override
+            public String exec(ExecutePack pack) {
+                List<String> args = pack.get(ArrayList.class, 1);
+                return playstore(args, pack.context);
+            }
+        },
+        file {
+            @Override
+            public String exec(ExecutePack pack) {
+                List<String> args = pack.get(ArrayList.class, 1);
+                MainPack p = ((MainPack) pack);
+                return file(args, p.currentDirectory, p.res, p.outputable);
+            }
+        },
+        gg {
+            @Override
+            public String exec(ExecutePack pack) {
+                List<String> args = pack.get(ArrayList.class, 1);
+                return google(args, pack.context);
+            }
+        },
+        yt {
+            @Override
+            public String exec(ExecutePack pack) {
+                List<String> args = pack.get(ArrayList.class, 1);
+                return youTube(args, pack.context);
+            }
+        },
+        u {
+            @Override
+            public String exec(ExecutePack pack) {
+                List<String> args = pack.get(ArrayList.class, 1);
+                return url(Tuils.toPlanString(args, Tuils.SPACE), pack.context);
+            }
+        },
+        dd {
+            @Override
+            public String exec(ExecutePack pack) {
+                List<String> args = pack.get(ArrayList.class, 1);
+                return duckDuck(args, pack.context);
+            }
+        };
 
-        List<String> args = info.get(ArrayList.class, 1);
-        String param = info.get(String.class, 0);
+        @Override
+        public int[] args() {
+            return new int[] {CommandAbstraction.TEXTLIST};
+        }
 
-        switch (param) {
-            case PLAYSTORE_PARAM:
-                return playstore(args, info.context);
-            case YOUTUBE_PARAM:
-                return youTube(args, info.context);
-            case FILE_PARAM:
-                return file(args, info.currentDirectory, info.res, info.outputable);
-            case GOOGLE_PARAM:
-                return google(args, info.context);
-            case URL_PARAM:
-                return url(args.get(0), info.context);
-            default:
-                return info.res.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
+        static Param get(String p) {
+            p = p.toLowerCase();
+            Param[] ps = values();
+            for (Param p1 : ps)
+                if (p.endsWith(p1.label()))
+                    return p1;
+            return null;
+        }
+
+        static String[] labels() {
+            Param[] ps = values();
+            String[] ss = new String[ps.length];
+
+            for (int count = 0; count < ps.length; count++) {
+                ss[count] = ps[count].label();
+            }
+
+            return ss;
+        }
+
+        @Override
+        public String label() {
+            return Tuils.MINUS + name();
         }
     }
 
-    private String google(List<String> args, Context c) {
+    @Override
+    protected ohi.andre.consolelauncher.commands.main.Param paramForString(String param) {
+        return Param.get(param);
+    }
+
+    @Override
+    protected String doThings(ExecutePack pack) {
+        return null;
+    }
+
+    @Override
+    public String[] params() {
+        return Param.labels();
+    }
+
+    private static String google(List<String> args, Context c) {
         String toSearch = Tuils.toPlanString(args, "+");
 
         Uri uri = Uri.parse(GOOGLE_PREFIX + toSearch);
@@ -68,7 +134,7 @@ public class search implements CommandAbstraction {
         return Tuils.EMPTYSTRING;
     }
 
-    private String playstore(List<String> args, Context c) {
+    private static String playstore(List<String> args, Context c) {
         String toSearch = Tuils.toPlanString(args, "%20");
 
         try {
@@ -80,7 +146,7 @@ public class search implements CommandAbstraction {
         return Tuils.EMPTYSTRING;
     }
 
-    private String url(String url, Context c) {
+    private static String url(String url, Context c) {
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             url = "http://" + url;
         }
@@ -92,7 +158,17 @@ public class search implements CommandAbstraction {
         return Tuils.EMPTYSTRING;
     }
 
-    private String file(final List<String> args, final File cd, final Resources res, final Outputable outputable) {
+    private static String duckDuck(List<String> args, Context c) {
+        String toSearch = Tuils.toPlanString(args, "+");
+
+        Uri uri = Uri.parse(DUCKDUCKGO_PREFIX + toSearch);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        c.startActivity(intent);
+
+        return Tuils.EMPTYSTRING;
+    }
+
+    private static String file(final List<String> args, final File cd, final Resources res, final Outputable outputable) {
         new Thread() {
             @Override
             public void run() {
@@ -111,7 +187,7 @@ public class search implements CommandAbstraction {
         return Tuils.EMPTYSTRING;
     }
 
-    private List<String> rightPaths(File dir, String name, boolean scrollCompare) {
+    private static List<String> rightPaths(File dir, String name, boolean scrollCompare) {
         File[] files = dir.listFiles();
         List<String> rightPaths = new ArrayList<>(files.length);
 
@@ -130,7 +206,7 @@ public class search implements CommandAbstraction {
         return rightPaths;
     }
 
-    private boolean fileMatch(File f, String name, boolean scrollCompare) {
+    private static boolean fileMatch(File f, String name, boolean scrollCompare) {
         if (scrollCompare) {
             return Compare.scrollComparison(f.getName(), name) >= MIN_FILE_RATE;
         } else {
@@ -138,7 +214,7 @@ public class search implements CommandAbstraction {
         }
     }
 
-    private String youTube(List<String> args, Context c) {
+    private static String youTube(List<String> args, Context c) {
         String toSearch = Tuils.toPlanString(args, "+");
         Uri uri = Uri.parse(YOUTUBE_PREFIX + toSearch);
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -163,24 +239,8 @@ public class search implements CommandAbstraction {
     }
 
     @Override
-    public int[] argType() {
-        return new int[] {CommandAbstraction.PARAM, CommandAbstraction.TEXTLIST};
-    }
-
-    @Override
     public int priority() {
         return 4;
-    }
-
-    @Override
-    public String[] parameters() {
-        return new String[]{
-                PLAYSTORE_PARAM,
-                FILE_PARAM,
-                GOOGLE_PARAM,
-                YOUTUBE_PARAM,
-                URL_PARAM
-        };
     }
 
     @Override
@@ -190,25 +250,16 @@ public class search implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
+//        use default param
+
         MainPack info = (MainPack) pack;
         List<String> toSearch = Arrays.asList((String[]) info.args);
         String param = info.cmdPrefs.forCommand(getClass().getSimpleName()).get(CommandsPreferences.DEFAULT_PARAM);
-
-        switch (param) {
-            case PLAYSTORE_PARAM:
-                return playstore(toSearch, info.context);
-            case YOUTUBE_PARAM:
-                return youTube(toSearch, info.context);
-            case FILE_PARAM:
-                return file(toSearch, info.currentDirectory, info.res, info.outputable);
-            case GOOGLE_PARAM:
-                return google(toSearch, info.context);
-            case URL_PARAM:
-                return url(toSearch.get(0), info.context);
-            default:
-                return info.res.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
+        Param p = Param.get(param);
+        if(p != null) {
+            return p.exec(pack);
         }
+        return pack.context.getString(helpRes());
     }
-
 }

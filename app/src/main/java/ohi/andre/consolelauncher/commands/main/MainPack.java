@@ -1,22 +1,19 @@
 package ohi.andre.consolelauncher.commands.main;
 
-import android.annotation.TargetApi;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.hardware.Camera;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.os.Parcel;
-import android.util.Size;
 
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Objects;
 
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandsPreferences;
@@ -26,7 +23,8 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.MusicManager;
-import ohi.andre.consolelauncher.managers.PreferencesManager;
+import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
@@ -45,9 +43,6 @@ public class MainPack extends ExecutePack {
     //	current directory
     public File currentDirectory;
 
-    //	context for accessing methods
-    public Context context;
-
     public SkinManager skinManager;
 
     //	resources references
@@ -62,7 +57,7 @@ public class MainPack extends ExecutePack {
     public WifiManager wifi;
 
     //	prefs
-    public PreferencesManager preferencesManager;
+    public XMLPrefsManager preferencesManager;
 
     //	3g/data
     public Method setMobileDataEnabledMethod;
@@ -93,11 +88,13 @@ public class MainPack extends ExecutePack {
     //	uses su
     private boolean canUseSu = false;
 
+    public LocationManager locationManager;
+
     public String lastCommand;
 
     public Redirectator redirectator;
 
-    public MainPack(Context context, PreferencesManager prefsMgr, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
+    public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
                     ContactManager c, DevicePolicyManager devicePolicyManager, ComponentName componentName,
                     Reloadable r, CommandExecuter executeCommand, Outputable outputable, Redirectator redirectator) {
         super(commandGroup);
@@ -108,8 +105,6 @@ public class MainPack extends ExecutePack {
 
         this.executer = executeCommand;
 
-        this.preferencesManager = prefsMgr;
-
         this.context = context;
 
         this.currentDirectory = new File(Tuils.getInternalDirectoryPath());
@@ -118,7 +113,7 @@ public class MainPack extends ExecutePack {
 
         this.canUseFlash = context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
 
-        this.cmdPrefs = new CommandsPreferences(prefsMgr);
+        this.cmdPrefs = new CommandsPreferences();
 
         this.player = p;
         this.contacts = c;

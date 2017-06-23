@@ -1,247 +1,150 @@
 package ohi.andre.consolelauncher.tuils;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
+import java.io.InterruptedIOException;
+
+import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
 /**
- * ShellUtils
- * <ul>
- * <strong>Check root</strong>
- * <li>{@link ShellUtils#checkRootPermission()}</li>
- * </ul>
- * <ul>
- * <strong>Execte command</strong>
- * <li>{@link ShellUtils#execCommand(String, boolean, String)}</li>
- * <li>{@link ShellUtils#execCommand(String, boolean, boolean, String)}</li>
- * <li>{@link ShellUtils#execCommand(List, boolean, String)}</li>
- * <li>{@link ShellUtils#execCommand(List, boolean, boolean, String)}</li>
- * <li>{@link ShellUtils#execCommand(String[], boolean, String)}</li>
- * <li>{@link ShellUtils#execCommand(String[], boolean, boolean, String)}</li>
- * </ul>
- *
- * @author <a href="http://www.trinea.cn" target="_blank">Trinea</a> 2013-5-16
+ * Created by francescoandreuzzi on 24/04/2017.
  */
+
 public class ShellUtils {
 
-    public static final String SPACE = Tuils.SPACE;
-    public static final String COMMAND_SU = "su";
-    public static final String COMMAND_SU_ADD = "-c";
-    public static final String COMMAND_SH = "sh";
-    public static final String COMMAND_EXIT = "exit\n";
-    public static final String COMMAND_LINE_END = Tuils.NEWLINE;
-    public static final String COMMAND_CD = "cd";
-
-    private ShellUtils() {
-        throw new AssertionError();
-    }
-
-    /**
-     * check whether has root permission
-     *
-     * @return
-     */
-    public static boolean checkRootPermission() {
-        return execCommand("echo root", true, false, null).result == 0;
-    }
-
-
-    /**
-     * execute shell command, default return result msg
-     *
-     * @param command command
-     * @param isRoot  whether need to run with root
-     * @return
-     * @see ShellUtils#execCommand(String[], boolean, boolean, String)
-     */
-    public static CommandResult execCommand(String command, boolean isRoot, String path) {
-        return execCommand(new String[]{command}, isRoot, true, path);
-    }
-
-    /**
-     * execute shell commands, default return result msg
-     *
-     * @param commands command list
-     * @param isRoot   whether need to run with root
-     * @return
-     * @see ShellUtils#execCommand(String[], boolean, boolean, String)
-     */
-    public static CommandResult execCommand(List<String> commands, boolean isRoot, String path) {
-        return execCommand(commands == null ? null : commands.toArray(new String[]{}), isRoot, true, path);
-    }
-
-    /**
-     * execute shell commands, default return result msg
-     *
-     * @param commands command array
-     * @param isRoot   whether need to run with root
-     * @return
-     * @see ShellUtils#execCommand(String[], boolean, boolean, String)
-     */
-    public static CommandResult execCommand(String[] commands, boolean isRoot, String path) {
-        return execCommand(commands, isRoot, true, path);
-    }
-
-    /**
-     * execute shell command
-     *
-     * @param command         command
-     * @param isRoot          whether need to run with root
-     * @param isNeedResultMsg whether need result msg
-     * @return
-     * @see ShellUtils#execCommand(String[], boolean, boolean, String)
-     */
-    public static CommandResult execCommand(String command, boolean isRoot, boolean isNeedResultMsg, String path) {
-        return execCommand(new String[]{command}, isRoot, isNeedResultMsg, path);
-    }
-
-    /**
-     * execute shell commands
-     *
-     * @param commands        command list
-     * @param isRoot          whether need to run with root
-     * @param isNeedResultMsg whether need result msg
-     * @return
-     * @see ShellUtils#execCommand(String[], boolean, boolean, String)
-     */
-    public static CommandResult execCommand(List<String> commands, boolean isRoot, boolean isNeedResultMsg, String path) {
-        return execCommand(commands == null ? null : commands.toArray(new String[]{}), isRoot, isNeedResultMsg, path);
-    }
-
-    /**
-     * execute shell commands
-     *
-     * @param commands        command array
-     * @param isRoot          whether need to run with root
-     * @param isNeedResultMsg whether need result msg
-     * @return <ul>
-     * <li>if isNeedResultMsg is false, {@link CommandResult#successMsg} is null and
-     * {@link CommandResult#errorMsg} is null.</li>
-     * <li>if {@link CommandResult#result} is -1, there maybe some excepiton.</li>
-     * </ul>
-     */
-    public static CommandResult execCommand(String[] commands, boolean isRoot, boolean isNeedResultMsg, String path) {
-        int result = -1;
-        if (commands == null || commands.length == 0) {
-            return new CommandResult(result, null, null);
-        }
-
-        Process process = null;
-        BufferedReader successResult = null;
-        BufferedReader errorResult = null;
-        StringBuilder successMsg = null;
-        StringBuilder errorMsg = null;
-
-        DataOutputStream os = null;
-        try {
-            process = Runtime.getRuntime().exec(isRoot ? COMMAND_SU : COMMAND_SH);
-            os = new DataOutputStream(process.getOutputStream());
-
-            if (path != null) {
-                String cdCommand = COMMAND_CD + SPACE + path;
-                os.write(cdCommand.getBytes());
-                os.writeBytes(COMMAND_LINE_END);
-                os.flush();
-            }
-
-            for (String command : commands) {
-                if (command == null) {
-                    continue;
-                }
-
-                os.write(command.getBytes());
-                os.writeBytes(COMMAND_LINE_END);
-                os.flush();
-            }
-            os.writeBytes(COMMAND_EXIT);
-            os.flush();
-
-            result = process.waitFor();
-            // get command result
-            if (isNeedResultMsg) {
-                successMsg = new StringBuilder();
-                errorMsg = new StringBuilder();
-                successResult = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                errorResult = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-                String s;
-                while ((s = successResult.readLine()) != null) {
-                    successMsg.append(COMMAND_LINE_END);
-                    successMsg.append(s);
-                }
-                while ((s = errorResult.readLine()) != null) {
-                    successMsg.append(COMMAND_LINE_END);
-                    errorMsg.append(s);
-                }
-            }
-        }
-        catch (Exception e) {}
-        finally {
-            try {
-                if (os != null) {
-                    os.close();
-                }
-                if (successResult != null) {
-                    successResult.close();
-                }
-                if (errorResult != null) {
-                    errorResult.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            if (process != null) {
-                process.destroy();
-            }
-        }
-        return new CommandResult(result, successMsg == null ? null : successMsg.toString(), errorMsg == null ? null
-                : errorMsg.toString());
-    }
-
-    /**
-     * result of command
-     * <ul>
-     * <li>{@link CommandResult#result} means result of command, 0 means normal, else means error, same to excute in
-     * linux shell</li>
-     * <li>{@link CommandResult#successMsg} means success message of command result</li>
-     * <li>{@link CommandResult#errorMsg} means error message of command result</li>
-     * </ul>
-     *
-     * @author <a href="http://www.trinea.cn" target="_blank">Trinea</a> 2013-5-16
-     */
     public static class CommandResult {
-
-        /**
-         * result of command
-         **/
         public int result;
-        /**
-         * success message of command result
-         **/
-        public String successMsg;
-        /**
-         * error message of command result
-         **/
-        public String errorMsg;
+        public String msg;
 
-        public CommandResult(int result) {
-            this.result = result;
-        }
-
-        public CommandResult(int result, String successMsg, String errorMsg) {
-            this.result = result;
-            this.successMsg = successMsg;
-            this.errorMsg = errorMsg;
+        public CommandResult(int exit, String msg) {
+            this.result = exit;
+            this.msg = msg;
         }
 
         @Override
         public String toString() {
-            if (successMsg != null && successMsg.length() > 0)
-                return successMsg;
-            else
-                return errorMsg;
+            return msg;
         }
+    }
+
+    public static CommandResult execCommand(String cmd , boolean root, String path) {
+        return execCommand(new String[] {cmd}, root, path, null);
+    }
+
+    public static CommandResult execCommand(String[] cmd , boolean root, String path) {
+        return execCommand(cmd, root, path, null);
+    }
+
+    public static CommandResult execCommand(String cmd , boolean root, String path, Outputable outputable) {
+        return execCommand(new String[] {cmd}, root, path, outputable);
+    }
+
+//    custom dir doesnt work, and also multiple commands
+    public static CommandResult execCommand(String[] cmds , boolean root, String path, final Outputable outputable) {
+//        try {
+//            Process process = Runtime.getRuntime().exec(cmds[0]);
+//            process.waitFor();
+//
+//            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//
+//            StringBuilder log = new StringBuilder();
+//            String line;
+//            while ((line = bufferedReader.readLine()) != null) {
+//                Log.e("andre", "uh");
+//                log.append(line + "\n");
+//            }
+//            process.destroy();
+//
+//            return new CommandResult(0, log.toString());
+//        } catch (Exception e) {
+//            return new CommandResult(0, e.toString());
+//        }
+
+        if(cmds.length > 1 || cmds.length == 0) return null;
+
+        int result = -1;
+
+        BufferedReader errorResult = null;
+        StringBuilder errorMsg = null;
+        final StringBuilder output = new StringBuilder();
+
+        try {
+
+            final Process process = Runtime.getRuntime().exec((root ? "su -c " : "") + cmds[0], null, path != null ? new File(path) : null);
+            final Thread externalThread = Thread.currentThread();
+
+            Thread readerThread = new StoppableThread() {
+
+                @Override
+                public void run() {
+                    super.run();
+
+                    if (Thread.interrupted() || externalThread.isInterrupted()) return;
+
+                    BufferedReader successResult = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String s;
+                    try {
+                        while ((s = successResult.readLine()) != null) {
+                            if (Thread.currentThread().isInterrupted() || externalThread.isInterrupted())
+                                return;
+
+                            if (outputable != null) outputable.onOutput(Tuils.NEWLINE + s);
+                            else {
+                                output.append(Tuils.NEWLINE);
+                                output.append(s);
+                            }
+                        }
+
+                        sleep(25);
+                    } catch (StackOverflowError | Exception e) {
+                        if(outputable != null && ! (e instanceof InterruptedException)) outputable.onOutput(e.toString());
+
+                        try {
+                            successResult.close();
+                        } catch (IOException e1) {}
+
+                        return;
+                    }
+                }
+            };
+            readerThread.start();
+
+            result = process.waitFor();
+            readerThread.interrupt();
+
+            if(output.length() == 0) {
+                errorMsg = new StringBuilder();
+
+                errorResult = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+                String s;
+                while ((s = errorResult.readLine()) != null) {
+                    if(errorMsg.length() > 0) errorMsg.append(Tuils.NEWLINE);
+                    errorMsg.append(s);
+                }
+            }
+
+            process.destroy();
+        }
+        catch (Exception e) {}
+        finally {
+            try {
+                if (errorResult != null) {
+                    errorResult.close();
+                }
+            } catch (IOException e) {}
+        }
+
+        if(output.length() > 0) {
+            return new CommandResult(result, output.toString());
+        }
+        else if(errorMsg != null) {
+            return new CommandResult(result, errorMsg.toString());
+        }
+        return null;
     }
 }

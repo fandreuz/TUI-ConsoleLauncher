@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.commands;
 
-import ohi.andre.consolelauncher.commands.main.MainPack;
-
 public interface CommandAbstraction {
 
     //	undefinied n of arguments
@@ -10,8 +8,7 @@ public interface CommandAbstraction {
     //	arg type
     int PLAIN_TEXT = 10;
     int FILE = 11;
-    int PACKAGE = 12;
-    int HIDDEN_PACKAGE = 20;
+    int VISIBLE_PACKAGE = 12;
     int CONTACTNUMBER = 13;
     int TEXTLIST = 14;
     int SONG = 15;
@@ -19,6 +16,10 @@ public interface CommandAbstraction {
     int COMMAND = 17;
     int PARAM = 18;
     int BOOLEAN = 19;
+    int HIDDEN_PACKAGE = 20;
+    int COLOR = 21;
+    int CONFIG_FILE = 22;
+    int CONFIG_ENTRY = 23;
 
     String exec(ExecutePack pack) throws Exception;
 
@@ -32,9 +33,7 @@ public interface CommandAbstraction {
 
     int helpRes();
 
-    String onArgNotFound(ExecutePack pack);
+    String onArgNotFound(ExecutePack pack, int indexNotFound);
 
     String onNotArgEnough(ExecutePack pack, int nArgs);
-
-    String[] parameters();
 }

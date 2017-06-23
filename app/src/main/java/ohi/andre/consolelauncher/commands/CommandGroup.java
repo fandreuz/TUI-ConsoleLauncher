@@ -1,12 +1,10 @@
 package ohi.andre.consolelauncher.commands;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;

@@ -67,7 +67,7 @@ public class ls implements CommandAbstraction {
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
         return info.res.getString(R.string.output_filenotfound);
     }
@@ -81,10 +81,5 @@ public class ls implements CommandAbstraction {
         } catch (Exception e) {
             return e.toString();
         }
-    }
-
-    @Override
-    public String[] parameters() {
-        return null;
     }
 }

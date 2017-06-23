@@ -8,29 +8,21 @@ import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
-import java.util.List;
-
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class call implements CommandAbstraction {
 
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
-        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(info.context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
 
-            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
-            return info.context.getString(R.string.output_waitingpermission);
-        }
-
-        if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.CALL_PHONE}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
+            ActivityCompat.requestPermissions((Activity) info.context, new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
             return info.context.getString(R.string.output_waitingpermission);
         }
 
@@ -73,26 +65,12 @@ public class call implements CommandAbstraction {
     }
 
     @Override
-    public String[] parameters() {
-        return null;
-    }
-
-    @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
-        MainPack pack = (MainPack) info;
-        if (ContextCompat.checkSelfPermission(pack.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) pack.context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_REQUEST_PERMISSION);
-            return pack.context.getString(R.string.output_waitingpermission);
-        }
-
-        List<String> contacts = pack.contacts.listNamesAndNumbers();
-        Tuils.addPrefix(contacts, Tuils.DOUBLE_SPACE);
-        Tuils.insertHeaders(contacts, false);
-        return Tuils.toPlanString(contacts);
+        return info.context.getString(helpRes());
     }
 
     @Override
-    public String onArgNotFound(ExecutePack pack) {
+    public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
         return info.res.getString(R.string.output_numbernotfound);
     }
