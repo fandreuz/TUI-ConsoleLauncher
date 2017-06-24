@@ -142,7 +142,7 @@ public class SuggestionsManager {
                 }
             } else {
 //                lastword > 0 && before = 0
-                suggestCommand(info, suggestionList, lastWord);
+                suggestCommand(info, suggestionList, lastWord, before);
                 suggestAlias(info.aliasManager, suggestionList, lastWord);
                 suggestApp(info, suggestionList, lastWord, Tuils.EMPTYSTRING);
             }
@@ -186,7 +186,7 @@ public class SuggestionsManager {
                 suggestApp(info, suggestions, prev, before);
                 break;
             case CommandAbstraction.COMMAND:
-                suggestCommand(info, suggestions, prev);
+                suggestCommand(info, suggestions, prev, before);
                 break;
             case CommandAbstraction.CONTACTNUMBER:
                 suggestContact(info, suggestions, prev, before);
@@ -339,9 +339,9 @@ public class SuggestionsManager {
         }
     }
 
-    private void suggestCommand(MainPack info, List<Suggestion> suggestions, String prev) {
+    private void suggestCommand(MainPack info, List<Suggestion> suggestions, String prev, String before) {
         if (prev == null || prev.length() == 0) {
-            suggestCommand(info, suggestions);
+            suggestCommand(info, suggestions, before);
             return;
         }
 
@@ -353,7 +353,7 @@ public class SuggestionsManager {
                     CommandAbstraction cmd = info.commandGroup.getCommandByName(s);
                     int[] args = cmd.argType();
                     boolean exec = args == null || args.length == 0;
-                    suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, exec, MAX_RATE, Suggestion.TYPE_COMMAND));
+                    suggestions.add(new Suggestion(before, s, exec, MAX_RATE, Suggestion.TYPE_COMMAND));
                 }
             }
             return;
@@ -364,7 +364,7 @@ public class SuggestionsManager {
             CommandAbstraction cmd = info.commandGroup.getCommandByName(i.s);
             int[] args = cmd.argType();
             boolean exec = args == null || args.length == 0;
-            suggestions.add(new Suggestion(Tuils.EMPTYSTRING, i.s, exec, i.rate, Suggestion.TYPE_COMMAND));
+            suggestions.add(new Suggestion(before, i.s, exec, i.rate, Suggestion.TYPE_COMMAND));
         }
     }
 
@@ -374,13 +374,13 @@ public class SuggestionsManager {
         }
     }
 
-    private void suggestCommand(MainPack info, List<Suggestion> suggestions) {
+    private void suggestCommand(MainPack info, List<Suggestion> suggestions, String before) {
         for (String s : info.commandGroup.getCommandNames()) {
             CommandAbstraction cmd = info.commandGroup.getCommandByName(s);
             if (cmd != null && cmd.priority() >= MIN_COMMAND_PRIORITY) {
                 int[] args = cmd.argType();
                 boolean exec = args == null || args.length == 0;
-                suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, exec, cmd.priority(), Suggestion.TYPE_COMMAND));
+                suggestions.add(new Suggestion(before, s, exec, cmd.priority(), Suggestion.TYPE_COMMAND));
             }
         }
     }
