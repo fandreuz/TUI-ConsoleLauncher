@@ -1,9 +1,7 @@
 package ohi.andre.consolelauncher.managers.notifications;
 
 import android.annotation.TargetApi;
-import android.graphics.Color;
 import android.os.Build;
-import android.util.Log;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -11,14 +9,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -28,11 +22,9 @@ import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.XML_DEFAULT;
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.resetFile;
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.set;
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.setMany;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.transform;
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.writeTo;
 
 /**
@@ -54,13 +46,14 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     private static XMLPrefsManager.XmlPrefsElement instance = null;
 
     public static boolean default_app_state;
+    public static String default_color;
 
     public enum Options implements XMLPrefsManager.XMLPrefsSave {
 
         enabled {
             @Override
             public String defaultValue() {
-                return "true";
+                return "false";
             }
         },
         default_app_state {
@@ -94,7 +87,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     @Override
     public XMLPrefsManager.XMLPrefsList getValues() {
-        return null;
+        return values;
     }
 
     @Override
@@ -112,8 +105,6 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     public static void create() {
         instance = new NotificationManager();
-
-        default_app_state = XMLPrefsManager.get(boolean.class, Options.default_app_state);
 
         if(created) return;
         created = true;
@@ -179,9 +170,9 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
                         boolean enabled = !e.hasAttribute(ENABLED_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(ENABLED_ATTRIBUTE));
 
-                        int color = -1;
-                        if(enabled)
-                            color = e.hasAttribute(COLOR_ATTRIBUTE) ? Color.parseColor(e.getAttribute(COLOR_ATTRIBUTE)) : XMLPrefsManager.getColor(Options.default_color);
+                        String color = null;
+                        if(enabled) color = e.hasAttribute(COLOR_ATTRIBUTE) ? e.getAttribute(COLOR_ATTRIBUTE) : null;
+
                         app = new NotificatedApp(nn, color, enabled);
                         apps.add(app);
                     }
@@ -189,18 +180,21 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             }
 
 
-            if(enums.size() == 0) return;
+            if(enums.size() > 0) {
+                for(XMLPrefsManager.XMLPrefsSave s : enums) {
+                    Element em = d.createElement(s.label());
+                    em.setAttribute(VALUE_ATTRIBUTE, s.defaultValue());
+                    root.appendChild(em);
 
-            for(XMLPrefsManager.XMLPrefsSave s : enums) {
-                Element em = d.createElement(s.label());
-                em.setAttribute(VALUE_ATTRIBUTE, s.defaultValue());
-                root.appendChild(em);
+                    values.add(s.label(), s.defaultValue());
+                }
 
-                values.add(s.label(), s.defaultValue());
+                writeTo(d, file);
             }
-
-            writeTo(d, file);
         } catch (Exception e) {}
+
+        default_app_state = XMLPrefsManager.get(boolean.class, Options.default_app_state);
+        default_color = XMLPrefsManager.get(String.class, Options.default_color);
     }
 
     public static void notificationsChangeFor(NotificatedApp app) {
@@ -228,7 +222,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             NotificatedApp app = apps.get(count);
             names[count] = app.pkg;
             values[count][0] = app.enabled + Tuils.EMPTYSTRING;
-            values[count][1] = app.color + Tuils.EMPTYSTRING;
+            values[count][1] = app.color != null ? app.color : Tuils.EMPTYSTRING;
         }
 
         setMany(new File(Tuils.getFolder(), PATH), NAME, names, attrNames, values);
@@ -243,21 +237,17 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public static NotificatedApp getAppState(String pkg) {
-        int index = apps.indexOf(pkg);
+        int index = Tuils.find(pkg, apps);
         if(index == -1) return null;
         return apps.get(index);
     }
 
     public static class NotificatedApp {
         String pkg;
-        int color;
+        String color;
         boolean enabled;
 
-        public NotificatedApp(String pkg, String color, boolean enabled) throws Exception {
-            this(pkg, Color.parseColor(color), enabled);
-        }
-
-        public NotificatedApp(String pkg, int color, boolean enabled) {
+        public NotificatedApp(String pkg, String color, boolean enabled) {
             this.pkg = pkg;
             this.color = color;
             this.enabled = enabled;
@@ -265,9 +255,12 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
         @Override
         public boolean equals(Object obj) {
-            if(obj instanceof NotificatedApp) return pkg.equals(((NotificatedApp) obj).pkg);
-            if(obj instanceof String) return pkg.equals(obj);
-            return this == obj;
+            return this.toString().equals(obj.toString());
+        }
+
+        @Override
+        public String toString() {
+            return pkg;
         }
     }
 }

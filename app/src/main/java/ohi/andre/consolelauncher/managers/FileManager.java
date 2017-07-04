@@ -71,11 +71,6 @@ public class FileManager {
             return FileManager.ISFILE;
         }
 
-        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + where.getAbsolutePath()+ "\"", su, null);
-        if(r.result != 0) {
-            return NOT_WRITEABLE;
-        }
-
         for (File f : files) {
             mv(f, where, su);
         }
@@ -84,14 +79,6 @@ public class FileManager {
     }
 
     private static int mv(File f, File where, boolean su) throws IOException {
-        ShellUtils.CommandResult rw = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath()+ "\"", su, null);
-        if(rw.result != 0) {
-            return NOT_WRITEABLE;
-        }
-        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", su, null);
-        if(rr.result != 0) {
-            return NOT_READABLE;
-        }
 
         ShellUtils.CommandResult result = ShellUtils.execCommand("mv " +
                 (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
@@ -114,15 +101,12 @@ public class FileManager {
     }
 
     public static int rm(File f, boolean su) {
-        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath() + "\"", su, null);
-        if(r.result != 0) {
-            return NOT_WRITEABLE;
-        }
 
         ShellUtils.CommandResult result = ShellUtils.execCommand("rm " +
                 (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
                 Tuils.SPACE +
                 "\"" + f.getAbsolutePath() + "\"", su, null);
+        if(result == null) return IOERROR;
         return result.result;
     }
 
@@ -135,11 +119,6 @@ public class FileManager {
             return FileManager.ISFILE;
         }
 
-        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + where.getAbsolutePath()+ "\"", su, null);
-        if(r.result != 0) {
-            return NOT_WRITEABLE;
-        }
-
         for (File f : files) {
             cp(f, where, su);
         }
@@ -148,11 +127,6 @@ public class FileManager {
     }
 
     private static int cp(File f, File where, boolean su) throws IOException {
-        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", su, null);
-        if(rr.result != 0) {
-            return NOT_READABLE;
-        }
-
         ShellUtils.CommandResult result = ShellUtils.execCommand("cp " +
                 (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
                 Tuils.SPACE +

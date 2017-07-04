@@ -40,7 +40,10 @@
     <string name="output_numberformat">Wrong number format</string>
     <string name="output_invalidarg">Invalid argument</string>
     <string name="output_lessarg">Less arguments than expected</string>
+
+    <!-- alias -->
     <string name="output_aliasnotfound">Alias not found:</string>
+    <string name="output_problemaddingalias">There was a problem with your alias</string>
 
     <!-- tuixt -->
     <string name="help_tuixt_help">Print the list of commands, or info about a command
@@ -118,7 +121,7 @@
 
 
     <string name="help_airplane">Toggle Airplane Mode</string>
-    <string name="help_aliases">Manager your aliases
+    <string name="help_alias">Manage your aliases
         \n\nUsage:
         \n-add -> add a new alias
         \n-rm -> remove an existing alias

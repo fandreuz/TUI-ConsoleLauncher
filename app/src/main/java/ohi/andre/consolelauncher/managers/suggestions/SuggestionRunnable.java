@@ -23,7 +23,6 @@ import android.widget.TextView;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.SkinManager;
-import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 
 public class SuggestionRunnable implements Runnable {
 

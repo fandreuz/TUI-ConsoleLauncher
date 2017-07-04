@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -188,13 +189,10 @@ public class Tuils {
     }
 
     public static int find(Object o, Object[] array) {
-        for(int count = 0; count < array.length; count++) {
-            if(o.equals(array[count])) return count;
-        }
-        return -1;
+        return find(o, Arrays.asList(array));
     }
 
-    public static int find(Object o, List<Object> list) {
+    public static int find(Object o, List list) {
         for(int count = 0; count < list.size(); count++) {
             Object x = list.get(count);
             if(o instanceof XMLPrefsManager.XMLPrefsSave) {
@@ -209,7 +207,8 @@ public class Tuils {
                 } catch (Exception e) {}
             }
 
-            if(o.equals(list.get(count))) return count;
+            Object ob = list.get(count);
+            if(o.equals(ob) || ob.equals(o)) return count;
         }
         return -1;
     }

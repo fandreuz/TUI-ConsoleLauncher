@@ -1,7 +1,6 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.graphics.Color;
-import android.util.Log;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -68,6 +67,18 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "#fff44336";
+            }
+        },
+        toolbar_color {
+            @Override
+            public String defaultValue() {
+                return "#ffff0000";
+            }
+        },
+        enter_color {
+            @Override
+            public String defaultValue() {
+                return "#ffffffff";
             }
         },
         overlay_color {
@@ -403,6 +414,12 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "true";
             }
+        },
+        show_alias_suggestions {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
         };
 
         @Override
@@ -503,11 +520,16 @@ public class XMLPrefsManager {
             else if(obj instanceof XMLPrefsSave) return this.key.equals(((XMLPrefsSave) obj).label());
             return obj.equals(key);
         }
+
+        @Override
+        public String toString() {
+            return key + " --> " + value;
+        }
     }
 
     public static class XMLPrefsList {
 
-        List<XMLPrefsEntry> list = new ArrayList<>();
+        public List<XMLPrefsEntry> list = new ArrayList<>();
 
         public void add(XMLPrefsEntry entry) {
             list.add(entry);
@@ -688,7 +710,10 @@ public class XMLPrefsManager {
                 if(index != -1) {
                     Element e = (Element) node;
 
-                    for(int c = 0; c < attributeNames.length; c++) e.setAttribute(attributeNames[c], attributeValues[index][c]);
+                    for(int c = 0; c < attributeNames.length; c++) {
+                        if(attributeValues[index][c] == null) continue;
+                        e.setAttribute(attributeNames[c], attributeValues[index][c]);
+                    }
 
                     writeTo(d, file);
                     return null;
@@ -698,7 +723,10 @@ public class XMLPrefsManager {
 //            it wasn't found
             for(int count = 0; count < elementNames.length; count++) {
                 Element element = d.createElement(elementNames[count]);
-                for(int c = 0; c < attributeNames.length; c++) element.setAttribute(attributeNames[c], attributeValues[count][c]);
+                for(int c = 0; c < attributeNames.length; c++) {
+                    if(attributeValues[count][c] == null) continue;
+                    element.setAttribute(attributeNames[c], attributeValues[count][c]);
+                }
                 root.appendChild(element);
             }
 
@@ -782,7 +810,6 @@ public class XMLPrefsManager {
     }
 
     public static int getColor(XMLPrefsManager.XMLPrefsSave prefsSave) {
-
         try {
             return (int) transform(prefsSave.parent().getValues().get(prefsSave).value, Color.class);
         } catch (Exception e) {

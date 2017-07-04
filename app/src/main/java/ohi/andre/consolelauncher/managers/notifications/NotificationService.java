@@ -6,32 +6,20 @@ package ohi.andre.consolelauncher.managers.notifications;
 
 import android.annotation.TargetApi;
 import android.app.Notification;
-import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.IntDef;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import ohi.andre.consolelauncher.BuildConfig;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
-
-import static ohi.andre.consolelauncher.managers.notifications.NotificationManager.*;
+import static ohi.andre.consolelauncher.managers.notifications.NotificationManager.NotificatedApp;
+import static ohi.andre.consolelauncher.managers.notifications.NotificationManager.default_color;
 
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -51,13 +39,13 @@ public class NotificationService extends NotificationListenerService {
         if(NotificationManager.apps() == 0) {
 //            some nice apps
             NotificationManager.notificationsChangeFor(new ArrayList<>(Arrays.asList(
-                    new NotificatedApp("com.whatsapp", Color.parseColor("#25D366"), true),
-                    new NotificatedApp("com.google.android.apps.inbox", Color.parseColor("#03A9F4"), true),
-                    new NotificatedApp("com.paypal.android.p2pmobile", Color.parseColor("#003087"), true),
-                    new NotificatedApp("com.google.android.apps.plus", Color.parseColor("#dd4b39"), true),
-                    new NotificatedApp("com.facebook.katana", Color.parseColor("#3b5998"), true),
-                    new NotificatedApp("com.twitter.android", Color.parseColor("#1da1f2"), true),
-                    new NotificatedApp("com.android.vending", Color.parseColor("#34a853"), true)
+                    new NotificatedApp("com.whatsapp", "#25D366", true),
+                    new NotificatedApp("com.google.android.apps.inbox", "#03A9F4", true),
+                    new NotificatedApp("com.paypal.android.p2pmobile", "#003087", true),
+                    new NotificatedApp("com.google.android.apps.plus", "#dd4b39", true),
+                    new NotificatedApp("com.facebook.katana", "#3b5998", true),
+                    new NotificatedApp("com.twitter.android", "#1da1f2", true),
+                    new NotificatedApp("com.android.vending", "#34a853", true)
             )));
         }
 
@@ -99,6 +87,7 @@ public class NotificationService extends NotificationListenerService {
         if( (nApp != null && !nApp.enabled)) {
             return;
         }
+
         if(nApp == null && !NotificationManager.default_app_state) {
             return;
         }
@@ -127,7 +116,7 @@ public class NotificationService extends NotificationListenerService {
         msgrcv.putExtra("package", pack);
         msgrcv.putExtra("title", title);
         msgrcv.putExtra("text", text);
-        msgrcv.putExtra("color", nApp.color);
+        msgrcv.putExtra("color", nApp != null ? nApp.color : default_color);
 
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgrcv);
     }

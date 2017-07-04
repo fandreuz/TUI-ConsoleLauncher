@@ -23,7 +23,7 @@ public class notifications extends ParamCommand {
         inc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 1), -1, true));
+                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 1), null, true));
                 return null;
             }
 
@@ -35,7 +35,7 @@ public class notifications extends ParamCommand {
         exc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 1), -1, false));
+                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 1), null, false));
                 return null;
             }
 

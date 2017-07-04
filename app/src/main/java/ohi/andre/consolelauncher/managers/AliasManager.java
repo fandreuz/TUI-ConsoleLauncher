@@ -1,13 +1,26 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.util.Log;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -16,100 +29,103 @@ import javax.xml.parsers.ParserConfigurationException;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
+import static android.R.id.list;
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.resetFile;
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.set;
 
 public class AliasManager implements Reloadable {
 
-    public static final String NAME = "ALIAS";
-    public static final String PATH = "alias.xml";
+    public static final String PATH = "alias.txt";
 
-    private final String VALUE_ATTRIBUTE = "value";
-
-    private XMLPrefsManager.XMLPrefsList alias;
+    private Map<String, String> aliases;
 
     public AliasManager() {
         reload();
     }
 
     public String printAliases() {
-        List<XMLPrefsManager.XMLPrefsEntry> list = alias.list;
-
         String output = Tuils.EMPTYSTRING;
-        for (XMLPrefsManager.XMLPrefsEntry entry : list) {
-            output = output.concat(entry.key + " --> " + entry.value + Tuils.NEWLINE);
+        for (Map.Entry<String, String> entry : aliases.entrySet()) {
+            output = output.concat(entry.getKey() + " --> " + entry.getValue() + Tuils.NEWLINE);
         }
 
         return output.trim();
     }
 
     public String getAlias(String s) {
-        XMLPrefsManager.XMLPrefsEntry entry = alias.get(s);
-        if(entry != null) return entry.value;
-        return null;
+        return aliases.get(s);
     }
 
     @Override
     public void reload() {
-        if(alias != null) alias.list.clear();
-        alias = new XMLPrefsManager.XMLPrefsList();
+        if(aliases != null) aliases.clear();
+        else aliases = new HashMap();
 
         File file = new File(Tuils.getFolder(), PATH);
 
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = null;
         try {
-            builder = factory.newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            return;
-        }
+            if(!file.exists()) file.createNewFile();
 
-        Document d;
-        try {
-            d = builder.parse(file);
-        } catch (Exception e) {
-            resetFile(file, NAME);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 
-            try {
-                d = builder.parse(file);
-            } catch (Exception e1) {return;}
-        }
-
-        Element root = (Element) d.getElementsByTagName(NAME).item(0);
-        if(root == null) {
-            resetFile(file, NAME);
-
-            try {
-                d = builder.parse(file);
-            } catch (Exception e) {
-                return;
+            String line;
+            while((line = reader.readLine()) != null) {
+                String[] splatted = line.split("=");
+                if(splatted.length < 2) continue;
+                aliases.put(splatted[0], splatted[1]);
             }
-
-            root = (Element) d.getElementsByTagName(NAME).item(0);
-        }
-        NodeList nodes = root.getElementsByTagName("*");
-
-        for(int count = 0; count < nodes.getLength(); count++) {
-            Node node = nodes.item(count);
-
-            String nn = node.getNodeName();
-            alias.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
-        }
+        } catch (Exception e) {}
     }
 
-    public String add(String name, String value) {
-        return set(new File(Tuils.getFolder(), PATH), NAME, name, new String[] {VALUE_ATTRIBUTE}, new String[] {value});
+    public boolean add(String name, String value) {
+        reload();
+
+        if(aliases.containsKey(name)) return false;
+
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(new File(Tuils.getFolder(), PATH));
+            fos.write((name + "=" + value + Tuils.NEWLINE).getBytes());
+            fos.close();
+
+            aliases.put(name, value);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 
     public boolean remove(String name) {
-        return XMLPrefsManager.removeNode(new File(Tuils.getFolder(), PATH), NAME, name);
+        reload();
+
+        try {
+            File inputFile = new File(Tuils.getFolder(), PATH);
+            File tempFile = new File(Tuils.getFolder(), PATH + "2");
+
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+            String prefix = name + "=";
+            String line;
+            while((line = reader.readLine()) != null) {
+                if(line.startsWith(prefix)) continue;
+                writer.write(line + Tuils.NEWLINE);
+            }
+            writer.close();
+            reader.close();
+
+
+            aliases.remove(name);
+
+            return tempFile.renameTo(inputFile);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public List<String> getAliases() {
-        List<String> labels = new ArrayList<>();
-        if(alias == null) return labels;
-
-        for(int count = 0; count < alias.size(); count++) labels.add(alias.at(count).key);
-        return labels;
+        if(aliases == null) return new ArrayList<>(0);
+        return new ArrayList<>(aliases.keySet());
     }
 }

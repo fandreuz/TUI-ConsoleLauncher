@@ -99,7 +99,7 @@ public class TerminalManager {
         prefixView.setText(prefix);
 
         if (submitView != null) {
-            submitView.setColorFilter(mSkinManager.inputColor);
+            submitView.setColorFilter(mSkinManager.enter_color);
             submitView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -109,7 +109,7 @@ public class TerminalManager {
         }
 
         if (backView != null) {
-            backView.setColorFilter(this.mSkinManager.inputColor);
+            backView.setColorFilter(this.mSkinManager.toolbarColor);
             backView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -119,7 +119,7 @@ public class TerminalManager {
         }
 
         if (nextView != null) {
-            nextView.setColorFilter(this.mSkinManager.inputColor);
+            nextView.setColorFilter(this.mSkinManager.toolbarColor);
             nextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -129,20 +129,20 @@ public class TerminalManager {
         }
 
         if (pasteView != null) {
-            pasteView.setColorFilter(this.mSkinManager.inputColor);
+            pasteView.setColorFilter(this.mSkinManager.toolbarColor);
             pasteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     String text = Tuils.getTextFromClipboard(context);
                     if(text != null && text.length() > 0) {
-                        setInput(text);
+                        setInput(getInput() + text);
                     }
                 }
             });
         }
 
         if (deleteView != null) {
-            deleteView.setColorFilter(this.mSkinManager.inputColor);
+            deleteView.setColorFilter(this.mSkinManager.toolbarColor);
             deleteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

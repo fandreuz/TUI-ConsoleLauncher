@@ -24,7 +24,7 @@ public class SkinManager implements Parcelable {
     public int globalFontSize;
 
     public String deviceName;
-    public int deviceColor, inputColor, outputColor, ramColor, bgColor, overlayColor;
+    public int deviceColor, inputColor, outputColor, ramColor, bgColor, overlayColor, toolbarColor, enter_color;
 
     public boolean useSystemWp, showSuggestions, systemFont, inputBottom, showSubmit;
 
@@ -52,6 +52,8 @@ public class SkinManager implements Parcelable {
         ramColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.ram_color);
         inputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color);
         outputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
+        toolbarColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color);
+        enter_color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.enter_color);
 
         deviceName = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.deviceName);
         if (deviceName.length() == 0 || deviceName.equals("null")) {
@@ -130,18 +132,25 @@ public class SkinManager implements Parcelable {
         switch (type) {
             case SuggestionsManager.Suggestion.TYPE_APP:
                 choosen = suggAppText;
+                break;
             case SuggestionsManager.Suggestion.TYPE_ALIAS:
                 choosen = suggAliasText;
+                break;
             case SuggestionsManager.Suggestion.TYPE_COMMAND:
                 choosen = suggCmdText;
+                break;
             case SuggestionsManager.Suggestion.TYPE_CONTACT:
                 choosen = suggContactText;
+                break;
             case SuggestionsManager.Suggestion.TYPE_FILE:
                 choosen = suggFileText;
+                break;
             case SuggestionsManager.Suggestion.TYPE_SONG:
                 choosen = suggSongText;
+                break;
             default:
                 choosen = suggDefaultText;
+                break;
         }
 
         if(choosen == -1) choosen = suggDefaultText;

@@ -1,7 +1,6 @@
 package ohi.andre.consolelauncher;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
@@ -13,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,9 +28,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
-
-import java.io.File;
-import java.io.IOException;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
@@ -64,8 +59,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     private MainManager main;
 
     private boolean openKeyboardOnStart, fullscreen;
-
-    private Intent starterIntent;
 
     private CommandExecuter ex = new CommandExecuter() {
 
@@ -155,11 +148,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             editor.commit();
 
             Intent intent = new Intent(this, TutorialActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }
-
-        starterIntent = getIntent();
 
         try {
             XMLPrefsManager.create();
@@ -231,8 +221,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     protected void onStart() {
         super.onStart();
 
-        if (ui != null && openKeyboardOnStart) {
-            ui.onStart();
+        if (ui != null) {
+            ui.onStart(openKeyboardOnStart);
         }
     }
 
@@ -406,9 +396,12 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             String pack = intent.getStringExtra("package");
             String title = intent.getStringExtra("title");
             String text = intent.getStringExtra("text");
+            String color = intent.getStringExtra("color");
 
             if(ui != null) {
-                ui.setOutput(pack + ": " + (title == null ? Tuils.EMPTYSTRING : title + (text == null ? Tuils.EMPTYSTRING : " --- ")) + (text == null ? Tuils.EMPTYSTRING : text), intent.getIntExtra("color", Color.RED), false);
+                ui.setOutput(pack + ": " + (title == null ? Tuils.EMPTYSTRING : title + (text == null ? Tuils.EMPTYSTRING : " --- ")) + (text == null ? Tuils.EMPTYSTRING : text),
+                        Color.parseColor(color),
+                        false);
             }
         }
     };

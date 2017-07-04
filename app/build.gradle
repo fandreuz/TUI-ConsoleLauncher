@@ -3,14 +3,15 @@ android {
 
     compileSdkVersion 25
     buildToolsVersion '25.0.2'
+
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
 
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 91
-        versionName "5.3e"
+        versionCode 92
+        versionName "5.3f"
     }
 
     buildTypes {
@@ -31,5 +32,4 @@ android {
         compile 'com.android.support:appcompat-v7:23.4.0'
         compile 'com.github.Andre1299:CompareString:1.4.2'
     }
-
 }

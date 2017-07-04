@@ -68,7 +68,7 @@
         android:theme="@style/Custom.Solid">
         <activity
             android:name=".LauncherActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
 
             android:launchMode="singleTask"
             android:clearTaskOnLaunch="true"
@@ -76,8 +76,10 @@
             android:resumeWhilePausing="true"
             android:taskAffinity=""
             android:enabled="true"
+            android:excludeFromRecents="true"
 
             android:windowSoftInputMode="stateAlwaysVisible|adjustResize">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

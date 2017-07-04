@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.managers.suggestions;
 
-import android.util.Log;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,9 +10,9 @@ import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandTuils;
+import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.commands.specific.PermanentSuggestionCommand;
-import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
@@ -46,7 +44,14 @@ public class SuggestionsManager {
 
     private final int FIRST_INTERVAL = 3;
 
+    private boolean showAlias, showAliasWasSet = false;
+
     public Suggestion[] getSuggestions(MainPack info, String before, String lastWord) {
+
+        if(!showAliasWasSet) {
+            showAlias = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_alias_suggestions);
+            showAliasWasSet = true;
+        }
 
         List<Suggestion> suggestionList = new ArrayList<>();
 
@@ -70,7 +75,7 @@ public class SuggestionsManager {
                     }
                 }
 
-                suggestAlias(info.aliasManager, suggestionList, lastWord);
+                if(showAlias) suggestAlias(info.aliasManager, suggestionList, lastWord);
 
                 return suggestionList.toArray(new Suggestion[suggestionList.size()]);
             }
@@ -143,7 +148,7 @@ public class SuggestionsManager {
             } else {
 //                lastword > 0 && before = 0
                 suggestCommand(info, suggestionList, lastWord, before);
-                suggestAlias(info.aliasManager, suggestionList, lastWord);
+                if(showAlias) suggestAlias(info.aliasManager, suggestionList, lastWord);
                 suggestApp(info, suggestionList, lastWord, Tuils.EMPTYSTRING);
             }
         }

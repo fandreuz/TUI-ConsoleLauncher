@@ -1,5 +1,7 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.util.Log;
+
 import java.io.File;
 import java.util.ArrayList;
 

@@ -9,7 +9,6 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.Gravity;
@@ -30,9 +29,9 @@ import java.lang.reflect.Field;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -97,8 +96,8 @@ public class UIManager implements OnTouchListener {
 
     protected TextWatcher textWatcher = new TextWatcher() {
 
-        int nOfSpace = -1;
-        String originalText;
+//        int nOfSpace = -1;
+//        String originalText;
 
         boolean call = true;
 
@@ -497,8 +496,8 @@ public class UIManager implements OnTouchListener {
         imm.hideSoftInputFromWindow(mTerminalAdapter.getInputWindowToken(), 0);
     }
 
-    public void onStart() {
-        openKeyboard();
+    public void onStart(boolean openKeyboardOnStart) {
+        if(openKeyboardOnStart) openKeyboard();
         mTerminalAdapter.scrollToEnd();
     }
 

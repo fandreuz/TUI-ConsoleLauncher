@@ -481,7 +481,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
     private class AppsHolder {
 
-        int MOST_USED = 10, NULL = 11, USER_DEFINIED = 12;
+        final int MOST_USED = 10, NULL = 11, USER_DEFINIED = 12;
 
         private List<AppInfo> infos;
         private List<String> appLabels;
@@ -500,12 +500,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 for(int count = 0; count < Options.values().length; count++) {
                     String vl = values.get(Options.valueOf(PREFIX + (count + 1))).value;
 
-                    if(vl.equals(Options.NULL)) suggested.add(new SuggestedApp(NULL));
+                    if(vl.equals(Options.NULL)) continue;
                     if(vl.equals(Options.MOST_USED)) suggested.add(new SuggestedApp(MOST_USED));
                     else {
                         AppInfo info = AppUtils.findAppInfo(vl, infos);
-                        if(info == null) suggested.add(new SuggestedApp(NULL));
-                        else suggested.add(new SuggestedApp(info, USER_DEFINIED));
+                        if(info == null) continue;
                     }
                 }
 
@@ -526,6 +525,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                         return;
                     }
                 }
+                lastWriteable = suggested.size() - 1;
             }
 
             public SuggestedApp get(int index) {
@@ -540,26 +540,25 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 return suggested.indexOf(info);
             }
 
-            private void remove(int index) {
-                suggested.remove(index);
-            }
-
             public void attemptInsertSuggestion(AppInfo info) {
-                if (info.launchedTimes == 0) {
+                if (info.launchedTimes == 0 || lastWriteable == -1) {
                     return;
                 }
-
-                if(lastWriteable == -1) return;
 
                 int index = indexOf(info);
                 if (index == -1) {
                     for (int count = 0; count <= lastWriteable; count++) {
+
                         SuggestedApp app = get(count);
                         if (app.app == null || info.launchedTimes > app.app.launchedTimes) {
-                            this.remove(lastWriteable);
-                            SuggestedApp s = suggested.remove(0);
+                            SuggestedApp s = suggested.get(count);
+
+                            AppInfo before = s.app;
                             s.change(info);
-                            suggested.add(0, s);
+
+                            if(before != null) attemptInsertSuggestion(before);
+
+                            break;
                         }
                     }
                 }
@@ -645,11 +644,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 @Override
                 public int compareTo(@NonNull Object o) {
                     SuggestedApp other = (SuggestedApp) o;
-                    if(this.type == NULL || other.type == NULL) {
-                        if(this.type == NULL && other.type == NULL) return 0;
-                        if(this.type == NULL) return 1;
-                        return -1;
-                    }
 
                     if(this.type == USER_DEFINIED || other.type == USER_DEFINIED) {
                         if(this.type == USER_DEFINIED && other.type == USER_DEFINIED) return other.app.launchedTimes - this.app.launchedTimes;
@@ -660,10 +654,24 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 //                    most_used
                     if(this.app == null || other.app == null) {
                         if(this.app == null && other.app == null) return 0;
-                        if(this.app == null) return -1;
-                        return 1;
+                        if(this.app == null) return 1;
+                        return -1;
                     }
-                    return other.app.launchedTimes - this.app.launchedTimes;
+                    return this.app.launchedTimes - other.app.launchedTimes;
+                }
+
+                @Override
+                public String toString() {
+                    switch (type) {
+                        case USER_DEFINIED:
+                            return "userdef " + (app != null ? app.packageName : "");
+                        case MOST_USED:
+                            return "most used " + (app != null ? app.packageName : "");
+                        case NULL:
+                            return "null";
+                    }
+
+                    return null;
                 }
             }
         }

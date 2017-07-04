@@ -25,7 +25,12 @@ public class alias extends ParamCommand {
             public String exec(ExecutePack pack) {
                 ArrayList<String> args = pack.get(ArrayList.class, 1);
                 if(args.size() < 2) return pack.context.getString(R.string.output_lessarg);
-                return ((MainPack) pack).aliasManager.add(args.remove(0), Tuils.toPlanString(args, Tuils.SPACE));
+
+                if( ((MainPack) pack).aliasManager.add(args.remove(0), Tuils.toPlanString(args, Tuils.SPACE)) ) {
+                    return null;
+                } else {
+                    return pack.context.getString(R.string.output_problemaddingalias);
+                }
             }
 
             @Override
@@ -33,7 +38,7 @@ public class alias extends ParamCommand {
                 return new int[] {CommandAbstraction.TEXTLIST};
             }
         },
-        remove {
+        rm {
             @Override
             public String exec(ExecutePack pack) {
                 ArrayList<String> args = pack.get(ArrayList.class, 1);
@@ -115,7 +120,7 @@ public class alias extends ParamCommand {
 
     @Override
     public int helpRes() {
-        return R.string.help_aliases;
+        return R.string.help_alias;
     }
 
     @Override
