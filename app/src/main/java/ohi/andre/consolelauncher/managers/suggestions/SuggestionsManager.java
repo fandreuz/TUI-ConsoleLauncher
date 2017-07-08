@@ -42,7 +42,7 @@ public class SuggestionsManager {
     private final int MAX_RATE = 100;
     private final int NO_RATE = -1;
 
-    private final int FIRST_INTERVAL = 3;
+    private final int FIRST_INTERVAL = 5;
 
     private boolean showAlias, showAliasWasSet = false;
 

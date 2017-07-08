@@ -5,11 +5,10 @@ import android.net.Uri;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -38,6 +37,13 @@ public class tui extends ParamCommand {
             public String exec(ExecutePack pack) {
                 MainPack info = (MainPack) pack;
                 return info.res.getString(R.string.version_label) + Tuils.SPACE + BuildConfig.VERSION_NAME + Tuils.NEWLINE + Tuils.NEWLINE + info.res.getString(R.string.output_about);
+            }
+        },
+        reset {
+            @Override
+            public String exec(ExecutePack pack) {
+                FileManager.rm(Tuils.getFolder(), false);
+                return null;
             }
         };
 

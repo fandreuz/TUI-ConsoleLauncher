@@ -60,7 +60,6 @@
     <uses-feature android:name="android.hardware.location.gps"
         android:required="false"/>
 
-    <!-- t-ui -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -176,16 +175,6 @@
                     android:scheme="file" />
             </intent-filter>
 
-        </activity>
-
-        <activity android:name=".tuils.tutorial.TutorialActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"
-            android:windowSoftInputMode="stateAlwaysHidden"
-
-            android:excludeFromRecents="true">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".LauncherActivity" />
         </activity>
 
         <service android:name=".managers.notifications.NotificationService"

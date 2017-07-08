@@ -8,12 +8,15 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.text.format.Time;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -239,7 +242,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         } catch (Exception e) {}
 
         for(Map.Entry<String, ?> entry : this.preferences.getAll().entrySet()) {
-            if (entry.getValue() instanceof Integer) map.get(entry.getKey()).launchedTimes = (Integer) entry.getValue();
+            if (entry.getValue() instanceof Integer) {
+                AppInfo info = map.get(entry.getKey());
+                if(info != null) info.launchedTimes = (Integer) entry.getValue();
+            }
         }
 
         for (Map.Entry<String, AppInfo> stringAppInfoEntry : map.entrySet()) {
@@ -505,6 +511,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                     else {
                         AppInfo info = AppUtils.findAppInfo(vl, infos);
                         if(info == null) continue;
+                        suggested.add(new SuggestedApp(info, USER_DEFINIED));
                     }
                 }
 
@@ -541,28 +548,52 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             }
 
             public void attemptInsertSuggestion(AppInfo info) {
+//                Log.e("andre", "attempt: " + info.toString());
+
                 if (info.launchedTimes == 0 || lastWriteable == -1) {
                     return;
                 }
 
-                int index = indexOf(info);
-                if (index == -1) {
-                    for (int count = 0; count <= lastWriteable; count++) {
+//                Log.e("andre", String.valueOf(lastWriteable));
 
-                        SuggestedApp app = get(count);
-                        if (app.app == null || info.launchedTimes > app.app.launchedTimes) {
-                            SuggestedApp s = suggested.get(count);
+                int i = Tuils.find(info, suggested);
+                if(i == -1) {
+                    int index = indexOf(info);
+                    if (index == -1) {
+                        for (int count = 0; count <= lastWriteable; count++) {
+//                            Log.e("andre", "loop: " + count);
 
-                            AppInfo before = s.app;
-                            s.change(info);
+                            SuggestedApp app = get(count);
+//                            Log.e("andre", app.toString());
 
-                            if(before != null) attemptInsertSuggestion(before);
+                            if (app.app == null || info.launchedTimes > app.app.launchedTimes) {
+//                                Log.e("andre", "yes");
+                                SuggestedApp s = suggested.get(count);
 
-                            break;
+//                                Log.e("andre", "before it was: " + s.toString());
+//                                Log.e("andre", suggested.toString());
+
+                                AppInfo before = s.app;
+                                s.change(info);
+
+//                                Log.e("andre", suggested.toString());
+
+                                if(before != null) {
+//                                    Log.e("andre", "rec");
+                                    attemptInsertSuggestion(before);
+                                }
+
+                                break;
+                            }
                         }
                     }
                 }
+//                else {
+//                    Log.e("andre", "index == -1");
+//                    Log.e("andre", suggested.toString());
+//                }
                 sort();
+//                Log.e("andre", suggested.toString());
             }
 
 //            public void updateSuggestion(AppInfo info) {
@@ -638,7 +669,17 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
                 @Override
                 public boolean equals(Object o) {
-                    return this.app != null && o instanceof SuggestedApp && ((SuggestedApp) o).app != null && this.app.equals(((SuggestedApp) o).app);
+                    if(o instanceof SuggestedApp) {
+                        try {
+                            return (app == null && ((SuggestedApp) o).app == null) || app.equals(((SuggestedApp) o).app);
+                        } catch (NullPointerException e) {
+                            return false;
+                        }
+                    } else if(o instanceof AppInfo) {
+                        if(app == null) return false;
+                        return app.equals(o);
+                    }
+                    return false;
                 }
 
                 @Override
@@ -754,7 +795,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         }
     }
 
-    private static class AppUtils {
+    public static class AppUtils {
 
         public static void checkEquality(List<AppInfo> list) {
 
@@ -812,6 +853,49 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             } catch (Exception e) {
                 return packageName;
             }
+        }
+
+        public static String format(PackageInfo info) {
+            StringBuilder builder = new StringBuilder();
+
+            builder.append(info.packageName).append(Tuils.NEWLINE);
+            builder.append("vrs: ").append(info.versionCode).append(" - ").append(info.versionName).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                Time time = new Time();
+                time.set(info.firstInstallTime);
+                builder.append("Install: ").append(time.format(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format))).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+            }
+
+            ActivityInfo[] a = info.activities;
+            if(a != null && a.length > 0) {
+                List<String> as = new ArrayList<>();
+                for(ActivityInfo i : a) as.add(i.name.replace(info.packageName, Tuils.EMPTYSTRING));
+                builder.append("Activities: ").append(Tuils.NEWLINE).append(Tuils.toPlanString(as, Tuils.NEWLINE)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+            }
+
+            ServiceInfo[] s = info.services;
+            if(s != null && s.length > 0) {
+                List<String> ss = new ArrayList<>();
+                for(ServiceInfo i : s) ss.add(i.name.replace(info.packageName, Tuils.EMPTYSTRING));
+                builder.append("Services: ").append(Tuils.NEWLINE).append(Tuils.toPlanString(ss, Tuils.NEWLINE)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+            }
+
+            ActivityInfo[] r = info.receivers;
+            if(r != null && r.length > 0) {
+                List<String> rs = new ArrayList<>();
+                for(ActivityInfo i : r) rs.add(i.name.replace(info.packageName, Tuils.EMPTYSTRING));
+                builder.append("Receivers: ").append(Tuils.NEWLINE).append(Tuils.toPlanString(rs, Tuils.NEWLINE)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+            }
+
+            String[] p = info.requestedPermissions;
+            if(p != null && p.length > 0) {
+                List<String> ps = new ArrayList<>();
+                for(String i : p) ps.add(i.substring(i.lastIndexOf(".") + 1));
+                builder.append("Permissions: ").append(Tuils.NEWLINE).append(Tuils.toPlanString(ps, ", "));
+            }
+
+            return builder.toString();
         }
 
         protected static AppInfo findAppInfo(String packageName, List<AppInfo> infos) {

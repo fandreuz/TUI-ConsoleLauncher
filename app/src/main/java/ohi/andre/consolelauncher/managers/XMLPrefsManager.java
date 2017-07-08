@@ -63,10 +63,40 @@ public class XMLPrefsManager {
                 return "#ffff9800";
             }
         },
+        battery_color_high {
+            @Override
+            public String defaultValue() {
+                return "#4CAF50";
+            }
+        },
+        battery_color_medium {
+            @Override
+            public String defaultValue() {
+                return "#FFEB3B";
+            }
+        },
+        battery_color_low {
+            @Override
+            public String defaultValue() {
+                return "#FF5722";
+            }
+        },
+        time_color {
+            @Override
+            public String defaultValue() {
+                return "#03A9F4";
+            }
+        },
         ram_color {
             @Override
             public String defaultValue() {
                 return "#fff44336";
+            }
+        },
+        toolbar_bg {
+            @Override
+            public String defaultValue() {
+                return "#00000000";
             }
         },
         toolbar_color {
@@ -167,6 +197,24 @@ public class XMLPrefsManager {
             }
         },
         show_device_name {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        show_battery {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        enable_battery_status {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        show_time {
             @Override
             public String defaultValue() {
                 return "true";
@@ -397,6 +445,12 @@ public class XMLPrefsManager {
                 return "true";
             }
         },
+        auto_scroll {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
         donation_message {
             @Override
             public String defaultValue() {
@@ -419,6 +473,30 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "true";
+            }
+        },
+        clear_after_cmds {
+            @Override
+            public String defaultValue() {
+                return "20";
+            }
+        },
+        clear_after_seconds {
+            @Override
+            public String defaultValue() {
+                return "-1";
+            }
+        },
+        max_lines {
+            @Override
+            public String defaultValue() {
+                return "100";
+            }
+        },
+        time_format {
+            @Override
+            public String defaultValue() {
+                return "%m/%d/%y %H.%M";
             }
         };
 
@@ -815,7 +893,7 @@ public class XMLPrefsManager {
         } catch (Exception e) {
             String def = prefsSave.defaultValue();
             if(def == null || def.length() == 0) {
-                return -1;
+                return SkinManager.COLOR_NOT_SET;
             }
             return (int) transform(def, Color.class);
         }

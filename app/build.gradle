@@ -10,8 +10,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 92
-        versionName "5.3f"
+        versionCode 95
+        versionName "5.3i"
     }
 
     buildTypes {
@@ -31,5 +31,13 @@ android {
     dependencies {
         compile 'com.android.support:appcompat-v7:23.4.0'
         compile 'com.github.Andre1299:CompareString:1.4.2'
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File(
+                    output.outputFile.parent,
+                    output.outputFile.name.replace("app-release.apk", "${variant.applicationId}_${variant.versionName}.apk"))
+        }
     }
 }

@@ -7,6 +7,7 @@ package ohi.andre.consolelauncher.managers.notifications;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
 import android.service.notification.NotificationListenerService;
@@ -112,11 +113,18 @@ public class NotificationService extends NotificationListenerService {
 
         if(NotificationManager.textMatches(text) || NotificationManager.titleMatches(title)) return;
 
+        int color;
+        try {
+            color = Color.parseColor(nApp.color);
+        } catch (Exception e) {
+            color = Color.parseColor(default_color);
+        }
+
         Intent msgrcv = new Intent("Msg");
         msgrcv.putExtra("package", pack);
         msgrcv.putExtra("title", title);
         msgrcv.putExtra("text", text);
-        msgrcv.putExtra("color", nApp != null ? nApp.color : default_color);
+        msgrcv.putExtra("color", color);
 
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgrcv);
     }

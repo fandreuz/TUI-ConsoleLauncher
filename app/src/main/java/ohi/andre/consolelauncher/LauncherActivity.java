@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -43,7 +42,6 @@ import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
-import ohi.andre.consolelauncher.tuils.tutorial.TutorialActivity;
 
 public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
@@ -110,7 +108,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         @Override
         public void onOutput(String output) {
             try {
-                ui.setOutput(output, true);
+                ui.setOutput(output);
             } catch (NullPointerException e) {
                 e.printStackTrace();
             }
@@ -146,9 +144,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean(FIRSTACCESS_KEY, false);
             editor.commit();
-
-            Intent intent = new Intent(this, TutorialActivity.class);
-            startActivity(intent);
         }
 
         try {
@@ -269,12 +264,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-//                    reloadOver11();
-//                } else {
-//                    finish();
-//                    startActivity(starterIntent);
-//                }
 
                 Intent mStartActivity = new Intent(LauncherActivity.this, LauncherActivity.class);
                 int mPendingIntentId = 123456;
@@ -286,11 +275,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             }
         });
     }
-
-//    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-//    private void reloadOver11() {
-//        recreate();
-//    }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -356,7 +340,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                         MainPack info = main.getMainPack();
                         main.onCommand(info.lastCommand, null);
                     } else {
-                        ui.setOutput(getString(R.string.output_nopermissions), false);
+                        ui.setOutput(getString(R.string.output_nopermissions));
                         main.sendPermissionNotGrantedWarning();
                     }
                     break;
@@ -375,7 +359,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                     break;
                 case COMMAND_SUGGESTION_REQUEST_PERMISSION:
                     if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                        ui.setOutput(getString(R.string.output_nopermissions), false);
+                        ui.setOutput(getString(R.string.output_nopermissions));
                     }
                     break;
             }
@@ -396,11 +380,11 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             String pack = intent.getStringExtra("package");
             String title = intent.getStringExtra("title");
             String text = intent.getStringExtra("text");
-            String color = intent.getStringExtra("color");
+            int color = intent.getIntExtra("color", -1);
 
             if(ui != null) {
                 ui.setOutput(pack + ": " + (title == null ? Tuils.EMPTYSTRING : title + (text == null ? Tuils.EMPTYSTRING : " --- ")) + (text == null ? Tuils.EMPTYSTRING : text),
-                        Color.parseColor(color),
+                        color,
                         false);
             }
         }

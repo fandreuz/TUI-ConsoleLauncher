@@ -10,13 +10,4 @@
     <integer name="tools_view_weightsum">4</integer>
     <integer name="tools_view_weight">1</integer>
 
-    <integer name="tutorial_bigicon_weightsum">3</integer>
-    <integer name="tutorial_bigicon_weight">1</integer>
-
-    <integer name="tutorial_items_bigmargin">35</integer>
-    <integer name="tutorial_items_smallmargin">15</integer>
-
-    <integer name="tutorial_end_icon_weightsum">7</integer>
-    <integer name="tutorial_end_icon_weight">1</integer>
-
 </resources>

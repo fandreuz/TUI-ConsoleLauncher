@@ -79,12 +79,10 @@ public class FileManager {
     }
 
     private static int mv(File f, File where, boolean su) throws IOException {
+        ShellUtils.CommandResult result = ShellUtils.execCommand("mv " + Tuils.SPACE +
+                f.getAbsolutePath() + Tuils.SPACE +
+                where.getAbsolutePath(), su, null);
 
-        ShellUtils.CommandResult result = ShellUtils.execCommand("mv " +
-                (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
-                Tuils.SPACE +
-                "\"" + f.getAbsolutePath() + "\"" + Tuils.SPACE +
-                "\"" + where.getAbsolutePath() + "\"", su, null);
         return result.result;
     }
 
@@ -101,11 +99,11 @@ public class FileManager {
     }
 
     public static int rm(File f, boolean su) {
-
         ShellUtils.CommandResult result = ShellUtils.execCommand("rm " +
                 (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
                 Tuils.SPACE +
-                "\"" + f.getAbsolutePath() + "\"", su, null);
+                f.getAbsolutePath(), su, null);
+
         if(result == null) return IOERROR;
         return result.result;
     }
@@ -127,11 +125,9 @@ public class FileManager {
     }
 
     private static int cp(File f, File where, boolean su) throws IOException {
-        ShellUtils.CommandResult result = ShellUtils.execCommand("cp " +
-                (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
-                Tuils.SPACE +
-                "\"" + f.getAbsolutePath() + "\"" + Tuils.SPACE +
-                "\"" + where.getAbsolutePath() + "\"", su, null);
+        ShellUtils.CommandResult result = ShellUtils.execCommand("cp " + Tuils.SPACE +
+                f.getAbsolutePath() + Tuils.SPACE +
+                where.getAbsolutePath(), su, null);
         return result.result;
     }
 

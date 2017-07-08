@@ -6,10 +6,12 @@ import android.os.IBinder;
 import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -46,8 +48,6 @@ public class TerminalManager {
     public static final int INPUT = 10;
     public static final int OUTPUT = 11;
 
-    private int cmds = 0;
-
     private long lastEnter;
 
     private CharSequence prefix;
@@ -78,7 +78,19 @@ public class TerminalManager {
 
     private boolean defaultHint = true;
 
-    public TerminalManager(TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
+    private int clearCmdsCount= 0, messagesCmdsCount = 0;
+
+    private int clearAfterCmds, clearAfterMs, maxLines;
+    private Runnable clearRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            clear();
+            mTerminalView.postDelayed(this, clearAfterMs);
+        }
+    };
+
+    public TerminalManager(final TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
                            ImageButton pasteView, SkinManager skinManager, final Context context, MainPack mainPack) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
             throw new UnsupportedOperationException();
@@ -87,6 +99,10 @@ public class TerminalManager {
 
         this.mSkinManager = skinManager;
         this.mainPack = mainPack;
+
+        this.clearAfterMs = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_seconds) * 1000;
+        this.clearAfterCmds = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_cmds);
+        this.maxLines = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.max_lines);
 
         if(skinManager.linuxAppearence) {
             prefix = "$ ";
@@ -109,6 +125,7 @@ public class TerminalManager {
         }
 
         if (backView != null) {
+            ((View) backView.getParent()).setBackgroundColor(mSkinManager.toolbarBg);
             backView.setColorFilter(this.mSkinManager.toolbarColor);
             backView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -156,6 +173,32 @@ public class TerminalManager {
         this.mTerminalView.setTextSize(mSkinManager.getTextSize());
         this.mTerminalView.setFocusable(false);
         setupScroller();
+
+        if(clearAfterMs > 0) this.mTerminalView.postDelayed(clearRunnable, clearAfterMs);
+        if(maxLines > 0) {
+            this.mTerminalView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    int count = terminalView.getLayout().getLineCount() - 1;
+
+                    if(count > maxLines) {
+                        int excessive = count - maxLines;
+
+                        CharSequence text = terminalView.getText();
+                        while (excessive >= 0) {
+                            int index = TextUtils.indexOf(text, Tuils.NEWLINE);
+                            if(index == -1) break;
+                            text = text.subSequence(index + 1, text.length());
+                            excessive--;
+                        }
+
+                        terminalView.setText(text);
+                    }
+
+                    return true;
+                }
+            });
+        }
 
         View v = mTerminalView;
         do {
@@ -222,9 +265,15 @@ public class TerminalManager {
         String input = mInputView.getText().toString().trim();
 
         if(input.length() > 0) {
+            clearCmdsCount++;
+            messagesCmdsCount++;
+
+            if(clearCmdsCount != 0 && clearAfterCmds > 0 && clearCmdsCount % clearAfterCmds == 0) clear();
+
+            for (Messager messager : messagers) if (messagesCmdsCount != 0 && messagesCmdsCount % messager.n == 0) writeToView(messager.message, OUTPUT);
+
             writeToView((input.startsWith("su ") ? "# " : prefix) + input, INPUT);
 
-            cmds++;
             if(cmdList.size() == CMD_LIST_SIZE) {
                 cmdList.remove(0);
             }
@@ -242,15 +291,15 @@ public class TerminalManager {
         return true;
     }
 
-    public void setOutput(String output, boolean fromUser) {
-        setOutput(output, -1, OUTPUT, fromUser);
+    public void setOutput(String output) {
+        setOutput(output, -1, OUTPUT);
     }
 
-    public void setOutput(String output, int color, boolean fromUser) {
-        setOutput(output, color, -1, fromUser);
+    public void setOutput(String output, int color) {
+        setOutput(output, color, -1);
     }
 
-    public void setOutput(String output, int color, int type, boolean fromUser) {
+    public void setOutput(String output, int color, int type) {
         if (output == null) return;
 
         output = output.trim();
@@ -263,9 +312,6 @@ public class TerminalManager {
 
         if(color == -1) writeToView(output, type);
         else writeToView(color, output);
-
-        if(fromUser)
-            for (Messager messager : messagers) if (cmds != 0 && cmds % messager.n == 0) writeToView(messager.message, OUTPUT);
     }
 
     public void onBackPressed() {
@@ -413,13 +459,8 @@ public class TerminalManager {
                 mTerminalView.setText(Tuils.EMPTYSTRING);
             }
         });
-        mInputView.post(new Runnable() {
-            @Override
-            public void run() {
-                mInputView.setText(Tuils.EMPTYSTRING);
-            }
-        });
         cmdList.clear();
+        clearCmdsCount = 0;
     }
 
     public static class Messager {

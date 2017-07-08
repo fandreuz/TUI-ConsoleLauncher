@@ -2,6 +2,8 @@ package ohi.andre.consolelauncher.commands.main.raw;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import java.io.File;
@@ -10,7 +12,6 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -19,7 +20,7 @@ public class apps extends ParamCommand {
 
     private enum Param implements ohi.andre.consolelauncher.commands.main.Param {
 
-        lshidden {
+        lsh {
             @Override
             public int[] args() {
                 return new int[0];
@@ -38,7 +39,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                ((MainPack) pack).appsManager.hideApp(pack.get(String.class, 1));
+                ((MainPack) pack).appsManager.unhideApp(pack.get(String.class, 1));
                 return null;
             }
         },
@@ -52,6 +53,23 @@ public class apps extends ParamCommand {
             public String exec(ExecutePack pack) {
                 ((MainPack) pack).appsManager.hideApp(pack.get(String.class, 1));
                 return null;
+            }
+        },
+        l {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                try {
+                    PackageInfo info = pack.context.getPackageManager().getPackageInfo(pack.get(String.class, 1), PackageManager.GET_PERMISSIONS | PackageManager.GET_ACTIVITIES |
+                            PackageManager.GET_SERVICES | PackageManager.GET_RECEIVERS);
+                    return AppsManager.AppUtils.format(info);
+                } catch (PackageManager.NameNotFoundException e) {
+                    return e.toString();
+                }
             }
         },
         ps {

@@ -1,10 +1,11 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
-import java.util.Calendar;
+import android.text.format.Time;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 
 /**
  * Created by andre on 03/12/15.
@@ -12,14 +13,9 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 public class time implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
-        Calendar c = Calendar.getInstance();
-        int hours = c.get(Calendar.HOUR_OF_DAY);
-        int minutes = c.get(Calendar.MINUTE);
-		
-		if(minutes < 10)
-			return hours + ":0" + minutes;
-		else
-			return hours + ":" + minutes;
+        Time time = new Time();
+        time.setToNow();
+        return time.format(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format));
     }
 
     @Override

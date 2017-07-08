@@ -14,4 +14,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <TextView android:id="@+id/battery_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView android:id="@+id/time_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 </LinearLayout>

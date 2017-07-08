@@ -5,8 +5,4 @@
     <dimen name="suggestion_height">55dp</dimen>
     <dimen name="tools_height">30dp</dimen>
 
-    <dimen name="tutorial_vertical_margin">22dp</dimen>
-
-    <dimen name="tutorial_title_marginbottom">18dp</dimen>
-
 </resources>

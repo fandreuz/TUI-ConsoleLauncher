@@ -133,9 +133,10 @@
     <string name="help_apps">Manage your apps
         \n\nUsage:
         \n>>apps [option] [app name]
-        \n\n-lshidden -> show hidden apps
+        \n\n-lsh -> show hidden apps
         \n-show -> show an hidden application
         \n-hide -> hide an application
+        \n-l -> show details about an application
         \n-ps -> show Google Play Store page for this app
         \n-st -> show Settings details for this app
         \n-frc -> force t-ui to open this app
@@ -161,7 +162,6 @@
         \nUsage: call [number] OR [name] (if you don\'t specify a number or a name you will get the list of your contacts)
         \n\n>>call James
     </string>
-    <string name="help_contacts">Print your contacts</string>
     <string name="help_config">Manage your config files.
         \nUsage:
         \n>>config [option] [file OR config_entry] [*value]
@@ -236,6 +236,7 @@
         \nt>>tui [option]
         \n\n-rm -> remove t-ui
         \n-about -> show info about the developer and the current version</string>
+        \n-reset -> Removes t-ui folder and resets default settings (restart required)
     <string name="help_tutorial">Go to T-UI tutorial page</string>
     <string name="help_uninstall">Uninstall an application
         \nUsage:
@@ -274,7 +275,7 @@
         \nUsage:
         \ncntcts [option] [*optional* contact]
         \n\n-ls -> list your contacts
-        \n-show -> show details about a contact
+        \n-l -> show details about a contact
         \n-new -> create a new contact
         \n-edit -> edit an existing contact
         \n-rm -> remove a contact
@@ -305,105 +306,6 @@
 
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
-
-    <!-- tutorial -->
-    <string name="tutorial_title">A brief introduction</string>
-
-    <string name="tutorial_navigation_right">- - &gt;</string>
-    <string name="tutorial_navigation_left">&lt; - -</string>
-    <string name="tutorial_navigation">End</string>
-    
-    <string-array name="tutorial_help">
-        <item>the command \"help\"</item>
-        <item>11help gives you information about commands that comes with T-UI. click on the input area on the bottom of the screen and type \"help\".</item>
-        <item>10$ help</item>
-        <item>01A\nabout airplane alias aliasfile apps\nB\n...</item>
-        <item>11\"help\" has also an other important feature: it works like Linux\'s man, therefore it tells you how to use a command. For example:</item>
-        <item>10$ help search</item>
-        <item>11will prints this:</item>
-        <item>@string/help_search</item>
-    </string-array>
-    
-    <string-array name="tutorial_apps">
-        <item>how to use your apps</item>
-        <item>11you can launch an app typing its name (or package name) in the input area. For example</item>
-        <item>10$ Chrome</item>
-        <item>01--> com.google.android.apps.chrome.Main</item>
-        <item>11you should also know something about the command \"apps\", which lets you know what apps are installed on your device and provides some shortcuts (mostly to Play Store and Settings)
-            \nTherefore, to learn something about this command:</item>
-        <item>10$ help apps</item>
-        <item>@string/help_apps</item>
-    </string-array>
-    
-    <string-array name="tutorial_usefulcommands">
-        <item>some useful commands</item>
-        <item>11you can call a contact of yours with the command \"call\"</item>
-        <item>00$ call Francesco Andreuzzi</item>
-        <item>11if you want to remove an app from your device use the command \"uninstall\"</item>
-        <item>00$ uninstall AwfulAppName</item>
-        <item>11use \"calc\" for quick math operations</item>
-        <item>00$ calc sqrt(4 * 6 + (189 % 3))</item>
-        <item>11you can also use rm, cp and mv for file-management</item>
-        <item>00$ mv /storage/sdcard0/Downloads/file.txt /storage/sdcard1/Docs</item>
-        <item>11use \"open\" to view files saved on your phone</item>
-        <item>00$ open /storage/sdcard0/Downloads/file.txt</item>
-        <item>11use the command \"clear\" to clean the screen, and \"restart\" to reboot T-UI (and apply setting changes)</item>
-        <item>10$ clear</item>
-        <item>10$ restart</item>
-    </string-array>
-    
-    <string-array name="tutorial_oscommands">
-        <item>control your device</item>
-        <item>11you can toggle your WI-FI connection with the command \"wifi\"</item>
-        <item>00$ wifi</item>
-        <item>11the command \"flash\" lets you turn on or off the flashlight in no time</item>
-        <item>00$ flash</item>
-        <item>11there are many commands like these, for example:</item>
-        <item>10$ airplane</item>
-        <item>10$ bluetooth</item>
-        <item>10$ data true</item>
-        <item>10$ data false</item>
-    </string-array>
-    
-    <string-array name="tutorial_tuixt">
-        <item>tuixt - text editor</item>
-        <item>11the release 5.0 introduced tuixt, the built-in text editor of T-UI. you can start it with this command</item>
-        <item>10$ tuixt [path to file]</item>
-        <item>01the file can also be non existent, in that case tuixt will create it</item>
-        <item>11use the command \"save\" to apply changes on the file, or you will lose them</item>
-        <item>00$ save</item>
-        <item>11the command \"exit\" closes tuixt (without saving!) and brings you to your home screen</item>
-        <item>00$ exit</item>
-    </string-array>
-    
-    <string-array name="tutorial_settings">
-        <item>settings and aliases</item>
-        <item>11T-UI is an highly customizable launcher. you can start using the command \"tuisettings\" which opens a text file called \"settings.txt\"</item>
-        <item>10$ tuisettings</item>
-        <item>11as you will see it contains many lines of \"properties\" written with the scheme \"propertyName=propertyValue\".
-            \ndo not ever edit propertyName, or you\'ll break that feature. just change propertyValue
-            \nfor example:</item>
-        <item>11backgroundColor=#ff000000</item>
-        <item>01if you change #ff000000 (hexadecimal code) to #ffff0000 your background will become red</item>
-        <item>11aliases are one of the most powerful features of T-UI. you can assign a name to a command you use frequently and make it quicker to use
-            \nstart using the command \"aliasfile\"</item>
-        <item>10$ aliasfile</item>
-        <item>11this will open a file called \"alias.txt\" which already contains two aliases I created to show you how they work.
-            \nthe scheme is easy to understand: aliasName=command
-            \nyou can now create your personal aliases appending them to the file (one per line)</item>
-        <item>11you can use an alias typing its name in the input area and clicking enter. for example</item>
-        <item>10$ st</item>
-        <item>01--> com.android.settings.Settings</item>
-    </string-array>
-    
-    <array name="tutorial">
-        <item>@array/tutorial_help</item>
-        <item>@array/tutorial_apps</item>
-        <item>@array/tutorial_usefulcommands</item>
-        <item>@array/tutorial_oscommands</item>
-        <item>@array/tutorial_tuixt</item>
-        <item>@array/tutorial_settings</item>
-    </array>
 
 
 

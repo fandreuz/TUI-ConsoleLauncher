@@ -15,7 +15,6 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -88,7 +87,7 @@ public class cntcts extends ParamCommand {
                 return new int[] {CommandAbstraction.CONTACTNUMBER};
             }
         },
-        show {
+        l {
             @Override
             public String exec(ExecutePack pack) {
                 String[] about = ((MainPack) pack).contacts.about(pack.get(String.class, 1));

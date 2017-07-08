@@ -9,6 +9,7 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.Time;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.Gravity;
@@ -17,6 +18,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
@@ -44,7 +46,8 @@ import ohi.andre.consolelauncher.tuils.stuff.TrashInterfaces;
 public class UIManager implements OnTouchListener {
 
     private final int RAM_DELAY = 3000;
-    public Handler handler;
+    private final int BATTERY_DELAY = 20 * 1000;
+    private final int TIME_DELAY = 1000;
 
     protected Context mContext;
 
@@ -60,16 +63,44 @@ public class UIManager implements OnTouchListener {
     private TerminalManager mTerminalAdapter;
 
     private TextView ram;
+    private TextView device;
+    private TextView battery;
+    private TextView time;
+
+    private Runnable batteryRunnable = new Runnable() {
+        @Override
+        public void run() {
+            int percentage = Tuils.getBatteryPercentage(mContext);
+
+            if(percentage >= 50 || !skinManager.manyColorsBattery) battery.setTextColor(skinManager.battery_color_high);
+            else if(percentage >= 10) battery.setTextColor(skinManager.battery_color_medium);
+            else battery.setTextColor(skinManager.battery_color_low);
+
+            battery.setText(percentage + "%");
+
+            battery.postDelayed(batteryRunnable, BATTERY_DELAY);
+        }
+    };
+
+    private String format;
+    private Runnable timeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Time t = new Time();
+            t.setToNow();
+
+            time.setText(t.format(format));
+            time.postDelayed(this, TIME_DELAY);
+        }
+    };
 
     private ActivityManager.MemoryInfo memory;
     private ActivityManager activityManager;
     private Runnable ramRunnable = new Runnable() {
         @Override
         public void run() {
-            if (handler != null) {
-                updateRamDetails();
-                handler.postDelayed(this, RAM_DELAY);
-            }
+            updateRamDetails();
+            ram.postDelayed(this, RAM_DELAY);
         }
     };
 
@@ -319,7 +350,7 @@ public class UIManager implements OnTouchListener {
         lastSuggestionThread.start();
     }
 
-    protected UIManager(ExecutePack info, Context context, final ViewGroup rootView, final CommandExecuter tri, DevicePolicyManager mgr, ComponentName name,
+    protected UIManager(ExecutePack info, final Context context, final ViewGroup rootView, final CommandExecuter tri, DevicePolicyManager mgr, ComponentName name,
                         MainPack mainPack) {
 
         rootView.setOnTouchListener(this);
@@ -345,19 +376,34 @@ public class UIManager implements OnTouchListener {
             rootView.setBackgroundColor(skinManager.overlayColor);
         }
 
+//        scrolllllll
+        if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.auto_scroll)) {
+            rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    int heightDiff = rootView.getRootView().getHeight() - rootView.getHeight();
+                    if (heightDiff > Tuils.dpToPx(context, 200)) { // if more than 200 dp, it's probably a keyboard...
+                        if(mTerminalAdapter != null) mTerminalAdapter.scrollToEnd();
+                    }
+                }
+            });
+        }
+
         ram = (TextView) rootView.findViewById(R.id.ram_tv);
-        TextView deviceInfo = (TextView) rootView.findViewById(R.id.deviceinfo_tv);
+        device = (TextView) rootView.findViewById(R.id.deviceinfo_tv);
+        battery = (TextView) rootView.findViewById(R.id.battery_tv);
+        time = (TextView) rootView.findViewById(R.id.time_tv);
+
         boolean showRam = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ram);
         if (showRam) {
             ram.setTextColor(skinManager.ramColor);
-            ram.setTextSize(skinManager.getRamSize());
+            ram.setTextSize(skinManager.getTextSize());
             ram.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
 
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
 
-            handler = new Handler();
-            handler.postDelayed(ramRunnable, RAM_DELAY);
+            ram.postDelayed(ramRunnable, RAM_DELAY);
         } else {
             ram.setVisibility(View.GONE);
             ram = null;
@@ -367,13 +413,35 @@ public class UIManager implements OnTouchListener {
         if (showDevice) {
             String deviceName = skinManager.deviceName;
 
-            deviceInfo.setText(deviceName);
-            deviceInfo.setTextColor(skinManager.deviceColor);
-            deviceInfo.setTextSize(skinManager.getDeviceSize());
-
-            deviceInfo.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            device.setText(deviceName);
+            device.setTextColor(skinManager.deviceColor);
+            device.setTextSize(skinManager.getTextSize());
+            device.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         } else {
-            deviceInfo.setVisibility(View.GONE);
+            device.setVisibility(View.GONE);
+        }
+
+        boolean showTime = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_time);
+        if(showTime) {
+            format = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
+
+            time.setTextColor(skinManager.time_color);
+            time.setTextSize(skinManager.getTextSize());
+            time.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+
+            time.post(timeRunnable);
+        } else {
+            time.setVisibility(View.GONE);
+        }
+
+        boolean showBattery = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_battery);
+        if(showBattery) {
+            battery.setTextSize(skinManager.getTextSize());
+            battery.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+
+            battery.post(batteryRunnable);
+        } else {
+            battery.setVisibility(View.GONE);
         }
 
         final boolean inputBottom = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.input_bottom);
@@ -498,7 +566,6 @@ public class UIManager implements OnTouchListener {
 
     public void onStart(boolean openKeyboardOnStart) {
         if(openKeyboardOnStart) openKeyboard();
-        mTerminalAdapter.scrollToEnd();
     }
 
     public void setInput(String s) {
@@ -517,12 +584,12 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.setDefaultHint();
     }
 
-    public void setOutput(String string, boolean fromUser) {
-        mTerminalAdapter.setOutput(string, fromUser);
+    public void setOutput(String string) {
+        mTerminalAdapter.setOutput(string);
     }
 
     public void setOutput(String s, int color, boolean fromUser) {
-        mTerminalAdapter.setOutput(s, color, fromUser);
+        mTerminalAdapter.setOutput(s, color);
     }
 
     public void disableSuggestions() {

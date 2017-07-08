@@ -12,17 +12,19 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
+import android.util.TypedValue;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -40,7 +42,6 @@ import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
-import ohi.andre.consolelauncher.tuils.tutorial.TutorialActivity;
 
 public class Tuils {
 
@@ -60,6 +61,19 @@ public class Tuils {
             }
         }
         return false;
+    }
+
+    public static int getBatteryPercentage(Context context) {
+
+        IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, iFilter);
+
+        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
+        int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
+
+        float batteryPct = level / (float) scale;
+
+        return (int) (batteryPct * 100);
     }
 
     public static boolean containsExtension(String[] array, String value) {
@@ -99,6 +113,11 @@ public class Tuils {
         return songs;
     }
 
+    public static float dpToPx(Context context, float valueInDp) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, valueInDp, metrics);
+    }
+
     public static boolean hasNotificationAccess(Context context) {
         String pkgName = BuildConfig.APPLICATION_ID;
         final String flat = Settings.Secure.getString(context.getContentResolver(), "enabled_notification_listeners");
@@ -127,10 +146,6 @@ public class Tuils {
         context.startActivity(selector);
 
         packageManager.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
-    }
-
-    public static void showTutorial(Context context) {
-        context.startActivity(new Intent(context, TutorialActivity.class));
     }
 
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
@@ -195,6 +210,7 @@ public class Tuils {
     public static int find(Object o, List list) {
         for(int count = 0; count < list.size(); count++) {
             Object x = list.get(count);
+
             if(o instanceof XMLPrefsManager.XMLPrefsSave) {
                 try {
                     if(((XMLPrefsManager.XMLPrefsSave) o).is((String) x)) return count;
@@ -207,8 +223,7 @@ public class Tuils {
                 } catch (Exception e) {}
             }
 
-            Object ob = list.get(count);
-            if(o.equals(ob) || ob.equals(o)) return count;
+            if(o.equals(x) || x.equals(o)) return count;
         }
         return -1;
     }
