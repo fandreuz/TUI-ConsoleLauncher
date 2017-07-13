@@ -1,5 +1,6 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -28,9 +29,14 @@ public class search extends ParamCommand {
 
     private static final String YOUTUBE_PREFIX = "https://www.youtube.com/results?search_query=";
     private static final String GOOGLE_PREFIX = "http://www.google.com/#q=";
+    private static final String GOOGLE_PACKAGE = "com.google.android.googlequicksearchbox";
+    private static final String GOOGLE_ACTIVITY = ".SearchActivity";
     private static final String PLAYSTORE_PREFIX = "market://search?q=";
     private static final String PLAYSTORE_BROWSER_PREFIX = "https://play.google.com/store/search?q=";
     private static final String DUCKDUCKGO_PREFIX = "https://duckduckgo.com/?q=";
+    private static final String DUCKDUCKGO_PACKAGE = "com.duckduckgo.mobile.android";
+    private static final String DUCKDUCKGO_ACTIVITY = ".activity.DuckDuckGo";
+
 
     private enum Param implements ohi.andre.consolelauncher.commands.main.Param {
 
@@ -125,11 +131,21 @@ public class search extends ParamCommand {
     }
 
     private static String google(List<String> args, Context c) {
-        String toSearch = Tuils.toPlanString(args, "+");
 
-        Uri uri = Uri.parse(GOOGLE_PREFIX + toSearch);
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        c.startActivity(intent);
+        try {
+            String toSearch = Tuils.toPlanString(args, " ");
+
+            Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+            intent.setClassName(GOOGLE_PACKAGE, GOOGLE_PACKAGE + GOOGLE_ACTIVITY);
+            intent.putExtra(SearchManager.QUERY, toSearch);
+            c.startActivity(intent);
+        } catch (Exception e) {
+            String toSearch = Tuils.toPlanString(args, "+");
+
+            Uri uri = Uri.parse(GOOGLE_PREFIX + toSearch);
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            c.startActivity(intent);
+        }
 
         return Tuils.EMPTYSTRING;
     }
@@ -159,12 +175,20 @@ public class search extends ParamCommand {
     }
 
     private static String duckDuck(List<String> args, Context c) {
-        String toSearch = Tuils.toPlanString(args, "+");
+        try {
+            String toSearch = Tuils.toPlanString(args, " ");
 
-        Uri uri = Uri.parse(DUCKDUCKGO_PREFIX + toSearch);
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        c.startActivity(intent);
+            Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+            intent.setClassName(DUCKDUCKGO_PACKAGE, DUCKDUCKGO_PACKAGE + DUCKDUCKGO_ACTIVITY);
+            intent.putExtra(SearchManager.QUERY, toSearch);
+            c.startActivity(intent);
+        } catch (Exception e) {
+            String toSearch = Tuils.toPlanString(args, "+");
 
+            Uri uri = Uri.parse(DUCKDUCKGO_PREFIX + toSearch);
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            c.startActivity(intent);
+        }
         return Tuils.EMPTYSTRING;
     }
 
