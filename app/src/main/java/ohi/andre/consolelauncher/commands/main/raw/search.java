@@ -29,7 +29,7 @@ public class search extends ParamCommand {
 
     private static final String YOUTUBE_PREFIX = "https://www.youtube.com/results?search_query=";
     private static final String YOUTUBE_PACKAGE = "com.google.android.youtube";
-	private static final String GOOGLE_PREFIX = "http://www.google.com/#q=";
+    private static final String GOOGLE_PREFIX = "http://www.google.com/#q=";
     private static final String GOOGLE_PACKAGE = "com.google.android.googlequicksearchbox";
     private static final String GOOGLE_ACTIVITY = ".SearchActivity";
     private static final String PLAYSTORE_PREFIX = "market://search?q=";
@@ -240,17 +240,17 @@ public class search extends ParamCommand {
 
     private static String youTube(List<String> args, Context c) {
         try {
-			String toSearch = Tuils.toPlanString(args, " ");
-			Intent intent = new Intent(Intent.ACTION_SEARCH);
-			intent.setPackage(YOUTUBE_PACKAGE);
-			intent.putExtra("query", toSearch);
-			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			c.startActivity(intent);
+            String toSearch = Tuils.toPlanString(args, " 
+            Intent intent = new Intent(Intent.ACTION_SEARCH);
+            intent.setPackage(YOUTUBE_PACKAGE);
+            intent.putExtra("query", toSearch);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            c.startActivity(intent);
         } catch (Exception e) {
-			String toSearch = Tuils.toPlanString(args, "+");
-			Uri uri = Uri.parse(YOUTUBE_PREFIX + toSearch);
-			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-			c.startActivity(intent);
+            String toSearch = Tuils.toPlanString(args, "+");
+            Uri uri = Uri.parse(YOUTUBE_PREFIX + toSearch);
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            c.startActivity(intent);
         }
         return Tuils.EMPTYSTRING;
     }
