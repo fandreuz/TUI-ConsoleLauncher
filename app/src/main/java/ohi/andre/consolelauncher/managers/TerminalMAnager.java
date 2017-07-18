@@ -4,11 +4,14 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.os.IBinder;
 import android.text.InputType;
-import android.text.Spannable;
+import android.text.Layout;
 import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.format.Time;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -45,12 +48,14 @@ public class TerminalManager {
     private final int SCROLL_DELAY = 200;
     private final int CMD_LIST_SIZE = 40;
 
-    public static final int INPUT = 10;
-    public static final int OUTPUT = 11;
+    public static final int CATEGORY_INPUT = 10;
+    public static final int CATEGORY_OUTPUT = 11;
+    public static final int CATEGORY_NOTIFICATION = 12;
 
     private long lastEnter;
 
-    private CharSequence prefix;
+    private String prefix;
+    private String suPrefix;
 
     private ScrollView mScrollView;
     private TextView mTerminalView;
@@ -90,6 +95,12 @@ public class TerminalManager {
         }
     };
 
+    private String timeFormat;
+    private Time time;
+
+    private String inputFormat;
+    private String outputFormat;
+
     public TerminalManager(final TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
                            ImageButton pasteView, SkinManager skinManager, final Context context, MainPack mainPack) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
@@ -104,15 +115,19 @@ public class TerminalManager {
         this.clearAfterCmds = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_cmds);
         this.maxLines = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.max_lines);
 
-        if(skinManager.linuxAppearence) {
-            prefix = "$ ";
-        } else {
-            prefix = ">> ";
-        }
+        timeFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
+        time = new Time();
+
+        inputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.input_format);
+        outputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.output_format);
+
+        prefix = skinManager.prefix;
+        suPrefix = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.input_root_prefix);
+
         prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         prefixView.setTextColor(this.mSkinManager.inputColor);
         prefixView.setTextSize(this.mSkinManager.getTextSize());
-        prefixView.setText(prefix);
+        prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
 
         if (submitView != null) {
             submitView.setColorFilter(mSkinManager.enter_color);
@@ -179,7 +194,12 @@ public class TerminalManager {
             this.mTerminalView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                 @Override
                 public boolean onPreDraw() {
-                    int count = terminalView.getLayout().getLineCount() - 1;
+                    if(TerminalManager.this.mTerminalView == null) return true;
+
+                    Layout l = terminalView.getLayout();
+                    if(l == null) return true;
+
+                    int count = l.getLineCount() - 1;
 
                     if(count > maxLines) {
                         int excessive = count - maxLines;
@@ -270,9 +290,9 @@ public class TerminalManager {
 
             if(clearCmdsCount != 0 && clearAfterCmds > 0 && clearCmdsCount % clearAfterCmds == 0) clear();
 
-            for (Messager messager : messagers) if (messagesCmdsCount != 0 && messagesCmdsCount % messager.n == 0) writeToView(messager.message, OUTPUT);
+            for (Messager messager : messagers) if (messagesCmdsCount != 0 && messagesCmdsCount % messager.n == 0) writeToView(messager.message, CATEGORY_OUTPUT);
 
-            writeToView((input.startsWith("su ") ? "# " : prefix) + input, INPUT);
+            writeToView(input, CATEGORY_INPUT);
 
             if(cmdList.size() == CMD_LIST_SIZE) {
                 cmdList.remove(0);
@@ -291,27 +311,15 @@ public class TerminalManager {
         return true;
     }
 
-    public void setOutput(String output) {
-        setOutput(output, -1, OUTPUT);
-    }
-
-    public void setOutput(String output, int color) {
-        setOutput(output, color, -1);
-    }
-
-    public void setOutput(String output, int color, int type) {
-        if (output == null) return;
-
-        output = output.trim();
-        if(output.equals(Tuils.EMPTYSTRING)) return;
+    public void setOutput(CharSequence output, int type) {
+        if (output == null || output.length() == 0) return;
 
         if(output.equals(clear.CLEAR)) {
             clear();
             return;
         }
 
-        if(color == -1) writeToView(output, type);
-        else writeToView(color, output);
+        writeToView(output, type);
     }
 
     public void onBackPressed() {
@@ -343,34 +351,63 @@ public class TerminalManager {
         }
     }
 
-    private void writeToView(final String text, final int type) {
+    final String FORMAT_INPUT = "%i";
+    final String FORMAT_OUTPUT = "%o";
+    final String FORMAT_PREFIX = "%p";
+    final String FORMAT_TIME = "%t";
+    final String FORMAT_NEWLINE = "%n";
+
+    private void writeToView(final CharSequence text, final int type) {
         mTerminalView.post(new Runnable() {
             @Override
             public void run() {
-                String txt = text;
-                txt = Tuils.NEWLINE.concat(txt);
 
-                SpannableString string = getSpannable(txt, type);
-                mTerminalView.append(string);
-
+                mTerminalView.append(TextUtils.concat(Tuils.NEWLINE, getFinalText(text, type)));
                 scrollToEnd();
             }
         });
     }
+    private CharSequence getFinalText(CharSequence t, int type) {
+        time.setToNow();
+        String tm = time.format(timeFormat);
+        SpannableString st = new SpannableString(tm);
+        st.setSpan(new ForegroundColorSpan(mSkinManager.time_color), 0, tm.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-    private void writeToView(final int color, final String text) {
-        mTerminalView.post(new Runnable() {
-            @Override
-            public void run() {
-                String txt = text;
-                txt = Tuils.NEWLINE.concat(txt);
+        CharSequence s;
+        switch (type) {
+            case CATEGORY_INPUT:
+                t = t.toString().trim();
 
-                SpannableString string = getSpannable(color, txt);
-                mTerminalView.append(string);
+                boolean su = t.toString().startsWith("su ");
 
-                scrollToEnd();
-            }
-        });
+                SpannableString si = new SpannableString(inputFormat);
+                si.setSpan(new ForegroundColorSpan(mSkinManager.inputColor), 0, inputFormat.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                s = TextUtils.replace(si,
+                        new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_TIME, FORMAT_NEWLINE,
+                                FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_TIME.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
+                        new CharSequence[] {t, su ? suPrefix : prefix, st, Tuils.NEWLINE, t, su ? suPrefix : prefix, st, Tuils.NEWLINE});
+
+                break;
+            case CATEGORY_OUTPUT:
+                t = t.toString().trim();
+
+                SpannableString so = new SpannableString(outputFormat);
+                so.setSpan(new ForegroundColorSpan(mSkinManager.outputColor), 0, outputFormat.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                s = TextUtils.replace(so,
+                        new String[] {FORMAT_OUTPUT, FORMAT_TIME, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_TIME.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
+                        new CharSequence[] {t, st, Tuils.NEWLINE, t, st, Tuils.NEWLINE});
+
+                break;
+            case CATEGORY_NOTIFICATION:
+                s = t;
+                break;
+            default:
+                return null;
+        }
+
+        return s;
     }
 
     public void simulateEnter() {
@@ -379,24 +416,6 @@ public class TerminalManager {
 
     public void setupScroller() {
         this.mTerminalView.setMovementMethod(new ScrollingMovementMethod());
-    }
-
-    private SpannableString getSpannable(String text, int type) {
-        int color;
-        if(type == INPUT) {
-            color = mSkinManager.inputColor;
-        } else if(type == OUTPUT) {
-            color = mSkinManager.outputColor;
-        } else {
-            return null;
-        }
-        return getSpannable(color, text);
-    }
-
-    private SpannableString getSpannable(int color, String text) {
-        SpannableString spannableString = new SpannableString(text);
-        spannableString.setSpan(new ForegroundColorSpan(color), 0, spannableString.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-        return spannableString;
     }
 
     public String getInput() {

@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.commands.specific;
 
-import android.util.Log;
-
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;

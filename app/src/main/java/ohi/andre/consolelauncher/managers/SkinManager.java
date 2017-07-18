@@ -25,12 +25,13 @@ public class SkinManager implements Parcelable {
     public int globalFontSize;
 
     public String deviceName;
-    public int deviceColor, inputColor, outputColor, ramColor, bgColor, overlayColor, toolbarColor, toolbarBg, enter_color, time_color, battery_color_high, battery_color_medium, battery_color_low;
+    public int deviceColor, inputColor, outputColor, ramColor, bgColor, overlayColor, toolbarColor, toolbarBg, enter_color, time_color, battery_color_high, battery_color_medium, battery_color_low,
+            storageColor;
 
     public boolean useSystemWp, showSuggestions, systemFont, inputBottom, showSubmit, manyColorsBattery;
 
-    public String username = null;
-    public boolean showUsernameAndDeviceWhenEmpty = true, showUsername = false, showDeviceInSessionInfo = false, linuxAppearence = true, showPath = true;
+    public String username = null, prefix;
+    public boolean showUsernameAndDeviceWhenEmpty = true, showUsername = false, showDeviceInSessionInfo = false, showPath = true;
 
     private int suggDefaultText, suggDefaultBg, suggAliasText, suggAliasBg, suggSongText, suggSongBg, suggContactText, suggContactBg, suggAppText, suggAppBg, suggCmdText, suggCmdBg, suggFileText, suggFileBg;
     private boolean transparentSuggestions;
@@ -59,31 +60,30 @@ public class SkinManager implements Parcelable {
         toolbarBg = XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_bg);
         enter_color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.enter_color);
         time_color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
+        storageColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.storage_color);
         battery_color_high = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_high);
         if(manyColorsBattery) {
             battery_color_medium = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_medium);
             battery_color_low = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_low);
         }
 
+        prefix = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.input_prefix);
+
         deviceName = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.deviceName);
         if (deviceName.length() == 0 || deviceName.equals("null")) {
             deviceName = Build.DEVICE;
         }
 
+        username = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.username);
         showUsernameAndDeviceWhenEmpty = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ssninfo);
         if(showUsernameAndDeviceWhenEmpty) {
             showUsername = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_username_ssninfo);
-            if(showUsername) {
-                username = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.username);
-            }
 
             showDeviceInSessionInfo = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_devicename_ssninfo);
             showPath = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_path_ssninfo);
         }
 
-        linuxAppearence = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.linux_like);
-
-        showSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.enabled);
+        showSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.show_suggestions);
         if (showSuggestions) {
 
             suggDefaultText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_text_color);
@@ -140,7 +140,6 @@ public class SkinManager implements Parcelable {
         showUsernameAndDeviceWhenEmpty = in.readByte() != 0;
         showUsername = in.readByte() != 0;
         showDeviceInSessionInfo = in.readByte() != 0;
-        linuxAppearence = in.readByte() != 0;
         showPath = in.readByte() != 0;
         suggDefaultText = in.readInt();
         suggDefaultBg = in.readInt();
@@ -157,6 +156,7 @@ public class SkinManager implements Parcelable {
         suggFileText = in.readInt();
         suggFileBg = in.readInt();
         transparentSuggestions = in.readByte() != 0;
+        prefix = in.readString();
     }
 
     public static final Creator<SkinManager> CREATOR = new Creator<SkinManager>() {
@@ -265,7 +265,6 @@ public class SkinManager implements Parcelable {
         dest.writeByte((byte) (showUsernameAndDeviceWhenEmpty ? 1 : 0));
         dest.writeByte((byte) (showUsername ? 1 : 0));
         dest.writeByte((byte) (showDeviceInSessionInfo ? 1 : 0));
-        dest.writeByte((byte) (linuxAppearence ? 1 : 0));
         dest.writeByte((byte) (showPath ? 1 : 0));
         dest.writeInt(suggDefaultText);
         dest.writeInt(suggDefaultBg);
@@ -282,5 +281,6 @@ public class SkinManager implements Parcelable {
         dest.writeInt(suggFileText);
         dest.writeInt(suggFileBg);
         dest.writeByte((byte) (transparentSuggestions ? 1 : 0));
+        dest.writeString(prefix);
     }
 }

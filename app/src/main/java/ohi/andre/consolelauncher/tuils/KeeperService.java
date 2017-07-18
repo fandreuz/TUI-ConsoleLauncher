@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
@@ -46,5 +47,7 @@ public class KeeperService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        Log.e("andre", "destroying keep");
     }
 }

@@ -11,12 +11,15 @@
     <string name="version_label">Version:</string>
     <string name="output_error">An unknown error has occurred</string>
     <string name="location_off">Turn on GPS or network location</string>
+    <string name="invalid_integer">Invalid integer</string>
 
     <!-- busy -->
     <string name="busy">T-UI is busy, wait until the execution finishes or use the command \"ctrlc\"</string>
     <string name="busy_hint">type \"ctrlc\" to stop</string>
 
-    <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.\n\nYou can disable this message in >>tuisettings</string>
+    <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.
+        \n\nYou can disable this message with the command "config -set donation_message false"</string>
+    <string name="firsthelp_text">First time with t-ui? Use the command "tutorial" or "help"</string>
 
     <!-- app mgr -->
     <string name="output_appnotfound">Application not found</string>
@@ -30,6 +33,7 @@
 
     <!-- pending operation -->
     <string name="calling">Calling:</string>
+    <string name="restarting">t-ui will be closed in some seconds. Click the home button to restart it</string>
 
     <!-- various outputs -->
     <string name="output_nothingfound">No matches</string>
@@ -158,15 +162,19 @@
         \n\n>>calc sqrt25
         \n5
     </string>
-    <string name="help_call">Perform a call to someone or print your contacts
-        \nUsage: call [number] OR [name] (if you don\'t specify a number or a name you will get the list of your contacts)
-        \n\n>>call James
+    <string name="help_call">Make a call
+        \nUsage: call [number] OR [name]
+        \n\nExample:
+        \n>>call James
+        \n>>call 3283456789
     </string>
+    <string name="help_community">Go to the t-ui community on Google+</string>
     <string name="help_config">Manage your config files.
         \nUsage:
         \n>>config [option] [file OR config_entry] [*value]
         \n\n-set -> set the value of a config node
         \n-open -> open a config file
+        \n-get -> get the value of an option
         \n\nExample:
         \n>>config -set bg_color #ff0000aa
         \n>>config -open suggestions.xml</string>
@@ -237,7 +245,7 @@
         \n\n-rm -> remove t-ui
         \n-about -> show info about the developer and the current version</string>
         \n-reset -> Removes t-ui folder and resets default settings (restart required)
-    <string name="help_tutorial">Go to T-UI tutorial page</string>
+    <string name="help_tutorial">Open the tutorial page on GitHub</string>
     <string name="help_uninstall">Uninstall an application
         \nUsage:
         \n>>uninstall appName OR packageName
@@ -261,12 +269,14 @@
         \nUsage:
         \n>>beep</string>
     <string name="help_notifications">Manage your notifications.
-        \nUsage:
-        \nnotifications [option] [appName] [*optional* color]
         \n\n-inc -> include an application
-        \n-exc -> exclude an appliation
+        \n-exc -> exclude an application
         \n-clr -> set the color to be used for the application
         \n-file -> open notifications.xml
+        \n-title_filter -> set a filter over notifications title ([id] [regex])
+        \n-text_filter -> set a filter over notifications text ([id] [regex])
+        \n-apply_filter -> apply a filter to a particular application ([id] [application])
+        \n-access -> show the system settings page dedicated to the Notification Access
         \n\nExample:
         \n\nnotifications -inc Clock
         \nnotifications -clr Settings #FF0000</string>

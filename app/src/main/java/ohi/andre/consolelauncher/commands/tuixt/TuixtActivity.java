@@ -24,14 +24,12 @@ import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.managers.FileManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -62,8 +60,6 @@ public class TuixtActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.e("andre", "0");
-
         final Typeface lucidaConsole = Typeface.createFromAsset(getAssets(), "lucida_console.ttf");
         final LinearLayout rootView = new LinearLayout(this);
 
@@ -76,7 +72,6 @@ public class TuixtActivity extends Activity {
             path = file.getAbsolutePath();
         }
 
-        Log.e("andre", "1");
         final File file = new File(path);
 
         CommandGroup group = new CommandGroup(this, "ohi.andre.consolelauncher.commands.tuixt.raw");
@@ -90,8 +85,6 @@ public class TuixtActivity extends Activity {
                 return;
             }
         }
-
-        Log.e("andre", "2");
 
         if (!skinManager.useSystemWp) {
             rootView.setBackgroundColor(skinManager.bgColor);
@@ -112,8 +105,6 @@ public class TuixtActivity extends Activity {
 
         TextView prefixView = (TextView) inputOutputView.findViewById(R.id.prefix_view);
 
-        Log.e("andre", "3");
-
         ImageButton submitView = (ImageButton) inputOutputView.findViewById(R.id.submit_tv);
         boolean showSubmit = skinManager.showSubmit;
         if (!showSubmit) {
@@ -121,18 +112,12 @@ public class TuixtActivity extends Activity {
             submitView = null;
         }
 
-        String prefix;
-        if(skinManager.linuxAppearence) {
-            prefix = "$ ";
-        } else {
-            prefix = ">>";
-        }
+        String prefix = skinManager.prefix;
+
         prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         prefixView.setTextColor(skinManager.inputColor);
         prefixView.setTextSize(skinManager.getTextSize());
         prefixView.setText(prefix);
-
-        Log.e("andre", "4");
 
         if (submitView != null) {
             submitView.setColorFilter(skinManager.inputColor);
@@ -158,8 +143,6 @@ public class TuixtActivity extends Activity {
                 return false;
             }
         });
-
-        Log.e("andre", "5");
 
         outputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         outputView.setTextSize(skinManager.getTextSize());
@@ -197,8 +180,6 @@ public class TuixtActivity extends Activity {
         });
 
         setContentView(rootView);
-
-        Log.e("andre", "6");
 
 //
 //
@@ -251,8 +232,6 @@ public class TuixtActivity extends Activity {
             inputView.setText("help");
             inputView.setSelection(inputView.getText().length());
         }
-
-        Log.e("andre", "7");
     }
 
     @Override

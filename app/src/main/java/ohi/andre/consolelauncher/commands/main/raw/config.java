@@ -1,9 +1,6 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
-import android.util.Log;
-
 import java.io.File;
-import java.util.Arrays;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
@@ -44,6 +41,18 @@ public class config extends ParamCommand {
                 File file = new File(Tuils.getFolder(), pack.get(String.class, 1));
                 pack.context.startActivity(Tuils.openFile(file));
                 return null;
+            }
+        },
+        get {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.CONFIG_ENTRY};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                XMLPrefsManager.XMLPrefsSave save = pack.get(XMLPrefsManager.XMLPrefsSave.class, 1);
+                return XMLPrefsManager.get(String.class, save);
             }
         };
 

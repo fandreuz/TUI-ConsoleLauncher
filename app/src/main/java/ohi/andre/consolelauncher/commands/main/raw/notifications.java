@@ -1,13 +1,15 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.content.Intent;
+import android.os.Build;
+import android.provider.Settings;
+
 import java.io.File;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -59,28 +61,43 @@ public class notifications extends ParamCommand {
                 return new int[] {CommandAbstraction.COLOR, CommandAbstraction.VISIBLE_PACKAGE};
             }
         },
-        title_regex {
+        title_filter {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.excludeRegex(pack.get(String.class, 1), "title");
+                int id = pack.get(int.class, 1);
+                NotificationManager.excludeRegex(pack.get(String.class, 2), "title", id);
                 return null;
             }
 
             @Override
             public int[] args() {
-                return new int[] {CommandAbstraction.PLAIN_TEXT};
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
             }
         },
-        text_regex {
+        text_filer {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.excludeRegex(pack.get(String.class, 1), "text");
+                int id = pack.get(int.class, 1);
+                NotificationManager.excludeRegex(pack.get(String.class, 2), "text", id);
                 return null;
             }
 
             @Override
             public int[] args() {
-                return new int[] {CommandAbstraction.PLAIN_TEXT};
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
+            }
+        },
+        apply_filter {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.VISIBLE_PACKAGE};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                int id = pack.get(int.class, 1);
+                NotificationManager.applyFilter(id, pack.get(String.class, 2));
+                return null;
             }
         },
         file {
@@ -92,6 +109,18 @@ public class notifications extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 pack.context.startActivity(Tuils.openFile(new File(Tuils.getFolder(), NotificationManager.PATH)));
+                return null;
+            }
+        },
+        access {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(new Intent(Build.VERSION.SDK_INT >= 22 ? Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS : "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                 return null;
             }
         };
@@ -139,7 +168,7 @@ public class notifications extends ParamCommand {
 
     @Override
     public int minArgs() {
-        return 0;
+        return 1;
     }
 
     @Override
@@ -159,6 +188,10 @@ public class notifications extends ParamCommand {
 
     @Override
     public String onArgNotFound(ExecutePack pack, int index) {
+        String arg = pack.get(String.class, 0).toLowerCase();
+        if(index == 1 && (arg.equals(Param.title_filter.label()) || arg.equals(Param.text_filer.label()) || arg.equals(Param.apply_filter.label()))) {
+            return ((MainPack) pack).context.getString(R.string.invalid_integer);
+        }
         return ((MainPack) pack).context.getString(R.string.output_appnotfound);
     }
 

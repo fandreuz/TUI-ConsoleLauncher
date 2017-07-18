@@ -4,21 +4,23 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/deviceinfo_tv"
+    <TextView android:id="@+id/tv0"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextView
-        android:id="@+id/ram_tv"
+    <TextView android:id="@+id/tv1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextView android:id="@+id/battery_tv"
+    <TextView android:id="@+id/tv2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextView android:id="@+id/time_tv"
+    <TextView android:id="@+id/tv3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView android:id="@+id/tv4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

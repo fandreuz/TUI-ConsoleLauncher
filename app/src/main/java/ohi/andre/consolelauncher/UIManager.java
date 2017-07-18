@@ -27,6 +27,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
@@ -36,6 +39,7 @@ import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
+import ohi.andre.consolelauncher.tuils.Sequence;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
@@ -47,7 +51,9 @@ public class UIManager implements OnTouchListener {
 
     private final int RAM_DELAY = 3000;
     private final int BATTERY_DELAY = 20 * 1000;
+//    private final int BATTERY_CHARGING_DELAY = 300;
     private final int TIME_DELAY = 1000;
+    private final int STORAGE_DELAY = 60 * 1000;
 
     protected Context mContext;
 
@@ -66,40 +72,204 @@ public class UIManager implements OnTouchListener {
     private TextView device;
     private TextView battery;
     private TextView time;
+    private TextView storage;
+
+    int mediumPercentage, lowPercentage;
+    String batteryFormat;
+//    boolean batteryCharging;
 
     private Runnable batteryRunnable = new Runnable() {
         @Override
         public void run() {
             int percentage = Tuils.getBatteryPercentage(mContext);
 
-            if(percentage >= 50 || !skinManager.manyColorsBattery) battery.setTextColor(skinManager.battery_color_high);
-            else if(percentage >= 10) battery.setTextColor(skinManager.battery_color_medium);
-            else battery.setTextColor(skinManager.battery_color_low);
+            if(skinManager.manyColorsBattery) {
+                if(percentage > mediumPercentage) battery.setTextColor(skinManager.battery_color_high);
+                else if(percentage > lowPercentage) battery.setTextColor(skinManager.battery_color_medium);
+                else battery.setTextColor(skinManager.battery_color_low);
+            } else {
+                battery.setTextColor(skinManager.battery_color_high);
+            }
 
-            battery.setText(percentage + "%");
+            if(batteryFormat == null) batteryFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.battery_format);
+
+            String cp = batteryFormat.replaceAll("%[vV]", String.valueOf(percentage)).replaceAll("%[nN]", Tuils.NEWLINE);
+            battery.setText(cp);
 
             battery.postDelayed(batteryRunnable, BATTERY_DELAY);
         }
     };
 
-    private String format;
+//    private Runnable batteryChargingRunnable = new Runnable() {
+//
+//        int[] colors;
+//        int index = 0;
+//
+//        @Override
+//        public void run() {
+//            if(colors == null) {
+//                colors = new int[3];
+//                colors[0] = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_high);
+//                colors[1] = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_medium);
+//                colors[2] = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_low);
+//            }
+//
+//            battery.setTextColor(colors[index++]);
+//            if(index >= colors.length) index = 0;
+//
+//            battery.postDelayed(this, BATTERY_CHARGING_DELAY);
+//        }
+//    };
+
+    private final String INT_AV = "%iav";
+    private final String INT_TOT = "%itot";
+    private final String EXT_AV = "%eav";
+    private final String EXT_TOT = "%etot";
+
+    private List<Pattern> storagePatterns;
+    private String storageFormat;
+    private Runnable storageRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if(storageFormat == null) storageFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.storage_format);
+
+            if(storagePatterns == null) {
+                storagePatterns = new ArrayList<>();
+
+                storagePatterns.add(Pattern.compile(INT_AV + "tb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_AV + "gb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_AV + "mb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_AV + "kb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_AV + "b", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_AV + "%", Pattern.CASE_INSENSITIVE));
+
+                storagePatterns.add(Pattern.compile(INT_TOT + "tb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_TOT + "gb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_TOT + "mb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_TOT + "kb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_TOT + "b", Pattern.CASE_INSENSITIVE));
+
+                storagePatterns.add(Pattern.compile(EXT_AV + "tb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_AV + "gb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_AV + "mb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_AV + "kb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_AV + "b", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_AV + "%", Pattern.CASE_INSENSITIVE));
+
+                storagePatterns.add(Pattern.compile(EXT_TOT + "tb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "gb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "mb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "kb", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "b", Pattern.CASE_INSENSITIVE));
+
+                storagePatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE));
+            }
+
+            double iav = Tuils.getAvailableInternalMemorySize(Tuils.BYTE);
+            double itot = Tuils.getTotalInternalMemorySize(Tuils.BYTE);
+            double eav = Tuils.getAvailableExternalMemorySize(Tuils.BYTE);
+            double etot = Tuils.getTotalExternalMemorySize(Tuils.BYTE);
+
+            String copy = storageFormat;
+
+            copy = storagePatterns.get(0).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.TERA)));
+            copy = storagePatterns.get(1).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.GIGA)));
+            copy = storagePatterns.get(2).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.MEGA)));
+            copy = storagePatterns.get(3).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.KILO)));
+            copy = storagePatterns.get(4).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.BYTE)));
+            copy = storagePatterns.get(5).matcher(copy).replaceAll(String.valueOf(Tuils.percentage(iav, itot)));
+
+            copy = storagePatterns.get(6).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.TERA)));
+            copy = storagePatterns.get(7).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.GIGA)));
+            copy = storagePatterns.get(8).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.MEGA)));
+            copy = storagePatterns.get(9).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.KILO)));
+            copy = storagePatterns.get(10).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.BYTE)));
+
+            copy = storagePatterns.get(11).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.TERA)));
+            copy = storagePatterns.get(12).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA)));
+            copy = storagePatterns.get(14).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.MEGA)));
+            copy = storagePatterns.get(14).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.KILO)));
+            copy = storagePatterns.get(15).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.BYTE)));
+            copy = storagePatterns.get(16).matcher(copy).replaceAll(String.valueOf(Tuils.percentage(eav, etot)));
+
+            copy = storagePatterns.get(17).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.TERA)));
+            copy = storagePatterns.get(18).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA)));
+            copy = storagePatterns.get(19).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.MEGA)));
+            copy = storagePatterns.get(20).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.KILO)));
+            copy = storagePatterns.get(21).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.BYTE)));
+
+            copy = storagePatterns.get(22).matcher(copy).replaceAll(Tuils.NEWLINE);
+
+            storage.setText(copy);
+            storage.postDelayed(this, STORAGE_DELAY);
+        }
+    };
+
+    private String timeFormat;
     private Runnable timeRunnable = new Runnable() {
         @Override
         public void run() {
             Time t = new Time();
             t.setToNow();
 
-            time.setText(t.format(format));
+            time.setText(t.format(timeFormat));
             time.postDelayed(this, TIME_DELAY);
         }
     };
 
     private ActivityManager.MemoryInfo memory;
     private ActivityManager activityManager;
+
+    private final String AV = "%av";
+    private final String TOT = "%tot";
+
+    List<Pattern> ramPatterns;
+    String ramFormat;
     private Runnable ramRunnable = new Runnable() {
         @Override
         public void run() {
-            updateRamDetails();
+            if(ramFormat == null) ramFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.ram_format);
+
+            if(ramPatterns == null) {
+                ramPatterns = new ArrayList<>();
+
+                ramPatterns.add(Pattern.compile(AV + "tb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(AV + "gb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(AV + "mb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(AV + "kb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(AV + "b", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(AV + "%", Pattern.CASE_INSENSITIVE));
+
+                ramPatterns.add(Pattern.compile(TOT + "tb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(TOT + "gb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(TOT + "mb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(TOT + "kb", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(TOT + "b", Pattern.CASE_INSENSITIVE));
+
+                ramPatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE));
+            }
+
+            String copy = ramFormat;
+
+            double av = Tuils.freeRam(activityManager, memory);
+            double tot = Tuils.totalRam() * 1024L;
+
+            copy = ramPatterns.get(0).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.TERA)));
+            copy = ramPatterns.get(1).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.GIGA)));
+            copy = ramPatterns.get(2).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.MEGA)));
+            copy = ramPatterns.get(3).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.KILO)));
+            copy = ramPatterns.get(4).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.BYTE)));
+            copy = ramPatterns.get(5).matcher(copy).replaceAll(String.valueOf(Tuils.percentage(av, tot)));
+
+            copy = ramPatterns.get(6).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.TERA)));
+            copy = ramPatterns.get(7).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.GIGA)));
+            copy = ramPatterns.get(8).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.MEGA)));
+            copy = ramPatterns.get(9).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.KILO)));
+            copy = ramPatterns.get(10).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.BYTE)));
+
+            copy = ramPatterns.get(11).matcher(copy).replaceAll(Tuils.NEWLINE);
+
+            ram.setText(copy);
             ram.postDelayed(this, RAM_DELAY);
         }
     };
@@ -389,10 +559,44 @@ public class UIManager implements OnTouchListener {
             });
         }
 
-        ram = (TextView) rootView.findViewById(R.id.ram_tv);
-        device = (TextView) rootView.findViewById(R.id.deviceinfo_tv);
-        battery = (TextView) rootView.findViewById(R.id.battery_tv);
-        time = (TextView) rootView.findViewById(R.id.time_tv);
+        TextView[] ts = {
+                (TextView) rootView.findViewById(R.id.tv0),
+                (TextView) rootView.findViewById(R.id.tv1),
+                (TextView) rootView.findViewById(R.id.tv2),
+                (TextView) rootView.findViewById(R.id.tv3),
+                (TextView) rootView.findViewById(R.id.tv4)
+        };
+
+        int ramIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.ram_index);
+        int deviceIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.device_index);
+        int batteryIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.battery_index);
+        int timeIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.time_index);
+        int storageIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.storage_index);
+
+        final int RAM = 10, DEVICE = 11, TIME = 12, BATTERY = 13, STORAGE = 14;
+        Sequence s = new Sequence(new int[] {ramIndex, deviceIndex, batteryIndex, timeIndex, storageIndex}, new Integer[] {RAM, DEVICE, BATTERY, TIME, STORAGE});
+
+        for(int count = 0; count < s.size(); count++) {
+            int i = (int) s.get(count);
+
+            switch (i) {
+                case RAM:
+                    ram = ts[count];
+                    break;
+                case DEVICE:
+                    device = ts[count];
+                    break;
+                case BATTERY:
+                    battery = ts[count];
+                    break;
+                case STORAGE:
+                    storage = ts[count];
+                    break;
+                case TIME:
+                    time = ts[count];
+                    break;
+            }
+        }
 
         boolean showRam = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ram);
         if (showRam) {
@@ -403,17 +607,37 @@ public class UIManager implements OnTouchListener {
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
 
-            ram.postDelayed(ramRunnable, RAM_DELAY);
+            ram.post(ramRunnable);
         } else {
             ram.setVisibility(View.GONE);
             ram = null;
         }
 
+        boolean showStorage = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_storage_info);
+        if(showStorage) {
+            storage.setTextColor(skinManager.storageColor);
+            storage.setTextSize(skinManager.getTextSize());
+            storage.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+
+            storage.post(storageRunnable);
+        } else {
+            storage.setVisibility(View.GONE);
+        }
+
         boolean showDevice = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_device_name);
         if (showDevice) {
-            String deviceName = skinManager.deviceName;
 
-            device.setText(deviceName);
+            Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE);
+            Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE);
+            Pattern NEWLINE = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
+
+            String deviceFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.device_format);
+
+            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(skinManager.username);
+            deviceFormat = DV.matcher(deviceFormat).replaceAll(skinManager.deviceName);
+            deviceFormat = NEWLINE.matcher(deviceFormat).replaceAll(Tuils.NEWLINE);
+
+            device.setText(deviceFormat);
             device.setTextColor(skinManager.deviceColor);
             device.setTextSize(skinManager.getTextSize());
             device.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
@@ -423,7 +647,7 @@ public class UIManager implements OnTouchListener {
 
         boolean showTime = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_time);
         if(showTime) {
-            format = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
+            timeFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
 
             time.setTextColor(skinManager.time_color);
             time.setTextSize(skinManager.getTextSize());
@@ -436,6 +660,20 @@ public class UIManager implements OnTouchListener {
 
         boolean showBattery = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_battery);
         if(showBattery) {
+            mediumPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_medium);
+            lowPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_low);
+
+//            batteryCharging = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.battery_charging_animation);
+//            if(batteryCharging) {
+//                IntentFilter filter = new IntentFilter();
+//                filter.addAction(Intent.ACTION_POWER_CONNECTED);
+//                filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+//
+//                LocalBroadcastManager.getInstance(context).registerReceiver(new PowerConnectionReceiver(), filter);
+//            }
+
+            if(mediumPercentage < lowPercentage) skinManager.manyColorsBattery = false;
+
             battery.setTextSize(skinManager.getTextSize());
             battery.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
 
@@ -468,7 +706,7 @@ public class UIManager implements OnTouchListener {
         }
 
 //        toolbar
-        boolean showToolbar = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Toolbar.enabled);
+        boolean showToolbar = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Toolbar.show_toolbar);
         ImageButton backView = null;
         ImageButton nextView = null;
         ImageButton deleteView = null;
@@ -584,12 +822,8 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.setDefaultHint();
     }
 
-    public void setOutput(String string) {
-        mTerminalAdapter.setOutput(string);
-    }
-
-    public void setOutput(String s, int color, boolean fromUser) {
-        mTerminalAdapter.setOutput(s, color);
+    public void setOutput(CharSequence s, int category) {
+        mTerminalAdapter.setOutput(s, category);
     }
 
     public void disableSuggestions() {
@@ -608,11 +842,6 @@ public class UIManager implements OnTouchListener {
 
     public void onBackPressed() {
         mTerminalAdapter.onBackPressed();
-    }
-
-    //    update ram
-    public void updateRamDetails() {
-        ram.setText("free RAM: " + Tuils.ramDetails(activityManager, memory));
     }
 
     public void focusTerminal() {
@@ -721,5 +950,20 @@ public class UIManager implements OnTouchListener {
     public interface OnNewInputListener {
         void onNewInput(String input);
     }
+
+//    public class PowerConnectionReceiver extends BroadcastReceiver {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+//            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+//
+//            if(isCharging) {
+//                battery.postDelayed(batteryChargingRunnable, BATTERY_CHARGING_DELAY);
+//            } else {
+//                battery.removeCallbacks(batteryChargingRunnable);
+//            }
+//        }
+//    }
+
 }
 

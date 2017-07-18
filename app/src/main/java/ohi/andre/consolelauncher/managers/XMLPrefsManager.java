@@ -7,12 +7,18 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -22,6 +28,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class XMLPrefsManager {
@@ -35,6 +43,7 @@ public class XMLPrefsManager {
         String label();
         XmlPrefsElement parent();
         boolean is(String s);
+        String hasReplaced();
     }
 
     public enum Theme implements XMLPrefsSave {
@@ -87,6 +96,12 @@ public class XMLPrefsManager {
                 return "#03A9F4";
             }
         },
+        storage_color {
+            @Override
+            public String defaultValue() {
+                return "#9C27B0";
+            }
+        },
         ram_color {
             @Override
             public String defaultValue() {
@@ -132,6 +147,11 @@ public class XMLPrefsManager {
         public boolean is(String s) {
             return name().equals(s);
         }
+
+        @Override
+        public String hasReplaced() {
+            return null;
+        }
     }
 
     public enum Ui implements XMLPrefsSave {
@@ -143,12 +163,6 @@ public class XMLPrefsManager {
             }
         },
         show_ssninfo {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
-        },
-        linux_like {
             @Override
             public String defaultValue() {
                 return "true";
@@ -208,6 +222,12 @@ public class XMLPrefsManager {
                 return "true";
             }
         },
+        show_storage_info {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
         enable_battery_status {
             @Override
             public String defaultValue() {
@@ -243,6 +263,48 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "false";
             }
+        },
+        device_index {
+            @Override
+            public String defaultValue() {
+                return "0";
+            }
+        },
+        ram_index {
+            @Override
+            public String defaultValue() {
+                return "1";
+            }
+        },
+        battery_index {
+            @Override
+            public String defaultValue() {
+                return "2";
+            }
+        },
+        time_index {
+            @Override
+            public String defaultValue() {
+                return "3";
+            }
+        },
+        storage_index {
+            @Override
+            public String defaultValue() {
+                return "4";
+            }
+        },
+        input_prefix {
+            @Override
+            public String defaultValue() {
+                return "$";
+            }
+        },
+        input_root_prefix {
+            @Override
+            public String defaultValue() {
+                return "#";
+            }
         };
 
         @Override
@@ -259,14 +321,24 @@ public class XMLPrefsManager {
         public boolean is(String s) {
             return name().equals(s);
         }
+
+        @Override
+        public String hasReplaced() {
+            return null;
+        }
     }
 
     public enum Toolbar implements XMLPrefsSave {
 
-        enabled {
+        show_toolbar {
             @Override
             public String defaultValue() {
                 return "true";
+            }
+
+            @Override
+            public String hasReplaced() {
+                return "enabled";
             }
         };
 
@@ -288,10 +360,15 @@ public class XMLPrefsManager {
 
     public enum Suggestions implements XMLPrefsSave {
 
-        enabled {
+        show_suggestions {
             @Override
             public String defaultValue() {
                 return "true";
+            }
+
+            @Override
+            public String hasReplaced() {
+                return "enabled";
             }
         },
         transparent {
@@ -399,6 +476,11 @@ public class XMLPrefsManager {
         public boolean is(String s) {
             return name().equals(s);
         }
+
+        @Override
+        public String hasReplaced() {
+            return null;
+        }
     }
 
     public enum Behavior implements XMLPrefsSave {
@@ -498,6 +580,54 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "%m/%d/%y %H.%M";
             }
+        },
+        battery_medium {
+            @Override
+            public String defaultValue() {
+                return "50";
+            }
+        },
+        battery_low {
+            @Override
+            public String defaultValue() {
+                return "15";
+            }
+        },
+        device_format {
+            @Override
+            public String defaultValue() {
+                return "%d: %u";
+            }
+        },
+        ram_format {
+            @Override
+            public String defaultValue() {
+                return "Available RAM: %avgb GB of %totgb GB (%av%%)";
+            }
+        },
+        battery_format {
+            @Override
+            public String defaultValue() {
+                return "%v%";
+            }
+        },
+        storage_format {
+            @Override
+            public String defaultValue() {
+                return "Internal Storage: %iavmb MB of %itotmb MB (%iav%%)";
+            }
+        },
+        input_format {
+            @Override
+            public String defaultValue() {
+                return "[%t] %p %i";
+            }
+        },
+        output_format {
+            @Override
+            public String defaultValue() {
+                return "%o";
+            }
         };
 
         @Override
@@ -513,6 +643,11 @@ public class XMLPrefsManager {
         @Override
         public boolean is(String s) {
             return name().equals(s);
+        }
+
+        @Override
+        public String hasReplaced() {
+            return null;
         }
     }
 
@@ -539,16 +674,51 @@ public class XMLPrefsManager {
         public boolean is(String s) {
             return name().equals(s);
         }
+
+        @Override
+        public String hasReplaced() {
+            return null;
+        }
     }
 
     public enum XMLPrefsRoot implements XmlPrefsElement {
 
-        THEME("theme.xml", Theme.values()),
-        CMD("cmd.xml", Cmd.values()),
-        TOOLBAR("toolbar.xml", Toolbar.values()),
-        UI("ui.xml", Ui.values()),
-        BEHAVIOR("behavior.xml", Behavior.values()),
-        SUGGESTIONS("suggestions.xml", Suggestions.values());
+        THEME("theme.xml", Theme.values()) {
+            @Override
+            public String[] deleted() {
+                return new String[0];
+            }
+        },
+        CMD("cmd.xml", Cmd.values()) {
+            @Override
+            public String[] deleted() {
+                return new String[] {"time_format"};
+            }
+        },
+        TOOLBAR("toolbar.xml", Toolbar.values()) {
+            @Override
+            public String[] deleted() {
+                return new String[0];
+            }
+        },
+        UI("ui.xml", Ui.values()) {
+            @Override
+            public String[] deleted() {
+                return new String[] {"show_timestamp_before_cmd", "linux_like"};
+            }
+        },
+        BEHAVIOR("behavior.xml", Behavior.values()) {
+            @Override
+            public String[] deleted() {
+                return new String[0];
+            }
+        },
+        SUGGESTIONS("suggestions.xml", Suggestions.values()) {
+            @Override
+            public String[] deleted() {
+                return new String[0];
+            }
+        };
 
 //        notifications
 //        apps
@@ -581,6 +751,7 @@ public class XMLPrefsManager {
     public interface XmlPrefsElement {
         XMLPrefsList getValues();
         void write(XMLPrefsSave save, String value);
+        String[] deleted();
     }
 
     public static class XMLPrefsEntry {
@@ -647,6 +818,15 @@ public class XMLPrefsManager {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
 
+        BufferedReader oldStream = null;
+        HashMap<XMLPrefsSave, String> oldValues = null;
+
+        File old = new File(folder, "settings.txt");
+        if(old.exists()) {
+            oldStream = new BufferedReader(new FileReader(old));
+            oldValues = getOld(oldStream);
+        }
+
         for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
             File file = new File(folder, element.path);
             if(!file.exists() && !file.createNewFile()) continue;
@@ -663,6 +843,14 @@ public class XMLPrefsManager {
             List<XMLPrefsSave> enums = element.enums;
             if(enums == null) continue;
 
+            Map<String, XMLPrefsManager.XMLPrefsSave> replacedValues = new HashMap<>();
+            for(XMLPrefsManager.XMLPrefsSave s : NotificationManager.Options.values()) {
+                String r = s.hasReplaced();
+                if(r != null) replacedValues.put(r, s);
+            }
+
+            String[] deleted = element.deleted();
+
             Element root = (Element) d.getElementsByTagName(element.name()).item(0);
             if(root == null) {
                 resetFile(file, element.name());
@@ -671,43 +859,69 @@ public class XMLPrefsManager {
             }
             NodeList nodes = root.getElementsByTagName("*");
 
-//            List<Node> customNodes = null;
-//            if(element.flag == FLAG_HAS_CUSTOM_TAGS || element.flag == FLAG_CUSTOM_TAGS_ONLY) customNodes = new ArrayList<>();
-
             for(int count = 0; count < nodes.getLength(); count++) {
                 Node node = nodes.item(count);
 
                 String nn = node.getNodeName();
-//                if(customNodes == null) {
                 element.values.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
-//                } else {
-//                    if(element.flag != FLAG_CUSTOM_TAGS_ONLY && element.contains(nn)) element.values.add(nn, node.getAttributes().getNamedItem("value").getNodeValue());
-//                    else {
-//                        customNodes.add(node);
-//                        continue;
-//                    }
-//                }
 
                 for(int en = 0; en < enums.size(); en++) {
                     if(enums.get(en).label().equals(nn)) {
                         enums.remove(en);
                         break;
+                    } else if(replacedValues.containsKey(nn)) {
+                        XMLPrefsManager.XMLPrefsSave s = replacedValues.remove(nn);
+
+                        Element e = (Element) node;
+                        String oldValue = e.hasAttribute(VALUE_ATTRIBUTE) ? e.getAttribute(VALUE_ATTRIBUTE) : null;
+                        root.removeChild(e);
+
+                        replacedValues.put(oldValue, s);
+                    } else if(deleted != null) {
+                        int index = Tuils.find(nn, deleted);
+                        if(index != -1) {
+                            deleted[index] = null;
+                            Element e = (Element) node;
+                            root.removeChild(e);
+                        }
                     }
                 }
             }
 
             if(enums.size() == 0) continue;
 
+            Set<Map.Entry<String, XMLPrefsSave>> es = replacedValues.entrySet();
+
             for(XMLPrefsSave s : enums) {
+                String value = null;
+                for(Map.Entry<String, XMLPrefsManager.XMLPrefsSave> e : es) {
+                    if(e.getValue().equals(s)) value = e.getKey();
+                }
+                if(value == null) {
+
+                    if(oldValues != null) {
+                        for(Map.Entry<XMLPrefsSave, String> sm : oldValues.entrySet()) {
+                            if(sm.getKey().equals(s)) {
+                                value = sm.getValue();
+                            }
+                        }
+                    }
+
+                    if(value == null) value = s.defaultValue();
+                }
+
+
                 Element em = d.createElement(s.label());
-                em.setAttribute(VALUE_ATTRIBUTE, s.defaultValue());
+                em.setAttribute(VALUE_ATTRIBUTE, value);
                 root.appendChild(em);
 
-                element.values.add(s.label(), s.defaultValue());
+                element.values.add(s.label(), value);
             }
 
             writeTo(d, file);
         }
+
+        if(old.exists()) old.delete();
     }
 
     public static Object transform(String s, Class<?> c) {
@@ -728,7 +942,7 @@ public class XMLPrefsManager {
     static final Pattern p1 = Pattern.compile(">");
 //    static final Pattern p2 = Pattern.compile("</");
     static final Pattern p3 = Pattern.compile("\n\n");
-    static final String p1s = ">\n";
+    static final String p1s = ">" + Tuils.NEWLINE;
 //    static final String p2s = "\n</";
     static final String p3s = Tuils.NEWLINE;
 
@@ -757,6 +971,34 @@ public class XMLPrefsManager {
             stream.flush();
             stream.close();
         } catch (Exception e) {}
+    }
+
+    public static String add(File file, String rootName, String elementName, String[] attributeNames, String[] attributeValues) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+
+            Document d;
+            try {
+                d = builder.parse(file);
+            } catch (Exception e) {
+                return e.toString();
+            }
+
+            Element root = (Element) d.getElementsByTagName(rootName).item(0);
+
+            Element element = d.createElement(elementName);
+            for(int c = 0; c < attributeNames.length; c++) {
+                if(attributeValues[c] == null) continue;
+                element.setAttribute(attributeNames[c], attributeValues[c]);
+            }
+            root.appendChild(element);
+
+            writeTo(d, file);
+        } catch (Exception e) {
+            return e.toString();
+        }
+        return null;
     }
 
     public static String set(File file, String rootName, String elementName, String[] attributeNames, String[] attributeValues) {
@@ -911,5 +1153,84 @@ public class XMLPrefsManager {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private static HashMap<XMLPrefsSave, String> getOld(BufferedReader reader) {
+        HashMap<XMLPrefsSave, String> map = new HashMap<>();
+
+        String line;
+        try {
+            while((line = reader.readLine()) != null) {
+                String[] split = line.split("=");
+                if(split.length != 2) continue;
+
+                String name = split[0].trim();
+                String value = split[1];
+
+                XMLPrefsSave s = getCorresponding(name);
+                if(s == null) continue;
+
+                map.put(s, value);
+            }
+        } catch (IOException e) {
+            return null;
+        }
+
+        return map;
+    }
+
+    static final SimpleMutableEntry[] OLD = {
+            new SimpleMutableEntry("deviceColor", Theme.device_color),
+            new SimpleMutableEntry("inputColor", Theme.input_color),
+            new SimpleMutableEntry("outputColor", Theme.output_color),
+            new SimpleMutableEntry("backgroundColor", Theme.bg_color),
+            new SimpleMutableEntry("useSystemFont", Ui.system_font),
+            new SimpleMutableEntry("fontSize", Ui.font_size),
+            new SimpleMutableEntry("ramColor", Theme.ram_color),
+            new SimpleMutableEntry("inputFieldBottom", Ui.input_bottom),
+            new SimpleMutableEntry("username", Ui.username),
+            new SimpleMutableEntry("showUsername", Ui.show_username_ssninfo),
+            new SimpleMutableEntry("showSubmit", Ui.show_enter_button),
+            new SimpleMutableEntry("deviceName", Ui.deviceName),
+            new SimpleMutableEntry("showRam", Ui.show_ram),
+            new SimpleMutableEntry("showDevice", Ui.show_device_name),
+            new SimpleMutableEntry("showToolbar", Toolbar.show_toolbar),
+            new SimpleMutableEntry("showSessionInfoWhenInputEmpty", Ui.show_ssninfo),
+            new SimpleMutableEntry("showPathInSessionInfo", Ui.show_path_ssninfo),
+            new SimpleMutableEntry("showDeviceNameInSessionInfo", Ui.show_devicename_ssninfo),
+
+            new SimpleMutableEntry("suggestionTextColor", Suggestions.default_text_color),
+            new SimpleMutableEntry("transparentSuggestions", Suggestions.transparent),
+            new SimpleMutableEntry("aliasSuggestionBg", Suggestions.alias_bg_color),
+            new SimpleMutableEntry("appSuggestionBg", Suggestions.apps_bg_color),
+            new SimpleMutableEntry("commandSuggestionsBg", Suggestions.cmd_bg_color),
+            new SimpleMutableEntry("songSuggestionBg", Suggestions.song_bg_color),
+            new SimpleMutableEntry("contactSuggestionBg", Suggestions.contact_bg_color),
+            new SimpleMutableEntry("fileSuggestionBg", Suggestions.file_bg_color),
+            new SimpleMutableEntry("defaultSuggestionBg", Suggestions.default_bg_color),
+
+            new SimpleMutableEntry("useSystemWallpaper", Ui.system_wallpaper),
+            new SimpleMutableEntry("fullscreen", Ui.fullscreen),
+            new SimpleMutableEntry("keepAliveWithNotification", Behavior.tui_notification),
+            new SimpleMutableEntry("openKeyboardOnStart", Behavior.auto_show_keyboard),
+
+            new SimpleMutableEntry("fromMediastore", Behavior.songs_from_mediastore),
+            new SimpleMutableEntry("playRandom", Behavior.random_play),
+            new SimpleMutableEntry("songsFolder", Behavior.songs_folder),
+
+            new SimpleMutableEntry("closeOnDbTap", Behavior.double_tap_closes),
+            new SimpleMutableEntry("showSuggestions", Suggestions.show_suggestions),
+            new SimpleMutableEntry("showDonationMessage", Behavior.donation_message),
+            new SimpleMutableEntry("showAliasValue", Behavior.show_alias_content),
+            new SimpleMutableEntry("showAppsHistory", Behavior.show_launch_history),
+
+            new SimpleMutableEntry("defaultSearch", Cmd.default_search)
+    };
+
+    private static XMLPrefsSave getCorresponding(String old) {
+        for(SimpleMutableEntry<String, XMLPrefsSave> s : OLD) {
+            if(old.equals(s.getKey())) return s.getValue();
+        }
+        return null;
     }
 }

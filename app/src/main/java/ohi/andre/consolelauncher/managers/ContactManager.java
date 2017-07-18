@@ -160,6 +160,11 @@ public class ContactManager {
             phones.close();
         }
 
+        List<Contact> cp = new ArrayList<>(contacts);
+        for(int count = 0; count < cp.size(); count++) {
+            if(cp.get(count).numbers.size() == 0) contacts.remove(count--);
+        }
+
         return contacts;
     }
 
@@ -348,12 +353,21 @@ public class ContactManager {
         public String name;
         public List<String> numbers = new ArrayList<>();
 
-        public int selectedNumber;
+        private int selectedNumber;
 
         public Contact(String name, List<String> numbers, int defNumber) {
             this.name = name;
             this.numbers = numbers;
-            this.selectedNumber = defNumber;
+
+            setSelectedNumber(defNumber);
+        }
+
+        public void setSelectedNumber(int s) {
+            if(s >= numbers.size()) s = 0;
+        }
+
+        public int getSelectedNumber() {
+            return selectedNumber;
         }
 
         @Override

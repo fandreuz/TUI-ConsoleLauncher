@@ -42,7 +42,7 @@ public class SuggestionsManager {
     private final int MAX_RATE = 100;
     private final int NO_RATE = -1;
 
-    private final int FIRST_INTERVAL = 5;
+    private final int FIRST_INTERVAL = 7;
 
     private boolean showAlias, showAliasWasSet = false;
 
@@ -525,7 +525,9 @@ public class SuggestionsManager {
             if(type == Suggestion.TYPE_CONTACT) {
                 ContactManager.Contact c = (ContactManager.Contact) object;
 
-                return textBefore + Tuils.SPACE + c.numbers.get(c.selectedNumber);
+                if(c.numbers.size() <= c.getSelectedNumber()) c.setSelectedNumber(0);
+
+                return textBefore + Tuils.SPACE + c.numbers.get(c.getSelectedNumber());
             } else if(type == Suggestion.TYPE_PERMANENT) {
                 return text;
             }

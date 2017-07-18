@@ -8,8 +8,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import java.util.Arrays;
-
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
@@ -21,7 +19,6 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.MusicManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -301,7 +298,9 @@ public class MainManager {
 
             if(showAppHistory) out.onOutput("-->" + Tuils.SPACE + intent.getComponent().getClassName());
 
-            mContext.startActivity(intent);
+//            if(intent.getBooleanExtra("forResult", false)) ((Activity) mContext).startActivityForResult(intent, 0);
+//            else
+                mContext.startActivity(intent);
 
             return true;
         }

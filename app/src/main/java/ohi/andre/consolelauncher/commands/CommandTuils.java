@@ -169,6 +169,8 @@ public class CommandTuils {
             return configEntry(input);
         } else if(type == CommandAbstraction.CONFIG_FILE) {
             return configFile(input);
+        } else if(type == CommandAbstraction.INT) {
+            return integer(input);
         }
 
         return null;
@@ -369,7 +371,6 @@ public class CommandTuils {
 
     private static ArgInfo configEntry(String input) {
         int index = input.indexOf(Tuils.SPACE);
-        if(index == -1) return new ArgInfo(input, null, true, 1);
 
         if(xmlPrefsEntrys == null) {
             xmlPrefsEntrys = new ArrayList<>();
@@ -380,7 +381,7 @@ public class CommandTuils {
             for(XMLPrefsManager.XMLPrefsSave save : NotificationManager.Options.values()) xmlPrefsEntrys.add(save);
         }
 
-        String candidate = input.substring(0,index);
+        String candidate = index == -1 ? input : input.substring(0,index);
         for(XMLPrefsManager.XMLPrefsSave xs : xmlPrefsEntrys) {
             if(xs.is(candidate)) return new ArgInfo(xs, input.substring(index + 1,input.length()), true, 1);
         }
@@ -400,6 +401,23 @@ public class CommandTuils {
             if(xs.equalsIgnoreCase(input)) return new ArgInfo(xs, null, true, 1);
         }
         return new ArgInfo(null, input, false, 0);
+    }
+
+    private static ArgInfo integer(String input) {
+        int n;
+        String s;
+
+        int index = input.indexOf(Tuils.SPACE);
+        if(index == -1) s = input;
+        else s = input.substring(0, index);
+
+        try {
+            n = Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return new ArgInfo(null, input, false, 0);
+        }
+
+        return new ArgInfo(n, index == -1 ? null : input.substring(index + 1), true, 1);
     }
 
     public static boolean isSuRequest(String input) {

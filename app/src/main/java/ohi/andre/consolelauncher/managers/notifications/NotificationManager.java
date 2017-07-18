@@ -2,6 +2,7 @@ package ohi.andre.consolelauncher.managers.notifications;
 
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.util.Log;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -12,7 +13,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -34,11 +38,17 @@ import static ohi.andre.consolelauncher.managers.XMLPrefsManager.writeTo;
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
+    private static int TITLE = 10;
+    private static int TEXT = 11;
+
     private static final String COLOR_ATTRIBUTE = "color";
     private static final String ENABLED_ATTRIBUTE = "enabled";
+    private static final String ID_ATTRIBUTE = "id";
     private static final String ON_ATTRIBUTE = "on";
+    private static final String PACKAGE_ATTRIBUTE = "package";
 
-    private static final String REGEX_NODE = "regex";
+    private static final String FILTER_NODE = "filter";
+    private static final String APPLY_NODE = "apply";
 
     public static final String PATH = "notifications.xml";
     private static final String NAME = "NOTIFICATIONS";
@@ -50,10 +60,15 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     public enum Options implements XMLPrefsManager.XMLPrefsSave {
 
-        enabled {
+        show_notifications {
             @Override
             public String defaultValue() {
                 return "false";
+            }
+
+            @Override
+            public String hasReplaced() {
+                return "enabled";
             }
         },
         default_app_state {
@@ -65,7 +80,13 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         default_color {
             @Override
             public String defaultValue() {
-                return "#FF0000";
+                return "#00FF00";
+            }
+        },
+        notification_format {
+            @Override
+            public String defaultValue() {
+                return "[%t] %pkg: %ttl --- %txt";
             }
         };
 
@@ -83,6 +104,16 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         public boolean is(String s) {
             return name().equals(s);
         }
+
+        @Override
+        public String hasReplaced() {
+            return null;
+        }
+    }
+
+    @Override
+    public String[] deleted() {
+        return new String[0];
     }
 
     @Override
@@ -97,8 +128,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     private static XMLPrefsManager.XMLPrefsList values;
     private static List<NotificatedApp> apps;
-    private static List<Pattern> titleRegexs;
-    private static List<Pattern> textRegexs;
+    private static List<FilterGroup> groups;
+    private static HashMap<Integer, String> applies;
     private static boolean created = false;
 
     private NotificationManager() {}
@@ -110,8 +141,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         created = true;
 
         apps = new ArrayList<>();
-        textRegexs = new ArrayList<>();
-        titleRegexs = new ArrayList<>();
+        groups = new ArrayList<>();
+        applies = new HashMap<>();
         values = new XMLPrefsManager.XMLPrefsList();
 
         try {
@@ -140,6 +171,13 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             }
             NodeList nodes = root.getElementsByTagName("*");
 
+            Map<String, XMLPrefsManager.XMLPrefsSave> replacedValues = new HashMap<>();
+            for(XMLPrefsManager.XMLPrefsSave s : Options.values()) {
+                String r = s.hasReplaced();
+                if(r != null) replacedValues.put(r, s);
+            }
+
+            Main:
             for(int count = 0; count < nodes.getLength(); count++) {
                 Node node = nodes.item(count);
 
@@ -153,16 +191,66 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                             break;
                         }
                     }
-                } else if(nn.equals(REGEX_NODE)) {
+                } else if(nn.equals(FILTER_NODE)) {
                     if(node.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) node;
-                        String regex = e.hasAttribute(REGEX_NODE) ? e.getAttribute(REGEX_NODE) : null;
+
+                        String regex = e.hasAttribute(VALUE_ATTRIBUTE) ? e.getAttribute(VALUE_ATTRIBUTE) : null;
                         if(regex == null) continue;
+
                         String on = e.hasAttribute(ON_ATTRIBUTE) ? e.getAttribute(ON_ATTRIBUTE) : null;
-                        if(on == null || on.equals("text") || !on.equals("title")) textRegexs.add(Pattern.compile(regex));
-                        else titleRegexs.add(Pattern.compile(regex));
+                        if(on == null) on = "text";
+
+                        int id;
+                        try {
+                            id = e.hasAttribute(ID_ATTRIBUTE) ? Integer.parseInt(e.getAttribute(ID_ATTRIBUTE)) : -1;
+                        } catch (NumberFormatException f) {
+                            id = -1;
+                        }
+
+                        Filter filter = Filter.getInstance(regex, on.equals("title") ? TITLE : TEXT);
+                        if(filter == null) continue;
+
+                        if(id != -1) {
+                            for(FilterGroup group : groups) {
+                                if(id == group.id) {
+                                    group.add(filter);
+                                    continue Main;
+                                }
+                            }
+                        }
+
+                        FilterGroup group = new FilterGroup(id);
+                        group.add(filter);
+                        groups.add(group);
                     }
-                } else {
+                } else if(nn.equals(APPLY_NODE)) {
+                    if(node.getNodeType() == Node.ELEMENT_NODE) {
+                        Element e = (Element) node;
+
+                        int id;
+                        try {
+                            id = e.hasAttribute(ID_ATTRIBUTE) ? Integer.parseInt(e.getAttribute(ID_ATTRIBUTE)) : -1;
+                        } catch (NumberFormatException f) {
+                            continue;
+                        }
+
+                        String pkg = e.hasAttribute(PACKAGE_ATTRIBUTE) ? e.getAttribute(PACKAGE_ATTRIBUTE) : null;
+                        if(pkg == null) continue;
+
+                        applies.put(id, pkg);
+                    }
+                } else if(replacedValues.containsKey(nn)) {
+                    XMLPrefsManager.XMLPrefsSave s = replacedValues.remove(nn);
+
+                    Element e = (Element) node;
+                    String oldValue = e.hasAttribute(VALUE_ATTRIBUTE) ? e.getAttribute(VALUE_ATTRIBUTE) : null;
+                    root.removeChild(e);
+
+                    replacedValues.put(oldValue, s);
+                }
+//                todo support delete
+                else {
                     if(node.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) node;
 
@@ -179,38 +267,53 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                 }
             }
 
-
             if(enums.size() > 0) {
+                Set<Map.Entry<String, XMLPrefsManager.XMLPrefsSave>> es = replacedValues.entrySet();
                 for(XMLPrefsManager.XMLPrefsSave s : enums) {
+                    String value = null;
+                    for(Map.Entry<String, XMLPrefsManager.XMLPrefsSave> e : es) {
+                        if(e.getValue().equals(s)) value = e.getKey();
+                    }
+                    if(value == null) value = s.defaultValue();
+
                     Element em = d.createElement(s.label());
-                    em.setAttribute(VALUE_ATTRIBUTE, s.defaultValue());
+                    em.setAttribute(VALUE_ATTRIBUTE, value);
                     root.appendChild(em);
 
-                    values.add(s.label(), s.defaultValue());
+                    values.add(s.label(), value);
                 }
 
                 writeTo(d, file);
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            Log.e("andre", "", e);
+        }
 
         default_app_state = XMLPrefsManager.get(boolean.class, Options.default_app_state);
         default_color = XMLPrefsManager.get(String.class, Options.default_color);
+
+        Out:
+        for(Map.Entry<Integer, String> e : applies.entrySet()) {
+            for(FilterGroup g : groups) {
+                if(g.applyTo(e.getKey(), e.getValue())) continue Out;
+            }
+        }
     }
 
     public static void notificationsChangeFor(NotificatedApp app) {
         notificationsChangeFor(new ArrayList<>(Collections.singletonList(app)));
     }
 
-    public static boolean textMatches(String text) {
-        if(text == null || text.length() == 0) return false;
-        for(Pattern p : textRegexs) if (p.matcher(text).matches()) return true;
+    public static boolean match(String pkg, String text, String title) {
+        for(FilterGroup group : groups) {
+            if(group.pkgs != null && !group.pkgs.contains(pkg)) continue;
+            if(group.check(title, text)) return true;
+        }
         return false;
     }
 
-    public static boolean titleMatches(String text) {
-        if(text == null || text.length() == 0) return false;
-        for(Pattern p : titleRegexs) if (p.matcher(text).matches()) return true;
-        return false;
+    public static String getFormat() {
+        return values.get(Options.notification_format).value;
     }
 
     public static void notificationsChangeFor(List<NotificatedApp> apps) {
@@ -228,8 +331,12 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         setMany(new File(Tuils.getFolder(), PATH), NAME, names, attrNames, values);
     }
 
-    public static void excludeRegex(String regex, String on) {
-        XMLPrefsManager.set(new File(Tuils.getFolder(), PATH), NAME, REGEX_NODE, new String[] {ON_ATTRIBUTE, VALUE_ATTRIBUTE}, new String[] {on, regex});
+    public static void excludeRegex(String regex, String on, int id) {
+        XMLPrefsManager.add(new File(Tuils.getFolder(), PATH), NAME, FILTER_NODE, new String[] {ON_ATTRIBUTE, VALUE_ATTRIBUTE, ID_ATTRIBUTE}, new String[] {on, regex, id + Tuils.EMPTYSTRING});
+    }
+
+    public static void applyFilter(int groupId, String packageName) {
+        XMLPrefsManager.add(new File(Tuils.getFolder(), PATH), NAME, APPLY_NODE, new String[] {ID_ATTRIBUTE, PACKAGE_ATTRIBUTE}, new String[] {groupId + Tuils.EMPTYSTRING, packageName});
     }
 
     public static int apps() {
@@ -261,6 +368,67 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         @Override
         public String toString() {
             return pkg;
+        }
+    }
+
+    public static class Filter {
+        Pattern pattern;
+        int on;
+
+        public static Filter getInstance(String p, int on) {
+            Filter filter = new Filter(p, on);
+            if(filter.pattern == null) return null;
+            return filter;
+        }
+
+        private Filter(String p, int on) {
+            this.on = on;
+
+            try {
+                this.pattern = Pattern.compile(p);
+            } catch (Exception e) {
+                this.pattern = null;
+            }
+        }
+    }
+
+    public static class FilterGroup {
+        List<Filter> brothers;
+        int id;
+
+        List<String> pkgs;
+
+        public FilterGroup(int id) {
+            this.id = id;
+
+            brothers = new ArrayList<>();
+        }
+
+        public void add(Filter filter) {
+            brothers.add(filter);
+        }
+
+        public boolean check(String title, String text) {
+            for(Filter filter : brothers) {
+                String s;
+                if(filter.on == TITLE) s = title;
+                else s = text;
+
+                if(!filter.pattern.matcher(s).find()) return false;
+            }
+
+            return true;
+        }
+
+        public boolean applyTo(int id, String s) {
+            if(this.id == id) {
+                if(pkgs == null) pkgs = new ArrayList<>();
+
+                pkgs.add(s);
+                return true;
+            }
+
+            return false;
         }
     }
 }

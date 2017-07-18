@@ -20,17 +20,23 @@ import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.StatFs;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -164,11 +170,184 @@ public class Tuils {
         a.startActivity(intent);
     }
 
-    public static String ramDetails(ActivityManager mgr, MemoryInfo info) {
-        mgr.getMemoryInfo(info);
-        long availableMegs = info.availMem / 1048576L;
+    public static Intent webPage(String url) {
+        return new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+    }
 
-        return availableMegs + " MB";
+    public static double getAvailableInternalMemorySize(int unit) {
+        File path = Environment.getDataDirectory();
+        StatFs stat = new StatFs(path.getPath());
+
+        long blockSize;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            blockSize = stat.getBlockSizeLong();
+        } else {
+            blockSize = stat.getBlockSize();
+        }
+
+        long availableBlocks = 0;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            availableBlocks = stat.getAvailableBlocksLong();
+        } else {
+            availableBlocks = stat.getAvailableBlocks();
+        }
+
+        return formatSize(availableBlocks * blockSize, unit);
+    }
+
+    public static double getTotalInternalMemorySize(int unit) {
+        File path = Environment.getDataDirectory();
+        StatFs stat = new StatFs(path.getPath());
+
+        long blockSize;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            blockSize = stat.getBlockSizeLong();
+        } else {
+            blockSize = stat.getBlockSize();
+        }
+
+        long totalBlocks = 0;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            totalBlocks = stat.getBlockCountLong();
+        } else {
+            totalBlocks = stat.getBlockCount();
+        }
+
+        return formatSize(totalBlocks * blockSize, unit);
+    }
+
+    public static double getAvailableExternalMemorySize(int unit) {
+        if (externalMemoryAvailable()) {
+            File path = Environment.getExternalStorageDirectory();
+            StatFs stat = new StatFs(path.getPath());
+
+            long blockSize;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                blockSize = stat.getBlockSizeLong();
+            } else {
+                blockSize = stat.getBlockSize();
+            }
+
+            long availableBlocks = 0;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                availableBlocks = stat.getAvailableBlocksLong();
+            } else {
+                availableBlocks = stat.getAvailableBlocks();
+            }
+
+            return formatSize(availableBlocks * blockSize, unit);
+        } else {
+            return -1;
+        }
+    }
+
+    public static double getTotalExternalMemorySize(int unit) {
+        if (externalMemoryAvailable()) {
+            File path = Environment.getExternalStorageDirectory();
+            StatFs stat = new StatFs(path.getPath());
+
+            long blockSize;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                blockSize = stat.getBlockSizeLong();
+            } else {
+                blockSize = stat.getBlockSize();
+            }
+
+            long totalBlocks = 0;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                totalBlocks = stat.getBlockCountLong();
+            } else {
+                totalBlocks = stat.getBlockCount();
+            }
+
+            return formatSize(totalBlocks * blockSize, unit);
+        } else {
+            return -1;
+        }
+    }
+
+    public static double percentage(double part, double total) {
+        return round(part * 100 / total, 2);
+    }
+
+    public static boolean externalMemoryAvailable() {
+        return android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
+    }
+
+    public static double formatSize(long bytes, int unit) {
+        double convert = 1048576.0;
+        double smallConvert = 1024.0;
+
+        double result;
+
+        switch (unit) {
+            case TERA:
+                result = (bytes / convert) / convert;
+                break;
+            case GIGA:
+                result = (bytes / convert) / smallConvert;
+                break;
+            case MEGA:
+                result = bytes / convert;
+                break;
+            case KILO:
+                result = bytes / smallConvert;
+                break;
+            case BYTE:
+                result = bytes;
+                break;
+            default: return -1;
+        }
+
+        return round(result, 2);
+    }
+
+    public static int max(int... ints) {
+        int max = ints[0];
+        for(int count = 1; count < ints.length; count++) {
+            max = Math.max(max, ints[count]);
+        }
+        return max;
+    }
+
+    public static final int TERA = 0;
+    public static final int GIGA = 1;
+    public static final int MEGA = 2;
+    public static final int KILO = 3;
+    public static final int BYTE = 4;
+    public static final int PERCENTAGE = 5;
+
+    private static long total = -1;
+
+    public static double freeRam(ActivityManager mgr, MemoryInfo info) {
+        mgr.getMemoryInfo(info);
+        return info.availMem;
+    }
+
+    public static long totalRam() {
+        if(total > 0) return total;
+
+        BufferedReader reader;
+        try {
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/meminfo")));
+
+            String line;
+            while((line = reader.readLine()) != null) {
+                if(line.startsWith("MemTotal")) {
+                    line = line.replaceAll("\\D+", Tuils.EMPTYSTRING);
+                    return Long.parseLong(line);
+                }
+            }
+        } catch (Exception e) {}
+        return 0;
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
     public static List<String> getClassesInPackage(String packageName, Context c) throws IOException {
@@ -211,19 +390,23 @@ public class Tuils {
         for(int count = 0; count < list.size(); count++) {
             Object x = list.get(count);
 
-            if(o instanceof XMLPrefsManager.XMLPrefsSave) {
+            if (o instanceof XMLPrefsManager.XMLPrefsSave) {
                 try {
-                    if(((XMLPrefsManager.XMLPrefsSave) o).is((String) x)) return count;
+                    if (((XMLPrefsManager.XMLPrefsSave) o).is((String) x)) return count;
                 } catch (Exception e) {}
             }
 
-            if(o instanceof String && x instanceof XMLPrefsManager.XMLPrefsSave) {
+            if (o instanceof String && x instanceof XMLPrefsManager.XMLPrefsSave) {
                 try {
-                    if(((XMLPrefsManager.XMLPrefsSave) x).is((String) o)) return count;
+                    if (((XMLPrefsManager.XMLPrefsSave) x).is((String) o)) return count;
                 } catch (Exception e) {}
             }
 
-            if(o.equals(x) || x.equals(o)) return count;
+            try {
+                if (o.equals(x) || x.equals(o)) return count;
+            } catch (Exception e) {
+                continue;
+            }
         }
         return -1;
     }

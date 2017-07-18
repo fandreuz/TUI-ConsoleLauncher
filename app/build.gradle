@@ -10,8 +10,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 95
-        versionName "5.3i"
+        versionCode 103
+        versionName "6.0a"
     }
 
     buildTypes {
@@ -34,10 +34,13 @@ android {
     }
 
     applicationVariants.all { variant ->
+        def vn = variant.versionName
+        def x = vn.substring(0,vn.length() - 1)
+
         variant.outputs.each { output ->
             output.outputFile = new File(
                     output.outputFile.parent,
-                    output.outputFile.name.replace("app-release.apk", "${variant.applicationId}_${variant.versionName}.apk"))
+                    output.outputFile.name.replace("app-release.apk", "${x}/${variant.applicationId}_${variant.versionName}_${new Date().format("dd-MM_hh.mm.ss")}.apk"))
         }
     }
 }
