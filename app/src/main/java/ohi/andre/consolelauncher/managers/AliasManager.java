@@ -2,36 +2,21 @@ package ohi.andre.consolelauncher.managers;
 
 import android.util.Log;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
-
-import static android.R.id.list;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.resetFile;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.set;
 
 public class AliasManager implements Reloadable {
 
@@ -78,14 +63,12 @@ public class AliasManager implements Reloadable {
     }
 
     public boolean add(String name, String value) {
-        reload();
-
-        if(aliases.containsKey(name)) return false;
+        Log.e("andre", "adding: " + name + " ---> " + value);
 
         FileOutputStream fos;
         try {
-            fos = new FileOutputStream(new File(Tuils.getFolder(), PATH));
-            fos.write((name + "=" + value + Tuils.NEWLINE).getBytes());
+            fos = new FileOutputStream(new File(Tuils.getFolder(), PATH), true);
+            fos.write((Tuils.NEWLINE + name + "=" + value).getBytes());
             fos.close();
 
             aliases.put(name, value);

@@ -176,9 +176,18 @@ public class SuggestionsManager {
             return;
         }
 
-        boolean exec = false;
-        if(lastWord == null || lastWord.length() == 0) for (String s : cmd.params()) suggestions.add(new Suggestion(before, s, exec, NO_RATE, 0));
-        else for (String s : cmd.params()) if (s.startsWith(lastWord)) suggestions.add(new Suggestion(before, s, exec, NO_RATE, 0));
+        if(lastWord == null || lastWord.length() == 0) {
+            for (String s : cmd.params()) {
+                int[] args = cmd.argsForParam(s);
+                suggestions.add(new Suggestion(before, s, args == null || args.length == 0, NO_RATE, 0));
+            }
+        }
+        else {
+            for (String s : cmd.params()) {
+                int[] args = cmd.argsForParam(s);
+                if (s.startsWith(lastWord) || s.replace("-", Tuils.EMPTYSTRING).startsWith(lastWord)) suggestions.add(new Suggestion(before, s, args == null || args.length == 0, NO_RATE, 0));
+            }
+        }
     }
 
     private void suggestArgs(MainPack info, int type, List<Suggestion> suggestions, String prev, String before) {
@@ -300,21 +309,21 @@ public class SuggestionsManager {
 
     private void suggestContact(MainPack info, List<Suggestion> suggestions, String prev, String before) {
         if (prev == null || prev.length() == 0) {
-            for (ContactManager.Contact contact : info.contacts.listContacts())
+            for (ContactManager.Contact contact : info.contacts.getContacts())
                 suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
         }
 
         else if(prev.length() <= FIRST_INTERVAL) {
             prev = prev.trim().toLowerCase();
 
-            for (ContactManager.Contact contact : info.contacts.listContacts())
+            for (ContactManager.Contact contact : info.contacts.getContacts())
                 if(contact.name.toLowerCase().trim().startsWith(prev)) {
                     suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
                 }
         }
 
         else {
-            for(ContactManager.Contact contact : info.contacts.listContacts()) {
+            for(ContactManager.Contact contact : info.contacts.getContacts()) {
                 int rate = ContactManager.USE_SCROLL_COMPARE ? Compare.scrollComparison(contact.name, prev) : Compare.linearComparison(contact.name, prev);
                 if(rate >= min_contacts_rate) {
                     suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));

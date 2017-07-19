@@ -344,7 +344,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                     public void run() {
                         finish();
                     }
-                }, 2 * 1000);
+                }, 1000);
             }
         });
     }
@@ -406,6 +406,10 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        if(permissions.length > 0 && permissions[0].equals(Manifest.permission.READ_CONTACTS) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            ContactManager.refreshContacts(main.getMainPack().contacts, this);
+        }
+
         try {
             switch (requestCode) {
                 case COMMAND_REQUEST_PERMISSION:

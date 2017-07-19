@@ -65,7 +65,9 @@ public class CommandTuils {
         try {
             if(cmd instanceof ParamCommand) {
                 ArgInfo arg = param(input);
-                if(arg == null || !arg.found) return command;
+                if(arg == null || !arg.found) {
+                    return command;
+                }
 
                 input = arg.residualString;
                 String param = (String) arg.arg;
@@ -329,18 +331,15 @@ public class CommandTuils {
     }
 
     private static ArgInfo param(String input) {
-        String param = null;
-        int indexOfFirstSpace = 0;
-
-        if (input.startsWith("-")) {
-            indexOfFirstSpace = input.indexOf(Tuils.SPACE);
-            if (indexOfFirstSpace == -1)
-                indexOfFirstSpace = input.length();
-
-            param = input.substring(0, indexOfFirstSpace);
+        int indexOfFirstSpace = input.indexOf(Tuils.SPACE);
+        if (indexOfFirstSpace == -1) {
+            indexOfFirstSpace = input.length();
         }
 
-        return new ArgInfo(param, param != null ? input.substring(indexOfFirstSpace) : input, param != null, param != null ? 1 : 0);
+        String param = input.substring(0, indexOfFirstSpace).trim();
+        if(param.length() > 0 && !param.startsWith("-")) param = "-".concat(param);
+
+        return new ArgInfo(param.length() > 0 ? param : null, input.substring(indexOfFirstSpace), param.length() > 0, param.length() > 0 ? 1 : 0);
     }
 
     private static ArgInfo packageName(String input, AppsManager apps) {

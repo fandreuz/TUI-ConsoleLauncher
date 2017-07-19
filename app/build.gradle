@@ -10,8 +10,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 103
-        versionName "6.0a"
+        versionCode 104
+        versionName "6.0b"
     }
 
     buildTypes {

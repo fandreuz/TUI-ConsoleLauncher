@@ -7,14 +7,13 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.LauncherActivity;
@@ -25,92 +24,20 @@ public class ContactManager {
     public static final boolean USE_SCROLL_COMPARE = false;
 
     private Context context;
+    private List<Contact> contacts;
 
     public ContactManager(Context context) {
         this.context = context;
+
+        refreshContacts(this, context);
     }
 
-    private Map<String, String> getContacts() {
-        Map<String, String> contacts = new TreeMap<>();
-
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_SUGGESTION_REQUEST_PERMISSION);
-            return contacts;
-        }
-
-        Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
-        if (phones != null) {
-            while (phones.moveToNext()) {
-//                if(!phones.getString(phones.getColumnIndex("sort_key")).equals("Numero Fittizio")) continue;
-//
-//                for(int count = 0; count < phones.getColumnCount(); count++) {
-//
-//                    Log.e("andre", phones.getColumnName(count));
-//                    int type = phones.getType(count);
-//                    switch (type) {
-//                        case Cursor.FIELD_TYPE_STRING:
-//                            Log.e("andre", "string");
-//                            Log.e("andre", phones.getString(count));
-//                            break;
-//                        case Cursor.FIELD_TYPE_FLOAT:
-//                            Log.e("andre", "float");
-//                            Log.e("andre", String.valueOf(phones.getFloat(count)));
-//                            break;
-//                        case Cursor.FIELD_TYPE_BLOB:
-//                            Log.e("andre", "blob");
-//                            Log.e("andre", Arrays.toString(phones.getBlob(count)));
-//                            break;
-//                        case Cursor.FIELD_TYPE_INTEGER:
-//                            Log.e("andre", "int");
-//                            Log.e("andre", String.valueOf(phones.getInt(count)));
-//                            break;
-//                        case Cursor.FIELD_TYPE_NULL:
-//                            Log.e("andre", "null");
-//                            break;
-//                    }
-////                    Log.e("andre", phones.getColumnName(count) + ", " + phones.getString(count));
-//                }
-//                Log.e("andre", "#######");
-//
-                String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                contacts.put(name, phoneNumber);
-            }
-            phones.close();
-        }
-
-        return contacts;
-    }
-
-    public List<String> listNames() {
-        List<String> contacts = new ArrayList<>();
-
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_SUGGESTION_REQUEST_PERMISSION);
-            return contacts;
-        }
-
-        Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, new String[] {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME}, null, null,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
-
-        if (phones != null) {
-            while (phones.moveToNext()) {
-                String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                contacts.add(name);
-            }
-            phones.close();
-        }
-
-        return contacts;
-    }
-
-    public List<Contact> listContacts() {
+    public static void refreshContacts(ContactManager mgr, Context context) {
         List<Contact> contacts = new ArrayList<>();
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_SUGGESTION_REQUEST_PERMISSION);
-            return contacts;
+            return;
         }
 
         Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
@@ -132,7 +59,7 @@ public class ContactManager {
 
                 prim = phones.getInt(phones.getColumnIndex(ContactsContract.Data.IS_SUPER_PRIMARY));
                 if(prim > 0) {
-                    defaultNumber = lastNumbers.size() - 1;
+                    defaultNumber = lastNumbers.size();
                 }
 
                 if(number == null || number.length() == 0) continue;
@@ -147,6 +74,8 @@ public class ContactManager {
 
                     lastNumbers = new ArrayList<>();
                     nrml = new ArrayList<>();
+                    name = null;
+                    defaultNumber = 0;
 
                     name = phones.getString(phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 }
@@ -155,6 +84,10 @@ public class ContactManager {
                 if(!nrml.contains(normalized)) {
                     nrml.add(normalized);
                     lastNumbers.add(number);
+                }
+
+                if(name != null && phones.isLast()) {
+                    contacts.add(new Contact(name, lastNumbers, defaultNumber));
                 }
             }
             phones.close();
@@ -165,57 +98,39 @@ public class ContactManager {
             if(cp.get(count).numbers.size() == 0) contacts.remove(count--);
         }
 
+        mgr.contacts = contacts;
+        Collections.sort(mgr.contacts);
+    }
+
+    public List<String> listNames() {
+        List<String> names = new ArrayList<>();
+        for(Contact c : contacts) names.add(c.name);
+        return names;
+    }
+
+    public List<Contact> getContacts() {
         return contacts;
     }
 
     public List<String> listNamesAndNumbers() {
+        List<String> c = new ArrayList<>();
 
-        List<String> contacts = new ArrayList<>();
+        for(int count = 0; count < contacts.size(); count++) {
+            Contact cnt = contacts.get(count);
 
-        Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                new String[] {ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Data.CONTACT_ID, ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+            StringBuilder b = new StringBuilder();
+            b.append(cnt.name);
 
-        if (phones != null) {
-
-            int lastId = -1;
-            List<String> lastNumbers = new ArrayList<>();
-            List<String> nrml = new ArrayList<>();
-            String name = null;
-
-            while (phones.moveToNext()) {
-                int id = phones.getInt(phones.getColumnIndex(ContactsContract.Data.CONTACT_ID));
-                String number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                if(number == null || number.length() == 0) continue;
-
-                if(phones.isFirst()) {
-                    lastId = id;
-                    name = phones.getString(phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                } else if(id != lastId || phones.isLast()) {
-                    lastId = id;
-
-                    for(String n : lastNumbers) {
-                        name = name + Tuils.NEWLINE + "\t\t\t" + n;
-                    }
-                    contacts.add(name);
-
-                    lastNumbers = new ArrayList<>();
-                    nrml = new ArrayList<>();
-
-                    name = phones.getString(phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                }
-
-                String normalized = number.replaceAll(Tuils.SPACE, Tuils.EMPTYSTRING);
-                if(!nrml.contains(normalized)) {
-                    nrml.add(normalized);
-                    lastNumbers.add(number);
-                }
+            for(String n : cnt.numbers) {
+                b.append(Tuils.NEWLINE);
+                b.append("\t");
+                b.append(n);
             }
-            phones.close();
+
+            c.add(b.toString());
         }
 
-        return contacts;
+        return c;
     }
 
     public static final int NAME = 0;
@@ -294,28 +209,18 @@ public class ContactManager {
     }
 
     public String findNumber(String name, int minRate) {
-        Map<String, String> contacts = getContacts();
-        Set<String> names = contacts.keySet();
+        String mostSuitable = Compare.similarString(listNames(), name, minRate, USE_SCROLL_COMPARE);
+        if(mostSuitable == null) return null;
 
-        String mostSuitable = Compare.similarString(names, name, minRate, USE_SCROLL_COMPARE);
-        return mostSuitable == null ? null : contacts.get(mostSuitable);
+        for(int count = 0; count < contacts.size(); count++) {
+            Contact c = contacts.get(count);
+            if(c.name.equals(mostSuitable)) {
+                if(c.numbers.size() > 0) return c.numbers.get(0);
+            }
+        }
+
+        return null;
     }
-
-//    public void delete(String phone) {
-//        Cursor cursor = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-//                new String[] {ContactsContract.Data.CONTACT_ID},
-//                ContactsContract.CommonDataKinds.Phone.NUMBER + " = ?", new String[]{phone},
-//                null);
-//
-//        if(cursor != null && cursor.getCount() > 0) {
-//            cursor.moveToNext();
-//            String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID));
-//            cursor.close();
-//            context.getContentResolver().delete(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-//                    ContactsContract.Data.CONTACT_ID + " = ?", new String[] {id});
-//        }
-//
-//    }
 
     public boolean delete(String phone) {
         return context.getContentResolver().delete(fromPhone(phone), null, null) > 0;
@@ -349,7 +254,7 @@ public class ContactManager {
         return ContactsContract.Contacts.getLookupUri(mCurrentId, mCurrentLookupKey);
     }
 
-    public static class Contact {
+    public static class Contact implements Comparable<Contact> {
         public String name;
         public List<String> numbers = new ArrayList<>();
 
@@ -364,6 +269,7 @@ public class ContactManager {
 
         public void setSelectedNumber(int s) {
             if(s >= numbers.size()) s = 0;
+            this.selectedNumber = s;
         }
 
         public int getSelectedNumber() {
@@ -373,6 +279,14 @@ public class ContactManager {
         @Override
         public String toString() {
             return name + " : " + numbers.toString();
+        }
+
+        @Override
+        public int compareTo(@NonNull Contact o) {
+            char tf = name.toUpperCase().charAt(0);
+            char of = o.name.toUpperCase().charAt(0);
+
+            return tf - of;
         }
     }
 }

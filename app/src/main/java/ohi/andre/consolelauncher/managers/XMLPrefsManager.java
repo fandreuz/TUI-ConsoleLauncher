@@ -572,7 +572,7 @@ public class XMLPrefsManager {
         max_lines {
             @Override
             public String defaultValue() {
-                return "100";
+                return "300";
             }
         },
         time_format {

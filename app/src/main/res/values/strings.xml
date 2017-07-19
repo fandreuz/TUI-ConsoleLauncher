@@ -138,12 +138,12 @@
         \n\nUsage:
         \n>>apps [option] [app name]
         \n\n-lsh -> show hidden apps
-        \n-show -> show an hidden application
-        \n-hide -> hide an application
-        \n-l -> show details about an application
-        \n-ps -> show Google Play Store page for this app
-        \n-st -> show Settings details for this app
-        \n-frc -> force t-ui to open this app
+        \n-show -> show an hidden app
+        \n-hide -> hide an app
+        \n-l -> show details about an app
+        \n-ps -> show Google Play Store page for an app
+        \n-st -> show Settings details for an app
+        \n-frc -> force t-ui to launch an app
         \n-file -> open apps.xml
         \nno option -> list your apps
         \n\nExample:

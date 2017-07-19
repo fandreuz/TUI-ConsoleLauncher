@@ -29,7 +29,7 @@ public class tui extends ParamCommand {
                 Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
                 info.context.startActivity(uninstallIntent);
 
-                return Tuils.EMPTYSTRING;
+                return null;
             }
         },
         about {
@@ -43,6 +43,31 @@ public class tui extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 FileManager.rm(Tuils.getFolder(), false);
+                return null;
+            }
+        },
+        folder {
+            @Override
+            public String exec(ExecutePack pack) {
+//                Intent intent = new Intent(Intent.ACTION_VIEW);
+//                intent.setData(Uri.fromFile(Tuils.getFolder()));
+//                pack.context.startActivity(intent);
+
+//                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+//                Uri uri = Uri.parse(Tuils.getFolder().getAbsolutePath());
+//                intent.setDataAndType(uri, "*/*");
+//                pack.context.startActivity(Intent.createChooser(intent, "Open folder"));
+
+                Uri selectedUri = Uri.parse(Tuils.getFolder().getAbsolutePath());
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(selectedUri, "resource/folder");
+
+                if (intent.resolveActivityInfo(pack.context.getPackageManager(), 0) != null) {
+                    pack.context.startActivity(intent);
+                } else {
+                    return Tuils.getFolder().getAbsolutePath();
+                }
+
                 return null;
             }
         };
