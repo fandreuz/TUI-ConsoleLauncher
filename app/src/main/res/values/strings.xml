@@ -12,13 +12,14 @@
     <string name="output_error">An unknown error has occurred</string>
     <string name="location_off">Turn on GPS or network location</string>
     <string name="invalid_integer">Invalid integer</string>
+    <string name="activity_not_found">Ativity not found</string>
 
     <!-- busy -->
     <string name="busy">T-UI is busy, wait until the execution finishes or use the command \"ctrlc\"</string>
     <string name="busy_hint">type \"ctrlc\" to stop</string>
 
     <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.
-        \n\nYou can disable this message with the command "config -set donation_message false"</string>
+        \n\nYou can disable this message with the command\nconfig -set donation_message false</string>
     <string name="firsthelp_text">First time with t-ui? Use the command "tutorial" or "help"</string>
 
     <!-- app mgr -->
@@ -44,6 +45,7 @@
     <string name="output_numberformat">Wrong number format</string>
     <string name="output_invalidarg">Invalid argument</string>
     <string name="output_lessarg">Less arguments than expected</string>
+    <string name="output_usedefapp">You can use "apps -default_app" instead</string>
 
     <!-- alias -->
     <string name="output_aliasnotfound">Alias not found:</string>
@@ -81,7 +83,7 @@
     <string name="output_nowriteable">You can\'t write or delete this file</string>
 
     <!-- install/uninstall -->
-    <string name="app_installed">\nApp installed:</string>
+    <string name="app_installed">App installed:</string>
 
     <!-- music -->
     <string name="output_playing">Playing:</string>
@@ -143,6 +145,7 @@
         \n-l -> show details about an app
         \n-ps -> show Google Play Store page for an app
         \n-st -> show Settings details for an app
+        \n-default_app -> change the default_app at the specified index ("apps -default_app index appName")
         \n-frc -> force t-ui to launch an app
         \n-file -> open apps.xml
         \nno option -> list your apps
@@ -205,7 +208,7 @@
     </string>
     <string name="help_previous">Play the last track played</string>
     <string name="help_rate">Help T-UI with a positive rate (or negative, I don\'t know)\t;)</string>
-    <string name="help_refresh">Refresh apps and alias</string>
+    <string name="help_refresh">Refresh apps, alias, music, contacts</string>
     <string name="help_restart">Restart t-ui and load modified values</string>
     <string name="help_rm">Remove a file:
         \nUsage:
@@ -233,7 +236,9 @@
     <string name="help_shellcommands">Print Terminal Emulator commands</string>
     <string name="help_status">Get infos about battery charge, wifi status and mobile data</string>
     <string name="help_stop">Stop the player</string>
-    <string name="help_time">Print current time</string>
+    <string name="help_time">Print the current time with the given format
+        \n\nUsage:
+        \n$ time [index]</string>
     <string name="help_track">Print informations about the current track</string>
     <string name="help_tracks">Print all of the tracks in your music folder</string>
     <string name="help_tuixt">Open the text editor.
@@ -286,21 +291,16 @@
         \ncntcts [option] [*optional* contact]
         \n\n-ls -> list your contacts
         \n-l -> show details about a contact
-        \n-new -> create a new contact
+        \n-add -> create a new contact
         \n-edit -> edit an existing contact
         \n-rm -> remove a contact
         \n\nExample:
         \n\ncntcts -edit James Pike
-        \ncntcts -new</string>
+        \ncntcts -add</string>
     <string name="help_exit">Close T-UI and reset launcher preferences</string>
 
     <!-- linux -->
-    <string name="help_cd">Change the current directory
-        \nUsage:
-        \n>>cd [path]
-        \n\nExample:
-        \n>>cd /storage/sdcard1/DCIM
-    </string>
+    <string name="help_ctrlc">Send SIGINT to the current shell process</string>
     <string name="help_open">Open a file with the default application
         \nUsage:
         \n>>open [pathToFile]

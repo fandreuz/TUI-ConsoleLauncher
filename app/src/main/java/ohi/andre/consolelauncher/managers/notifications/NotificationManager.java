@@ -10,6 +10,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -313,7 +316,16 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public static String getFormat() {
-        return values.get(Options.notification_format).value;
+        try {
+            return values.get(Options.notification_format).value;
+        } catch (Exception e) {
+
+            try {
+                e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
+            } catch (FileNotFoundException e1) {}
+
+            return Options.notification_format.defaultValue();
+        }
     }
 
     public static void notificationsChangeFor(List<NotificatedApp> apps) {

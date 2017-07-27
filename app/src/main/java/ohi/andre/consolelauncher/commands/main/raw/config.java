@@ -5,6 +5,7 @@ import java.io.File;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
+import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -27,6 +28,10 @@ public class config extends ParamCommand {
             public String exec(ExecutePack pack) {
                 XMLPrefsManager.XMLPrefsSave save = pack.get(XMLPrefsManager.XMLPrefsSave.class, 1);
                 save.parent().write(save, pack.get(String.class, 2));
+
+                if(save.label().startsWith("default_app_n")) {
+                    return pack.context.getString(R.string.output_usedefapp);
+                }
                 return null;
             }
         },
@@ -86,7 +91,7 @@ public class config extends ParamCommand {
     }
 
     @Override
-    protected ohi.andre.consolelauncher.commands.main.Param paramForString(String param) {
+    protected ohi.andre.consolelauncher.commands.main.Param paramForString(MainPack pack, String param) {
         return Param.get(param);
     }
 

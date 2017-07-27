@@ -5,11 +5,11 @@ import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.text.format.Time;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.Gravity;
@@ -41,17 +41,18 @@ import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.tuils.Sequence;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
+import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
 import ohi.andre.consolelauncher.tuils.interfaces.SuggestionViewDecorer;
+import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 import ohi.andre.consolelauncher.tuils.stuff.TrashInterfaces;
 
 public class UIManager implements OnTouchListener {
 
     private final int RAM_DELAY = 3000;
     private final int BATTERY_DELAY = 20 * 1000;
-//    private final int BATTERY_CHARGING_DELAY = 300;
     private final int TIME_DELAY = 1000;
     private final int STORAGE_DELAY = 60 * 1000;
 
@@ -100,27 +101,6 @@ public class UIManager implements OnTouchListener {
         }
     };
 
-//    private Runnable batteryChargingRunnable = new Runnable() {
-//
-//        int[] colors;
-//        int index = 0;
-//
-//        @Override
-//        public void run() {
-//            if(colors == null) {
-//                colors = new int[3];
-//                colors[0] = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_high);
-//                colors[1] = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_medium);
-//                colors[2] = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_low);
-//            }
-//
-//            battery.setTextColor(colors[index++]);
-//            if(index >= colors.length) index = 0;
-//
-//            battery.postDelayed(this, BATTERY_CHARGING_DELAY);
-//        }
-//    };
-
     private final String INT_AV = "%iav";
     private final String INT_TOT = "%itot";
     private final String EXT_AV = "%eav";
@@ -163,6 +143,11 @@ public class UIManager implements OnTouchListener {
                 storagePatterns.add(Pattern.compile(EXT_TOT + "b", Pattern.CASE_INSENSITIVE));
 
                 storagePatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE));
+
+                storagePatterns.add(Pattern.compile(INT_AV, Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_TOT, Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_AV, Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_TOT, Pattern.CASE_INSENSITIVE));
             }
 
             double iav = Tuils.getAvailableInternalMemorySize(Tuils.BYTE);
@@ -200,19 +185,20 @@ public class UIManager implements OnTouchListener {
 
             copy = storagePatterns.get(22).matcher(copy).replaceAll(Tuils.NEWLINE);
 
+            copy = storagePatterns.get(23).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.GIGA)));
+            copy = storagePatterns.get(24).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.GIGA)));
+            copy = storagePatterns.get(25).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA)));
+            copy = storagePatterns.get(26).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA)));
+
             storage.setText(copy);
             storage.postDelayed(this, STORAGE_DELAY);
         }
     };
 
-    private String timeFormat;
     private Runnable timeRunnable = new Runnable() {
         @Override
         public void run() {
-            Time t = new Time();
-            t.setToNow();
-
-            time.setText(t.format(timeFormat));
+            time.setText(TimeManager.replace("%t0"));
             time.postDelayed(this, TIME_DELAY);
         }
     };
@@ -297,113 +283,17 @@ public class UIManager implements OnTouchListener {
 
     protected TextWatcher textWatcher = new TextWatcher() {
 
-//        int nOfSpace = -1;
-//        String originalText;
-
-        boolean call = true;
-
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
 
         @Override
         public void onTextChanged(CharSequence s, int st, int b, int c) {
-            if (suggestionsView == null || suggestionsManager == null || !showSuggestions || !call) {
-                return;
-            }
-
-//            if(st == s.length() - 1 && b == 0 && c == 1 && s.subSequence(st, s.length()).toString().equals(Tuils.SPACE) && !navigatingWithSpace) {
-//                nOfSpace++;
-//                originalText = s.toString();
-//            } else if(!navigatingWithSpace) {
-//                nOfSpace = -1;
-//                originalText = null;
-//                navigatingWithSpace = false;
-//            }
-//
-//            if(nOfSpace == suggestionsView.getChildCount() + 1) {
-//                nOfSpace = -2;
-//                navigatingWithSpace = false;
-//            }
-//
-//            if(nOfSpace >= 0) {
-//                if(nOfSpace == 1 && suggestionsView.getChildCount() == 1) {
-//                    nOfSpace = -1;
-//                    originalText = null;
-//                    navigatingWithSpace = false;
-//                } else {
-//                    for(int count = 0; count < suggestionsView.getChildCount(); count++) {
-//                        SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) suggestionsView.getChildAt(count).getTag(R.id.suggestion_id);
-//                        if(originalText.trim().endsWith(suggestion.text)) {
-//                            nOfSpace = -1;
-//                            originalText = null;
-//                            navigatingWithSpace = false;
-//                            break;
-//                        }
-//                        if(count == suggestionsView.getChildCount() - 1) return;
-//                    }
-//                }
-//            }
-
-            String text = s.toString();
-            int lastSpace = text.lastIndexOf(Tuils.SPACE);
-
-            String lastWord = text.substring(lastSpace != -1 ? lastSpace + 1 : 0);
-            String before = text.substring(0, lastSpace != -1 ? lastSpace + 1 : 0);
-
-            requestSuggestion(before, lastWord);
+            requestSuggestion(s.toString());
         }
 
         @Override
-        public void afterTextChanged(Editable s) {
-//            if(nOfSpace == -2) {
-//                s.replace(0,s.length(),originalText);
-//                originalText = null;
-//                return;
-//            }
-//
-//            if(nOfSpace > 0 && s.length() > 0 && call) {
-//                if(nOfSpace == 1) {
-//                    call = false;
-//                    s.replace(s.length() - 1, s.length(), Tuils.EMPTYSTRING);
-//                    call = true;
-//                }
-//
-//                navigatingWithSpace = true;
-//
-//                call = false;
-//                s.replace(s.length() - 1, s.length(), Tuils.EMPTYSTRING);
-//                call = true;
-//
-////                int count = suggestionsView.getChildCount();
-//                int index = nOfSpace - 1;
-////                if(nOfSpace <= count) {
-////                    index = nOfSpace - 1;
-////                }
-////                else {
-////                    index = nOfSpace % (count + 1) - 1;
-////                }
-//
-//                call = false;
-//                if(index != -1) {
-//                    View view = suggestionsView.getChildAt(index);
-//                    SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) view.getTag(R.id.suggestion_id);
-//
-//                    String text = suggestion.getText() + Tuils.SPACE;
-//
-//                    if(originalText.length() < s.length() && suggestion.type == SuggestionsManager.Suggestion.TYPE_PERMANENT) {
-//                        s.replace(originalText.length(), s.length(), text);
-//                    }  else {
-//                        s.replace(0, s.length(), text);
-//                    }
-//                } else {
-//                    Log.e("andre", "4");
-//                    s.replace(0, s.length(), originalText);
-//                    navigatingWithSpace = false;
-//                }
-//                call = true;
-//            }
-        }
+        public void afterTextChanged(Editable s) {}
     };
 
     private View.OnClickListener clickListener = new View.OnClickListener() {
@@ -427,6 +317,19 @@ public class UIManager implements OnTouchListener {
         }
     };
 
+    public void requestSuggestion(String text) {
+        if (suggestionsView == null || suggestionsManager == null || !showSuggestions) {
+            return;
+        }
+
+        int lastSpace = text.lastIndexOf(Tuils.SPACE);
+
+        String lastWord = text.substring(lastSpace != -1 ? lastSpace + 1 : 0);
+        String before = text.substring(0, lastSpace != -1 ? lastSpace + 1 : 0);
+
+        requestSuggestion(before, lastWord);
+    }
+
     private void requestSuggestion(final String before, final String lastWord) {
 
         if (suggestionViewParams == null) {
@@ -434,7 +337,6 @@ public class UIManager implements OnTouchListener {
             suggestionViewParams.setMargins(SkinManager.SUGGESTION_MARGIN, 0, SkinManager.SUGGESTION_MARGIN, 0);
             suggestionViewParams.gravity = Gravity.CENTER_VERTICAL;
         }
-
 
         if(suggestionRunnable == null) {
             suggestionRunnable = new SuggestionRunnable(skinManager, suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent());
@@ -520,13 +422,10 @@ public class UIManager implements OnTouchListener {
         lastSuggestionThread.start();
     }
 
-    protected UIManager(ExecutePack info, final Context context, final ViewGroup rootView, final CommandExecuter tri, DevicePolicyManager mgr, ComponentName name,
-                        MainPack mainPack) {
+    protected UIManager(ExecutePack info, final Context context, final ViewGroup rootView, final CommandExecuter tri, MainPack mainPack) {
 
-        rootView.setOnTouchListener(this);
-
-        policy = mgr;
-        component = name;
+        policy = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        component = new ComponentName(context, PolicyReceiver.class);
 
         mContext = context;
         this.info = (MainPack) info;
@@ -633,8 +532,8 @@ public class UIManager implements OnTouchListener {
 
             String deviceFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.device_format);
 
-            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(skinManager.username);
-            deviceFormat = DV.matcher(deviceFormat).replaceAll(skinManager.deviceName);
+            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(skinManager.username != null ? skinManager.username : "null");
+            deviceFormat = DV.matcher(deviceFormat).replaceAll(skinManager.deviceName != null ? skinManager.deviceName : "null");
             deviceFormat = NEWLINE.matcher(deviceFormat).replaceAll(Tuils.NEWLINE);
 
             device.setText(deviceFormat);
@@ -647,8 +546,6 @@ public class UIManager implements OnTouchListener {
 
         boolean showTime = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_time);
         if(showTime) {
-            timeFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
-
             time.setTextColor(skinManager.time_color);
             time.setTextSize(skinManager.getTextSize());
             time.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
@@ -662,15 +559,6 @@ public class UIManager implements OnTouchListener {
         if(showBattery) {
             mediumPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_medium);
             lowPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_low);
-
-//            batteryCharging = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.battery_charging_animation);
-//            if(batteryCharging) {
-//                IntentFilter filter = new IntentFilter();
-//                filter.addAction(Intent.ACTION_POWER_CONNECTED);
-//                filter.addAction(Intent.ACTION_POWER_DISCONNECTED);
-//
-//                LocalBroadcastManager.getInstance(context).registerReceiver(new PowerConnectionReceiver(), filter);
-//            }
 
             if(mediumPercentage < lowPercentage) skinManager.manyColorsBattery = false;
 
@@ -691,7 +579,7 @@ public class UIManager implements OnTouchListener {
 
         terminalView = (TextView) inputOutputView.findViewById(R.id.terminal_view);
         terminalView.setOnTouchListener(this);
-        ((View) terminalView.getParent()).setOnTouchListener(this);
+        ((View) terminalView.getParent().getParent()).setOnTouchListener(this);
 
         final EditText inputView = (EditText) inputOutputView.findViewById(R.id.input_view);
         inputView.setOnTouchListener(this);
@@ -865,7 +753,7 @@ public class UIManager implements OnTouchListener {
 
             @Override
             public boolean onDoubleTapEvent(MotionEvent e) {
-                return false;
+                return true;
             }
 
             @Override
@@ -881,7 +769,8 @@ public class UIManager implements OnTouchListener {
                     boolean admin = policy.isAdminActive(component);
 
                     if (!admin) {
-                        Tuils.requestAdmin((Activity) mContext, component, mContext.getString(R.string.adminrequest_label));
+                        Intent i = Tuils.requestAdmin(component);
+                        mContext.startActivity(i);
                     } else {
                         policy.lockNow();
                     }
@@ -893,7 +782,8 @@ public class UIManager implements OnTouchListener {
     }
 
     protected boolean verifyDoubleTap(MotionEvent event) {
-        return det != null && det.onTouchEvent(event);
+        boolean b = det.onTouchEvent(event);
+        return det != null && b;
     }
 
     //	 on pause
@@ -903,8 +793,9 @@ public class UIManager implements OnTouchListener {
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        if (verifyDoubleTap(event))
+        if (verifyDoubleTap(event)) {
             return true;
+        }
 
         if (event.getAction() != MotionEvent.ACTION_DOWN)
             return v.onTouchEvent(event);

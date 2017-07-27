@@ -1,4 +1,4 @@
-package ohi.andre.consolelauncher.managers;
+package ohi.andre.consolelauncher.managers.music;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 import ohi.andre.comparestring.Compare;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.broadcast.HeadsetBroadcast;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;

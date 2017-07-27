@@ -11,6 +11,7 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -25,7 +26,7 @@ public class notifications extends ParamCommand {
         inc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 1), null, true));
+                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName(), null, true));
                 return null;
             }
 
@@ -37,7 +38,7 @@ public class notifications extends ParamCommand {
         exc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 1), null, false));
+                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName(), null, false));
                 return null;
             }
 
@@ -51,7 +52,7 @@ public class notifications extends ParamCommand {
             public String exec(ExecutePack pack) {
                 if(pack.args.length < 3) return ((MainPack) pack).context.getString(R.string.help_notifications);
                 try {
-                    NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(String.class, 2), pack.get(String.class, 1), true));
+                    NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(AppsManager.LaunchInfo.class, 2).componentName.getPackageName(), pack.get(String.class, 1), true));
                 } catch (Exception e) {}
                 return null;
             }
@@ -74,7 +75,7 @@ public class notifications extends ParamCommand {
                 return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
             }
         },
-        text_filer {
+        text_filter {
             @Override
             public String exec(ExecutePack pack) {
                 int id = pack.get(int.class, 1);
@@ -96,7 +97,7 @@ public class notifications extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 int id = pack.get(int.class, 1);
-                NotificationManager.applyFilter(id, pack.get(String.class, 2));
+                NotificationManager.applyFilter(id, pack.get(AppsManager.LaunchInfo.class, 2).componentName.getPackageName());
                 return null;
             }
         },
@@ -120,7 +121,11 @@ public class notifications extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                pack.context.startActivity(new Intent(Build.VERSION.SDK_INT >= 22 ? Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS : "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+                try {
+                    pack.context.startActivity(new Intent(Build.VERSION.SDK_INT >= 22 ? Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS : "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+                } catch (Exception e) {
+                    return pack.context.getString(R.string.activity_not_found);
+                }
                 return null;
             }
         };
@@ -152,7 +157,7 @@ public class notifications extends ParamCommand {
     }
 
     @Override
-    protected ohi.andre.consolelauncher.commands.main.Param paramForString(String param) {
+    protected ohi.andre.consolelauncher.commands.main.Param paramForString(MainPack pack, String param) {
         return Param.get(param);
     }
 
@@ -189,7 +194,7 @@ public class notifications extends ParamCommand {
     @Override
     public String onArgNotFound(ExecutePack pack, int index) {
         String arg = pack.get(String.class, 0).toLowerCase();
-        if(index == 1 && (arg.equals(Param.title_filter.label()) || arg.equals(Param.text_filer.label()) || arg.equals(Param.apply_filter.label()))) {
+        if(index == 1 && (arg.equals(Param.title_filter.label()) || arg.equals(Param.text_filter.label()) || arg.equals(Param.apply_filter.label()))) {
             return ((MainPack) pack).context.getString(R.string.invalid_integer);
         }
         return ((MainPack) pack).context.getString(R.string.output_appnotfound);

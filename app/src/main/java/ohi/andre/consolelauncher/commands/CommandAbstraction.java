@@ -21,7 +21,7 @@ public interface CommandAbstraction {
     int CONFIG_FILE = 22;
     int CONFIG_ENTRY = 23;
     int INT = 24;
-    int REGEX = 25;
+    int DEFAULT_APP = 25;
 
     String exec(ExecutePack pack) throws Exception;
 

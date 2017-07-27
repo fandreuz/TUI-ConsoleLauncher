@@ -124,7 +124,8 @@ public class SuggestionRunnable implements Runnable {
                         ((Activity) toAdd[space].getContext()).unregisterForContextMenu(toAdd[space]);
                     }
                 } else {
-                    throw new UnsupportedOperationException("no views enough");
+//                    throw new UnsupportedOperationException("no views enough");
+                    break;
                 }
             }
         }

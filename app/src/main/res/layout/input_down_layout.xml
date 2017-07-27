@@ -116,7 +116,9 @@
                 android:layout_height="wrap_content"
 
                 android:scrollHorizontally="false"
-                android:scrollbars="vertical"/>
+                android:scrollbars="vertical"
+                android:textIsSelectable="true"
+                android:gravity="bottom"/>
 
         </LinearLayout>
 

@@ -98,9 +98,13 @@ public class sms extends RedirectCommand {
             SmsManager smsManager = SmsManager.getDefault();
             smsManager.sendTextMessage(number, null, message, null, null);
 
+            cleanup();
+
             return info.res.getString(R.string.output_smssent);
         } catch (Exception ex) {
-            return info.res.getString(R.string.output_error);
+            cleanup();
+
+            return ex.toString();
         }
     }
 

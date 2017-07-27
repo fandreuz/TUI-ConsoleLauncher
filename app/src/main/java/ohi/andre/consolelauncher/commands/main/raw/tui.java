@@ -1,5 +1,8 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
@@ -10,6 +13,7 @@ import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 
 /**
  * Created by francescoandreuzzi on 10/06/2017.
@@ -23,7 +27,10 @@ public class tui extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 MainPack info = (MainPack) pack;
-                info.policy.removeActiveAdmin(info.component);
+
+                DevicePolicyManager policy = (DevicePolicyManager) info.context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+                ComponentName name = new ComponentName(info.context, PolicyReceiver.class);
+                policy.removeActiveAdmin(name);
 
                 Uri packageURI = Uri.parse("package:" + BuildConfig.APPLICATION_ID);
                 Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
@@ -104,7 +111,7 @@ public class tui extends ParamCommand {
     }
 
     @Override
-    protected ohi.andre.consolelauncher.commands.main.Param paramForString(String param) {
+    protected ohi.andre.consolelauncher.commands.main.Param paramForString(MainPack pack, String param) {
         return Param.get(param);
     }
 

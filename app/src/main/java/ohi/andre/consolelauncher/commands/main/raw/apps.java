@@ -14,6 +14,7 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class apps extends ParamCommand {
@@ -39,7 +40,8 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                ((MainPack) pack).appsManager.unhideApp(pack.get(String.class, 1));
+                AppsManager.LaunchInfo i = pack.get(AppsManager.LaunchInfo.class, 1);
+                ((MainPack) pack).appsManager.showActivity(i);
                 return null;
             }
         },
@@ -51,7 +53,8 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                ((MainPack) pack).appsManager.hideApp(pack.get(String.class, 1));
+                AppsManager.LaunchInfo i = pack.get(AppsManager.LaunchInfo.class, 1);
+                ((MainPack) pack).appsManager.hideActivity(i);
                 return null;
             }
         },
@@ -64,8 +67,9 @@ public class apps extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 try {
-                    PackageInfo info = pack.context.getPackageManager().getPackageInfo(pack.get(String.class, 1), PackageManager.GET_PERMISSIONS | PackageManager.GET_ACTIVITIES |
-                            PackageManager.GET_SERVICES | PackageManager.GET_RECEIVERS);
+                    AppsManager.LaunchInfo i = pack.get(AppsManager.LaunchInfo.class, 1);
+
+                    PackageInfo info = pack.context.getPackageManager().getPackageInfo(i.componentName.getPackageName(), PackageManager.GET_PERMISSIONS | PackageManager.GET_ACTIVITIES | PackageManager.GET_SERVICES | PackageManager.GET_RECEIVERS);
                     return AppsManager.AppUtils.format(info);
                 } catch (PackageManager.NameNotFoundException e) {
                     return e.toString();
@@ -80,8 +84,37 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                openPlaystore(pack.context, pack.get(String.class, 1));
+                openPlaystore(pack.context, pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName());
                 return null;
+            }
+        },
+        default_app {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.DEFAULT_APP};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                int index = pack.get(int.class, 1);
+
+                Object o = pack.get(Object.class, 2);
+
+                String marker;
+                if(o instanceof AppsManager.LaunchInfo) {
+                    AppsManager.LaunchInfo i = (AppsManager.LaunchInfo) o;
+                    marker = i.componentName.getPackageName() + "-" + i.componentName.getClassName();
+                } else {
+                    marker = (String) o;
+                }
+
+                try {
+                    XMLPrefsManager.XMLPrefsSave save = AppsManager.Options.valueOf("default_app_n" + index);
+                    save.parent().write(save, marker);
+                    return null;
+                } catch (Exception e) {
+                    return pack.context.getString(R.string.invalid_integer);
+                }
             }
         },
         st {
@@ -92,7 +125,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                openSettings(pack.context, pack.get(String.class, 1));
+                openSettings(pack.context, pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName());
                 return null;
             }
         },
@@ -104,7 +137,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                Intent intent = ((MainPack) pack).appsManager.getIntent(pack.get(String.class, 1));
+                Intent intent = ((MainPack) pack).appsManager.getIntent(pack.get(AppsManager.LaunchInfo.class, 1));
                 pack.context.startActivity(intent);
 
                 return null;
@@ -150,7 +183,7 @@ public class apps extends ParamCommand {
     }
 
     @Override
-    protected ohi.andre.consolelauncher.commands.main.Param paramForString(String param) {
+    protected ohi.andre.consolelauncher.commands.main.Param paramForString(MainPack pack, String param) {
         return Param.get(param);
     }
 
@@ -183,7 +216,7 @@ public class apps extends ParamCommand {
 
     @Override
     public int maxArgs() {
-        return 2;
+        return 3;
     }
 
     @Override

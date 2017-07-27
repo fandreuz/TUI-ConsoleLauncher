@@ -30,8 +30,7 @@ public class SkinManager implements Parcelable {
 
     public boolean useSystemWp, showSuggestions, systemFont, inputBottom, showSubmit, manyColorsBattery;
 
-    public String username = null, prefix;
-    public boolean showUsernameAndDeviceWhenEmpty = true, showUsername = false, showDeviceInSessionInfo = false, showPath = true;
+    public String username = null, prefix = null, ssnInfoFormat = null;
 
     private int suggDefaultText, suggDefaultBg, suggAliasText, suggAliasBg, suggSongText, suggSongBg, suggContactText, suggContactBg, suggAppText, suggAppBg, suggCmdText, suggCmdBg, suggFileText, suggFileBg;
     private boolean transparentSuggestions;
@@ -75,13 +74,8 @@ public class SkinManager implements Parcelable {
         }
 
         username = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.username);
-        showUsernameAndDeviceWhenEmpty = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ssninfo);
-        if(showUsernameAndDeviceWhenEmpty) {
-            showUsername = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_username_ssninfo);
 
-            showDeviceInSessionInfo = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_devicename_ssninfo);
-            showPath = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_path_ssninfo);
-        }
+        ssnInfoFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.session_info_format);
 
         showSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.show_suggestions);
         if (showSuggestions) {
@@ -137,10 +131,7 @@ public class SkinManager implements Parcelable {
         showSubmit = in.readByte() != 0;
         manyColorsBattery = in.readByte() != 0;
         username = in.readString();
-        showUsernameAndDeviceWhenEmpty = in.readByte() != 0;
-        showUsername = in.readByte() != 0;
-        showDeviceInSessionInfo = in.readByte() != 0;
-        showPath = in.readByte() != 0;
+        ssnInfoFormat = in.readString();
         suggDefaultText = in.readInt();
         suggDefaultBg = in.readInt();
         suggAliasText = in.readInt();
@@ -262,10 +253,7 @@ public class SkinManager implements Parcelable {
         dest.writeByte((byte) (showSubmit ? 1 : 0));
         dest.writeByte((byte) (manyColorsBattery ? 1 : 0));
         dest.writeString(username);
-        dest.writeByte((byte) (showUsernameAndDeviceWhenEmpty ? 1 : 0));
-        dest.writeByte((byte) (showUsername ? 1 : 0));
-        dest.writeByte((byte) (showDeviceInSessionInfo ? 1 : 0));
-        dest.writeByte((byte) (showPath ? 1 : 0));
+        dest.writeString(ssnInfoFormat);
         dest.writeInt(suggDefaultText);
         dest.writeInt(suggDefaultBg);
         dest.writeInt(suggAliasText);

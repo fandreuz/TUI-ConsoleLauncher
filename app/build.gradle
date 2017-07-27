@@ -10,8 +10,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 104
-        versionName "6.0b"
+        versionCode 108
+        versionName "6.0d"
     }
 
     buildTypes {
@@ -19,6 +19,11 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            zipAlignEnabled true
+        }
+        debug {
+            minifyEnabled false
+            shrinkResources false
             zipAlignEnabled true
         }
     }

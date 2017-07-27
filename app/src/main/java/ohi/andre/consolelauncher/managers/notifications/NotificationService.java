@@ -17,9 +17,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
-import android.text.format.Time;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static ohi.andre.consolelauncher.managers.notifications.NotificationManager.NotificatedApp;
@@ -44,8 +43,6 @@ public class NotificationService extends NotificationListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Log.e("andre", "hello");
 
         NotificationManager.create();
 
@@ -85,17 +82,12 @@ public class NotificationService extends NotificationListenerService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        Log.e("andre", "destroying notif");
     }
 
-    Time time;
-    String timeFormat;
     String format;
     int timeColor;
 
     final String FORMAT_PKG = "%pkg";
-    final String FORMAT_DATE = "%t";
     final String FORMAT_TEXT = "%txt";
     final String FORMAT_TITLE = "%ttl";
     final String FORMAT_APPNAME = "%app";
@@ -114,9 +106,7 @@ public class NotificationService extends NotificationListenerService {
             return;
         }
 
-        if(time == null) {
-            time = new Time();
-            timeFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
+        if(format == null) {
             manager = getPackageManager();
             format = NotificationManager.getFormat();
             timeColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
@@ -173,20 +163,17 @@ public class NotificationService extends NotificationListenerService {
         SpannableString spanned = new SpannableString(format);
         spanned.setSpan(new ForegroundColorSpan(color), 0, format.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        time.setToNow();
-        String t = this.time.format(timeFormat);
-        SpannableString spannedTime = new SpannableString(t);
-        spannedTime.setSpan(new ForegroundColorSpan(timeColor), 0, t.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
         CharSequence s;
         try {
             s = TextUtils.replace(spanned,
-                    new String[] {FORMAT_PKG, FORMAT_APPNAME, FORMAT_DATE, FORMAT_TEXT, FORMAT_TITLE, FORMAT_NEWLINE,
-                            FORMAT_PKG.toUpperCase(), FORMAT_APPNAME.toUpperCase(), FORMAT_DATE.toUpperCase(), FORMAT_TEXT.toUpperCase(), FORMAT_TITLE.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
+                    new String[] {FORMAT_PKG, FORMAT_APPNAME, FORMAT_TEXT, FORMAT_TITLE, FORMAT_NEWLINE,
+                            FORMAT_PKG.toUpperCase(), FORMAT_APPNAME.toUpperCase(), FORMAT_TEXT.toUpperCase(), FORMAT_TITLE.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
                     new CharSequence[] {
-                            pack, appName, spannedTime, text, title, Tuils.NEWLINE, pack, appName, spannedTime, text, title, Tuils.NEWLINE
+                            pack, appName, text, title, Tuils.NEWLINE, pack, appName, text, title, Tuils.NEWLINE
                     }
             );
+
+            s = TimeManager.replace(s, timeColor);
         } catch (Exception e) {
             return;
         }

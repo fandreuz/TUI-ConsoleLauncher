@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.commands.main;
 
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -22,10 +20,10 @@ import ohi.andre.consolelauncher.commands.main.raw.flash;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.MusicManager;
+import ohi.andre.consolelauncher.managers.ShellManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
-import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
@@ -41,6 +39,8 @@ public class MainPack extends ExecutePack {
 
     //	current directory
     public File currentDirectory;
+
+    public ShellManager shellManager;
 
     public SkinManager skinManager;
 
@@ -73,10 +73,6 @@ public class MainPack extends ExecutePack {
     public AliasManager aliasManager;
     public AppsManager appsManager;
 
-    //	admin
-    public DevicePolicyManager policy;
-    public ComponentName component;
-
     //	reload field
     public Reloadable reloadable;
 
@@ -94,9 +90,11 @@ public class MainPack extends ExecutePack {
     public Redirectator redirectator;
 
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
-                    ContactManager c, DevicePolicyManager devicePolicyManager, ComponentName componentName,
-                    Reloadable r, CommandExecuter executeCommand, Outputable outputable, Redirectator redirectator) {
+                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Outputable outputable, Redirectator redirectator, ShellManager shellManager) {
         super(commandGroup);
+
+        this.shellManager = shellManager;
+        this.currentDirectory = shellManager.currentDir();
 
         this.outputable = outputable;
 
@@ -106,7 +104,6 @@ public class MainPack extends ExecutePack {
 
         this.context = context;
 
-        this.currentDirectory = new File(Tuils.getInternalDirectoryPath());
         this.aliasManager = alMgr;
         this.appsManager = appmgr;
 
@@ -116,9 +113,6 @@ public class MainPack extends ExecutePack {
 
         this.player = p;
         this.contacts = c;
-
-        this.policy = devicePolicyManager;
-        this.component = componentName;
 
         this.reloadable = r;
 
@@ -166,11 +160,13 @@ public class MainPack extends ExecutePack {
     public void destroy() {
         player.destroy(this.context);
         appsManager.onDestroy();
+        shellManager.destroy();
     }
 
     @Override
     public void clear() {
         super.clear();
+
         setSu(false);
     }
 }

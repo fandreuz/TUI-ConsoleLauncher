@@ -1,12 +1,13 @@
 package ohi.andre.consolelauncher;
 
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+
+import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
@@ -17,16 +18,19 @@ import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.MusicManager;
+import ohi.andre.consolelauncher.managers.ShellManager;
+import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
-import ohi.andre.consolelauncher.tuils.ShellUtils;
+import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
+import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
+import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 
 /*Copyright Francesco Andreuzzi
 
@@ -84,6 +88,7 @@ public class MainManager {
             new SystemCommandTrigger()
     };
     private MainPack mainPack;
+    private ShellManager shell;
 
     private Context mContext;
 
@@ -93,28 +98,7 @@ public class MainManager {
     private boolean showAliasValue;
     private boolean showAppHistory;
 
-    private Handler handler = new Handler();
-
-    private Thread thread;
-    private boolean busy = false;
-    private boolean ctrlced = false;
-    private void busy() {
-        busy = true;
-
-//        i do this because i don't want to change the hint every single time (users would complain)
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(busy) in.changeHint(mContext.getString(R.string.busy_hint));
-            }
-        }, 650);
-    }
-    private void notBusy() {
-        busy = false;
-        in.resetHint();
-    }
-
-    protected MainManager(LauncherActivity c, Inputable i, Outputable o, DevicePolicyManager devicePolicyManager, ComponentName componentName) {
+    protected MainManager(LauncherActivity c, Inputable i, Outputable o, Suggester sugg) {
         mContext = c;
 
         in = i;
@@ -140,27 +124,16 @@ public class MainManager {
 
         MusicManager music = new MusicManager(mContext, out);
 
-        AppsManager appsMgr = new AppsManager(c, out);
+        AppsManager appsMgr = new AppsManager(c, out, sugg);
         AliasManager aliasManager = new AliasManager();
 
-        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, devicePolicyManager, componentName, c, executer, out, redirectator);
+        shell = new ShellManager(out);
+
+        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, out, redirectator, shell);
     }
 
 //    command manager
     public void onCommand(String input, String alias) {
-        if(busy) {
-            if(input.equalsIgnoreCase("ctrlc")) {
-                thread.interrupt();
-
-                ctrlced = true;
-
-                notBusy();
-                return;
-            }
-
-            out.onOutput(mContext.getString(R.string.busy));
-            return;
-        }
 
         input = Tuils.removeUnncesarySpaces(input);
 
@@ -200,7 +173,6 @@ public class MainManager {
         redirectator.cleanup();
     }
 
-    //    dispose
     public void dispose() {
         mainPack.dispose();
     }
@@ -231,52 +203,17 @@ public class MainManager {
         }
     }
 
-    //    this must be the last trigger
     private class SystemCommandTrigger implements CmdTrigger {
-
-        final int COMMAND_NOTFOUND = 127;
 
         @Override
         public boolean trigger(final ExecutePack info, final String input) throws Exception {
-
-//            this is the last trigger, it has to say "command not found"
-
-            final String cmd = input;
-            final boolean useSU = false;
-
-            thread = new StoppableThread() {
+            new Thread() {
                 @Override
                 public void run() {
-                    super.run();
-
-                    busy();
-
-                    if(Thread.interrupted()) return;
-                    ShellUtils.CommandResult result = ShellUtils.execCommand(new String[] {cmd}, useSU, mainPack.currentDirectory.getAbsolutePath(), out);
-                    if(Thread.interrupted()) return;
-
-                    if(ctrlced) {
-                        ctrlced = false;
-                        return;
-                    }
-
-                    if (result == null || result.result == COMMAND_NOTFOUND || result.result == -1) {
-                        out.onOutput(mContext.getString(R.string.output_commandnotfound));
-                    } else {
-                        String output = result.toString();
-                        if(output != null) {
-                            output = output.trim();
-                            if(output.length() == 0 && result.result > 0) {
-                                output = mainPack.res.getString(R.string.output_commandexitvalue) + Tuils.SPACE + result.result;
-                            }
-                        }
-                        out.onOutput(output);
-                    }
-
-                    notBusy();
-                }
-            };
-            thread.start();
+                    shell.cmd(input, true);
+                    ((MainPack) info).currentDirectory = shell.currentDir();
+                };
+            }.start();
 
             return true;
         }
@@ -284,24 +221,48 @@ public class MainManager {
 
     private class AppTrigger implements CmdTrigger {
 
+        String appFormat;
+        int timeColor;
+        int outputColor;
+
+        Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE);
+        Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
+        Pattern pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE);
+        Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
+
         @Override
         public boolean trigger(ExecutePack info, String input) {
-            String packageName = mainPack.appsManager.findPackage(input, AppsManager.SHOWN_APPS);
-            if (packageName == null) {
+            AppsManager.LaunchInfo i = mainPack.appsManager.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+            if (i == null) {
                 return false;
             }
 
-            Intent intent = mainPack.appsManager.getIntent(packageName);
+            Intent intent = mainPack.appsManager.getIntent(i);
             if (intent == null) {
                 return false;
             }
 
-            if(showAppHistory) out.onOutput("-->" + Tuils.SPACE + intent.getComponent().getClassName());
+            if(showAppHistory) {
+                if(appFormat == null) {
+                    appFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.app_launch_format);
+                    timeColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
+                    outputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
+                }
 
-//            if(intent.getBooleanExtra("forResult", false)) ((Activity) mContext).startActivityForResult(intent, 0);
-//            else
-                mContext.startActivity(intent);
+                String a = new String(appFormat);
+                a = pa.matcher(a).replaceAll(intent.getComponent().getClassName());
+                a = pp.matcher(a).replaceAll(intent.getComponent().getPackageName());
+                a = pl.matcher(a).replaceAll(i.publicLabel);
+                a = pn.matcher(a).replaceAll(Tuils.NEWLINE);
 
+                SpannableString text = new SpannableString(a);
+                text.setSpan(new ForegroundColorSpan(outputColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                CharSequence s = TimeManager.replace(text, timeColor);
+
+                out.onOutput(s, TerminalManager.CATEGORY_GENERAL);
+            }
+
+            mContext.startActivity(intent);
             return true;
         }
     }
@@ -312,14 +273,11 @@ public class MainManager {
         public boolean trigger(final ExecutePack info, final String input) throws Exception {
 
             final boolean[] returnValue = new boolean[1];
-            thread = new StoppableThread() {
+
+            new StoppableThread() {
                 @Override
                 public void run() {
                     super.run();
-
-                    busy();
-
-                    Looper.prepare();
 
                     mainPack.lastCommand = input;
 
@@ -331,12 +289,10 @@ public class MainManager {
                             returnValue.notify();
                         }
 
-                        if (returnValue[0]) {
-                            if(Thread.interrupted()) return;
+                        if (command != null) {
                             String output = command.exec(mContext.getResources(), info);
-                            if(Thread.interrupted()) return;
 
-                            if(output != null && !ctrlced) {
+                            if(output != null) {
                                 out.onOutput(output);
                             }
                         }
@@ -344,12 +300,8 @@ public class MainManager {
                         out.onOutput(e.toString());
                         Log.e("andre", "", e);
                     }
-
-                    notBusy();
                 }
-            };
-
-            thread.start();
+            }.start();
 
             synchronized (returnValue) {
                 returnValue.wait();

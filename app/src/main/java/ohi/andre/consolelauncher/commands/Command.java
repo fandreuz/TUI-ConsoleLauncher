@@ -1,9 +1,9 @@
 package ohi.andre.consolelauncher.commands;
 
 import android.content.res.Resources;
-import android.util.Log;
 
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -18,17 +18,33 @@ public class Command {
     public String exec(Resources resources, ExecutePack info) throws Exception {
         info.set(mArgs);
 
-        if(cmd instanceof ParamCommand && mArgs != null && (mArgs.length == 0 || ((ParamCommand) cmd).argsForParam((String) mArgs[0]) == null)) {
-            return info.context.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
-        }
         if (indexNotFound != -1) {
             return cmd.onArgNotFound(info, indexNotFound);
         }
-        if (nArgs < cmd.minArgs() || (mArgs == null && cmd.minArgs() > 0) ||
-                (cmd instanceof ParamCommand && mArgs != null && mArgs.length > 0 && ((ParamCommand) cmd).argsForParam((String) mArgs[0]) != null &&
-                        ((ParamCommand) cmd).argsForParam((String) mArgs[0]).length + 1 > nArgs)) {
+
+        if(cmd instanceof ParamCommand) {
+            ParamCommand pCmd = (ParamCommand) cmd;
+
+            if(mArgs == null || mArgs.length == 0) {
+                return cmd.onNotArgEnough(info, 0);
+            }
+
+            int[] args = info.get(Param.class, 0).args();
+            if(args == null) return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
+
+            if(pCmd.supportDefaultParam()) {
+                if(args.length + 1 > nArgs + 1) {
+                    return cmd.onNotArgEnough(info, nArgs);
+                }
+            } else {
+                if(args.length + 1 > nArgs) {
+                    return cmd.onNotArgEnough(info, nArgs);
+                }
+            }
+        } else if (nArgs < cmd.minArgs() || (mArgs == null && cmd.minArgs() > 0)) {
             return cmd.onNotArgEnough(info, nArgs);
         }
+
         if (cmd.maxArgs() != CommandAbstraction.UNDEFINIED && nArgs > cmd.maxArgs()) {
             return resources.getString(R.string.output_toomanyargs);
         }
@@ -45,12 +61,12 @@ public class Command {
 
         int[] args;
         if (useParamArgs) {
-            args = ((ParamCommand) cmd).argsForParam((String) mArgs[0]);
+            args = ((Param) mArgs[0]).args();
         } else {
             args = cmd.argType();
         }
 
-        if (args == null) {
+        if (args == null || args.length == 0) {
             return 0;
         }
 

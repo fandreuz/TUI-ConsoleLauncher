@@ -29,8 +29,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
-
+    <permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <permission
         android:name="android.permission.FLASHLIGHT"
         android:description="@string/help_flash"
@@ -71,7 +72,7 @@
             android:name=".LauncherActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
 
-            android:launchMode="singleInstance"
+            android:launchMode="singleTask"
             android:clearTaskOnLaunch="true"
             android:stateNotNeeded="true"
             android:resumeWhilePausing="true"
@@ -174,6 +175,14 @@
                 <data
                     android:host="*"
                     android:pathPattern=".*\\.cfg"
+                    android:scheme="file" />
+                <data
+                    android:host="*"
+                    android:pathPattern=".*\\.txt"
+                    android:scheme="file" />
+                <data
+                    android:host="*"
+                    android:pathPattern=".*\\.xml"
                     android:scheme="file" />
             </intent-filter>
 

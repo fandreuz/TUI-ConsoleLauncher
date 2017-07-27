@@ -11,13 +11,14 @@ import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.commands.specific.PermanentSuggestionCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
-import ohi.andre.consolelauncher.managers.MusicManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -44,12 +45,12 @@ public class SuggestionsManager {
 
     private final int FIRST_INTERVAL = 7;
 
-    private boolean showAlias, showAliasWasSet = false;
+    private boolean showAliasDefault, showAliasWasSet = false;
 
     public Suggestion[] getSuggestions(MainPack info, String before, String lastWord) {
 
         if(!showAliasWasSet) {
-            showAlias = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_alias_suggestions);
+            showAliasDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.suggest_alias_default);
             showAliasWasSet = true;
         }
 
@@ -75,7 +76,7 @@ public class SuggestionsManager {
                     }
                 }
 
-                if(showAlias) suggestAlias(info.aliasManager, suggestionList, lastWord);
+                if(showAliasDefault) suggestAlias(info.aliasManager, suggestionList, lastWord);
 
                 return suggestionList.toArray(new Suggestion[suggestionList.size()]);
             }
@@ -93,9 +94,7 @@ public class SuggestionsManager {
                         suggestPermanentSuggestions(suggestionList, (PermanentSuggestionCommand) cmd.cmd);
                     }
 
-                    if (cmd.nArgs == cmd.cmd.maxArgs() ||
-                            (cmd.mArgs != null && cmd.mArgs.length > 0 && cmd.cmd instanceof ParamCommand && cmd.nArgs >= 1 &&
-                                    ((ParamCommand) cmd.cmd).argsForParam((String) cmd.mArgs[0]) != null && ((ParamCommand) cmd.cmd).argsForParam((String) cmd.mArgs[0]).length + 1 == cmd.nArgs)) {
+                    if (cmd.nArgs == cmd.cmd.maxArgs() || (cmd.mArgs != null && cmd.mArgs.length > 0 && cmd.cmd instanceof ParamCommand && cmd.nArgs >= 1 && ((Param) cmd.mArgs[0]).args().length + 1 == cmd.nArgs)) {
                         return new Suggestion[0];
                     }
 
@@ -106,7 +105,9 @@ public class SuggestionsManager {
 //                        suggestArgs(info, cmd.cmd instanceof ParamCommand ? ((ParamCommand) cmd.cmd).argsForParam((String) cmd.mArgs[0])[cmd.nArgs - 1] : cmd.cmd.argType()[cmd.nArgs], suggestionList, lastWord, before);
 //                    }
 
-                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) suggestParams(suggestionList, (ParamCommand) cmd.cmd, before, null);
+                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) {
+                        suggestParams(info, suggestionList, (ParamCommand) cmd.cmd, before, null);
+                    }
                     else suggestArgs(info, cmd.nextArg(), suggestionList, before);
 
                 } else {
@@ -138,7 +139,7 @@ public class SuggestionsManager {
                     }
 
                     if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) {
-                        suggestParams(suggestionList, (ParamCommand) cmd.cmd, before, lastWord);
+                        suggestParams(info, suggestionList, (ParamCommand) cmd.cmd, before, lastWord);
                     } else suggestArgs(info, cmd.nextArg(), suggestionList, lastWord, before);
                 } else {
 //                    not a command
@@ -148,7 +149,7 @@ public class SuggestionsManager {
             } else {
 //                lastword > 0 && before = 0
                 suggestCommand(info, suggestionList, lastWord, before);
-                if(showAlias) suggestAlias(info.aliasManager, suggestionList, lastWord);
+                suggestAlias(info.aliasManager, suggestionList, lastWord);
                 suggestApp(info, suggestionList, lastWord, Tuils.EMPTYSTRING);
             }
         }
@@ -170,7 +171,7 @@ public class SuggestionsManager {
         else for(String s : aliasManager.getAliases()) if(s.startsWith(lastWord)) suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, true, NO_RATE, Suggestion.TYPE_ALIAS));
     }
 
-    private void suggestParams(List<Suggestion> suggestions, ParamCommand cmd, String before, String lastWord) {
+    private void suggestParams(MainPack pack, List<Suggestion> suggestions, ParamCommand cmd, String before, String lastWord) {
         String[] params = cmd.params();
         if (params == null) {
             return;
@@ -178,14 +179,20 @@ public class SuggestionsManager {
 
         if(lastWord == null || lastWord.length() == 0) {
             for (String s : cmd.params()) {
-                int[] args = cmd.argsForParam(s);
-                suggestions.add(new Suggestion(before, s, args == null || args.length == 0, NO_RATE, 0));
+                Param p = cmd.getParam(pack, s).getValue();
+                if(p == null) continue;
+
+                suggestions.add(new Suggestion(before, s, p.args().length == 0, NO_RATE, 0));
             }
         }
         else {
             for (String s : cmd.params()) {
-                int[] args = cmd.argsForParam(s);
-                if (s.startsWith(lastWord) || s.replace("-", Tuils.EMPTYSTRING).startsWith(lastWord)) suggestions.add(new Suggestion(before, s, args == null || args.length == 0, NO_RATE, 0));
+                Param p = cmd.getParam(pack, s).getValue();
+                if(p == null) continue;
+
+                if (s.startsWith(lastWord) || s.replace("-", Tuils.EMPTYSTRING).startsWith(lastWord)) {
+                    suggestions.add(new Suggestion(before, s, p.args().length == 0, NO_RATE, 0));
+                }
             }
         }
     }
@@ -223,6 +230,8 @@ public class SuggestionsManager {
             case CommandAbstraction.CONFIG_FILE:
                 suggestConfigFile(suggestions, prev, before);
                 break;
+            case CommandAbstraction.DEFAULT_APP:
+                suggestDefaultApp(info, suggestions, prev, before);
         }
     }
 
@@ -423,6 +432,31 @@ public class SuggestionsManager {
 
     private void suggestHiddenApp(MainPack info, List<Suggestion> suggestions, String prev, String before) {
         List<String> names = info.appsManager.getHiddenAppsLabels();
+        if (prev == null || prev.length() == 0) {
+            for (String s : names) {
+                suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_APP));
+            }
+        } else if(prev.length() <= FIRST_INTERVAL) {
+            prev = prev.trim().toLowerCase();
+            for (String n : names) {
+                if(n.toLowerCase().trim().startsWith(prev)) {
+                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
+                }
+            }
+        } else {
+            List<Compare.CompareInfo> infos = Compare.compareInfo(names, prev, min_apps_rate,
+                    AppsManager.USE_SCROLL_COMPARE);
+            for(Compare.CompareInfo i : infos) {
+                suggestions.add(new Suggestion(before, i.s, true, i.rate, Suggestion.TYPE_APP));
+            }
+        }
+    }
+
+    private void suggestDefaultApp(MainPack info, List<Suggestion> suggestions, String prev, String before) {
+        suggestions.add(new Suggestion(before, "most_used", false, MAX_RATE, Suggestion.TYPE_PERMANENT));
+        suggestions.add(new Suggestion(before, "null", false, MAX_RATE, Suggestion.TYPE_PERMANENT));
+
+        List<String> names = info.appsManager.getAppLabels();
         if (prev == null || prev.length() == 0) {
             for (String s : names) {
                 suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_APP));

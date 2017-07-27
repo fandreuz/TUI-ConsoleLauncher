@@ -8,10 +8,8 @@ import android.text.Layout;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.format.Time;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -27,6 +25,7 @@ import java.util.List;
 import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.clear;
+import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /*Copyright Francesco Andreuzzi
@@ -51,6 +50,7 @@ public class TerminalManager {
     public static final int CATEGORY_INPUT = 10;
     public static final int CATEGORY_OUTPUT = 11;
     public static final int CATEGORY_NOTIFICATION = 12;
+    public static final int CATEGORY_GENERAL = 13;
 
     private long lastEnter;
 
@@ -95,9 +95,6 @@ public class TerminalManager {
         }
     };
 
-    private String timeFormat;
-    private Time time;
-
     private String inputFormat;
     private String outputFormat;
 
@@ -114,9 +111,6 @@ public class TerminalManager {
         this.clearAfterMs = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_seconds) * 1000;
         this.clearAfterCmds = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_cmds);
         this.maxLines = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.max_lines);
-
-        timeFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
-        time = new Time();
 
         inputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.input_format);
         outputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.output_format);
@@ -270,7 +264,7 @@ public class TerminalManager {
     private void setupNewInput() {
         mInputView.setText(Tuils.EMPTYSTRING);
 
-        if(defaultHint && mSkinManager.showPath) {
+        if(defaultHint) {
             mInputView.setHint(Tuils.getHint(mSkinManager, mainPack.currentDirectory.getAbsolutePath()));
         }
 
@@ -354,7 +348,6 @@ public class TerminalManager {
     final String FORMAT_INPUT = "%i";
     final String FORMAT_OUTPUT = "%o";
     final String FORMAT_PREFIX = "%p";
-    final String FORMAT_TIME = "%t";
     final String FORMAT_NEWLINE = "%n";
 
     private void writeToView(final CharSequence text, final int type) {
@@ -362,16 +355,14 @@ public class TerminalManager {
             @Override
             public void run() {
 
-                mTerminalView.append(TextUtils.concat(Tuils.NEWLINE, getFinalText(text, type)));
+                CharSequence s = getFinalText(text, type);
+                mTerminalView.append(TextUtils.concat(Tuils.NEWLINE, s));
                 scrollToEnd();
             }
         });
     }
+
     private CharSequence getFinalText(CharSequence t, int type) {
-        time.setToNow();
-        String tm = time.format(timeFormat);
-        SpannableString st = new SpannableString(tm);
-        st.setSpan(new ForegroundColorSpan(mSkinManager.time_color), 0, tm.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         CharSequence s;
         switch (type) {
@@ -383,10 +374,11 @@ public class TerminalManager {
                 SpannableString si = new SpannableString(inputFormat);
                 si.setSpan(new ForegroundColorSpan(mSkinManager.inputColor), 0, inputFormat.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                s = TextUtils.replace(si,
-                        new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_TIME, FORMAT_NEWLINE,
-                                FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_TIME.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
-                        new CharSequence[] {t, su ? suPrefix : prefix, st, Tuils.NEWLINE, t, su ? suPrefix : prefix, st, Tuils.NEWLINE});
+                s = TimeManager.replace(si, mSkinManager.time_color);
+                s = TextUtils.replace(s,
+                        new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE,
+                                FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
+                        new CharSequence[] {t, su ? suPrefix : prefix, Tuils.NEWLINE, t, su ? suPrefix : prefix, Tuils.NEWLINE});
 
                 break;
             case CATEGORY_OUTPUT:
@@ -396,11 +388,11 @@ public class TerminalManager {
                 so.setSpan(new ForegroundColorSpan(mSkinManager.outputColor), 0, outputFormat.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                 s = TextUtils.replace(so,
-                        new String[] {FORMAT_OUTPUT, FORMAT_TIME, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_TIME.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
-                        new CharSequence[] {t, st, Tuils.NEWLINE, t, st, Tuils.NEWLINE});
+                        new String[] {FORMAT_OUTPUT, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
+                        new CharSequence[] {t, Tuils.NEWLINE, t, Tuils.NEWLINE});
 
                 break;
-            case CATEGORY_NOTIFICATION:
+            case CATEGORY_NOTIFICATION: case CATEGORY_GENERAL:
                 s = t;
                 break;
             default:

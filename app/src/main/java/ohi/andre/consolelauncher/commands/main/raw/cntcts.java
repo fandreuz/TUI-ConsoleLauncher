@@ -134,7 +134,7 @@ public class cntcts extends ParamCommand {
     }
 
     @Override
-    protected ohi.andre.consolelauncher.commands.main.Param paramForString(String param) {
+    protected ohi.andre.consolelauncher.commands.main.Param paramForString(MainPack pack, String param) {
         return Param.get(param);
     }
 

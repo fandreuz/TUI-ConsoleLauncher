@@ -28,8 +28,6 @@ public class ContactManager {
 
     public ContactManager(Context context) {
         this.context = context;
-
-        refreshContacts(this, context);
     }
 
     public static void refreshContacts(ContactManager mgr, Context context) {
@@ -37,6 +35,7 @@ public class ContactManager {
 
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_SUGGESTION_REQUEST_PERMISSION);
+            mgr.contacts = contacts;
             return;
         }
 
@@ -103,16 +102,22 @@ public class ContactManager {
     }
 
     public List<String> listNames() {
+        if(contacts == null || contacts.size() == 0) refreshContacts(this, context);
+
         List<String> names = new ArrayList<>();
         for(Contact c : contacts) names.add(c.name);
         return names;
     }
 
     public List<Contact> getContacts() {
+        if(contacts == null || contacts.size() == 0) refreshContacts(this, context);
+
         return contacts;
     }
 
     public List<String> listNamesAndNumbers() {
+        if(contacts == null || contacts.size() == 0) refreshContacts(this, context);
+
         List<String> c = new ArrayList<>();
 
         for(int count = 0; count < contacts.size(); count++) {
@@ -209,6 +214,8 @@ public class ContactManager {
     }
 
     public String findNumber(String name, int minRate) {
+        if(contacts == null) refreshContacts(this, context);
+
         String mostSuitable = Compare.similarString(listNames(), name, minRate, USE_SCROLL_COMPARE);
         if(mostSuitable == null) return null;
 

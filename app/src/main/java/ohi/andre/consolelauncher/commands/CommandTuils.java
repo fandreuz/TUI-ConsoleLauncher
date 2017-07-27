@@ -9,14 +9,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
-import ohi.andre.consolelauncher.managers.MusicManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 @SuppressLint("DefaultLocale")
@@ -64,17 +66,17 @@ public class CommandTuils {
 
         try {
             if(cmd instanceof ParamCommand) {
-                ArgInfo arg = param(input);
+                ArgInfo arg = param((MainPack) info, (ParamCommand) cmd, input);
                 if(arg == null || !arg.found) {
                     return command;
                 }
 
                 input = arg.residualString;
-                String param = (String) arg.arg;
-                types = ((ParamCommand) cmd).argsForParam(param);
+                Param p = (Param) arg.arg;
+                types = p.args();
 
                 nArgs++;
-                args.add(param);
+                args.add(p);
             } else {
                 types = cmd.argType();
             }
@@ -130,39 +132,31 @@ public class CommandTuils {
         if (type == CommandAbstraction.FILE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return file(input, pack.currentDirectory);
-        }
-        else if (type == CommandAbstraction.CONTACTNUMBER && info instanceof MainPack) {
+        } else if (type == CommandAbstraction.CONTACTNUMBER && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return contactNumber(input, pack.contacts);
-        }
-        else if (type == CommandAbstraction.PLAIN_TEXT) {
+        } else if (type == CommandAbstraction.PLAIN_TEXT) {
             return plainText(input);
-        }
-        else if (type == CommandAbstraction.VISIBLE_PACKAGE && info instanceof MainPack) {
+        } else if (type == CommandAbstraction.VISIBLE_PACKAGE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
-            return packageName(input, pack.appsManager);
+            return activityName(input, pack.appsManager);
         } else if (type == CommandAbstraction.HIDDEN_PACKAGE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return hiddenPackage(input, pack.appsManager);
-        }
-        else if (type == CommandAbstraction.TEXTLIST) {
+        } else if (type == CommandAbstraction.TEXTLIST) {
             return textList(input);
-        }
-        else if (type == CommandAbstraction.SONG && info instanceof MainPack) {
+        } else if (type == CommandAbstraction.SONG && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return song(input, pack.player);
-        }
-        else if (type == CommandAbstraction.FILE_LIST && info instanceof MainPack) {
+        } else if (type == CommandAbstraction.FILE_LIST && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
 
             if (suggestion)
                 return file(input, pack.currentDirectory);
             else
                 return fileList(input, pack.currentDirectory);
-        } else if (type == CommandAbstraction.COMMAND)
+        } else if (type == CommandAbstraction.COMMAND) {
             return command(input, info.commandGroup);
-        else if (type == CommandAbstraction.PARAM) {
-            return param(input);
         } else if(type == CommandAbstraction.BOOLEAN) {
             return bln(input);
         } else if(type == CommandAbstraction.COLOR) {
@@ -173,6 +167,8 @@ public class CommandTuils {
             return configFile(input);
         } else if(type == CommandAbstraction.INT) {
             return integer(input);
+        } else if(type == CommandAbstraction.DEFAULT_APP) {
+            return defaultApp(input, ((MainPack) info).appsManager);
         }
 
         return null;
@@ -330,7 +326,9 @@ public class CommandTuils {
         }
     }
 
-    private static ArgInfo param(String input) {
+    private static ArgInfo param(MainPack pack, ParamCommand cmd, String input) {
+        if(input == null || input.trim().length() == 0) return null;
+
         int indexOfFirstSpace = input.indexOf(Tuils.SPACE);
         if (indexOfFirstSpace == -1) {
             indexOfFirstSpace = input.length();
@@ -339,17 +337,30 @@ public class CommandTuils {
         String param = input.substring(0, indexOfFirstSpace).trim();
         if(param.length() > 0 && !param.startsWith("-")) param = "-".concat(param);
 
-        return new ArgInfo(param.length() > 0 ? param : null, input.substring(indexOfFirstSpace), param.length() > 0, param.length() > 0 ? 1 : 0);
+        SimpleMutableEntry<Boolean, Param> sm = cmd.getParam(pack, param);
+        Param p = sm.getValue();
+        boolean df = sm.getKey();
+
+        return new ArgInfo(p, df ? input : input.substring(indexOfFirstSpace), p != null, p != null ? 1 : 0);
     }
 
-    private static ArgInfo packageName(String input, AppsManager apps) {
-        String packageName = apps.findPackage(input, AppsManager.SHOWN_APPS);
-        return new ArgInfo(packageName, null, packageName != null, 1);
+    private static ArgInfo activityName(String input, AppsManager apps) {
+        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+        return new ArgInfo(info, null, info != null, info != null ? 1 : 0);
     }
 
     private static ArgInfo hiddenPackage(String input, AppsManager apps) {
-        String packageName = apps.findPackage(input, AppsManager.HIDDEN_APPS);
-        return new ArgInfo(packageName, null, packageName != null, 1);
+        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.HIDDEN_APPS);
+        return new ArgInfo(info, null, info != null, info != null ? 1 : 0);
+    }
+
+    private static ArgInfo defaultApp(String input, AppsManager apps) {
+        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+        if(info == null) {
+            return new ArgInfo(input, null, true, 1);
+        } else {
+            return new ArgInfo(info, null, true, 1);
+        }
     }
 
     private static ArgInfo contactNumber(String input, ContactManager contacts) {

@@ -7,16 +7,13 @@ import android.net.Uri;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
-import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -110,8 +107,13 @@ public class search extends ParamCommand {
     }
 
     @Override
-    protected ohi.andre.consolelauncher.commands.main.Param paramForString(String param) {
+    protected ohi.andre.consolelauncher.commands.main.Param paramForString(MainPack pack, String param) {
         return Param.get(param);
+    }
+
+    @Override
+    public boolean supportDefaultParam() {
+        return true;
     }
 
     @Override
@@ -230,7 +232,7 @@ public class search extends ParamCommand {
 
     @Override
     public int minArgs() {
-        return 1;
+        return 0;
     }
 
     @Override
@@ -245,21 +247,12 @@ public class search extends ParamCommand {
 
     @Override
     public String onNotArgEnough(ExecutePack pack, int nArgs) {
-        MainPack info = (MainPack) pack;
-        return info.res.getString(R.string.output_nothing_found);
+        return pack.context.getString(helpRes());
     }
 
     @Override
     public String onArgNotFound(ExecutePack pack, int index) {
 //        use default param
-
-        MainPack info = (MainPack) pack;
-        List<String> toSearch = Arrays.asList((String[]) info.args);
-        String param = info.cmdPrefs.forCommand(getClass().getSimpleName()).get(CommandsPreferences.DEFAULT_PARAM);
-        Param p = Param.get(param);
-        if(p != null) {
-            return p.exec(pack);
-        }
         return pack.context.getString(helpRes());
     }
 }

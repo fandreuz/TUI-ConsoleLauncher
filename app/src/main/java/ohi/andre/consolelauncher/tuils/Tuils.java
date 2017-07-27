@@ -1,11 +1,9 @@
 package ohi.andre.consolelauncher.tuils;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.admin.DevicePolicyManager;
-import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
@@ -25,12 +23,18 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.View;
+import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -41,10 +45,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.BuildConfig;
-import ohi.andre.consolelauncher.managers.MusicManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
@@ -71,15 +76,19 @@ public class Tuils {
 
     public static int getBatteryPercentage(Context context) {
 
-        IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, iFilter);
+        try {
+            IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = context.registerReceiver(null, iFilter);
 
-        int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
-        int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
+            int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
+            int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
 
-        float batteryPct = level / (float) scale;
+            float batteryPct = level / (float) scale;
 
-        return (int) (batteryPct * 100);
+            return (int) (batteryPct * 100);
+        } catch (Exception e) {
+            return -1;
+        }
     }
 
     public static boolean containsExtension(String[] array, String value) {
@@ -163,11 +172,10 @@ public class Tuils {
         c.startActivity(intent);
     }
 
-    public static void requestAdmin(Activity a, ComponentName component, String label) {
+    public static Intent requestAdmin(ComponentName component) {
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component);
-        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, label);
-        a.startActivity(intent);
+        return intent;
     }
 
     public static Intent webPage(String url) {
@@ -175,103 +183,43 @@ public class Tuils {
     }
 
     public static double getAvailableInternalMemorySize(int unit) {
-        File path = Environment.getDataDirectory();
-        StatFs stat = new StatFs(path.getPath());
-
-        long blockSize;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = stat.getBlockSizeLong();
-        } else {
-            blockSize = stat.getBlockSize();
-        }
-
-        long availableBlocks = 0;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            availableBlocks = stat.getAvailableBlocksLong();
-        } else {
-            availableBlocks = stat.getAvailableBlocks();
-        }
-
-        return formatSize(availableBlocks * blockSize, unit);
+        return getAvailableSpace(Environment.getDataDirectory(), unit);
     }
 
     public static double getTotalInternalMemorySize(int unit) {
-        File path = Environment.getDataDirectory();
-        StatFs stat = new StatFs(path.getPath());
-
-        long blockSize;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = stat.getBlockSizeLong();
-        } else {
-            blockSize = stat.getBlockSize();
-        }
-
-        long totalBlocks = 0;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            totalBlocks = stat.getBlockCountLong();
-        } else {
-            totalBlocks = stat.getBlockCount();
-        }
-
-        return formatSize(totalBlocks * blockSize, unit);
+        return getTotaleSpace(Environment.getDataDirectory(), unit);
     }
 
     public static double getAvailableExternalMemorySize(int unit) {
-        if (externalMemoryAvailable()) {
-            File path = Environment.getExternalStorageDirectory();
-            StatFs stat = new StatFs(path.getPath());
-
-            long blockSize;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                blockSize = stat.getBlockSizeLong();
-            } else {
-                blockSize = stat.getBlockSize();
-            }
-
-            long availableBlocks = 0;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                availableBlocks = stat.getAvailableBlocksLong();
-            } else {
-                availableBlocks = stat.getAvailableBlocks();
-            }
-
-            return formatSize(availableBlocks * blockSize, unit);
-        } else {
+        try {
+            return getAvailableSpace(new File(System.getenv("SECONDARY_STORAGE")), unit);
+        } catch (Exception e) {
             return -1;
         }
     }
 
     public static double getTotalExternalMemorySize(int unit) {
-        if (externalMemoryAvailable()) {
-            File path = Environment.getExternalStorageDirectory();
-            StatFs stat = new StatFs(path.getPath());
-
-            long blockSize;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                blockSize = stat.getBlockSizeLong();
-            } else {
-                blockSize = stat.getBlockSize();
-            }
-
-            long totalBlocks = 0;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                totalBlocks = stat.getBlockCountLong();
-            } else {
-                totalBlocks = stat.getBlockCount();
-            }
-
-            return formatSize(totalBlocks * blockSize, unit);
-        } else {
+        try {
+            return getTotaleSpace(new File(System.getenv("SECONDARY_STORAGE")), unit);
+        } catch (Exception e) {
             return -1;
         }
     }
 
-    public static double percentage(double part, double total) {
-        return round(part * 100 / total, 2);
+    public static double getAvailableSpace(File dir, int unit) {
+        StatFs statFs = new StatFs(dir.getAbsolutePath());
+        long blocks = statFs.getAvailableBlocks();
+        return formatSize(blocks * statFs.getBlockSize(), unit);
     }
 
-    public static boolean externalMemoryAvailable() {
-        return android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
+    public static double getTotaleSpace(File dir, int unit) {
+        StatFs statFs = new StatFs(dir.getAbsolutePath());
+        long blocks = statFs.getBlockCount();
+        return formatSize(blocks * statFs.getBlockSize(), unit);
+    }
+
+    public static double percentage(double part, double total) {
+        return round(part * 100 / total, 2);
     }
 
     public static double formatSize(long bytes, int unit) {
@@ -302,12 +250,16 @@ public class Tuils {
         return round(result, 2);
     }
 
-    public static int max(int... ints) {
-        int max = ints[0];
-        for(int count = 1; count < ints.length; count++) {
-            max = Math.max(max, ints[count]);
-        }
-        return max;
+    public static void deepView(View v) {
+        Tuils.log(v.toString());
+
+        if(!(v instanceof ViewGroup)) return;
+        ViewGroup g = (ViewGroup) v;
+
+        Tuils.log(g.getChildCount());
+        for(int c = 0; c < g.getChildCount(); c++) deepView(g.getChildAt(c));
+
+        Tuils.log("end of parents of: " + v.toString());
     }
 
     public static final int TERA = 0;
@@ -371,7 +323,7 @@ public class Tuils {
     }
 
     private static String getNicePath(String filePath) {
-        String home = Tuils.getInternalDirectoryPath();
+        String home = Environment.getExternalStorageDirectory().getAbsolutePath();
 
         if(filePath.equals(home)) {
             return "~";
@@ -389,6 +341,9 @@ public class Tuils {
     public static int find(Object o, List list) {
         for(int count = 0; count < list.size(); count++) {
             Object x = list.get(count);
+            if(x == null) continue;
+
+            if(o == x) return count;
 
             if (o instanceof XMLPrefsManager.XMLPrefsSave) {
                 try {
@@ -411,39 +366,18 @@ public class Tuils {
         return -1;
     }
 
+    static Pattern pd = Pattern.compile("%d", Pattern.CASE_INSENSITIVE);
+    static Pattern pu = Pattern.compile("%u", Pattern.CASE_INSENSITIVE);
+    static Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
     public static String getHint(SkinManager skinManager, String currentPath) {
+        String format = skinManager.ssnInfoFormat;
+        if(format.length() == 0) return null;
 
-        if(!skinManager.showUsernameAndDeviceWhenEmpty) {
-            return null;
-        }
+        format = pd.matcher(format).replaceAll(skinManager.deviceName);
+        format = pu.matcher(format).replaceAll(skinManager.username);
+        format = pp.matcher(format).replaceAll(Tuils.getNicePath(currentPath));
 
-        String username = Tuils.EMPTYSTRING;
-        if (skinManager.showUsername) {
-            username = skinManager.username;
-            if (username == null || username.length() == 0) {
-                username = Tuils.EMPTYSTRING;
-            }
-        }
-
-        String deviceName = Tuils.EMPTYSTRING;
-        if(skinManager.showDeviceInSessionInfo) {
-            deviceName = skinManager.deviceName;
-        }
-
-        String path = Tuils.EMPTYSTRING;
-        if(skinManager.showPath) {
-            path = ":" + getNicePath(currentPath);
-        }
-
-        if(username.equals(Tuils.EMPTYSTRING)) {
-            return deviceName + path;
-        } else {
-            if(deviceName.equals(Tuils.EMPTYSTRING)) {
-                return username + path;
-            } else {
-                return username + "@" + deviceName + path;
-            }
-        }
+        return format;
     }
 
     public static int findPrefix(List<String> list, String prefix) {
@@ -522,6 +456,43 @@ public class Tuils {
             return Tuils.toPlanString(strings, Tuils.NEWLINE);
         }
         return Tuils.EMPTYSTRING;
+    }
+
+    public static void log(Object o) {
+        if(o instanceof Throwable) {
+            Log.e("andre", "", (Throwable) o);
+        } else {
+            Log.e("andre", String.valueOf(o));
+        }
+    }
+
+    static FileOutputStream logStream = null;
+    public static void openLogStream(String name) {
+        closeStream();
+
+        try {
+            File file = new File(Tuils.getFolder(), name);
+            logStream = new FileOutputStream(file);
+        } catch (FileNotFoundException e) {}
+    }
+
+    public static void write(Throwable t) {
+        write(Tuils.getStackTrace(t));
+    }
+
+    public static void write(String line) {
+        if(logStream != null) try {
+            logStream.write((line + Tuils.NEWLINE).getBytes());
+        } catch (IOException e) {}
+    }
+
+    public static void closeStream() {
+        if(logStream != null) {
+            try {
+                logStream.close();
+                logStream = null;
+            } catch (IOException e) {}
+        }
     }
 
     public static String toPlanString(List<String> strings, String separator) {
@@ -609,70 +580,34 @@ public class Tuils {
         return true;
     }
 
-    public static String getFileType(File url) {
-        if (url.toString().contains(".doc") || url.toString().contains(".docx")) {
-            return "application/msword";
-        } else if (url.toString().contains(".pdf")) {
-            return "application/pdf";
-        } else if (url.toString().contains(".ppt") || url.toString().contains(".pptx")) {
-            return "application/vnd.ms-powerpoint";
-        } else if (url.toString().contains(".xls") || url.toString().contains(".xlsx")) {
-            return "application/vnd.ms-excel";
-        } else if (url.toString().contains(".zip") || url.toString().contains(".rar")) {
-            return "application/x-wav";
-        } else if (url.toString().contains(".rtf")) {
-            return "application/rtf";
-        } else if (url.toString().contains(".wav") || url.toString().contains(".mp3")) {
-            return "audio/x-wav";
-        } else if (url.toString().contains(".gif")) {
-            return "image/gif";
-        } else if (url.toString().contains(".jpg") || url.toString().contains(".jpeg") || url.toString().contains(".png")) {
-            return "image/jpeg";
-        } else if (url.toString().contains(".txt")) {
-            return "text/plain";
-        } else if (url.toString().contains(".3gp") || url.toString().contains(".mpg") || url.toString().contains(".mpeg") || url.toString().contains(".mpe") || url.toString().contains(".mp4") ||
-                url.toString().contains(".avi")) {
-            return "video/*";
-        } else {
-            return "*/*";
-        }
-    }
-
     public static Intent openFile(File url) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(Uri.fromFile(url), getFileType(url));
+        Uri u = Uri.fromFile(url);
+        Intent intent = new Intent(android.content.Intent.ACTION_VIEW);
 
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            return intent;
-        } catch (ActivityNotFoundException e) {
-            return null;
-        }
+        String extension = MimeTypeMap.getFileExtensionFromUrl(u.toString());
+        String mimetype = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+
+        intent.setDataAndType(u,mimetype);
+        return intent;
     }
 
     public static Intent shareFile(File url) {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        intent.setDataAndType(Uri.fromFile(url), getFileType(url));
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(url));
+        Uri u = Uri.fromFile(url);
+
+        String extension = MimeTypeMap.getFileExtensionFromUrl(u.toString());
+        String mimetype = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+
+        intent.setDataAndType(u,mimetype);
+        intent.putExtra(Intent.EXTRA_STREAM, u);
 
         return intent;
     }
 
-    public static String getInternalDirectoryPath() {
-        File f = Environment.getExternalStorageDirectory();
-        if(f != null) {
-            return f.getAbsolutePath();
-        }
-        return null;
-    }
-
     private static File getTuiFolder() {
-        String internalDir = Tuils.getInternalDirectoryPath();
-        if(internalDir == null) {
-            return null;
-        }
+        File internalDir = Environment.getExternalStorageDirectory();
         return new File(internalDir, TUI_FOLDER);
     }
 

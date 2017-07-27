@@ -6,21 +6,18 @@ import android.content.Context;
 public abstract class ExecutePack {
 
     public Object[] args;
-
     public Context context;
-
     public CommandGroup commandGroup;
-
 
     public ExecutePack(CommandGroup group) {
         this.commandGroup = group;
     }
 
-
     @SuppressWarnings("unchecked")
     public <T> T get(Class<T> c, int index) {
-        if (index >= this.args.length)
+        if (index >= this.args.length) {
             return null;
+        }
 
         return (T) (this.args[index]);
     }

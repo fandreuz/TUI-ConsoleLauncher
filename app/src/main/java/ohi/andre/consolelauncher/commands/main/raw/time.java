@@ -1,11 +1,9 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
-import android.text.format.Time;
-
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.tuils.TimeManager;
 
 /**
  * Created by andre on 03/12/15.
@@ -13,29 +11,28 @@ import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 public class time implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
-        Time time = new Time();
-        time.setToNow();
-        return time.format(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format));
+        int index = pack.get(int.class, 0);
+        return TimeManager.replace("%t" + index).toString();
     }
 
     @Override
     public int minArgs() {
-        return 0;
-    }
-
-    @Override
-    public int maxArgs() {
-        return 0;
-    }
-
-    @Override
-    public int priority() {
         return 1;
     }
 
     @Override
+    public int maxArgs() {
+        return 1;
+    }
+
+    @Override
+    public int priority() {
+        return 4;
+    }
+
+    @Override
     public int[] argType() {
-        return new int[0];
+        return new int[] {CommandAbstraction.INT};
     }
 
     @Override
@@ -45,11 +42,11 @@ public class time implements CommandAbstraction {
 
     @Override
     public String onArgNotFound(ExecutePack info, int index) {
-        return null;
+        return info.context.getString(R.string.invalid_integer);
     }
 
     @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
-        return null;
+        return TimeManager.replace("%t0").toString();
     }
 }

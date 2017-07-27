@@ -2,8 +2,11 @@ package ohi.andre.consolelauncher.commands.specific;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
+import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
+import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.Param;
+import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -22,22 +25,29 @@ public abstract class ParamCommand implements CommandAbstraction {
         String o = doThings(pack);
         if(o != null) return o;
 
-        Param param = paramForString(pack.get(String.class, 0));
-        if(param == null) {
-            return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + pack.get(String.class, 0);
-        }
+        Param param = pack.get(Param.class, 0);
+        if(param == null) return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + pack.get(String.class, 0);
         return param.exec(pack);
     }
 
-    public final int[] argsForParam(String param) {
-        try {
-            return paramForString(param).args();
-        } catch (NullPointerException e) {
-            return null;
+    public SimpleMutableEntry<Boolean, Param> getParam(MainPack pack, String param) {
+        Param p = paramForString(pack, param);
+        if(p == null && supportDefaultParam()) {
+            return new SimpleMutableEntry<>(true, paramForString(pack, defaultParam(pack)));
         }
+        return new SimpleMutableEntry<>(false, p);
+    }
+
+    public String defaultParam(MainPack pack) {
+        String def = pack.cmdPrefs.forCommand(getClass().getSimpleName()).get(CommandsPreferences.DEFAULT_PARAM);
+        if(!def.startsWith("-")) def = "-" + def;
+        return def;
     }
 
     public abstract String[] params();
-    protected abstract Param paramForString(String param);
+    protected abstract Param paramForString(MainPack pack, String param);
     protected abstract String doThings(ExecutePack pack);
+    public boolean supportDefaultParam() {
+        return false;
+    }
 }

@@ -1,9 +1,7 @@
 package ohi.andre.consolelauncher;
 
 import android.Manifest;
-import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -18,7 +16,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.MenuItem;
@@ -30,7 +27,6 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
@@ -43,13 +39,13 @@ import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.tuils.Assist;
 import ohi.andre.consolelauncher.tuils.KeeperService;
-import ohi.andre.consolelauncher.tuils.StoppableThread;
+import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
-import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
+import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 
 public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
@@ -70,11 +66,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         @Override
         public String exec(String input, String alias) {
-            try {
-                main.onCommand(input, alias);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-            }
+            if(main != null) main.onCommand(input, alias);
             return null;
         }
     };
@@ -83,11 +75,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         @Override
         public void in(String s) {
-            try {
-                ui.setInput(s);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-            }
+            if(ui != null) ui.setInput(s);
         }
 
         @Override
@@ -114,16 +102,24 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     private Outputable out = new Outputable() {
 
         @Override
-        public void onOutput(String output) {
-            try {
-                ui.setOutput(output, TerminalManager.CATEGORY_OUTPUT);
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-            }
+        public void onOutput(CharSequence output) {
+            if(ui != null) ui.setOutput(output, TerminalManager.CATEGORY_OUTPUT);
+        }
+
+        @Override
+        public void onOutput(CharSequence output, int category) {
+            if(ui != null) ui.setOutput(output, category);
         }
     };
 
-    static final boolean DEBUG = false;
+    private Suggester sugg = new Suggester() {
+        @Override
+        public void requestUpdate() {
+            if(ui != null) ui.requestSuggestion(Tuils.EMPTYSTRING);
+        }
+    };
+
+    static final boolean DEBUG = BuildConfig.BUILD_TYPE.startsWith("debug");
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -149,61 +145,26 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private void finishOnCreate() {
 
-        Thread logger = null;
-        if(DEBUG) {
-            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-                @Override
-                public void uncaughtException(Thread t, Throwable e) {
-                    try {
-                        e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
-                    } catch (FileNotFoundException e1) {}
-                }
-            });
-
-            final Thread c = Thread.currentThread();
-            logger = new StoppableThread() {
-
-                FileOutputStream stream;
-                final String newline = "###" + Tuils.NEWLINE;
-
-                @Override
-                public void run() {
-
-                    if(stream == null) {
-                        try {
-                            stream = new FileOutputStream(new File(Tuils.getFolder(), "hang.txt"));
-                        } catch (FileNotFoundException e) {
-                            return;
-                        }
-                    }
-
-                    if(Thread.currentThread().isInterrupted()) return;
-
-                    StackTraceElement[] stack = c.getStackTrace();
-                    for(StackTraceElement s : stack) {
-                        if(s.getClassName().startsWith("ohi.andre.consolelauncher"))
-                            try {
-                                stream.write( (s.getClassName() + " -> " + s.getMethodName() + ": " + s.getLineNumber() + Tuils.NEWLINE).getBytes());
-                            } catch (IOException e) {}
-                    }
-                    try {
-                        stream.write(newline.getBytes());
-                    } catch (IOException e) {}
-
-                    if(Thread.currentThread().isInterrupted()) return;
-
-                    run();
-                }
-            };
-            logger.start();
-        }
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                Tuils.log(e);
+                try {
+                    e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
+                } catch (FileNotFoundException e1) {}
+            }
+        });
 
         try {
             XMLPrefsManager.create();
+            TimeManager.create();
         } catch (Exception e) {
-            Log.e("andre", "", e);
-//            this.startActivity(new Intent(this, LauncherActivity.class));
-//            this.finish();
+            Tuils.log(Tuils.getStackTrace(e));
+
+            try {
+                e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
+            } catch (FileNotFoundException e1) {}
+
             return;
         }
 
@@ -214,9 +175,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         } else {
             stopService(keeperIntent);
         }
-
-        DevicePolicyManager policy = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        ComponentName component = new ComponentName(this, PolicyReceiver.class);
 
         fullscreen = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.fullscreen);
 
@@ -252,8 +210,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         setContentView(R.layout.base_view);
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
-        main = new MainManager(this, in, out, policy, component);
-        ui = new UIManager(main.getMainPack(), this, mainView, ex, policy, component, main.getMainPack());
+        main = new MainManager(this, in, out, sugg);
+        ui = new UIManager(main.getMainPack(), this, mainView, ex, main.getMainPack());
         main.setRedirectionListener(ui.buildRedirectionListener());
 
         in.in(Tuils.EMPTYSTRING);
@@ -273,20 +231,20 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         }
 
         System.gc();
-
-        if(logger != null) {
-            logger.interrupt();
-            logger = null;
-        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        if (ui != null) {
-            ui.onStart(openKeyboardOnStart);
-        }
+        if (ui != null) ui.onStart(openKeyboardOnStart);
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        sugg.requestUpdate();
     }
 
     @Override
@@ -303,8 +261,10 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     protected void onDestroy() {
         super.onDestroy();
 
-        stopService(new Intent(this, KeeperService.class));
-        stopService(new Intent(this, NotificationService.class));
+        try {
+            stopService(new Intent(this, KeeperService.class));
+            stopService(new Intent(this, NotificationService.class));
+        } catch (NoClassDefFoundError e) {}
         LocalBroadcastManager.getInstance(this).unregisterReceiver(onNotice);
 
         overridePendingTransition(0,0);

@@ -1,17 +1,15 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.graphics.Color;
+import android.util.Log;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +27,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class XMLPrefsManager {
@@ -156,30 +153,6 @@ public class XMLPrefsManager {
 
     public enum Ui implements XMLPrefsSave {
 
-        show_username_ssninfo {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
-        },
-        show_ssninfo {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
-        },
-        show_path_ssninfo {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
-        },
-        show_devicename_ssninfo {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
-        },
         show_enter_button {
             @Override
             public String defaultValue() {
@@ -551,7 +524,7 @@ public class XMLPrefsManager {
                 return "true";
             }
         },
-        show_alias_suggestions {
+        suggest_alias_default {
             @Override
             public String defaultValue() {
                 return "true";
@@ -614,7 +587,7 @@ public class XMLPrefsManager {
         storage_format {
             @Override
             public String defaultValue() {
-                return "Internal Storage: %iavmb MB of %itotmb MB (%iav%%)";
+                return "Internal Storage: %iavgb GB / %itotgb GB (%iav%%)";
             }
         },
         input_format {
@@ -627,6 +600,30 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "%o";
+            }
+        },
+        session_info_format {
+            @Override
+            public String defaultValue() {
+                return "%u@%d:%p";
+            }
+        },
+        enable_app_launch {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        app_launch_format {
+            @Override
+            public String defaultValue() {
+                return "--> %a";
+            }
+        },
+        time_format_separator {
+            @Override
+            public String defaultValue() {
+                return "@";
             }
         };
 
@@ -704,7 +701,7 @@ public class XMLPrefsManager {
         UI("ui.xml", Ui.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"show_timestamp_before_cmd", "linux_like"};
+                return new String[] {"show_timestamp_before_cmd", "linux_like", "show_username_ssninfo", "show_ssninfo", "show_path_ssninfo", "show_devicename_ssninfo", "show_alias_suggestions"};
             }
         },
         BEHAVIOR("behavior.xml", Behavior.values()) {
@@ -818,14 +815,14 @@ public class XMLPrefsManager {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
 
-        BufferedReader oldStream = null;
-        HashMap<XMLPrefsSave, String> oldValues = null;
-
-        File old = new File(folder, "settings.txt");
-        if(old.exists()) {
-            oldStream = new BufferedReader(new FileReader(old));
-            oldValues = getOld(oldStream);
-        }
+//        BufferedReader oldStream = null;
+//        HashMap<XMLPrefsSave, String> oldValues = null;
+//
+//        File old = new File(folder, "settings.txt");
+//        if(old.exists()) {
+//            oldStream = new BufferedReader(new FileReader(old));
+//            oldValues = getOld(oldStream);
+//        }
 
         for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
             File file = new File(folder, element.path);
@@ -899,17 +896,17 @@ public class XMLPrefsManager {
                 }
                 if(value == null) {
 
-                    if(oldValues != null) {
-                        for(Map.Entry<XMLPrefsSave, String> sm : oldValues.entrySet()) {
-                            if(sm.getKey().equals(s)) {
-                                value = sm.getValue();
-                            }
-                        }
-                    }
+//                    if(oldValues != null) {
+//                        for(Map.Entry<XMLPrefsSave, String> sm : oldValues.entrySet()) {
+//                            if(sm.getKey().equals(s)) {
+//                                value = sm.getValue();
+//                            }
+//                        }
+//                    }
 
-                    if(value == null) value = s.defaultValue();
+//                    if(value == null)
+                        value = s.defaultValue();
                 }
-
 
                 Element em = d.createElement(s.label());
                 em.setAttribute(VALUE_ATTRIBUTE, value);
@@ -921,7 +918,7 @@ public class XMLPrefsManager {
             writeTo(d, file);
         }
 
-        if(old.exists()) old.delete();
+//        if(old.exists()) old.delete();
     }
 
     public static Object transform(String s, Class<?> c) {
@@ -1052,6 +1049,7 @@ public class XMLPrefsManager {
 
             writeTo(d, file);
         } catch (Exception e) {
+            Log.e("andre", "", e);
             return e.toString();
         }
         return null;
@@ -1155,82 +1153,78 @@ public class XMLPrefsManager {
         }
     }
 
-    private static HashMap<XMLPrefsSave, String> getOld(BufferedReader reader) {
-        HashMap<XMLPrefsSave, String> map = new HashMap<>();
+//    private static HashMap<XMLPrefsSave, String> getOld(BufferedReader reader) {
+//        HashMap<XMLPrefsSave, String> map = new HashMap<>();
+//
+//        String line;
+//        try {
+//            while((line = reader.readLine()) != null) {
+//                String[] split = line.split("=");
+//                if(split.length != 2) continue;
+//
+//                String name = split[0].trim();
+//                String value = split[1];
+//
+//                XMLPrefsSave s = getCorresponding(name);
+//                if(s == null) continue;
+//
+//                map.put(s, value);
+//            }
+//        } catch (IOException e) {
+//            return null;
+//        }
+//
+//        return map;
+//    }
 
-        String line;
-        try {
-            while((line = reader.readLine()) != null) {
-                String[] split = line.split("=");
-                if(split.length != 2) continue;
-
-                String name = split[0].trim();
-                String value = split[1];
-
-                XMLPrefsSave s = getCorresponding(name);
-                if(s == null) continue;
-
-                map.put(s, value);
-            }
-        } catch (IOException e) {
-            return null;
-        }
-
-        return map;
-    }
-
-    static final SimpleMutableEntry[] OLD = {
-            new SimpleMutableEntry("deviceColor", Theme.device_color),
-            new SimpleMutableEntry("inputColor", Theme.input_color),
-            new SimpleMutableEntry("outputColor", Theme.output_color),
-            new SimpleMutableEntry("backgroundColor", Theme.bg_color),
-            new SimpleMutableEntry("useSystemFont", Ui.system_font),
-            new SimpleMutableEntry("fontSize", Ui.font_size),
-            new SimpleMutableEntry("ramColor", Theme.ram_color),
-            new SimpleMutableEntry("inputFieldBottom", Ui.input_bottom),
-            new SimpleMutableEntry("username", Ui.username),
-            new SimpleMutableEntry("showUsername", Ui.show_username_ssninfo),
-            new SimpleMutableEntry("showSubmit", Ui.show_enter_button),
-            new SimpleMutableEntry("deviceName", Ui.deviceName),
-            new SimpleMutableEntry("showRam", Ui.show_ram),
-            new SimpleMutableEntry("showDevice", Ui.show_device_name),
-            new SimpleMutableEntry("showToolbar", Toolbar.show_toolbar),
-            new SimpleMutableEntry("showSessionInfoWhenInputEmpty", Ui.show_ssninfo),
-            new SimpleMutableEntry("showPathInSessionInfo", Ui.show_path_ssninfo),
-            new SimpleMutableEntry("showDeviceNameInSessionInfo", Ui.show_devicename_ssninfo),
-
-            new SimpleMutableEntry("suggestionTextColor", Suggestions.default_text_color),
-            new SimpleMutableEntry("transparentSuggestions", Suggestions.transparent),
-            new SimpleMutableEntry("aliasSuggestionBg", Suggestions.alias_bg_color),
-            new SimpleMutableEntry("appSuggestionBg", Suggestions.apps_bg_color),
-            new SimpleMutableEntry("commandSuggestionsBg", Suggestions.cmd_bg_color),
-            new SimpleMutableEntry("songSuggestionBg", Suggestions.song_bg_color),
-            new SimpleMutableEntry("contactSuggestionBg", Suggestions.contact_bg_color),
-            new SimpleMutableEntry("fileSuggestionBg", Suggestions.file_bg_color),
-            new SimpleMutableEntry("defaultSuggestionBg", Suggestions.default_bg_color),
-
-            new SimpleMutableEntry("useSystemWallpaper", Ui.system_wallpaper),
-            new SimpleMutableEntry("fullscreen", Ui.fullscreen),
-            new SimpleMutableEntry("keepAliveWithNotification", Behavior.tui_notification),
-            new SimpleMutableEntry("openKeyboardOnStart", Behavior.auto_show_keyboard),
-
-            new SimpleMutableEntry("fromMediastore", Behavior.songs_from_mediastore),
-            new SimpleMutableEntry("playRandom", Behavior.random_play),
-            new SimpleMutableEntry("songsFolder", Behavior.songs_folder),
-
-            new SimpleMutableEntry("closeOnDbTap", Behavior.double_tap_closes),
-            new SimpleMutableEntry("showSuggestions", Suggestions.show_suggestions),
-            new SimpleMutableEntry("showDonationMessage", Behavior.donation_message),
-            new SimpleMutableEntry("showAliasValue", Behavior.show_alias_content),
-            new SimpleMutableEntry("showAppsHistory", Behavior.show_launch_history),
-
-            new SimpleMutableEntry("defaultSearch", Cmd.default_search)
-    };
-
-    private static XMLPrefsSave getCorresponding(String old) {
-        for(SimpleMutableEntry<String, XMLPrefsSave> s : OLD) {
-            if(old.equals(s.getKey())) return s.getValue();
-        }
-        return null;
-    }
+//    static final SimpleMutableEntry[] OLD = {
+//            new SimpleMutableEntry("deviceColor", Theme.device_color),
+//            new SimpleMutableEntry("inputColor", Theme.input_color),
+//            new SimpleMutableEntry("outputColor", Theme.output_color),
+//            new SimpleMutableEntry("backgroundColor", Theme.bg_color),
+//            new SimpleMutableEntry("useSystemFont", Ui.system_font),
+//            new SimpleMutableEntry("fontSize", Ui.font_size),
+//            new SimpleMutableEntry("ramColor", Theme.ram_color),
+//            new SimpleMutableEntry("inputFieldBottom", Ui.input_bottom),
+//            new SimpleMutableEntry("username", Ui.username),
+//            new SimpleMutableEntry("showSubmit", Ui.show_enter_button),
+//            new SimpleMutableEntry("deviceName", Ui.deviceName),
+//            new SimpleMutableEntry("showRam", Ui.show_ram),
+//            new SimpleMutableEntry("showDevice", Ui.show_device_name),
+//            new SimpleMutableEntry("showToolbar", Toolbar.show_toolbar),
+//
+//            new SimpleMutableEntry("suggestionTextColor", Suggestions.default_text_color),
+//            new SimpleMutableEntry("transparentSuggestions", Suggestions.transparent),
+//            new SimpleMutableEntry("aliasSuggestionBg", Suggestions.alias_bg_color),
+//            new SimpleMutableEntry("appSuggestionBg", Suggestions.apps_bg_color),
+//            new SimpleMutableEntry("commandSuggestionsBg", Suggestions.cmd_bg_color),
+//            new SimpleMutableEntry("songSuggestionBg", Suggestions.song_bg_color),
+//            new SimpleMutableEntry("contactSuggestionBg", Suggestions.contact_bg_color),
+//            new SimpleMutableEntry("fileSuggestionBg", Suggestions.file_bg_color),
+//            new SimpleMutableEntry("defaultSuggestionBg", Suggestions.default_bg_color),
+//
+//            new SimpleMutableEntry("useSystemWallpaper", Ui.system_wallpaper),
+//            new SimpleMutableEntry("fullscreen", Ui.fullscreen),
+//            new SimpleMutableEntry("keepAliveWithNotification", Behavior.tui_notification),
+//            new SimpleMutableEntry("openKeyboardOnStart", Behavior.auto_show_keyboard),
+//
+//            new SimpleMutableEntry("fromMediastore", Behavior.songs_from_mediastore),
+//            new SimpleMutableEntry("playRandom", Behavior.random_play),
+//            new SimpleMutableEntry("songsFolder", Behavior.songs_folder),
+//
+//            new SimpleMutableEntry("closeOnDbTap", Behavior.double_tap_closes),
+//            new SimpleMutableEntry("showSuggestions", Suggestions.show_suggestions),
+//            new SimpleMutableEntry("showDonationMessage", Behavior.donation_message),
+//            new SimpleMutableEntry("showAliasValue", Behavior.show_alias_content),
+//            new SimpleMutableEntry("showAppsHistory", Behavior.show_launch_history),
+//
+//            new SimpleMutableEntry("defaultSearch", Cmd.default_search)
+//    };
+//
+//    private static XMLPrefsSave getCorresponding(String old) {
+//        for(SimpleMutableEntry<String, XMLPrefsSave> s : OLD) {
+//            if(old.equals(s.getKey())) return s.getValue();
+//        }
+//        return null;
+//    }
 }
