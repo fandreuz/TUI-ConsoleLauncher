@@ -160,11 +160,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             TimeManager.create();
         } catch (Exception e) {
             Tuils.log(Tuils.getStackTrace(e));
-
-            try {
-                e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
-            } catch (FileNotFoundException e1) {}
-
+            Tuils.toFile(e);
             return;
         }
 
@@ -213,6 +209,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         main = new MainManager(this, in, out, sugg);
         ui = new UIManager(main.getMainPack(), this, mainView, ex, main.getMainPack());
         main.setRedirectionListener(ui.buildRedirectionListener());
+        main.setHintable(ui.getHintable());
+        main.setRooter(ui.getRooter());
 
         in.in(Tuils.EMPTYSTRING);
         ui.focusTerminal();

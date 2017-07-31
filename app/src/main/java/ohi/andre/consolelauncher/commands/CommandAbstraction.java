@@ -22,6 +22,7 @@ public interface CommandAbstraction {
     int CONFIG_ENTRY = 23;
     int INT = 24;
     int DEFAULT_APP = 25;
+    int ALL_PACKAGES = 26;
 
     String exec(ExecutePack pack) throws Exception;
 

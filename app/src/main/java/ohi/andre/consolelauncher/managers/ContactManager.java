@@ -15,13 +15,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class ContactManager {
-
-    public static final boolean USE_SCROLL_COMPARE = false;
 
     private Context context;
     private List<Contact> contacts;
@@ -213,15 +210,12 @@ public class ContactManager {
         return about;
     }
 
-    public String findNumber(String name, int minRate) {
+    public String findNumber(String name) {
         if(contacts == null) refreshContacts(this, context);
-
-        String mostSuitable = Compare.similarString(listNames(), name, minRate, USE_SCROLL_COMPARE);
-        if(mostSuitable == null) return null;
 
         for(int count = 0; count < contacts.size(); count++) {
             Contact c = contacts.get(count);
-            if(c.name.equals(mostSuitable)) {
+            if(c.name.equalsIgnoreCase(name)) {
                 if(c.numbers.size() > 0) return c.numbers.get(0);
             }
         }

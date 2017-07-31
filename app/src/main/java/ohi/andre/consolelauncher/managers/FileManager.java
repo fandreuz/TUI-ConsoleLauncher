@@ -13,8 +13,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import ohi.andre.comparestring.Compare;
-import ohi.andre.consolelauncher.tuils.ShellUtils;
+import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class FileManager {
@@ -62,7 +61,7 @@ public class FileManager {
         }
     }
 
-    public static int mv(File[] files, File where, boolean su) throws IOException {
+    public static int mv(File[] files, File where) throws IOException {
         if (files == null || files.length == 0 || where == null) {
             return FileManager.FILE_NOTFOUND;
         }
@@ -72,43 +71,35 @@ public class FileManager {
         }
 
         for (File f : files) {
-            mv(f, where, su);
+            mv(f, where);
         }
 
         return 0;
     }
 
-    private static int mv(File f, File where, boolean su) throws IOException {
-        ShellUtils.CommandResult result = ShellUtils.execCommand("mv " + Tuils.SPACE +
-                f.getAbsolutePath() + Tuils.SPACE +
-                where.getAbsolutePath(), su, null);
-
-        return result.result;
+    private static int mv(File f, File where) throws IOException {
+        MainManager.interactive.addCommand("mv " + Tuils.SPACE + f.getAbsolutePath() + Tuils.SPACE + where.getAbsolutePath());
+        return 0;
     }
 
-    public static int rm(File[] files, boolean su) {
+    public static int rm(File[] files) {
         if (files == null || files.length == 0) {
             return FileManager.FILE_NOTFOUND;
         }
 
         for (File f : files) {
-            rm(f, su);
+            rm(f);
         }
 
         return 0;
     }
 
-    public static int rm(File f, boolean su) {
-        ShellUtils.CommandResult result = ShellUtils.execCommand("rm " +
-                (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) +
-                Tuils.SPACE +
-                f.getAbsolutePath(), su, null);
-
-        if(result == null) return IOERROR;
-        return result.result;
+    public static int rm(File f) {
+        MainManager.interactive.addCommand("rm " + (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) + Tuils.SPACE + f.getAbsolutePath());
+        return 0;
     }
 
-    public static int cp(File[] files, File where, boolean su) throws IOException {
+    public static int cp(File[] files, File where) throws IOException {
         if (files == null || files.length == 0 || where == null) {
             return FileManager.FILE_NOTFOUND;
         }
@@ -118,17 +109,15 @@ public class FileManager {
         }
 
         for (File f : files) {
-            cp(f, where, su);
+            cp(f, where);
         }
 
         return 0;
     }
 
-    private static int cp(File f, File where, boolean su) throws IOException {
-        ShellUtils.CommandResult result = ShellUtils.execCommand("cp " + Tuils.SPACE +
-                f.getAbsolutePath() + Tuils.SPACE +
-                where.getAbsolutePath(), su, null);
-        return result.result;
+    private static int cp(File f, File where) throws IOException {
+        MainManager.interactive.addCommand("cp " + Tuils.SPACE + f.getAbsolutePath() + Tuils.SPACE + where.getAbsolutePath());
+        return 0;
     }
 
     public static List<File> lsFile(File f, boolean showHidden) {
@@ -156,7 +145,7 @@ public class FileManager {
                 if (rhs.isDirectory() && !lhs.isDirectory())
                     return 1;
 
-                return Compare.alphabeticCompare(lhs.getName(), rhs.getName());
+                return Tuils.alphabeticCompare(lhs.getName(), rhs.getName());
             }
         });
 

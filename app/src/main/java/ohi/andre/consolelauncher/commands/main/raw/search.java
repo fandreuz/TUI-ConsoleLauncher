@@ -9,17 +9,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
-
-import static ohi.andre.consolelauncher.managers.FileManager.MIN_FILE_RATE;
 
 public class search extends ParamCommand {
 
@@ -177,7 +173,7 @@ public class search extends ParamCommand {
                 super.run();
 
                 String name = Tuils.toPlanString(args);
-                List<String> paths = rightPaths(cd, name, FileManager.USE_SCROLL_COMPARE);
+                List<String> paths = rightPaths(cd, name);
                 if(paths.size() == 0) {
                     outputable.onOutput(res.getString(R.string.output_nothing_found));
                 } else {
@@ -189,31 +185,27 @@ public class search extends ParamCommand {
         return Tuils.EMPTYSTRING;
     }
 
-    private static List<String> rightPaths(File dir, String name, boolean scrollCompare) {
+    private static List<String> rightPaths(File dir, String name) {
         File[] files = dir.listFiles();
         List<String> rightPaths = new ArrayList<>(files.length);
 
         boolean check = false;
         for (File file : files) {
-            if (fileMatch(file, name, scrollCompare)) {
+            if (fileMatch(file, name)) {
                 if (!check)
                     rightPaths.add(dir.getAbsolutePath());
                 check = true;
                 rightPaths.add(Tuils.NEWLINE + Tuils.DOUBLE_SPACE + file.getAbsolutePath());
             }
             if (file.isDirectory())
-                rightPaths.addAll(rightPaths(file, name, scrollCompare));
+                rightPaths.addAll(rightPaths(file, name));
         }
 
         return rightPaths;
     }
 
-    private static boolean fileMatch(File f, String name, boolean scrollCompare) {
-        if (scrollCompare) {
-            return Compare.scrollComparison(f.getName(), name) >= MIN_FILE_RATE;
-        } else {
-            return Compare.linearComparison(f.getName(), name) >= MIN_FILE_RATE;
-        }
+    private static boolean fileMatch(File f, String name) {
+        return f.getName().equalsIgnoreCase(name);
     }
 
     private static String youTube(List<String> args, Context c) {

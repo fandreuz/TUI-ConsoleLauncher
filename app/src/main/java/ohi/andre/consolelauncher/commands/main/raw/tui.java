@@ -49,7 +49,7 @@ public class tui extends ParamCommand {
         reset {
             @Override
             public String exec(ExecutePack pack) {
-                FileManager.rm(Tuils.getFolder(), false);
+                FileManager.rm(Tuils.getFolder());
                 return null;
             }
         },

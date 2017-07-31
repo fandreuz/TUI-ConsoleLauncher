@@ -24,9 +24,6 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 @SuppressLint("DefaultLocale")
 public class CommandTuils {
 
-    private static final int MIN_CONTACT_RATE = 4;
-    private static final int MIN_SONG_RATE = 5;
-
     private static FileManager.SpecificExtensionFileFilter extensionFileFilter = new FileManager.SpecificExtensionFileFilter();
     private static FileManager.SpecificNameFileFilter nameFileFilter = new FileManager.SpecificNameFileFilter();
 
@@ -37,12 +34,6 @@ public class CommandTuils {
     public static Command parse(String input, ExecutePack info, boolean suggestion) throws Exception {
         Command command = new Command();
 
-        boolean pendingSuVerification = false;
-        if (!suggestion && isSuCommand(input)) {
-            input = input.substring(3);
-            pendingSuVerification = true;
-        }
-
         String name = CommandTuils.findName(input);
         if (!Tuils.isAlpha(name))
             return null;
@@ -52,10 +43,6 @@ public class CommandTuils {
             return null;
         }
         command.cmd = cmd;
-
-        if (pendingSuVerification && info instanceof MainPack) {
-            ((MainPack) info).setSu(Tuils.verifyRoot());
-        }
 
         input = input.substring(name.length());
         input = input.trim();
@@ -169,6 +156,8 @@ public class CommandTuils {
             return integer(input);
         } else if(type == CommandAbstraction.DEFAULT_APP) {
             return defaultApp(input, ((MainPack) info).appsManager);
+        } else if(type == CommandAbstraction.ALL_PACKAGES) {
+            return allPackages(input, ((MainPack) info).appsManager);
         }
 
         return null;
@@ -354,6 +343,15 @@ public class CommandTuils {
         return new ArgInfo(info, null, info != null, info != null ? 1 : 0);
     }
 
+    private static ArgInfo allPackages(String input, AppsManager apps) {
+        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+        if(info == null) {
+            info = apps.findLaunchInfoWithLabel(input, AppsManager.HIDDEN_APPS);
+        }
+
+        return new ArgInfo(info, null, info != null, info != null ? 1 : 0);
+    }
+
     private static ArgInfo defaultApp(String input, AppsManager apps) {
         AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
         if(info == null) {
@@ -369,14 +367,13 @@ public class CommandTuils {
         if (Tuils.isNumber(input))
             number = input;
         else
-            number = contacts.findNumber(input, MIN_CONTACT_RATE);
+            number = contacts.findNumber(input);
 
         return new ArgInfo(number, null, number != null, 1);
     }
 
     private static ArgInfo song(String input, MusicManager music) {
-        String name = music.getSong(input, MIN_SONG_RATE);
-        return new ArgInfo(name, null, name != null, 1);
+        return new ArgInfo(input, null, true, 1);
     }
 
     private static ArgInfo configEntry(String input) {

@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.broadcast.HeadsetBroadcast;
@@ -21,8 +20,6 @@ import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 public class MusicManager implements OnCompletionListener {
 
     public static final String[] MUSIC_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac"};
-
-    public static final boolean USE_SCROLL_COMPARE = true;
 
     private List<File> files;
     private MediaPlayer mp;
@@ -78,9 +75,9 @@ public class MusicManager implements OnCompletionListener {
     }
 
     //	return a song by incomplete name
-    public String getSong(String s, int minRate) {
-        return Compare.similarString(getNames(), s, minRate, USE_SCROLL_COMPARE);
-    }
+//    public String getSong(String s) {
+//        return s;
+//    }
 
     //	return the path by complete name
     public String getPath(String name) {

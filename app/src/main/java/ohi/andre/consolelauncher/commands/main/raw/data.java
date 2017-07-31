@@ -13,7 +13,6 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class data implements CommandAbstraction {
@@ -27,8 +26,8 @@ public class data implements CommandAbstraction {
             active = toggle(info);
             return info.res.getString(R.string.output_data) + Tuils.SPACE + Boolean.toString(active);
         } else {
-            ShellUtils.CommandResult result = ShellUtils.execCommand("svc data " + (active ? "enable" : "disable"), true, null);
-            return info.res.getString(R.string.output_commandexitvalue) + Tuils.SPACE + result.result;
+//            ShellUtils.CommandResult result = ShellUtils.execCommand("svc data " + (active ? "enable" : "disable"), true, null);
+            return pack.context.getString(R.string.output_nofeature);
         }
     }
 

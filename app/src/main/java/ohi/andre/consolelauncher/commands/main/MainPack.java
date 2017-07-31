@@ -8,6 +8,7 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Environment;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -20,14 +21,13 @@ import ohi.andre.consolelauncher.commands.main.raw.flash;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.ShellManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
+import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 
 /**
  * Created by francescoandreuzzi on 24/01/2017.
@@ -39,8 +39,6 @@ public class MainPack extends ExecutePack {
 
     //	current directory
     public File currentDirectory;
-
-    public ShellManager shellManager;
 
     public SkinManager skinManager;
 
@@ -54,9 +52,6 @@ public class MainPack extends ExecutePack {
 
     //	internet
     public WifiManager wifi;
-
-    //	prefs
-    public XMLPrefsManager preferencesManager;
 
     //	3g/data
     public Method setMobileDataEnabledMethod;
@@ -76,12 +71,12 @@ public class MainPack extends ExecutePack {
     //	reload field
     public Reloadable reloadable;
 
+    public Rooter rooter;
+
     public CommandsPreferences cmdPrefs;
 
     //	execute a command
     public CommandExecuter executer;
-    //	uses su
-    private boolean canUseSu = false;
 
     public LocationManager locationManager;
 
@@ -90,11 +85,10 @@ public class MainPack extends ExecutePack {
     public Redirectator redirectator;
 
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
-                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Outputable outputable, Redirectator redirectator, ShellManager shellManager) {
+                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Outputable outputable, Redirectator redirectator) {
         super(commandGroup);
 
-        this.shellManager = shellManager;
-        this.currentDirectory = shellManager.currentDir();
+        this.currentDirectory = Environment.getExternalStorageDirectory();
 
         this.outputable = outputable;
 
@@ -117,16 +111,6 @@ public class MainPack extends ExecutePack {
         this.reloadable = r;
 
         this.redirectator = redirectator;
-    }
-
-    public boolean getSu() {
-        boolean su = canUseSu;
-        canUseSu = false;
-        return su;
-    }
-
-    public void setSu(boolean su) {
-        this.canUseSu = su;
     }
 
     public void initCamera() {
@@ -160,13 +144,5 @@ public class MainPack extends ExecutePack {
     public void destroy() {
         player.destroy(this.context);
         appsManager.onDestroy();
-        shellManager.destroy();
-    }
-
-    @Override
-    public void clear() {
-        super.clear();
-
-        setSu(false);
     }
 }

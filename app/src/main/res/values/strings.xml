@@ -13,6 +13,7 @@
     <string name="location_off">Turn on GPS or network location</string>
     <string name="invalid_integer">Invalid integer</string>
     <string name="activity_not_found">Ativity not found</string>
+    <string name="use_suc">su: use "su -c" instead</string>
 
     <!-- busy -->
     <string name="busy">T-UI is busy, wait until the execution finishes or use the command \"ctrlc\"</string>
@@ -20,7 +21,7 @@
 
     <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.
         \n\nYou can disable this message with the command\nconfig -set donation_message false</string>
-    <string name="firsthelp_text">First time with t-ui? Use the command "tutorial" or "help"</string>
+    <string name="firsthelp_text">First time with t-ui? Use the command \"tutorial\" or \"help\"</string>
 
     <!-- app mgr -->
     <string name="output_appnotfound">Application not found</string>
@@ -73,7 +74,7 @@
     <string name="output_data">Mobile Data active:</string>
     <string name="output_bluetooth">Bluetooth active:</string>
     <string name="output_airplane">Airplane Mode active:</string>
-    <string name="output_nofeature">Can\'t use this feature on your Android version</string>
+    <string name="output_nofeature">This feature isn\'t available on your Android version</string>
 
     <!-- files -->
     <string name="output_isfile">Cant\'t write here. It\'s a file</string>
@@ -300,7 +301,7 @@
     <string name="help_exit">Close T-UI and reset launcher preferences</string>
 
     <!-- linux -->
-    <string name="help_ctrlc">Send SIGINT to the current shell process</string>
+    <string name="help_ctrlc">Interrupt the current shell process and create a new one</string>
     <string name="help_open">Open a file with the default application
         \nUsage:
         \n>>open [pathToFile]

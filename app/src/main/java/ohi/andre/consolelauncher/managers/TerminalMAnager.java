@@ -1,5 +1,6 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.IBinder;
@@ -27,6 +28,7 @@ import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.clear;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 
 /*Copyright Francesco Andreuzzi
 
@@ -60,6 +62,9 @@ public class TerminalManager {
     private ScrollView mScrollView;
     private TextView mTerminalView;
     private EditText mInputView;
+
+    private TextView mPrefix;
+    private boolean suMode;
 
     private List<String> cmdList = new ArrayList<>(CMD_LIST_SIZE);
     private int howBack = -1;
@@ -98,10 +103,14 @@ public class TerminalManager {
     private String inputFormat;
     private String outputFormat;
 
+    private Context mContext;
+
     public TerminalManager(final TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
                            ImageButton pasteView, SkinManager skinManager, final Context context, MainPack mainPack) {
         if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
             throw new UnsupportedOperationException();
+
+        this.mContext = context;
 
         final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
 
@@ -122,6 +131,7 @@ public class TerminalManager {
         prefixView.setTextColor(this.mSkinManager.inputColor);
         prefixView.setTextSize(this.mSkinManager.getTextSize());
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
+        this.mPrefix = prefixView;
 
         if (submitView != null) {
             submitView.setColorFilter(mSkinManager.enter_color);
@@ -369,7 +379,7 @@ public class TerminalManager {
             case CATEGORY_INPUT:
                 t = t.toString().trim();
 
-                boolean su = t.toString().startsWith("su ");
+                boolean su = t.toString().startsWith("su ") || suMode;
 
                 SpannableString si = new SpannableString(inputFormat);
                 si.setSpan(new ForegroundColorSpan(mSkinManager.inputColor), 0, inputFormat.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -472,6 +482,32 @@ public class TerminalManager {
         });
         cmdList.clear();
         clearCmdsCount = 0;
+    }
+
+    public Rooter getRooter() {
+        return new Rooter() {
+            @Override
+            public void onRoot() {
+                ((Activity) mContext).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        suMode = true;
+                        mPrefix.setText(suPrefix.endsWith(Tuils.SPACE) ? suPrefix : suPrefix + Tuils.SPACE);
+                    }
+                });
+            }
+
+            @Override
+            public void onStandard() {
+                ((Activity) mContext).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        suMode = false;
+                        mPrefix.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
+                    }
+                });
+            }
+        };
     }
 
     public static class Messager {

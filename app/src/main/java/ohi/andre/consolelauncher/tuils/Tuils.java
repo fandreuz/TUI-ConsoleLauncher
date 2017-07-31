@@ -30,13 +30,13 @@ import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -49,9 +49,9 @@ import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.BuildConfig;
-import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
 public class Tuils {
@@ -387,27 +387,6 @@ public class Tuils {
         return -1;
     }
 
-    public static boolean verifyRoot() {
-        Process p;
-        try {
-            p = Runtime.getRuntime().exec("su");
-
-            DataOutputStream os = new DataOutputStream(p.getOutputStream());
-            os.writeBytes("echo \"root?\" >/system/sd/temporary.txt\n");
-
-            os.writeBytes("exit\n");
-            os.flush();
-            try {
-                p.waitFor();
-                return p.exitValue() != 255;
-            } catch (InterruptedException e) {
-                return false;
-            }
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
     public static void insertHeaders(List<String> s, boolean newLine) {
         char current = 0;
         for (int count = 0; count < s.size(); count++) {
@@ -464,6 +443,12 @@ public class Tuils {
         } else {
             Log.e("andre", String.valueOf(o));
         }
+    }
+
+    public static void toFile(Throwable e) {
+        try {
+            e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
+        } catch (FileNotFoundException e1) {}
     }
 
     static FileOutputStream logStream = null;
@@ -755,5 +740,32 @@ public class Tuils {
 
         folder = tuiFolder;
         return folder;
+    }
+
+    public static int alphabeticCompare(String s1, String s2) {
+        String cmd1 = removeSpaces(s1);
+        cmd1 = cmd1.toLowerCase();
+        String cmd2 = removeSpaces(s2);
+        cmd2 = cmd2.toLowerCase();
+
+        for (int count = 0; count < cmd1.length() && count < cmd2.length(); count++) {
+            if (cmd1.charAt(count) < cmd2.charAt(count)) {
+                return -1;
+            } else if (cmd1.charAt(count) > cmd2.charAt(count)) {
+                return 1;
+            }
+        }
+
+        if (cmd1.length() > cmd2.length()) {
+            return 1;
+        } else if (cmd1.length() < cmd2.length()) {
+            return -1;
+        }
+        return 0;
+    }
+
+    private static final String SPACE_REGEXP = "\\s";
+    public static String removeSpaces(String string) {
+        return string.replaceAll(SPACE_REGEXP, EMPTYSTRING);
     }
 }

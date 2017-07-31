@@ -8,7 +8,6 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.tuils.ShellUtils;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class uninstall implements CommandAbstraction {
@@ -18,11 +17,11 @@ public class uninstall implements CommandAbstraction {
         MainPack info = (MainPack) pack;
 
         String packageName = info.get(AppsManager.LaunchInfo.class, 0).componentName.getPackageName();
-        if (info.getSu()) {
-            try {
-                return ShellUtils.execCommand("su pm uninstall " + packageName, true, null).toString();
-            } catch (Exception e) {}
-        }
+//        if (info.getSu()) {
+//            try {
+//                return ShellUtils.execCommand("su pm uninstall " + packageName, true, null).toString();
+//            } catch (Exception e) {}
+//        }
 
         Uri packageURI = Uri.parse("package:" + packageName);
         Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);

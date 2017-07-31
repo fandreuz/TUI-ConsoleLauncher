@@ -44,7 +44,9 @@ import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
+import ohi.andre.consolelauncher.tuils.interfaces.Hintable;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
+import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.interfaces.SuggestionViewDecorer;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 import ohi.andre.consolelauncher.tuils.stuff.TrashInterfaces;
@@ -738,6 +740,19 @@ public class UIManager implements OnTouchListener {
 
     public void scrollToEnd() {
         mTerminalAdapter.scrollToEnd();
+    }
+
+    public Hintable getHintable() {
+        return new Hintable() {
+            @Override
+            public void updateHint() {
+                mTerminalAdapter.setDefaultHint();
+            }
+        };
+    }
+
+    public Rooter getRooter() {
+        return mTerminalAdapter.getRooter();
     }
 
     //	 init detector for double tap

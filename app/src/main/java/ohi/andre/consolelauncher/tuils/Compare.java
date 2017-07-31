@@ -25,9 +25,9 @@ public class Compare {
         return s;
     }
 
-    public static boolean matches(String compared, String comparator, boolean allowSkip, int minRate) {
-        compared = removeAccents(compared);
-        comparator = removeAccents(comparator);
+    public static int matches(String compared, String comparator, boolean allowSkip) {
+        compared = removeAccents(compared).toLowerCase().trim();
+        comparator = removeAccents(comparator).toLowerCase().trim();
 
         List<String> s = new ArrayList<>();
         if(allowSkip) {
@@ -38,30 +38,60 @@ public class Compare {
         }
         s.add(compared);
 
+        float maxRate = -1;
         for(String st : s) {
-            int rate = 0;
+            float rate = 0;
             for(int i = 0; i < st.length() && i < comparator.length(); i++) {
                 char c1 = st.charAt(i);
                 char c2 = comparator.charAt(i);
 
-                if(c1 == c2) rate++;
+                if(c1 == c2) {
+                    rate += (double) (st.length() - i) / (double) st.length();
+                }
             }
 
-            if(rate >= minRate) return true;
+            if(rate >= (double) comparator.length() / 2d) maxRate = Math.max(maxRate, rate);
         }
 
-        return false;
+        return Math.round(maxRate);
     }
 
-    public static List<String> matches(List<String> compared, String comparator, boolean allowSkip, int minRate) {
-        List<String> ms = new ArrayList<>();
+    public static List<String> matches(List<String> compared, String comparator, boolean allowSkip) {
+        List<SimpleMutableEntry<String, Integer>> ms = matchesWithRate(compared, comparator, allowSkip);
 
-        for(String s : compared) {
-            if(matches(s, comparator, allowSkip, minRate)) {
-                ms.add(s);
-            }
+        List<String> result = new ArrayList<>(ms.size());
+        for(SimpleMutableEntry<String, Integer> e : ms) {
+            result.add(e.getKey());
         }
 
+        return result;
+    }
+
+    public static List<String> matches(String[] compared, String comparator, boolean allowSkip) {
+        return matches(Arrays.asList(compared), comparator, allowSkip);
+    }
+
+    public static List<SimpleMutableEntry<String, Integer>> matchesWithRate(List<String> compared, String comparator, boolean allowSkip) {
+        List<SimpleMutableEntry<String, Integer>> ms = new ArrayList<>();
+
+        for(String s : compared) {
+            if(Thread.currentThread().isInterrupted()) return ms;
+
+            int rate = matches(s, comparator, allowSkip);
+            if(rate != -1) ms.add(new SimpleMutableEntry<>(s, rate));
+        }
+
+//        Collections.sort(ms, new Comparator<SimpleMutableEntry<String, Integer>>() {
+//            @Override
+//            public int compare(SimpleMutableEntry<String, Integer> o1, SimpleMutableEntry<String, Integer> o2) {
+//                return o1.getValue() - o2.getValue();
+//            }
+//        });
+
         return ms;
+    }
+
+    public static List<SimpleMutableEntry<String, Integer>> matchesWithRate(String[] compared, String comparator, boolean allowSkip) {
+        return matchesWithRate(Arrays.asList(compared), comparator, allowSkip);
     }
 }

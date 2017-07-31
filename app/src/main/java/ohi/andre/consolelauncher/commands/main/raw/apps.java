@@ -132,7 +132,7 @@ public class apps extends ParamCommand {
         frc {
             @Override
             public int[] args() {
-                return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
+                return new int[] {CommandAbstraction.ALL_PACKAGES};
             }
 
             @Override

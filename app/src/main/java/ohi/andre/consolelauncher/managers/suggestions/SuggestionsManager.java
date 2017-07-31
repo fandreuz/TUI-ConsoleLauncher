@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandTuils;
@@ -18,9 +17,10 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
-import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.tuils.Compare;
+import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static ohi.andre.consolelauncher.commands.CommandTuils.xmlPrefsEntrys;
@@ -33,25 +33,26 @@ public class SuggestionsManager {
 
     private final int MIN_COMMAND_PRIORITY = 5;
 
-    private int min_command_rate = 4;
-    private int min_apps_rate = 4;
-    private int min_contacts_rate = 4;
-    private int min_file_rate = 2;
-    private int min_songs_rate = 4;
+//    private int min_command_rate = 4;
+//    private int min_apps_rate = 2;
+//    private int min_contacts_rate = 2;
+//    private int min_file_rate = 2;
+//    private int min_songs_rate = 2;
 
 //    use to place something at the top
     private final int MAX_RATE = 100;
     private final int NO_RATE = -1;
 
-    private final int FIRST_INTERVAL = 7;
+    private final int FIRST_INTERVAL = 6;
 
-    private boolean showAliasDefault, showAliasWasSet = false;
+    private boolean showAliasDefault, set = false, clickToLaunch;
 
     public Suggestion[] getSuggestions(MainPack info, String before, String lastWord) {
 
-        if(!showAliasWasSet) {
-            showAliasDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.suggest_alias_default);
-            showAliasWasSet = true;
+        if(!set) {
+            showAliasDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.suggest_alias_default);
+            set = true;
+            clickToLaunch = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.click_to_launch);
         }
 
         List<Suggestion> suggestionList = new ArrayList<>();
@@ -62,6 +63,7 @@ public class SuggestionsManager {
 //        lastword = 0
         if (lastWord.length() == 0) {
 //            lastword = 0 && before = 0
+
             if (before.length() == 0) {
                 String[] apps = info.appsManager.getSuggestedApps();
                 if (apps != null) {
@@ -72,7 +74,7 @@ public class SuggestionsManager {
 
                         float shift = count + 1;
                         float rate = 1f / shift;
-                        suggestionList.add(new Suggestion(before, apps[count], true, (int) Math.ceil(rate), Suggestion.TYPE_APP));
+                        suggestionList.add(new Suggestion(before, apps[count], clickToLaunch, (int) Math.ceil(rate), Suggestion.TYPE_APP));
                     }
                 }
 
@@ -80,6 +82,7 @@ public class SuggestionsManager {
 
                 return suggestionList.toArray(new Suggestion[suggestionList.size()]);
             }
+
 //            lastword == 0 && before > 0
             else {
 //                check if this is a command
@@ -111,15 +114,31 @@ public class SuggestionsManager {
                     else suggestArgs(info, cmd.nextArg(), suggestionList, before);
 
                 } else {
-//                    >>word
-//                    not a command
-//                    ==> app
-                    suggestApp(info, suggestionList, before, Tuils.EMPTYSTRING);
+
+                    String[] split = before.replaceAll("['\"]", Tuils.EMPTYSTRING).split(Tuils.SPACE);
+                    boolean isShellCmd = false;
+                    for(String s : split) {
+                        if(needsFileSuggestion(s)) {
+                            isShellCmd = true;
+                            break;
+                        }
+                    }
+
+                    if(isShellCmd) {
+                        suggestFile(info, suggestionList, Tuils.EMPTYSTRING, before);
+                    } else {
+//                        ==> app
+                        suggestApp(info, suggestionList, before, Tuils.EMPTYSTRING);
+                    }
+
                 }
             }
         }
+
+
 //        lastWord > 0
         else {
+
             if (before.length() > 0) {
 //                lastword > 0 && before > 0
                 Command cmd = null;
@@ -142,10 +161,23 @@ public class SuggestionsManager {
                         suggestParams(info, suggestionList, (ParamCommand) cmd.cmd, before, lastWord);
                     } else suggestArgs(info, cmd.nextArg(), suggestionList, lastWord, before);
                 } else {
-//                    not a command
-//                    ==> app
-                    suggestApp(info, suggestionList, before + lastWord, Tuils.EMPTYSTRING);
+
+                    String[] split = before.replaceAll("['\"]", Tuils.EMPTYSTRING).split(Tuils.SPACE);
+                    boolean isShellCmd = false;
+                    for(String s : split) {
+                        if(needsFileSuggestion(s)) {
+                            isShellCmd = true;
+                            break;
+                        }
+                    }
+
+                    if(isShellCmd) {
+                        suggestFile(info, suggestionList, lastWord, before);
+                    } else {
+                        suggestApp(info, suggestionList, before + lastWord, Tuils.EMPTYSTRING);
+                    }
                 }
+
             } else {
 //                lastword > 0 && before = 0
                 suggestCommand(info, suggestionList, lastWord, before);
@@ -159,6 +191,10 @@ public class SuggestionsManager {
         return suggestionList.toArray(array);
     }
 
+    private boolean needsFileSuggestion(String cmd) {
+        return cmd.equalsIgnoreCase("ls") || cmd.equalsIgnoreCase("cd") || cmd.equalsIgnoreCase("mv") || cmd.equalsIgnoreCase("cp") || cmd.equalsIgnoreCase("rm");
+    }
+
     private void suggestPermanentSuggestions(List<Suggestion> suggestions, PermanentSuggestionCommand cmd) {
         for(String s : cmd.permanentSuggestions()) {
             Suggestion sugg = new Suggestion(null, s, false, NO_RATE, Suggestion.TYPE_PERMANENT);
@@ -167,8 +203,8 @@ public class SuggestionsManager {
     }
 
     private void suggestAlias(AliasManager aliasManager, List<Suggestion> suggestions, String lastWord) {
-        if(lastWord.length() == 0) for(String s : aliasManager.getAliases()) suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, true, NO_RATE, Suggestion.TYPE_ALIAS));
-        else for(String s : aliasManager.getAliases()) if(s.startsWith(lastWord)) suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, true, NO_RATE, Suggestion.TYPE_ALIAS));
+        if(lastWord.length() == 0) for(String s : aliasManager.getAliases()) suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, clickToLaunch, NO_RATE, Suggestion.TYPE_ALIAS));
+        else for(String s : aliasManager.getAliases()) if(s.startsWith(lastWord)) suggestions.add(new Suggestion(Tuils.EMPTYSTRING, s, clickToLaunch, NO_RATE, Suggestion.TYPE_ALIAS));
     }
 
     private void suggestParams(MainPack pack, List<Suggestion> suggestions, ParamCommand cmd, String before, String lastWord) {
@@ -182,7 +218,7 @@ public class SuggestionsManager {
                 Param p = cmd.getParam(pack, s).getValue();
                 if(p == null) continue;
 
-                suggestions.add(new Suggestion(before, s, p.args().length == 0, NO_RATE, 0));
+                suggestions.add(new Suggestion(before, s, p.args().length == 0 && clickToLaunch, NO_RATE, 0));
             }
         }
         else {
@@ -191,7 +227,7 @@ public class SuggestionsManager {
                 if(p == null) continue;
 
                 if (s.startsWith(lastWord) || s.replace("-", Tuils.EMPTYSTRING).startsWith(lastWord)) {
-                    suggestions.add(new Suggestion(before, s, p.args().length == 0, NO_RATE, 0));
+                    suggestions.add(new Suggestion(before, s, p.args().length == 0 && clickToLaunch, NO_RATE, 0));
                 }
             }
         }
@@ -232,6 +268,10 @@ public class SuggestionsManager {
                 break;
             case CommandAbstraction.DEFAULT_APP:
                 suggestDefaultApp(info, suggestions, prev, before);
+                break;
+            case CommandAbstraction.ALL_PACKAGES:
+                suggestAllPackages(info, suggestions, prev, before);
+                break;
         }
     }
 
@@ -240,8 +280,8 @@ public class SuggestionsManager {
     }
 
     private void suggestBoolean(List<Suggestion> suggestions, String before) {
-        suggestions.add(new Suggestion(before, "true", true, NO_RATE, Suggestion.TYPE_BOOLEAN));
-        suggestions.add(new Suggestion(before, "false", true, NO_RATE, Suggestion.TYPE_BOOLEAN));
+        suggestions.add(new Suggestion(before, "true", clickToLaunch, NO_RATE, Suggestion.TYPE_BOOLEAN));
+        suggestions.add(new Suggestion(before, "false", clickToLaunch, NO_RATE, Suggestion.TYPE_BOOLEAN));
     }
 
     private void suggestFile(MainPack info, List<Suggestion> suggestions, String prev, String before) {
@@ -290,12 +330,9 @@ public class SuggestionsManager {
         if(files == null) {
             return;
         }
-        Arrays.sort(files);
-        List<Compare.CompareInfo> infos = Compare.compareInfo(files, prev, min_file_rate,
-                FileManager.USE_SCROLL_COMPARE);
 
-        for(Compare.CompareInfo i : infos) {
-            suggestions.add(new Suggestion(before, i.s, false, i.rate, Suggestion.TYPE_FILE));
+        for(SimpleMutableEntry<String, Integer> s : Compare.matchesWithRate(files, prev, false)) {
+            suggestions.add(new Suggestion(before, s.getKey(), false, s.getValue(), Suggestion.TYPE_FILE));
         }
     }
 
@@ -322,20 +359,22 @@ public class SuggestionsManager {
                 suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
         }
 
-        else if(prev.length() <= FIRST_INTERVAL) {
-            prev = prev.trim().toLowerCase();
-
-            for (ContactManager.Contact contact : info.contacts.getContacts())
-                if(contact.name.toLowerCase().trim().startsWith(prev)) {
-                    suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
-                }
-        }
+//        else if(prev.length() <= FIRST_INTERVAL) {
+//            prev = prev.trim().toLowerCase();
+//
+//            for (ContactManager.Contact contact : info.contacts.getContacts())
+//                if(contact.name.toLowerCase().trim().startsWith(prev)) {
+//                    suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
+//                }
+//        }
 
         else {
             for(ContactManager.Contact contact : info.contacts.getContacts()) {
-                int rate = ContactManager.USE_SCROLL_COMPARE ? Compare.scrollComparison(contact.name, prev) : Compare.linearComparison(contact.name, prev);
-                if(rate >= min_contacts_rate) {
-                    suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
+                if(Thread.currentThread().isInterrupted()) return;
+
+                int rate = Compare.matches(contact.name, prev, true);
+                if(rate != -1) {
+                    suggestions.add(new Suggestion(before, contact.name, true, rate, Suggestion.TYPE_CONTACT, contact));
                 }
             }
         }
@@ -344,20 +383,21 @@ public class SuggestionsManager {
     private void suggestSong(MainPack info, List<Suggestion> suggestions, String prev, String before) {
         if (prev == null || prev.length() == 0) {
             for (String s : info.player.getNames())
-                suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_SONG));
-        } else if(prev.length() <= FIRST_INTERVAL) {
-            prev = prev.trim().toLowerCase();
-            List<String> names = info.player.getNames();
-            for (String n : names) {
-                if(n.toLowerCase().trim().startsWith(prev)) {
-                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_SONG));
-                }
-            }
-        } else {
-            List<Compare.CompareInfo> infos = Compare.compareInfo(info.player.getNames(), prev, min_songs_rate,
-                    MusicManager.USE_SCROLL_COMPARE);
-            for(Compare.CompareInfo i : infos) {
-                suggestions.add(new Suggestion(before, i.s, true, i.rate, Suggestion.TYPE_SONG));
+                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_SONG));
+        }
+//        else if(prev.length() <= FIRST_INTERVAL) {
+//            prev = prev.trim().toLowerCase();
+//            List<String> names = info.player.getNames();
+//            for (String n : names) {
+//                if(n.toLowerCase().trim().startsWith(prev)) {
+//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_SONG));
+//                }
+//            }
+//        }
+        else {
+            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(info.player.getNames(), prev, true);
+            for(SimpleMutableEntry<String, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_SONG));
             }
         }
     }
@@ -372,22 +412,15 @@ public class SuggestionsManager {
             prev = prev.toLowerCase().trim();
             String[] cmds = info.commandGroup.getCommandNames();
             for (String s : cmds) {
+                if(Thread.currentThread().isInterrupted()) return;
+
                 if(s.startsWith(prev)) {
                     CommandAbstraction cmd = info.commandGroup.getCommandByName(s);
                     int[] args = cmd.argType();
                     boolean exec = args == null || args.length == 0;
-                    suggestions.add(new Suggestion(before, s, exec, MAX_RATE, Suggestion.TYPE_COMMAND));
+                    suggestions.add(new Suggestion(before, s, exec && clickToLaunch, MAX_RATE, Suggestion.TYPE_COMMAND));
                 }
             }
-            return;
-        }
-
-        List<Compare.CompareInfo> infos = Compare.compareInfo(info.commandGroup.getCommandNames(), prev, min_command_rate, false);
-        for(Compare.CompareInfo i : infos) {
-            CommandAbstraction cmd = info.commandGroup.getCommandByName(i.s);
-            int[] args = cmd.argType();
-            boolean exec = args == null || args.length == 0;
-            suggestions.add(new Suggestion(before, i.s, exec, i.rate, Suggestion.TYPE_COMMAND));
         }
     }
 
@@ -399,11 +432,13 @@ public class SuggestionsManager {
 
     private void suggestCommand(MainPack info, List<Suggestion> suggestions, String before) {
         for (String s : info.commandGroup.getCommandNames()) {
+            if(Thread.currentThread().isInterrupted()) return;
+
             CommandAbstraction cmd = info.commandGroup.getCommandByName(s);
             if (cmd != null && cmd.priority() >= MIN_COMMAND_PRIORITY) {
                 int[] args = cmd.argType();
                 boolean exec = args == null || args.length == 0;
-                suggestions.add(new Suggestion(before, s, exec, cmd.priority(), Suggestion.TYPE_COMMAND));
+                suggestions.add(new Suggestion(before, s, exec && clickToLaunch, cmd.priority(), Suggestion.TYPE_COMMAND));
             }
         }
     }
@@ -412,20 +447,21 @@ public class SuggestionsManager {
         List<String> names = info.appsManager.getAppLabels();
         if (prev == null || prev.length() == 0) {
             for (String s : names) {
-                suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_APP));
+                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
             }
-        } else if(prev.length() <= FIRST_INTERVAL) {
-            prev = prev.trim().toLowerCase();
-            for (String n : names) {
-                if(n.toLowerCase().trim().startsWith(prev)) {
-                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
-                }
-            }
-        } else {
-            List<Compare.CompareInfo> infos = Compare.compareInfo(names, prev, min_apps_rate,
-                    AppsManager.USE_SCROLL_COMPARE);
-            for(Compare.CompareInfo i : infos) {
-                suggestions.add(new Suggestion(before, i.s, true, i.rate, Suggestion.TYPE_APP));
+        }
+//        else if(prev.length() <= FIRST_INTERVAL) {
+//            prev = prev.trim().toLowerCase();
+//            for (String n : names) {
+//                if(n.toLowerCase().trim().startsWith(prev)) {
+//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
+//                }
+//            }
+//        }
+        else {
+            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(names, prev, true);
+            for(SimpleMutableEntry<String, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
             }
         }
     }
@@ -434,20 +470,37 @@ public class SuggestionsManager {
         List<String> names = info.appsManager.getHiddenAppsLabels();
         if (prev == null || prev.length() == 0) {
             for (String s : names) {
-                suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_APP));
+                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
             }
-        } else if(prev.length() <= FIRST_INTERVAL) {
-            prev = prev.trim().toLowerCase();
-            for (String n : names) {
-                if(n.toLowerCase().trim().startsWith(prev)) {
-                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
-                }
+        }
+//        else if(prev.length() <= FIRST_INTERVAL) {
+//            prev = prev.trim().toLowerCase();
+//            for (String n : names) {
+//                if(n.toLowerCase().trim().startsWith(prev)) {
+//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
+//                }
+//            }
+//        }
+        else {
+            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(names, prev, true);
+            for(SimpleMutableEntry<String, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
+            }
+        }
+    }
+
+    private void suggestAllPackages(MainPack info, List<Suggestion> suggestions, String prev, String before) {
+        List<String> apps = info.appsManager.getHiddenAppsLabels();
+        apps.addAll(info.appsManager.getAppLabels());
+
+        if (prev == null || prev.length() == 0) {
+            for (String s : apps) {
+                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
             }
         } else {
-            List<Compare.CompareInfo> infos = Compare.compareInfo(names, prev, min_apps_rate,
-                    AppsManager.USE_SCROLL_COMPARE);
-            for(Compare.CompareInfo i : infos) {
-                suggestions.add(new Suggestion(before, i.s, true, i.rate, Suggestion.TYPE_APP));
+            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(apps, prev, true);
+            for(SimpleMutableEntry<String, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
             }
         }
     }
@@ -459,20 +512,21 @@ public class SuggestionsManager {
         List<String> names = info.appsManager.getAppLabels();
         if (prev == null || prev.length() == 0) {
             for (String s : names) {
-                suggestions.add(new Suggestion(before, s, true, NO_RATE, Suggestion.TYPE_APP));
+                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
             }
-        } else if(prev.length() <= FIRST_INTERVAL) {
-            prev = prev.trim().toLowerCase();
-            for (String n : names) {
-                if(n.toLowerCase().trim().startsWith(prev)) {
-                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
-                }
-            }
-        } else {
-            List<Compare.CompareInfo> infos = Compare.compareInfo(names, prev, min_apps_rate,
-                    AppsManager.USE_SCROLL_COMPARE);
-            for(Compare.CompareInfo i : infos) {
-                suggestions.add(new Suggestion(before, i.s, true, i.rate, Suggestion.TYPE_APP));
+        }
+//        else if(prev.length() <= FIRST_INTERVAL) {
+//            prev = prev.trim().toLowerCase();
+//            for (String n : names) {
+//                if(n.toLowerCase().trim().startsWith(prev)) {
+//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
+//                }
+//            }
+//        }
+        else {
+            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(names, prev, true);
+            for(SimpleMutableEntry<String, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
             }
         }
     }
@@ -480,12 +534,11 @@ public class SuggestionsManager {
     private void suggestConfigEntry(List<Suggestion> suggestions, String prev, String before) {
         if(xmlPrefsEntrys == null) {
             xmlPrefsEntrys = new ArrayList<>();
-            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
-                for(XMLPrefsManager.XMLPrefsSave save : element.copy)
-                    xmlPrefsEntrys.add(save);
-            }
-            for(XMLPrefsManager.XMLPrefsSave save : AppsManager.Options.values()) xmlPrefsEntrys.add(save);
-            for(XMLPrefsManager.XMLPrefsSave save : NotificationManager.Options.values()) xmlPrefsEntrys.add(save);
+
+            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) xmlPrefsEntrys.addAll(element.copy);
+
+            Collections.addAll(xmlPrefsEntrys, AppsManager.Options.values());
+            Collections.addAll(xmlPrefsEntrys, NotificationManager.Options.values());
         }
 
         if(prev == null || prev.length() == 0) {
@@ -493,12 +546,24 @@ public class SuggestionsManager {
                 Suggestion sg = new Suggestion(before, s.label(), false, NO_RATE, Suggestion.TYPE_COMMAND);
                 suggestions.add(sg);
             }
-        } else if(prev.length() <= FIRST_INTERVAL) {
-            prev = prev.trim().toLowerCase();
+        }
+//        else if(prev.length() <= FIRST_INTERVAL) {
+//            prev = prev.trim().toLowerCase();
+//            for (XMLPrefsManager.XMLPrefsSave s : xmlPrefsEntrys) {
+//                String label = s.label();
+//                if(label.startsWith(prev)) {
+//                    suggestions.add(new Suggestion(before, label, false, MAX_RATE, Suggestion.TYPE_COMMAND));
+//                }
+//            }
+//        }
+        else {
             for (XMLPrefsManager.XMLPrefsSave s : xmlPrefsEntrys) {
+                if(Thread.currentThread().isInterrupted()) return;
+
                 String label = s.label();
-                if(label.startsWith(prev)) {
-                    suggestions.add(new Suggestion(before, label, false, MAX_RATE, Suggestion.TYPE_COMMAND));
+                int rate = Compare.matches(label, prev, true);
+                if(rate != -1) {
+                    suggestions.add(new Suggestion(before, label, false, rate, Suggestion.TYPE_COMMAND));
                 }
             }
         }
@@ -521,6 +586,8 @@ public class SuggestionsManager {
         } else if(prev.length() <= FIRST_INTERVAL) {
             prev = prev.trim().toLowerCase();
             for (String s : xmlPrefsFiles) {
+                if(Thread.currentThread().isInterrupted()) return;
+
                 if(s.startsWith(prev)) {
                     suggestions.add(new Suggestion(before, s, false, MAX_RATE, Suggestion.TYPE_FILE));
                 }

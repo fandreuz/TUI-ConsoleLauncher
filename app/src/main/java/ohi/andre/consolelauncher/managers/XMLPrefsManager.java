@@ -433,6 +433,18 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "#03A9F4";
             }
+        },
+        suggest_alias_default {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        click_to_launch {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
         };
 
         @Override
@@ -519,12 +531,6 @@ public class XMLPrefsManager {
             }
         },
         show_launch_history {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
-        },
-        suggest_alias_default {
             @Override
             public String defaultValue() {
                 return "true";

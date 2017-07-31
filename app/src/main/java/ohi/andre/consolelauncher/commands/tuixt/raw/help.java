@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
@@ -66,7 +65,7 @@ public class help implements CommandAbstraction {
         Collections.sort(toPrint, new Comparator<String>() {
             @Override
             public int compare(String lhs, String rhs) {
-                return Compare.alphabeticCompare(lhs, rhs);
+                return Tuils.alphabeticCompare(lhs, rhs);
             }
         });
 

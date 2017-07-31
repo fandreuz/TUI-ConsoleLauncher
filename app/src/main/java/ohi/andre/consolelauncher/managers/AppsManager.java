@@ -35,7 +35,6 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import ohi.andre.comparestring.Compare;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -51,8 +50,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
     public static final int SHOWN_APPS = 10;
     public static final int HIDDEN_APPS = 11;
-
-    public static final boolean USE_SCROLL_COMPARE = false;
 
     public static final String PATH = "apps.xml";
     private final String NAME = "APPS";
@@ -932,7 +929,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             Collections.sort(list, new Comparator<String>() {
                 @Override
                 public int compare(String lhs, String rhs) {
-                    return Compare.alphabeticCompare(lhs, rhs);
+                    return Tuils.alphabeticCompare(lhs, rhs);
                 }
             });
 

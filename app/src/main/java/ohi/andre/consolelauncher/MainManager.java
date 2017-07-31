@@ -2,11 +2,14 @@ package ohi.andre.consolelauncher;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Environment;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 
+import java.io.File;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.Command;
@@ -18,7 +21,6 @@ import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.ShellManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager;
@@ -26,11 +28,15 @@ import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
+import ohi.andre.consolelauncher.tuils.interfaces.Hintable;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
+import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
+import ohi.andre.consolelauncher.tuils.libsuperuser.Shell;
+import ohi.andre.consolelauncher.tuils.libsuperuser.StreamGobbler;
 
 /*Copyright Francesco Andreuzzi
 
@@ -88,7 +94,6 @@ public class MainManager {
             new SystemCommandTrigger()
     };
     private MainPack mainPack;
-    private ShellManager shell;
 
     private Context mContext;
 
@@ -97,6 +102,10 @@ public class MainManager {
 
     private boolean showAliasValue;
     private boolean showAppHistory;
+
+    public static Shell.Interactive interactive;
+
+    private Hintable hintable;
 
     protected MainManager(LauncherActivity c, Inputable i, Outputable o, Suggester sugg) {
         mContext = c;
@@ -127,9 +136,24 @@ public class MainManager {
         AppsManager appsMgr = new AppsManager(c, out, sugg);
         AliasManager aliasManager = new AliasManager();
 
-        shell = new ShellManager(out);
+        interactive = new Shell.Builder()
+                .setOnSTDOUTLineListener(new StreamGobbler.OnLineListener() {
+                    @Override
+                    public void onLine(String line) {
+                        out.onOutput(line);
+                    }
+                })
+                .setOnSTDERRLineListener(new StreamGobbler.OnLineListener() {
+                    @Override
+                    public void onLine(String line) {
+                        out.onOutput(line);
+                    }
+                })
+        .open();
 
-        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, out, redirectator, shell);
+        interactive.addCommand("cd " + Environment.getExternalStorageDirectory().getAbsolutePath());
+
+        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, out, redirectator);
     }
 
 //    command manager
@@ -179,10 +203,19 @@ public class MainManager {
 
     public void destroy() {
         mainPack.destroy();
+        interactive.close();
     }
 
     public MainPack getMainPack() {
         return mainPack;
+    }
+
+    public void setHintable(Hintable hintable) {
+        this.hintable = hintable;
+    }
+
+    public void setRooter(Rooter rooter) {
+        this.mainPack.rooter = rooter;
     }
 
     interface CmdTrigger {
@@ -205,14 +238,48 @@ public class MainManager {
 
     private class SystemCommandTrigger implements CmdTrigger {
 
+        final int CD_CODE = 10;
+        final int PWD_CODE = 11;
+
+        final Shell.OnCommandResultListener pwdResult = new Shell.OnCommandResultListener() {
+            @Override
+            public void onCommandResult(int commandCode, int exitCode, List<String> output) {
+                if(commandCode == PWD_CODE && output.size() == 1) {
+                    File f = new File(output.get(0));
+                    if(f.exists()) {
+                        mainPack.currentDirectory = f;
+                        if(hintable != null) hintable.updateHint();
+                    }
+                }
+            }
+        };
+
+        final Shell.OnCommandResultListener cdResult = new Shell.OnCommandResultListener() {
+            @Override
+            public void onCommandResult(int commandCode, int exitCode, List<String> output) {
+                if(commandCode == CD_CODE) {
+                    interactive.addCommand("pwd", PWD_CODE, pwdResult);
+                }
+            }
+        };
+
         @Override
         public boolean trigger(final ExecutePack info, final String input) throws Exception {
+
             new Thread() {
                 @Override
                 public void run() {
-                    shell.cmd(input, true);
-                    ((MainPack) info).currentDirectory = shell.currentDir();
-                };
+                    if(input.trim().equalsIgnoreCase("su")) {
+                        if(Shell.SU.available() && mainPack.rooter != null) mainPack.rooter.onRoot();
+                        interactive.addCommand("su");
+
+                    } else if(input.contains("cd ")) {
+                        interactive.addCommand(input, CD_CODE, cdResult);
+                    } else {
+                        interactive.addCommand(input);
+                    }
+
+                }
             }.start();
 
             return true;

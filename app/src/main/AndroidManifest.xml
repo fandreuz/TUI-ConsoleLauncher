@@ -29,15 +29,6 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-
-    <permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
-    <permission
-        android:name="android.permission.FLASHLIGHT"
-        android:description="@string/help_flash"
-        android:label="@string/help_flash"
-        android:permissionGroup="android.permission-group.HARDWARE_CONTROLS"
-        android:protectionLevel="normal" />
 
     <!-- features -->
     <uses-feature android:name="android.hardware.camera"
