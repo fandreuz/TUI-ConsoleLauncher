@@ -10,34 +10,25 @@ import android.os.Build;
 import java.lang.reflect.Field;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.specific.APICommand;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-public class data implements CommandAbstraction {
+public class data extends APICommand {
 
     @Override
     public String exec(ExecutePack pack) {
-        boolean active = pack.get(boolean.class, 0);
-
         MainPack info = (MainPack) pack;
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            active = toggle(info);
-            return info.res.getString(R.string.output_data) + Tuils.SPACE + Boolean.toString(active);
-        } else {
-//            ShellUtils.CommandResult result = ShellUtils.execCommand("svc data " + (active ? "enable" : "disable"), true, null);
-            return pack.context.getString(R.string.output_nofeature);
-        }
+        boolean active = toggle(info);
+        return info.res.getString(R.string.output_data) + Tuils.SPACE + Boolean.toString(active);
     }
 
     private boolean toggle(MainPack info) {
         if (info.connectivityMgr == null) {
             try {
                 init(info);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) {}
         }
 
         boolean mobileConnected;
@@ -80,17 +71,17 @@ public class data implements CommandAbstraction {
 
     @Override
     public int minArgs() {
-        return 1;
+        return 0;
     }
 
     @Override
     public int maxArgs() {
-        return 1;
+        return 0;
     }
 
     @Override
     public int[] argType() {
-        return new int[] {CommandAbstraction.BOOLEAN};
+        return new int[0];
     }
 
     @Override
@@ -100,13 +91,7 @@ public class data implements CommandAbstraction {
 
     @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
-        MainPack pack = (MainPack) info;
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            boolean active = toggle(pack);
-            return pack.res.getString(R.string.mobile_data) + Tuils.SPACE + active;
-        } else {
-            return pack.res.getString(helpRes());
-        }
+        return null;
     }
 
     @Override
@@ -114,4 +99,8 @@ public class data implements CommandAbstraction {
         return onNotArgEnough(info, 0);
     }
 
+    @Override
+    public boolean willWorkOn(int api) {
+        return api < Build.VERSION_CODES.LOLLIPOP;
+    }
 }

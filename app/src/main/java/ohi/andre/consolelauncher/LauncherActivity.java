@@ -60,7 +60,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     private UIManager ui;
     private MainManager main;
 
-    private boolean openKeyboardOnStart, fullscreen;
+    private boolean openKeyboardOnStart, fullscreen, canApplyTheme;
 
     private CommandExecuter ex = new CommandExecuter() {
 
@@ -119,7 +119,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         }
     };
 
-    static final boolean DEBUG = BuildConfig.BUILD_TYPE.startsWith("debug");
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,17 +129,15 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             return;
         }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED  &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED  &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
 
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
-                        LauncherActivity.STARTING_PERMISSION);
-                return;
-            }
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, LauncherActivity.STARTING_PERMISSION);
         }
-
-        finishOnCreate();
+        else {
+            canApplyTheme = true;
+            finishOnCreate();
+        }
     }
 
     private void finishOnCreate() {
@@ -189,7 +186,11 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             }
         }
 
-        NotificationManager.create();
+        try {
+            NotificationManager.create();
+        } catch (Exception e) {
+            Tuils.toFile(e);
+        }
         boolean notifications = XMLPrefsManager.get(boolean.class, NotificationManager.Options.show_notifications);
         if(notifications) {
             LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
@@ -207,7 +208,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
         main = new MainManager(this, in, out, sugg);
-        ui = new UIManager(main.getMainPack(), this, mainView, ex, main.getMainPack());
+        ui = new UIManager(main.getMainPack(), this, mainView, ex, main.getMainPack(), canApplyTheme);
         main.setRedirectionListener(ui.buildRedirectionListener());
         main.setHintable(ui.getHintable());
         main.setRooter(ui.getRooter());
@@ -382,14 +383,19 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                 case STARTING_PERMISSION:
                     int count = 0;
                     while(count < permissions.length && count < grantResults.length) {
-                        if( (permissions[count].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) || permissions[count].equals(Manifest.permission.READ_EXTERNAL_STORAGE))
-                                && grantResults[count] == PackageManager.PERMISSION_DENIED) {
+                        if(grantResults[count] == PackageManager.PERMISSION_DENIED) {
                             Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
-                            finish();
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    finish();
+                                }
+                            }, 2000);
                             return;
                         }
                         count++;
                     }
+                    canApplyTheme = false;
                     finishOnCreate();
                     break;
                 case COMMAND_SUGGESTION_REQUEST_PERMISSION:

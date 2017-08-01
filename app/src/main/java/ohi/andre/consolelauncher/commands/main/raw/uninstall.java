@@ -17,11 +17,6 @@ public class uninstall implements CommandAbstraction {
         MainPack info = (MainPack) pack;
 
         String packageName = info.get(AppsManager.LaunchInfo.class, 0).componentName.getPackageName();
-//        if (info.getSu()) {
-//            try {
-//                return ShellUtils.execCommand("su pm uninstall " + packageName, true, null).toString();
-//            } catch (Exception e) {}
-//        }
 
         Uri packageURI = Uri.parse("package:" + packageName);
         Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);

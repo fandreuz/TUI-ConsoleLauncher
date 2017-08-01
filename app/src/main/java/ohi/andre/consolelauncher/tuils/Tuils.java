@@ -387,6 +387,10 @@ public class Tuils {
         return -1;
     }
 
+    public static int mmToPx(DisplayMetrics metrics, int mm) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, mm, metrics);
+    }
+
     public static void insertHeaders(List<String> s, boolean newLine) {
         char current = 0;
         for (int count = 0; count < s.size(); count++) {
@@ -449,35 +453,6 @@ public class Tuils {
         try {
             e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
         } catch (FileNotFoundException e1) {}
-    }
-
-    static FileOutputStream logStream = null;
-    public static void openLogStream(String name) {
-        closeStream();
-
-        try {
-            File file = new File(Tuils.getFolder(), name);
-            logStream = new FileOutputStream(file);
-        } catch (FileNotFoundException e) {}
-    }
-
-    public static void write(Throwable t) {
-        write(Tuils.getStackTrace(t));
-    }
-
-    public static void write(String line) {
-        if(logStream != null) try {
-            logStream.write((line + Tuils.NEWLINE).getBytes());
-        } catch (IOException e) {}
-    }
-
-    public static void closeStream() {
-        if(logStream != null) {
-            try {
-                logStream.close();
-                logStream = null;
-            } catch (IOException e) {}
-        }
     }
 
     public static String toPlanString(List<String> strings, String separator) {

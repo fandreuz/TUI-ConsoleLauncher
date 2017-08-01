@@ -18,7 +18,7 @@ public class calc extends PermanentSuggestionCommand {
         try {
             return String.valueOf(Tuils.eval(pack.get(String.class, 0)));
         } catch (Exception e) {
-            return ((MainPack) pack).res.getString(R.string.output_invalidcalc) + Tuils.NEWLINE + e.toString();
+            return e.toString();
         }
     }
 

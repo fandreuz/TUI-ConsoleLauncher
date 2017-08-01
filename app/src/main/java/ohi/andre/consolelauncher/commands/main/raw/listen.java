@@ -19,7 +19,7 @@ public class listen extends music {
         String path = info.player.getPath(name);
         if (info.player.jukebox(path))
             return info.res.getString(R.string.output_playing) + " " + name;
-        return info.res.getString(R.string.output_nothingfound);
+        return info.res.getString(R.string.output_nothing_found);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class listen extends music {
     @Override
     public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
-        return info.res.getString(R.string.output_nothingfound);
+        return info.res.getString(R.string.output_nothing_found);
     }
 
 }

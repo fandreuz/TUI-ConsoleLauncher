@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="help_data">[ROOT ONLY!] Turn on or off mobile data.
-        \n\nUsage:
-        \n>>data true
-    </string>
-</resources>

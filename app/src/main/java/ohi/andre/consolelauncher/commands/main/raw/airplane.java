@@ -6,14 +6,14 @@ import android.os.Build;
 import android.provider.Settings;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.specific.APICommand;
 
 /**
  * Created by andre on 03/12/15.
  */
-public class airplane implements CommandAbstraction {
+public class airplane extends APICommand {
 
     @Override
     public String exec(ExecutePack pack) {
@@ -27,8 +27,8 @@ public class airplane implements CommandAbstraction {
             info.context.sendBroadcast(intent);
 
             return info.res.getString(R.string.output_airplane) + !isEnabled;
-        } else
-            return info.res.getString(R.string.output_nofeature);
+        }
+        return null;
     }
 
     private boolean isEnabled(Context context) {
@@ -68,5 +68,10 @@ public class airplane implements CommandAbstraction {
     @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
         return null;
+    }
+
+    @Override
+    public boolean willWorkOn(int api) {
+        return api < Build.VERSION_CODES.JELLY_BEAN_MR1;
     }
 }

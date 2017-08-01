@@ -1,1 +1,1 @@
-include ':app', ':emulatorview'
+include ':app'

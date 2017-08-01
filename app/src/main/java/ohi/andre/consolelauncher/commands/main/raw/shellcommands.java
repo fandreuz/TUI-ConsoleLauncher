@@ -33,7 +33,7 @@ public class shellcommands implements CommandAbstraction {
         });
 
         Tuils.addPrefix(commands, Tuils.DOUBLE_SPACE);
-        Tuils.addSeparator(commands, Tuils.TRIBLE_SPACE);
+        Tuils.addSeparator(commands, Tuils.SPACE);
         Tuils.insertHeaders(commands, true);
 
         return Tuils.toPlanString(commands, Tuils.EMPTYSTRING);

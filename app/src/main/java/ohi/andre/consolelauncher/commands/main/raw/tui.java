@@ -11,7 +11,6 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 
@@ -49,7 +48,7 @@ public class tui extends ParamCommand {
         reset {
             @Override
             public String exec(ExecutePack pack) {
-                FileManager.rm(Tuils.getFolder());
+                Tuils.getFolder().delete();
                 return null;
             }
         },

@@ -10,8 +10,6 @@ import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 
 public class SkinManager implements Parcelable {
 
-    public static final int SYSTEM_WALLPAPER = -1;
-
     public static final int SUGGESTION_PADDING_VERTICAL = 15;
     public static final int SUGGESTION_PADDING_HORIZONTAL = 15;
     public static final int SUGGESTION_MARGIN = 20;
@@ -45,11 +43,8 @@ public class SkinManager implements Parcelable {
         globalFontSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.font_size);
 
         useSystemWp = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_wallpaper);
-        if (useSystemWp) {
-            bgColor = SYSTEM_WALLPAPER;
-            overlayColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.overlay_color);
-        }
-        else bgColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.bg_color);
+        overlayColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.overlay_color);
+        bgColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.bg_color);
 
         deviceColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.device_color);
         ramColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.ram_color);

@@ -14,15 +14,15 @@ import android.support.v4.app.ActivityCompat;
 
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.specific.APICommand;
 
 /**
  * Created by francescoandreuzzi on 10/05/2017.
  */
 
-public class location implements CommandAbstraction {
+public class location extends APICommand {
 
     @Override
     public String exec(ExecutePack pack) throws Exception {
@@ -68,7 +68,8 @@ public class location implements CommandAbstraction {
 
             main.locationManager.requestSingleUpdate(gpsStatus ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER, locationListener, Looper.getMainLooper());
             return null;
-        } else return context.getString(R.string.output_nofeature);
+        }
+        return null;
     }
 
     @Override
@@ -104,5 +105,10 @@ public class location implements CommandAbstraction {
     @Override
     public String onNotArgEnough(ExecutePack pack, int nArgs) {
         return null;
+    }
+
+    @Override
+    public boolean willWorkOn(int api) {
+        return api >= Build.VERSION_CODES.GINGERBREAD;
     }
 }

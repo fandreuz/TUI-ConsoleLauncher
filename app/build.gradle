@@ -10,8 +10,8 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 111
-        versionName "6.0e"
+        versionCode 113
+        versionName "6.0g"
     }
 
     buildTypes {
@@ -47,6 +47,4 @@ android {
                     output.outputFile.name.replace("app-release.apk", "${x}/${variant.applicationId}_${variant.versionName}_${new Date().format("dd-MM_hh.mm.ss")}.apk"))
         }
     }
-}
-dependencies {
 }

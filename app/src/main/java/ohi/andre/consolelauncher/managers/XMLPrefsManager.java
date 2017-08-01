@@ -278,6 +278,30 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "#";
             }
+        },
+        left_margin_mm {
+            @Override
+            public String defaultValue() {
+                return "0";
+            }
+        },
+        right_margin_mm {
+            @Override
+            public String defaultValue() {
+                return "0";
+            }
+        },
+        top_margin_mm {
+            @Override
+            public String defaultValue() {
+                return "0";
+            }
+        },
+        bottom_margin_mm {
+            @Override
+            public String defaultValue() {
+                return "0";
+            }
         };
 
         @Override

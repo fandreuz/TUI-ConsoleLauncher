@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher.commands;
 
 import android.content.Context;
+import android.os.Build;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import ohi.andre.consolelauncher.commands.specific.APICommand;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class CommandGroup {
@@ -32,7 +34,7 @@ public class CommandGroup {
         while (iterator.hasNext()) {
             String s = iterator.next();
             CommandAbstraction ca = buildCommand(s);
-            if(ca != null) {
+            if(ca != null && ( !(ca instanceof APICommand) || ((APICommand) ca).willWorkOn(Build.VERSION.SDK_INT))) {
                 cmdAbs.add(ca);
             } else {
                 iterator.remove();

@@ -10,6 +10,7 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.Gravity;
@@ -424,7 +425,7 @@ public class UIManager implements OnTouchListener {
         lastSuggestionThread.start();
     }
 
-    protected UIManager(ExecutePack info, final Context context, final ViewGroup rootView, final CommandExecuter tri, MainPack mainPack) {
+    protected UIManager(ExecutePack info, final Context context, final ViewGroup rootView, final CommandExecuter tri, MainPack mainPack, boolean canApplyTheme) {
 
         policy = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
         component = new ComponentName(context, PolicyReceiver.class);
@@ -441,7 +442,7 @@ public class UIManager implements OnTouchListener {
 
         this.info.skinManager = skinManager;
 
-        if (!skinManager.useSystemWp) {
+        if (!skinManager.useSystemWp || !canApplyTheme) {
             rootView.setBackgroundColor(skinManager.bgColor);
         } else {
             rootView.setBackgroundColor(skinManager.overlayColor);
@@ -459,6 +460,15 @@ public class UIManager implements OnTouchListener {
                 }
             });
         }
+
+        int rightMM, leftMM, topMM, bottomMM;
+        rightMM = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.right_margin_mm);
+        leftMM = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.left_margin_mm);
+        topMM = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.top_margin_mm);
+        bottomMM = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.bottom_margin_mm);
+
+        DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
+        rootView.setPadding(Tuils.mmToPx(metrics, leftMM), Tuils.mmToPx(metrics, topMM), Tuils.mmToPx(metrics, rightMM), Tuils.mmToPx(metrics, bottomMM));
 
         TextView[] ts = {
                 (TextView) rootView.findViewById(R.id.tv0),

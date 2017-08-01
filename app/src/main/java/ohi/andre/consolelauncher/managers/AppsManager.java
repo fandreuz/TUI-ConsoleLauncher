@@ -311,7 +311,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 writeTo(d, file);
             }
         } catch (Exception e) {
-            Tuils.write(Tuils.getStackTrace(e));
+            Tuils.toFile(e);
         }
 
         for(Map.Entry<String, ?> entry : this.preferences.getAll().entrySet()) {
@@ -382,6 +382,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     private void appUninstalled(String packageName) {
+        outputable.onOutput(context.getString(R.string.app_uninstalled) + Tuils.SPACE + packageName);
+
         List<LaunchInfo> infos = AppUtils.findLaunchInfosWithPackage(packageName, appsHolder.getApps());
         for(LaunchInfo i : infos) appsHolder.remove(i);
     }

@@ -8,12 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 
-import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class FileManager {
@@ -21,33 +16,11 @@ public class FileManager {
     public static final int FILE_NOTFOUND = 10;
     public static final int ISDIRECTORY = 11;
     public static final int IOERROR = 12;
-    public static final int ISFILE = 13;
-    public static final int NOT_WRITEABLE = 14;
-    public static final int NOT_READABLE = 15;
-
-    public static final int MIN_FILE_RATE = 4;
-
-    public static final boolean USE_SCROLL_COMPARE = true;
 
     private static final String ASTERISK = "*";
     private static final String DOT = Tuils.DOT;
 
     public static String writeOn(File file, String text) {
-//        try {
-//            ShellUtils.CommandResult result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), false, null);
-//            if(result.result == 0) {
-//                return null;
-//            } else {
-//                result = ShellUtils.execCommand("echo " + "\"" + text + "\"" + " > " + file.getAbsolutePath(), true, null);
-//                if(result.result == 0) {
-//                    return null;
-//                }
-//                return result.toString();
-//            }
-//        } catch (Exception e) {
-//            return e.toString();
-//        }
-
         try {
             FileOutputStream stream = new FileOutputStream(file);
             stream.write(text.getBytes());
@@ -59,104 +32,6 @@ public class FileManager {
         } catch (IOException e) {
             return e.toString();
         }
-    }
-
-    public static int mv(File[] files, File where) throws IOException {
-        if (files == null || files.length == 0 || where == null) {
-            return FileManager.FILE_NOTFOUND;
-        }
-
-        if (!where.isDirectory()) {
-            return FileManager.ISFILE;
-        }
-
-        for (File f : files) {
-            mv(f, where);
-        }
-
-        return 0;
-    }
-
-    private static int mv(File f, File where) throws IOException {
-        MainManager.interactive.addCommand("mv " + Tuils.SPACE + f.getAbsolutePath() + Tuils.SPACE + where.getAbsolutePath());
-        return 0;
-    }
-
-    public static int rm(File[] files) {
-        if (files == null || files.length == 0) {
-            return FileManager.FILE_NOTFOUND;
-        }
-
-        for (File f : files) {
-            rm(f);
-        }
-
-        return 0;
-    }
-
-    public static int rm(File f) {
-        MainManager.interactive.addCommand("rm " + (f.isDirectory() ? "-r" : Tuils.EMPTYSTRING) + Tuils.SPACE + f.getAbsolutePath());
-        return 0;
-    }
-
-    public static int cp(File[] files, File where) throws IOException {
-        if (files == null || files.length == 0 || where == null) {
-            return FileManager.FILE_NOTFOUND;
-        }
-
-        if (!where.isDirectory()) {
-            return FileManager.ISFILE;
-        }
-
-        for (File f : files) {
-            cp(f, where);
-        }
-
-        return 0;
-    }
-
-    private static int cp(File f, File where) throws IOException {
-        MainManager.interactive.addCommand("cp " + Tuils.SPACE + f.getAbsolutePath() + Tuils.SPACE + where.getAbsolutePath());
-        return 0;
-    }
-
-    public static List<File> lsFile(File f, boolean showHidden) {
-//        ShellUtils.CommandResult r = ShellUtils.execCommand("test -w \"" + f.getAbsolutePath()+ "\"", false, null);
-//        if(r.result != 0) {
-//            return null;
-//        }
-
-        if(!f.isDirectory()) {
-            return null;
-        }
-
-//        ShellUtils.CommandResult rr = ShellUtils.execCommand("test -r \"" + f.getAbsolutePath()+ "\"", false, null);
-//        if(rr.result != 0) {
-//            return null;
-//        }
-
-        File[] content = f.listFiles();
-
-        Arrays.sort(content, new Comparator<File>() {
-            @Override
-            public int compare(File lhs, File rhs) {
-                if (lhs.isDirectory() && !rhs.isDirectory())
-                    return -1;
-                if (rhs.isDirectory() && !lhs.isDirectory())
-                    return 1;
-
-                return Tuils.alphabeticCompare(lhs.getName(), rhs.getName());
-            }
-        });
-
-        List<File> files = new ArrayList<>();
-        for (File u : content) {
-            if (!u.isHidden() || showHidden) {
-                files.add(u);
-            }
-        }
-
-        return files;
     }
 
     public static int openFile(Context c, File file) {
