@@ -6,6 +6,7 @@ import android.graphics.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
@@ -381,16 +382,17 @@ public class CommandTuils {
 
         if(xmlPrefsEntrys == null) {
             xmlPrefsEntrys = new ArrayList<>();
-            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values())
-                for(XMLPrefsManager.XMLPrefsSave save : element.copy)
-                    xmlPrefsEntrys.add(save);
-            for(XMLPrefsManager.XMLPrefsSave save : AppsManager.Options.values()) xmlPrefsEntrys.add(save);
-            for(XMLPrefsManager.XMLPrefsSave save : NotificationManager.Options.values()) xmlPrefsEntrys.add(save);
+
+            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) Collections.addAll(element.copy);
+            Collections.addAll(xmlPrefsEntrys, AppsManager.Options.values());
+            Collections.addAll(xmlPrefsEntrys, NotificationManager.Options.values());
         }
 
         String candidate = index == -1 ? input : input.substring(0,index);
         for(XMLPrefsManager.XMLPrefsSave xs : xmlPrefsEntrys) {
-            if(xs.is(candidate)) return new ArgInfo(xs, input.substring(index + 1,input.length()), true, 1);
+            if(xs.is(candidate)) {
+                return new ArgInfo(xs, index == -1 ? null : input.substring(index + 1,input.length()), true, 1);
+            }
         }
         return new ArgInfo(null, input, false, 0);
     }

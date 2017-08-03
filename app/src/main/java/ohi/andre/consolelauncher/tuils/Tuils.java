@@ -267,7 +267,6 @@ public class Tuils {
     public static final int MEGA = 2;
     public static final int KILO = 3;
     public static final int BYTE = 4;
-    public static final int PERCENTAGE = 5;
 
     private static long total = -1;
 
@@ -295,11 +294,15 @@ public class Tuils {
     }
 
     public static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
+        if (places < 0) places = 0;
 
-        BigDecimal bd = new BigDecimal(value);
-        bd = bd.setScale(places, RoundingMode.HALF_UP);
-        return bd.doubleValue();
+        try {
+            BigDecimal bd = new BigDecimal(value);
+            bd = bd.setScale(places, RoundingMode.HALF_UP);
+            return bd.doubleValue();
+        } catch (Exception e) {
+            return value;
+        }
     }
 
     public static List<String> getClassesInPackage(String packageName, Context c) throws IOException {

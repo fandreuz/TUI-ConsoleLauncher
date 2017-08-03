@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.managers;
 
-import android.util.Log;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
@@ -24,8 +23,14 @@ public class AliasManager implements Reloadable {
 
     private Map<String, String> aliases;
 
+    private String paramMarker, paramSeparator, aliasLabelFormat;
+
     public AliasManager() {
         reload();
+
+        paramMarker = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_marker);
+        paramSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_separator);
+        aliasLabelFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_content_format);
     }
 
     public String printAliases() {
@@ -37,8 +42,61 @@ public class AliasManager implements Reloadable {
         return output.trim();
     }
 
-    public String getAlias(String s) {
-        return aliases.get(s);
+//    [0] = aliasValue
+//    [1] = aliasName
+//    [2] = residualString
+    public String[] getAlias(String alias, boolean supportSpaces) {
+        if(supportSpaces) {
+
+            String[] split = alias.split(Tuils.SPACE);
+            String name = Tuils.EMPTYSTRING;
+
+            for(int count = 0; count < split.length; count++) {
+                name += Tuils.SPACE + split[count];
+                name = name.trim();
+
+                String a = aliases.get(name);
+
+                if(a != null) {
+                    String residual = Tuils.EMPTYSTRING;
+                    for(int c = count + 1; c < split.length; c++) {
+                        residual += split[c] + Tuils.SPACE;
+                    }
+
+                    return new String[] {a, name, residual.trim()};
+                }
+            }
+
+            return new String[] {null, null, alias};
+        } else {
+            return new String[] {aliases.get(alias), alias, Tuils.EMPTYSTRING};
+        }
+    }
+
+    public String format(String aliasValue, String params) {
+        params = params.trim();
+
+        String quoted = Pattern.quote(paramSeparator);
+
+        if(params.length() == 0) return aliasValue;
+        String[] split = params.split(quoted);
+
+        for(String s : split) {
+            aliasValue = aliasValue.replaceFirst(quoted, s);
+        }
+
+        return aliasValue;
+    }
+
+    private final Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
+    private final Pattern pv = Pattern.compile("%v", Pattern.CASE_INSENSITIVE);
+    private final Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE);
+    public String formatLabel(String aliasName, String aliasValue) {
+        String a = aliasLabelFormat;
+        a = pn.matcher(a).replaceAll(Tuils.NEWLINE);
+        a = pv.matcher(a).replaceAll(aliasValue);
+        a = pa.matcher(a).replaceAll(aliasName);
+        return a;
     }
 
     @Override
@@ -57,13 +115,21 @@ public class AliasManager implements Reloadable {
             while((line = reader.readLine()) != null) {
                 String[] splatted = line.split("=");
                 if(splatted.length < 2) continue;
-                aliases.put(splatted[0], splatted[1]);
+
+                String name, value = Tuils.EMPTYSTRING;
+                name = splatted[0];
+
+                for(int c = 1; c < splatted.length; c++) {
+                    value += splatted[c];
+                    if(c != splatted.length - 1) value += "=";
+                }
+
+                aliases.put(name, value);
             }
         } catch (Exception e) {}
     }
 
     public boolean add(String name, String value) {
-        Log.e("andre", "adding: " + name + " ---> " + value);
 
         FileOutputStream fos;
         try {

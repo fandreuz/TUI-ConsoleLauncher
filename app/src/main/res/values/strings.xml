@@ -10,6 +10,7 @@
     <string name="output_rate">Thank you!</string>
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
+    <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt</string>
 
     <!-- files -->
     <string name="output_error">An unknown error has occurred</string>
@@ -18,6 +19,7 @@
 
     <!-- notifications -->
     <string name="notification_reader">Notification Reader</string>
+    <string name="no_notification_access">Unfortunately t-ui can\'t redirect you to the \"Notification access\" page of your system settings</string>
 
     <!-- helps texts -->
     <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.

@@ -382,6 +382,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     private void appUninstalled(String packageName) {
+        if(outputable == null || appsHolder == null || context == null) return;
+
         outputable.onOutput(context.getString(R.string.app_uninstalled) + Tuils.SPACE + packageName);
 
         List<LaunchInfo> infos = AppUtils.findLaunchInfosWithPackage(packageName, appsHolder.getApps());

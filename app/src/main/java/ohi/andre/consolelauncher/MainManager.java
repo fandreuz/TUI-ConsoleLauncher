@@ -6,7 +6,6 @@ import android.os.Environment;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 
 import java.io.File;
 import java.util.List;
@@ -90,7 +89,6 @@ public class MainManager {
             new AliasTrigger(),
             new TuiCommandTrigger(),
             new AppTrigger(),
-//            keep this as last trigger
             new SystemCommandTrigger()
     };
     private MainPack mainPack;
@@ -102,6 +100,8 @@ public class MainManager {
 
     private boolean showAliasValue;
     private boolean showAppHistory;
+
+    private String multipleCmdSeparator;
 
     public static Shell.Interactive interactive;
 
@@ -116,6 +116,8 @@ public class MainManager {
         showAliasValue = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_alias_content);
         showAppHistory = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_launch_history);
 
+        multipleCmdSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.multiple_cmd_separator);
+
         CommandGroup group = new CommandGroup(mContext, COMMANDS_PKG);
 
         ContactManager cont = null;
@@ -125,8 +127,14 @@ public class MainManager {
 
         CommandExecuter executer = new CommandExecuter() {
             @Override
-            public String exec(String input, String alias) {
-                onCommand(input, alias);
+            public String exec(String aliasValue, String alias) {
+                onCommand(aliasValue, alias);
+                return null;
+            }
+
+            @Override
+            public String exec(String input) {
+                onCommand(input, null);
                 return null;
             }
         };
@@ -172,20 +180,29 @@ public class MainManager {
         }
 
         if(alias != null && showAliasValue) {
-            out.onOutput(alias + " --> " + "[" + input + "]");
+            out.onOutput(mainPack.aliasManager.formatLabel(alias, input));
         }
 
-        for (CmdTrigger trigger : triggers) {
-            boolean r;
-            try {
-                r = trigger.trigger(mainPack, input);
-            } catch (Exception e) {
-                out.onOutput(Tuils.getStackTrace(e));
-                return;
+        String[] cmds;
+        if(multipleCmdSeparator.length() > 0) {
+            cmds = input.split(multipleCmdSeparator);
+        } else {
+            cmds = new String[] {input};
+        }
+
+        for(String cmd : cmds) {
+            for (CmdTrigger trigger : triggers) {
+                boolean r;
+                try {
+                    r = trigger.trigger(mainPack, cmd);
+                } catch (Exception e) {
+                    out.onOutput(Tuils.getStackTrace(e));
+                    break;
+                }
+                if (r) {
+                    break;
+                }
             }
-            if (r) {
-                return;
-            } else {}
         }
     }
 
@@ -223,14 +240,23 @@ public class MainManager {
     }
 
     private class AliasTrigger implements CmdTrigger {
+
+
         @Override
-        public boolean trigger(ExecutePack info, String alias) {
-            String aliasValue = mainPack.aliasManager.getAlias(alias);
-            if (aliasValue == null) {
+        public boolean trigger(ExecutePack info, String input) {
+            String alias[] = mainPack.aliasManager.getAlias(input, true);
+
+            String aliasValue = alias[0];
+            if (alias[0] == null) {
                 return false;
             }
 
-            mainPack.executer.exec(aliasValue, alias);
+            String aliasName = alias[1];
+            String residual = alias[2];
+
+            aliasValue = mainPack.aliasManager.format(aliasValue, residual);
+
+            mainPack.executer.exec(aliasValue, aliasName);
 
             return true;
         }
@@ -364,8 +390,9 @@ public class MainManager {
                             }
                         }
                     } catch (Exception e) {
-                        out.onOutput(e.toString());
-                        Log.e("andre", "", e);
+                        out.onOutput(Tuils.getStackTrace(e));
+                        Tuils.log(e);
+                        Tuils.toFile(e);
                     }
                 }
             }.start();

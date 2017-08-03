@@ -655,6 +655,36 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "@";
             }
+        },
+        alias_param_marker {
+            @Override
+            public String defaultValue() {
+                return "%";
+            }
+        },
+        alias_param_separator {
+            @Override
+            public String defaultValue() {
+                return ",";
+            }
+        },
+        multiple_cmd_separator {
+            @Override
+            public String defaultValue() {
+                return ";";
+            }
+        },
+        alias_content_format {
+            @Override
+            public String defaultValue() {
+                return "%a --> [%v]";
+            }
+        },
+        enter_first_suggestion {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
         };
 
         @Override
@@ -845,15 +875,6 @@ public class XMLPrefsManager {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
 
-//        BufferedReader oldStream = null;
-//        HashMap<XMLPrefsSave, String> oldValues = null;
-//
-//        File old = new File(folder, "settings.txt");
-//        if(old.exists()) {
-//            oldStream = new BufferedReader(new FileReader(old));
-//            oldValues = getOld(oldStream);
-//        }
-
         for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
             File file = new File(folder, element.path);
             if(!file.exists() && !file.createNewFile()) continue;
@@ -925,17 +946,7 @@ public class XMLPrefsManager {
                     if(e.getValue().equals(s)) value = e.getKey();
                 }
                 if(value == null) {
-
-//                    if(oldValues != null) {
-//                        for(Map.Entry<XMLPrefsSave, String> sm : oldValues.entrySet()) {
-//                            if(sm.getKey().equals(s)) {
-//                                value = sm.getValue();
-//                            }
-//                        }
-//                    }
-
-//                    if(value == null)
-                        value = s.defaultValue();
+                    value = s.defaultValue();
                 }
 
                 Element em = d.createElement(s.label());
@@ -947,8 +958,6 @@ public class XMLPrefsManager {
 
             writeTo(d, file);
         }
-
-//        if(old.exists()) old.delete();
     }
 
     public static Object transform(String s, Class<?> c) {

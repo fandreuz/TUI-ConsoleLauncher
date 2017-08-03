@@ -82,6 +82,26 @@ public class UIManager implements OnTouchListener {
     String batteryFormat;
 //    boolean batteryCharging;
 
+    private String multipleCmdSeparator;
+
+    private boolean selectFirstSuggestionEnter = false;
+    private OnNewInputListener inputListener = new OnNewInputListener() {
+        @Override
+        public void onNewInput(String input) {
+            if(suggestionsView != null) {
+//                if(suggestionsView.getChildCount() > 0 && selectFirstSuggestionEnter) {
+//                    View v = suggestionsView.getChildAt(0);
+//                    v.performClick();
+//                    return;
+//                }
+                suggestionsView.removeAllViews();
+
+            }
+            trigger.exec(input);
+
+        }
+    };
+
     private Runnable batteryRunnable = new Runnable() {
         @Override
         public void run() {
@@ -306,10 +326,28 @@ public class UIManager implements OnTouchListener {
             boolean execOnClick = suggestion.exec;
 
             String text = suggestion.getText();
+            String input = mTerminalAdapter.getInput();
+
             if(suggestion.type == SuggestionsManager.Suggestion.TYPE_PERMANENT) {
-                mTerminalAdapter.setInput(mTerminalAdapter.getInput() + text);
+                mTerminalAdapter.setInput(input + text);
             } else {
-                mTerminalAdapter.setInput(text);
+                if(multipleCmdSeparator.length() > 0) {
+                    String[] split = input.split(multipleCmdSeparator);
+                    if(split.length == 0) return;
+                    if(split.length == 1) mTerminalAdapter.setInput(text);
+                    else {
+                        split[split.length - 1] = Tuils.EMPTYSTRING;
+
+                        String beforeInputs = Tuils.EMPTYSTRING;
+                        for(int count = 0; count < split.length - 1; count++) {
+                            beforeInputs = beforeInputs + split[count] + multipleCmdSeparator;
+                        }
+
+                        mTerminalAdapter.setInput(beforeInputs + text);
+                    }
+                } else {
+                    mTerminalAdapter.setInput(text);
+                }
             }
 
             if (execOnClick) {
@@ -320,20 +358,11 @@ public class UIManager implements OnTouchListener {
         }
     };
 
-    public void requestSuggestion(String text) {
+    public void requestSuggestion(final String input) {
+
         if (suggestionsView == null || suggestionsManager == null || !showSuggestions) {
             return;
         }
-
-        int lastSpace = text.lastIndexOf(Tuils.SPACE);
-
-        String lastWord = text.substring(lastSpace != -1 ? lastSpace + 1 : 0);
-        String before = text.substring(0, lastSpace != -1 ? lastSpace + 1 : 0);
-
-        requestSuggestion(before, lastWord);
-    }
-
-    private void requestSuggestion(final String before, final String lastWord) {
 
         if (suggestionViewParams == null) {
             suggestionViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -368,7 +397,34 @@ public class UIManager implements OnTouchListener {
             public void run() {
                 super.run();
 
-                final SuggestionsManager.Suggestion[] suggestions = suggestionsManager.getSuggestions(info, before, lastWord);
+                String before, lastWord;
+                String lastInput;
+                if(multipleCmdSeparator.length() > 0) {
+                    String[] split = input.split(multipleCmdSeparator);
+                    if(split.length == 0) lastInput = input;
+                    else lastInput = split[split.length - 1];
+                } else {
+                    lastInput = input;
+                }
+
+                int lastSpace = lastInput.lastIndexOf(Tuils.SPACE);
+                if(lastSpace == -1) {
+                    before = Tuils.EMPTYSTRING;
+                    lastWord = lastInput;
+                } else {
+                    before = lastInput.substring(0,lastSpace);
+                    lastWord = lastInput.substring(lastSpace + 1,lastInput.length());
+                }
+
+
+                final SuggestionsManager.Suggestion[] suggestions;
+                try {
+                    suggestions = suggestionsManager.getSuggestions(info, before, lastWord);
+                } catch (Exception e) {
+                    Tuils.log(e);
+                    Tuils.toFile(e);
+                    return;
+                }
 
                 if(suggestions.length == 0) {
                     ((Activity) mContext).runOnUiThread(removeAllSuggestions);
@@ -429,6 +485,9 @@ public class UIManager implements OnTouchListener {
 
         policy = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
         component = new ComponentName(context, PolicyReceiver.class);
+
+        multipleCmdSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.multiple_cmd_separator);
+        selectFirstSuggestionEnter = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.enter_first_suggestion);
 
         mContext = context;
         this.info = (MainPack) info;
@@ -678,15 +737,7 @@ public class UIManager implements OnTouchListener {
         } else initDetector();
 
         mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, skinManager, context, mainPack);
-        mTerminalAdapter.setInputListener(new OnNewInputListener() {
-            @Override
-            public void onNewInput(String input) {
-                if(suggestionsView != null) {
-                    suggestionsView.removeAllViews();
-                }
-                trigger.exec(input, null);
-            }
-        });
+        mTerminalAdapter.setInputListener(inputListener);
         if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.donation_message)) {
             mTerminalAdapter.addMessager(new TerminalManager.Messager(20, context.getString(R.string.rate_donate_text)));
         }

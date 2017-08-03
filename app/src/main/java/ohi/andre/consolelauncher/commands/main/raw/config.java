@@ -57,7 +57,9 @@ public class config extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 XMLPrefsManager.XMLPrefsSave save = pack.get(XMLPrefsManager.XMLPrefsSave.class, 1);
-                return XMLPrefsManager.get(String.class, save);
+                String s = XMLPrefsManager.get(String.class, save);
+                if(s.length() == 0) return "\"\"";
+                return s;
             }
         };
 
@@ -127,6 +129,11 @@ public class config extends ParamCommand {
 
     @Override
     public String onNotArgEnough(ExecutePack pack, int nArgs) {
+        if(nArgs == 2 && pack.get(ohi.andre.consolelauncher.commands.main.Param.class, 0).equals(Param.set)) {
+            pack.args = new Object[] {pack.args[0], pack.args[1], Tuils.EMPTYSTRING};
+            return Param.set.exec(pack);
+        }
+
         return pack.context.getString(helpRes());
     }
 }
