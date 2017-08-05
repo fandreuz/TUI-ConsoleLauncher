@@ -23,8 +23,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.github.anrwatchdog.ANRError;
-import com.github.anrwatchdog.ANRWatchDog;
+//import com.github.anrwatchdog.ANRError;
+//import com.github.anrwatchdog.ANRWatchDog;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -150,18 +150,18 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private void finishOnCreate() {
 
-        new ANRWatchDog(5000)
-                .setANRListener(new ANRWatchDog.ANRListener() {
-                    @Override
-                    public void onAppNotResponding(ANRError anrError) {
-                        Tuils.log(anrError);
-                        Tuils.toFile(anrError);
-
-                        Toast.makeText(LauncherActivity.this, R.string.anr, Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setReportMainThreadOnly()
-                .start();
+//        new ANRWatchDog(5000)
+//                .setANRListener(new ANRWatchDog.ANRListener() {
+//                    @Override
+//                    public void onAppNotResponding(ANRError anrError) {
+//                        Tuils.log(anrError);
+//                        Tuils.toFile(anrError);
+//
+//                        Toast.makeText(LauncherActivity.this, R.string.anr, Toast.LENGTH_LONG).show();
+//                    }
+//                })
+//                .setReportMainThreadOnly()
+//                .start();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override

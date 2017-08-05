@@ -4,7 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
@@ -45,7 +48,7 @@ public class SuggestionsManager {
 
     private final int FIRST_INTERVAL = 6;
 
-    private boolean showAliasDefault, set = false, clickToLaunch;
+    private boolean showAliasDefault, set = false, clickToLaunch, showCommonPrefix;
 
     public Suggestion[] getSuggestions(MainPack info, String before, String lastWord) {
 
@@ -53,6 +56,7 @@ public class SuggestionsManager {
             showAliasDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.suggest_alias_default);
             set = true;
             clickToLaunch = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.click_to_launch);
+            showCommonPrefix = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.show_common_prefix);
         }
 
         List<Suggestion> suggestionList = new ArrayList<>();
@@ -187,8 +191,61 @@ public class SuggestionsManager {
         }
 
         Collections.sort(suggestionList);
+        if (showCommonPrefix) {
+            addCommonPrefixSuggestion(suggestionList, lastWord, before);
+        }
         Suggestion[] array = new Suggestion[suggestionList.size()];
         return suggestionList.toArray(array);
+    }
+
+    private void addCommonPrefixSuggestion(List<Suggestion> suggestionList, String lastWord, String before) {
+        if (suggestionList.size() < 2) {
+            return;
+        }
+
+        final String input = before.length() == 0 ? lastWord : before + Tuils.SPACE + lastWord.toLowerCase();
+        final Set<String> suggestions = new HashSet<>();
+        for (Suggestion suggestion : suggestionList) {
+            String suggestionText = suggestion.getText().toLowerCase();
+            if (suggestionText.startsWith(input)) {
+                suggestions.add(suggestionText);
+            }
+        }
+
+        if (suggestions.isEmpty()) {
+            return;
+        }
+
+        String shortest = null;
+        for (String suggestion : suggestions) {
+            if (shortest == null) {
+                shortest = suggestion;
+            } else if (shortest.length() > suggestion.length()) {
+                shortest = suggestion;
+            }
+        }
+
+        String commonPrefix = shortest.toLowerCase();
+        outer:
+        while (commonPrefix.length() > 1) {
+            for (String suggestion : suggestions) {
+                if (!suggestion.startsWith(commonPrefix)) {
+                    commonPrefix = commonPrefix.substring(0, commonPrefix.length() - 2);
+                    continue outer;
+                }
+            }
+
+            // Hey, we have a common prefix!
+            final String toInsert = commonPrefix.replaceAll("^" + Pattern.quote(before), "")
+                    .replaceAll("^[ \t]+", "");
+            if (toInsert.length() > lastWord.length()
+                    && !suggestions.contains(commonPrefix)) {
+                suggestionList.add(0, new Suggestion(before, toInsert, false, NO_RATE, Suggestion.TYPE_COMMON_PREFIX));
+            }
+            return;
+        }
+
+        // No common prefix...
     }
 
     private boolean needsFileSuggestion(String cmd) {
@@ -606,6 +663,7 @@ public class SuggestionsManager {
         public static final int TYPE_BOOLEAN = 16;
         public static final int TYPE_COLOR = 17;
         public static final int TYPE_PERMANENT = 18;
+        public static final int TYPE_COMMON_PREFIX = 19;
 
         public String text;
         public String textBefore;

@@ -30,7 +30,7 @@ public class SkinManager implements Parcelable {
 
     public String username = null, prefix = null, ssnInfoFormat = null;
 
-    private int suggDefaultText, suggDefaultBg, suggAliasText, suggAliasBg, suggSongText, suggSongBg, suggContactText, suggContactBg, suggAppText, suggAppBg, suggCmdText, suggCmdBg, suggFileText, suggFileBg;
+    private int suggDefaultText, suggDefaultBg, suggAliasText, suggAliasBg, suggSongText, suggSongBg, suggContactText, suggContactBg, suggAppText, suggAppBg, suggCmdText, suggCmdBg, suggFileText, suggFileBg, suggCommonPrefixText, suggCommonPrefixBg;
     private boolean transparentSuggestions;
 
     public SkinManager() {
@@ -99,6 +99,9 @@ public class SkinManager implements Parcelable {
 
                 suggSongText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_text_color);
                 suggSongBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_bg_color);
+
+                suggCommonPrefixText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.common_prefix_text_color);
+                suggCommonPrefixBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.common_prefix_bg_color);
             }
         }
     }
@@ -141,6 +144,8 @@ public class SkinManager implements Parcelable {
         suggCmdBg = in.readInt();
         suggFileText = in.readInt();
         suggFileBg = in.readInt();
+        suggCommonPrefixText = in.readInt();
+        suggCommonPrefixBg = in.readInt();
         transparentSuggestions = in.readByte() != 0;
         prefix = in.readString();
     }
@@ -174,6 +179,8 @@ public class SkinManager implements Parcelable {
                     return new ColorDrawable(suggFileBg);
                 case SuggestionsManager.Suggestion.TYPE_SONG:
                     return new ColorDrawable(suggSongBg);
+                case SuggestionsManager.Suggestion.TYPE_COMMON_PREFIX:
+                    return new ColorDrawable(suggCommonPrefixBg);
                 default:
                     return new ColorDrawable(suggDefaultBg);
             }
@@ -201,6 +208,9 @@ public class SkinManager implements Parcelable {
                 break;
             case SuggestionsManager.Suggestion.TYPE_SONG:
                 chosen = suggSongText;
+                break;
+            case SuggestionsManager.Suggestion.TYPE_COMMON_PREFIX:
+                chosen = suggCommonPrefixText;
                 break;
             default:
                 chosen = suggDefaultText;
@@ -263,6 +273,8 @@ public class SkinManager implements Parcelable {
         dest.writeInt(suggCmdBg);
         dest.writeInt(suggFileText);
         dest.writeInt(suggFileBg);
+        dest.writeInt(suggCommonPrefixText);
+        dest.writeInt(suggCommonPrefixBg);
         dest.writeByte((byte) (transparentSuggestions ? 1 : 0));
         dest.writeString(prefix);
     }

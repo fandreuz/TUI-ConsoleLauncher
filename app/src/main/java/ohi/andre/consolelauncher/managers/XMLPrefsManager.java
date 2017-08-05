@@ -458,6 +458,18 @@ public class XMLPrefsManager {
                 return "#03A9F4";
             }
         },
+        common_prefix_text_color {
+            @Override
+            public String defaultValue() {
+                return "";
+            }
+        },
+        common_prefix_bg_color {
+            @Override
+            public String defaultValue() {
+                return "#0000FF";
+            }
+        },
         suggest_alias_default {
             @Override
             public String defaultValue() {
@@ -465,6 +477,12 @@ public class XMLPrefsManager {
             }
         },
         click_to_launch {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        show_common_prefix {
             @Override
             public String defaultValue() {
                 return "true";
