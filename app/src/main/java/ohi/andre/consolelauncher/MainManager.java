@@ -392,7 +392,6 @@ public class MainManager {
                     } catch (Exception e) {
                         out.onOutput(Tuils.getStackTrace(e));
                         Tuils.log(e);
-                        Tuils.toFile(e);
                     }
                 }
             }.start();

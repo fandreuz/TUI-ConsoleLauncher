@@ -61,6 +61,19 @@ public class config extends ParamCommand {
                 if(s.length() == 0) return "\"\"";
                 return s;
             }
+        },
+        reset {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.CONFIG_ENTRY};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                XMLPrefsManager.XMLPrefsSave save = pack.get(XMLPrefsManager.XMLPrefsSave.class, 1);
+                save.parent().write(save, save.defaultValue());
+                return null;
+            }
         };
 
         static Param get(String p) {

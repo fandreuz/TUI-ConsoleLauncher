@@ -9,10 +9,8 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
@@ -26,10 +24,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -57,7 +53,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private final String SHOW_ATTRIBUTE = "show";
 
     private Context context;
-    private PackageManager pkgManager;
     private File folder;
 
     private AppsHolder appsHolder;
@@ -123,11 +118,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         public boolean is(String s) {
             return name().equals(s);
         }
-
-        @Override
-        public String hasReplaced() {
-            return null;
-        }
     }
 
     @Override
@@ -163,7 +153,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         instance = this;
 
         this.context = context;
-        this.pkgManager = context.getPackageManager();
 
         this.outputable = outputable;
 
@@ -173,18 +162,15 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         this.folder = Tuils.getFolder();
         initAppListener(context);
 
-        new AsyncTask<Void,Void,Void>() {
+        new Thread() {
             @Override
-            protected Void doInBackground(Void... params) {
-                fill();
-                return null;
-            }
+            public void run() {
+                super.run();
 
-            @Override
-            protected void onPostExecute(Void aVoid) {
+                fill();
                 s.requestUpdate();
             }
-        }.execute();
+        }.start();
     }
 
     private void initAppListener(Context c) {
@@ -200,20 +186,15 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         List<LaunchInfo> allApps = createAppMap(context.getPackageManager());
         hiddenApps = new ArrayList<>();
 
-        Map<String, XMLPrefsManager.XMLPrefsSave> replacedValues = new HashMap<>();
-        for(XMLPrefsManager.XMLPrefsSave s : Options.values()) {
-            String r = s.hasReplaced();
-            if(r != null) replacedValues.put(r, s);
-        }
-
-        defaultApps = new XMLPrefsManager.XMLPrefsList();
-
         try {
+
+            defaultApps = new XMLPrefsManager.XMLPrefsList();
+
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
 
             File file = new File(folder, PATH);
-            if(!file.exists() && !file.createNewFile()) return;
+            if (!file.exists() && !file.createNewFile()) return;
 
             Document d;
             try {
@@ -226,7 +207,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             List<AppsManager.Options> enums = new ArrayList<>(Arrays.asList(AppsManager.Options.values()));
 
             Element root = (Element) d.getElementsByTagName(NAME).item(0);
-            if(root == null) {
+            if (root == null) {
                 resetFile(file, NAME);
 
                 d = builder.parse(file);
@@ -234,57 +215,51 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             }
 
             NodeList nodes = root.getElementsByTagName("*");
-            for(int count = 0; count < nodes.getLength(); count++) {
+            for (int count = 0; count < nodes.getLength(); count++) {
                 Node node = nodes.item(count);
 
                 String nn = node.getNodeName();
                 int nodeIndex = Tuils.find(nn, (List) enums);
-                if(nodeIndex != -1) {
+                if (nodeIndex != -1) {
                     defaultApps.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
 
-                    for(int en = 0; en < enums.size(); en++) {
-                        if(enums.get(en).label().equals(nn)) {
+                    for (int en = 0; en < enums.size(); en++) {
+                        if (enums.get(en).label().equals(nn)) {
                             enums.remove(en);
                             break;
                         }
                     }
-                } else if(replacedValues.containsKey(nn)) {
-                    XMLPrefsManager.XMLPrefsSave s = replacedValues.remove(nn);
-
-                    Element e = (Element) node;
-                    String oldValue = e.hasAttribute(VALUE_ATTRIBUTE) ? e.getAttribute(VALUE_ATTRIBUTE) : null;
-                    root.removeChild(e);
-
-                    replacedValues.put(oldValue, s);
                 }
 //                todo support delete
                 else {
-                    if(node.getNodeType() == Node.ELEMENT_NODE) {
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) node;
 
                         boolean shown = !e.hasAttribute(SHOW_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(SHOW_ATTRIBUTE));
-                        if(!shown) {
+                        if (!shown) {
                             ComponentName name = null;
 
                             String[] split = nn.split("-");
-                            if(split.length >= 2) {
+                            if (split.length >= 2) {
                                 name = new ComponentName(split[0], split[1]);
-                            } else if(split.length == 1) {
-                                if(split[0].contains("Activity")) {
-                                    for(LaunchInfo i : allApps) {
-                                        if(i.componentName.getClassName().equals(split[0])) name = i.componentName;
+                            } else if (split.length == 1) {
+                                if (split[0].contains("Activity")) {
+                                    for (LaunchInfo i : allApps) {
+                                        if (i.componentName.getClassName().equals(split[0]))
+                                            name = i.componentName;
                                     }
                                 } else {
-                                    for(LaunchInfo i : allApps) {
-                                        if(i.componentName.getPackageName().equals(split[0])) name = i.componentName;
+                                    for (LaunchInfo i : allApps) {
+                                        if (i.componentName.getPackageName().equals(split[0]))
+                                            name = i.componentName;
                                     }
                                 }
                             }
 
-                            if(name == null) continue;
+                            if (name == null) continue;
 
                             LaunchInfo removed = AppUtils.findLaunchInfoWithComponent(allApps, name);
-                            if(removed != null) {
+                            if (removed != null) {
                                 allApps.remove(removed);
                                 hiddenApps.add(removed);
                             }
@@ -293,14 +268,9 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 }
             }
 
-            if(enums.size() > 0) {
-                Set<Map.Entry<String, XMLPrefsManager.XMLPrefsSave>> es = replacedValues.entrySet();
-                for(XMLPrefsManager.XMLPrefsSave s : enums) {
-                    String value = null;
-                    for(Map.Entry<String, XMLPrefsManager.XMLPrefsSave> e : es) {
-                        if(e.getValue().equals(s)) value = e.getKey();
-                    }
-                    if(value == null) value = s.defaultValue();
+            if (enums.size() > 0) {
+                for (XMLPrefsManager.XMLPrefsSave s : enums) {
+                    String value = s.defaultValue();
 
                     Element em = d.createElement(s.label());
                     em.setAttribute(VALUE_ATTRIBUTE, value);
@@ -310,35 +280,38 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 }
                 writeTo(d, file);
             }
-        } catch (Exception e) {
-            Tuils.toFile(e);
-        }
 
-        for(Map.Entry<String, ?> entry : this.preferences.getAll().entrySet()) {
-            Object value = entry.getValue();
-            if (value instanceof Integer) {
-                ComponentName name = null;
+            for (Map.Entry<String, ?> entry : this.preferences.getAll().entrySet()) {
+                Object value = entry.getValue();
+                if (value instanceof Integer) {
+                    ComponentName name = null;
 
-                String[] split = entry.getKey().split("-");
-                if(split.length >= 2) {
-                    name = new ComponentName(split[0], split[1]);
-                } else if(split.length == 1) {
-                    if(split[0].contains("Activity")) {
-                        for(LaunchInfo i : allApps) {
-                            if(i.componentName.getClassName().equals(split[0])) name = i.componentName;
-                        }
-                    } else {
-                        for(LaunchInfo i : allApps) {
-                            if(i.componentName.getPackageName().equals(split[0])) name = i.componentName;
+                    String[] split = entry.getKey().split("-");
+                    if (split.length >= 2) {
+                        name = new ComponentName(split[0], split[1]);
+                    } else if (split.length == 1) {
+                        if (split[0].contains("Activity")) {
+                            for (LaunchInfo i : allApps) {
+                                if (i.componentName.getClassName().equals(split[0]))
+                                    name = i.componentName;
+                            }
+                        } else {
+                            for (LaunchInfo i : allApps) {
+                                if (i.componentName.getPackageName().equals(split[0]))
+                                    name = i.componentName;
+                            }
                         }
                     }
+
+                    if (name == null) continue;
+
+                    LaunchInfo info = AppUtils.findLaunchInfoWithComponent(allApps, name);
+                    if (info != null) info.launchedTimes = (Integer) value;
                 }
-
-                if(name == null) continue;
-
-                LaunchInfo info = AppUtils.findLaunchInfoWithComponent(allApps, name);
-                if(info != null) info.launchedTimes = (Integer) value;
             }
+
+        } catch (Exception e1) {
+            Tuils.toFile(e1);
         }
 
         appsHolder = new AppsHolder(allApps, defaultApps);
@@ -378,7 +351,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             appsHolder.add(app);
 
             outputable.onOutput(context.getString(R.string.app_installed) + Tuils.SPACE + packageName);
-        } catch (NameNotFoundException e) {}
+        } catch (Exception e) {}
     }
 
     private void appUninstalled(String packageName) {
@@ -789,8 +762,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             return null;
         }
 
+        private static Pattern removeSpacePattern = Pattern.compile("\\s+");
         public static LaunchInfo findLaunchInfoWithLabel(List<LaunchInfo> appList, String label) {
-            for(LaunchInfo i : appList) if(i.publicLabel.equalsIgnoreCase(label.trim())) return i;
+            label = removeSpacePattern.matcher(label).replaceAll(Tuils.EMPTYSTRING);
+            for(LaunchInfo i : appList) if(removeSpacePattern.matcher(i.publicLabel).replaceAll(Tuils.EMPTYSTRING).equalsIgnoreCase(label)) return i;
             return null;
         }
 

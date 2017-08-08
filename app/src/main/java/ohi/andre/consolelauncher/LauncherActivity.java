@@ -23,9 +23,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.github.anrwatchdog.ANRError;
-import com.github.anrwatchdog.ANRWatchDog;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -150,18 +147,16 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private void finishOnCreate() {
 
-        new ANRWatchDog(5000)
-                .setANRListener(new ANRWatchDog.ANRListener() {
-                    @Override
-                    public void onAppNotResponding(ANRError anrError) {
-                        Tuils.log(anrError);
-                        Tuils.toFile(anrError);
-
-                        Toast.makeText(LauncherActivity.this, R.string.anr, Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setReportMainThreadOnly()
-                .start();
+//        new ANRWatchDog(5000)
+//                .setANRListener(new ANRWatchDog.ANRListener() {
+//                    @Override
+//                    public void onAppNotResponding(ANRError anrError) {
+//                        Tuils.log(anrError);
+//                        Tuils.toFile(anrError);
+//                    }
+//                })
+//                .setReportMainThreadOnly()
+//                .start();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
@@ -392,7 +387,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         if(permissions.length > 0 && permissions[0].equals(Manifest.permission.READ_CONTACTS) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            ContactManager.refreshContacts(main.getMainPack().contacts, this);
+            main.getMainPack().contacts.refreshContacts(this);
         }
 
         try {

@@ -4,7 +4,6 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.ContactManager;
 
 public class refresh implements CommandAbstraction {
 
@@ -14,7 +13,7 @@ public class refresh implements CommandAbstraction {
         info.appsManager.fill();
         info.aliasManager.reload();
         info.player.refresh(info.context);
-        ContactManager.refreshContacts(info.contacts, info.context);
+        info.contacts.refreshContacts(info.context);
 
         return info.res.getString(R.string.output_refresh);
     }

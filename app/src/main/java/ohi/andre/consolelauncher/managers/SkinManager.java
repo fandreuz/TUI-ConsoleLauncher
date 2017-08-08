@@ -77,7 +77,7 @@ public class SkinManager implements Parcelable {
 
             suggDefaultText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_text_color);
             suggDefaultBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_bg_color);
-            transparentSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.transparent);
+            transparentSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.transparent_suggestions);
 
             if(transparentSuggestions && suggDefaultText == bgColor) {
                 suggDefaultText = Color.GREEN;

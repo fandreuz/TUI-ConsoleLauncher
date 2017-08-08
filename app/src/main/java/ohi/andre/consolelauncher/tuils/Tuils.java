@@ -4,22 +4,20 @@ import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.admin.DevicePolicyManager;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -32,7 +30,6 @@ import android.webkit.MimeTypeMap;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -43,6 +40,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -52,6 +50,7 @@ import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager;
+import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
 public class Tuils {
@@ -74,22 +73,27 @@ public class Tuils {
         return false;
     }
 
-    public static int getBatteryPercentage(Context context) {
-
+    public static void registerBatteryReceiver(Context context, OnBatteryUpdate listener) {
         try {
             IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = context.registerReceiver(null, iFilter);
+            context.registerReceiver(batteryReceiver, iFilter);
 
-            int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
-            int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
-
-            float batteryPct = level / (float) scale;
-
-            return (int) (batteryPct * 100);
+            batteryUpdate = listener;
         } catch (Exception e) {
-            return -1;
+            Tuils.toFile(e);
         }
     }
+
+    private static OnBatteryUpdate batteryUpdate;
+    private static BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(batteryUpdate == null) return;
+
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+            batteryUpdate.update(level);
+        }
+    };
 
     public static boolean containsExtension(String[] array, String value) {
         try {
@@ -397,17 +401,12 @@ public class Tuils {
     public static void insertHeaders(List<String> s, boolean newLine) {
         char current = 0;
         for (int count = 0; count < s.size(); count++) {
-            char c = 0;
+            String st = s.get(count).trim().toUpperCase();
+            if(st.length() < 0) continue;
 
-            String st = s.get(count);
-            for (int count2 = 0; count2 < st.length(); count2++) {
-                c = st.charAt(count2);
-                if (c != ' ')
-                    break;
-            }
-
+            char c = st.charAt(0);
             if (current != c) {
-                s.add(count, (newLine ? NEWLINE : EMPTYSTRING) + Character.toString(c).toUpperCase() + (newLine ? NEWLINE : EMPTYSTRING));
+                s.add(count, (newLine ? NEWLINE : EMPTYSTRING) + c + (newLine ? NEWLINE : EMPTYSTRING));
                 current = c;
             }
         }
@@ -454,8 +453,11 @@ public class Tuils {
 
     public static void toFile(Throwable e) {
         try {
-            e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
-        } catch (FileNotFoundException e1) {}
+            FileOutputStream out = new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true);
+            out.write((Tuils.NEWLINE + Tuils.NEWLINE + new Date().toString() + Tuils.NEWLINE).getBytes());
+            e.printStackTrace(new PrintStream(out));
+            out.close();
+        } catch (Exception e1) {}
     }
 
     public static String toPlanString(List<String> strings, String separator) {
@@ -574,37 +576,6 @@ public class Tuils {
         return new File(internalDir, TUI_FOLDER);
     }
 
-    public static List<File> getMediastoreSongs(Context activity) {
-        ContentResolver cr = activity.getContentResolver();
-
-        List<File> paths = new ArrayList<>();
-
-        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
-        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-        Cursor cur = cr.query(uri, null, selection, null, sortOrder);
-        int count = 0;
-
-        if(cur != null) {
-            count = cur.getCount();
-            if(count > 0) {
-                while(cur.moveToNext()) {
-                    String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
-                    if(data != null) {
-                        try {
-                            paths.add(new File(data));
-                        } catch (Exception e) {}
-                    }
-                }
-
-            }
-
-            cur.close();
-        }
-
-        return paths;
-    }
-
     public static double eval(final String str) {
         return new Object() {
             int pos = -1, ch;
@@ -721,22 +692,23 @@ public class Tuils {
     }
 
     public static int alphabeticCompare(String s1, String s2) {
-        String cmd1 = removeSpaces(s1);
-        cmd1 = cmd1.toLowerCase();
-        String cmd2 = removeSpaces(s2);
-        cmd2 = cmd2.toLowerCase();
+        String cmd1 = removeSpaces(s1).toLowerCase();
+        String cmd2 = removeSpaces(s2).toLowerCase();
 
         for (int count = 0; count < cmd1.length() && count < cmd2.length(); count++) {
-            if (cmd1.charAt(count) < cmd2.charAt(count)) {
+            char c1 = cmd1.charAt(count);
+            char c2 = cmd2.charAt(count);
+
+            if (c1 < c2) {
                 return -1;
-            } else if (cmd1.charAt(count) > cmd2.charAt(count)) {
+            } else if (c1 > c2) {
                 return 1;
             }
         }
 
-        if (cmd1.length() > cmd2.length()) {
+        if (s1.length() > s2.length()) {
             return 1;
-        } else if (cmd1.length() < cmd2.length()) {
+        } else if (s1.length() < s2.length()) {
             return -1;
         }
         return 0;

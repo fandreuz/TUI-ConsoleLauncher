@@ -1,5 +1,7 @@
 package ohi.andre.consolelauncher.commands;
 
+import android.util.SparseArray;
+
 import java.util.HashMap;
 
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
@@ -28,12 +30,10 @@ public class CommandsPreferences {
     }
 
     public class Preference {
-        HashMap<Integer, String> prefs = new HashMap<>();
-
+        SparseArray<String> prefs = new SparseArray<>();
         public void add(String pref, int id) {
             prefs.put(id, pref);
         }
-
         public String get(int id) {
             return prefs.get(id);
         }

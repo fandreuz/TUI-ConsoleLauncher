@@ -1,11 +1,15 @@
 package ohi.andre.consolelauncher.managers.music;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
+import android.net.Uri;
+import android.provider.MediaStore;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,6 +49,7 @@ public class MusicManager implements OnCompletionListener {
         try {
             this.mp = new MediaPlayer();
             this.mp.setOnCompletionListener(this);
+            this.files = new ArrayList<>();
 
             this.outputable = outputable;
 
@@ -74,13 +79,9 @@ public class MusicManager implements OnCompletionListener {
         return prepareSong(currentSongIndex);
     }
 
-    //	return a song by incomplete name
-//    public String getSong(String s) {
-//        return s;
-//    }
-
-    //	return the path by complete name
     public String getPath(String name) {
+        if(files == null) return null;
+
         int count = 0;
         File file = files.get(count);
         while(!file.getName().equals(name)) {
@@ -208,11 +209,54 @@ public class MusicManager implements OnCompletionListener {
 
     public void refresh(Context c) {
         if(fromMediastore) {
-            files = Tuils.getMediastoreSongs(c);
+            fillFromMediaStore(c, files);
         } else {
-            files = Tuils.getSongsInFolder(songsFolder);
+            fillFromDir(files, songsFolder);
         }
+    }
 
+    private static void fillFromMediaStore(final Context c, final List<File> files) {
+        files.clear();
+
+        new Thread() {
+            @Override
+            public void run() {
+                ContentResolver cr = c.getContentResolver();
+
+                Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+                String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+                Cursor cur = cr.query(uri, null, selection, null, sortOrder);
+                int count = 0;
+
+                if(cur != null) {
+                    count = cur.getCount();
+                    if(count > 0) {
+                        while(cur.moveToNext()) {
+                            String data = cur.getString(cur.getColumnIndex(MediaStore.Audio.Media.DATA));
+                            if(data != null) {
+                                try {
+                                    files.add(new File(data));
+                                } catch (Exception e) {}
+                            }
+                        }
+                    }
+
+                    cur.close();
+                }
+            }
+        }.start();
+    }
+
+    private static void fillFromDir(final List<File> files, final File dir) {
+        files.clear();
+
+        new Thread() {
+            @Override
+            public void run() {
+                files.addAll(Tuils.getSongsInFolder(dir));
+            }
+        }.start();
     }
 
     @Override

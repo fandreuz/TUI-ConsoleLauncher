@@ -16,13 +16,13 @@ import android.service.notification.StatusBarNotification;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Spannable;
 import android.text.SpannableString;
-import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.TimeManager;
@@ -87,11 +87,11 @@ public class NotificationService extends NotificationListenerService {
     String format;
     int timeColor;
 
-    final String FORMAT_PKG = "%pkg";
-    final String FORMAT_TEXT = "%txt";
-    final String FORMAT_TITLE = "%ttl";
-    final String FORMAT_APPNAME = "%app";
-    final String FORMAT_NEWLINE = "%n";
+    final Pattern patternPkg = Pattern.compile("%pkg", Pattern.CASE_INSENSITIVE);
+    final Pattern patternText = Pattern.compile("%txt", Pattern.CASE_INSENSITIVE);
+    final Pattern patternTitle = Pattern.compile("%ttl", Pattern.CASE_INSENSITIVE);
+    final Pattern patternAppname = Pattern.compile("%app", Pattern.CASE_INSENSITIVE);
+    final Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
 
     PackageManager manager;
 
@@ -160,20 +160,19 @@ public class NotificationService extends NotificationListenerService {
             color = Color.parseColor(default_color);
         }
 
-        SpannableString spanned = new SpannableString(format);
-        spanned.setSpan(new ForegroundColorSpan(color), 0, format.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        String finalText = format;
+        finalText = patternPkg.matcher(finalText).replaceAll(pack);
+        finalText = patternAppname.matcher(finalText).replaceAll(appName);
+        finalText = patternText.matcher(finalText).replaceAll(text);
+        finalText = patternTitle.matcher(finalText).replaceAll(title);
+        finalText = patternNewline.matcher(finalText).replaceAll(Tuils.NEWLINE);
+
+        SpannableString spannableString = new SpannableString(finalText);
+        spannableString.setSpan(new ForegroundColorSpan(color), 0, finalText.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         CharSequence s;
         try {
-            s = TextUtils.replace(spanned,
-                    new String[] {FORMAT_PKG, FORMAT_APPNAME, FORMAT_TEXT, FORMAT_TITLE, FORMAT_NEWLINE,
-                            FORMAT_PKG.toUpperCase(), FORMAT_APPNAME.toUpperCase(), FORMAT_TEXT.toUpperCase(), FORMAT_TITLE.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
-                    new CharSequence[] {
-                            pack, appName, text, title, Tuils.NEWLINE, pack, appName, text, title, Tuils.NEWLINE
-                    }
-            );
-
-            s = TimeManager.replace(s, timeColor);
+            s = TimeManager.replace(spannableString, timeColor);
         } catch (Exception e) {
             return;
         }

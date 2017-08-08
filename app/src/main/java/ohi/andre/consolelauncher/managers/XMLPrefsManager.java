@@ -1,7 +1,6 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.graphics.Color;
-import android.util.Log;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -13,10 +12,7 @@ import java.io.FileOutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -26,7 +22,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class XMLPrefsManager {
@@ -40,7 +35,6 @@ public class XMLPrefsManager {
         String label();
         XmlPrefsElement parent();
         boolean is(String s);
-        String hasReplaced();
     }
 
     public enum Theme implements XMLPrefsSave {
@@ -143,11 +137,6 @@ public class XMLPrefsManager {
         @Override
         public boolean is(String s) {
             return name().equals(s);
-        }
-
-        @Override
-        public String hasReplaced() {
-            return null;
         }
     }
 
@@ -318,11 +307,6 @@ public class XMLPrefsManager {
         public boolean is(String s) {
             return name().equals(s);
         }
-
-        @Override
-        public String hasReplaced() {
-            return null;
-        }
     }
 
     public enum Toolbar implements XMLPrefsSave {
@@ -331,11 +315,6 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "true";
-            }
-
-            @Override
-            public String hasReplaced() {
-                return "enabled";
             }
         };
 
@@ -362,13 +341,8 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "true";
             }
-
-            @Override
-            public String hasReplaced() {
-                return "enabled";
-            }
         },
-        transparent {
+        transparent_suggestions {
             @Override
             public String defaultValue() {
                 return "false";
@@ -484,11 +458,6 @@ public class XMLPrefsManager {
         @Override
         public boolean is(String s) {
             return name().equals(s);
-        }
-
-        @Override
-        public String hasReplaced() {
-            return null;
         }
     }
 
@@ -679,12 +648,6 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "%a --> [%v]";
             }
-        },
-        enter_first_suggestion {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
         };
 
         @Override
@@ -700,11 +663,6 @@ public class XMLPrefsManager {
         @Override
         public boolean is(String s) {
             return name().equals(s);
-        }
-
-        @Override
-        public String hasReplaced() {
-            return null;
         }
     }
 
@@ -731,11 +689,6 @@ public class XMLPrefsManager {
         public boolean is(String s) {
             return name().equals(s);
         }
-
-        @Override
-        public String hasReplaced() {
-            return null;
-        }
     }
 
     public enum XMLPrefsRoot implements XmlPrefsElement {
@@ -755,7 +708,7 @@ public class XMLPrefsManager {
         TOOLBAR("toolbar.xml", Toolbar.values()) {
             @Override
             public String[] deleted() {
-                return new String[0];
+                return new String[] {"enabled"};
             }
         },
         UI("ui.xml", Ui.values()) {
@@ -773,7 +726,7 @@ public class XMLPrefsManager {
         SUGGESTIONS("suggestions.xml", Suggestions.values()) {
             @Override
             public String[] deleted() {
-                return new String[0];
+                return new String[] {"transparent", "enabled"};
             }
         };
 
@@ -891,13 +844,8 @@ public class XMLPrefsManager {
             List<XMLPrefsSave> enums = element.enums;
             if(enums == null) continue;
 
-            Map<String, XMLPrefsManager.XMLPrefsSave> replacedValues = new HashMap<>();
-            for(XMLPrefsManager.XMLPrefsSave s : NotificationManager.Options.values()) {
-                String r = s.hasReplaced();
-                if(r != null) replacedValues.put(r, s);
-            }
-
             String[] deleted = element.deleted();
+            boolean needToWrite = false;
 
             Element root = (Element) d.getElementsByTagName(element.name()).item(0);
             if(root == null) {
@@ -917,37 +865,26 @@ public class XMLPrefsManager {
                     if(enums.get(en).label().equals(nn)) {
                         enums.remove(en);
                         break;
-                    } else if(replacedValues.containsKey(nn)) {
-                        XMLPrefsManager.XMLPrefsSave s = replacedValues.remove(nn);
-
-                        Element e = (Element) node;
-                        String oldValue = e.hasAttribute(VALUE_ATTRIBUTE) ? e.getAttribute(VALUE_ATTRIBUTE) : null;
-                        root.removeChild(e);
-
-                        replacedValues.put(oldValue, s);
                     } else if(deleted != null) {
                         int index = Tuils.find(nn, deleted);
                         if(index != -1) {
                             deleted[index] = null;
                             Element e = (Element) node;
                             root.removeChild(e);
+
+                            needToWrite = true;
                         }
                     }
                 }
             }
 
-            if(enums.size() == 0) continue;
-
-            Set<Map.Entry<String, XMLPrefsSave>> es = replacedValues.entrySet();
+            if(enums.size() == 0) {
+                if(needToWrite) writeTo(d, file);
+                continue;
+            }
 
             for(XMLPrefsSave s : enums) {
-                String value = null;
-                for(Map.Entry<String, XMLPrefsManager.XMLPrefsSave> e : es) {
-                    if(e.getValue().equals(s)) value = e.getKey();
-                }
-                if(value == null) {
-                    value = s.defaultValue();
-                }
+                String value = s.defaultValue();
 
                 Element em = d.createElement(s.label());
                 em.setAttribute(VALUE_ATTRIBUTE, value);
@@ -1088,7 +1025,8 @@ public class XMLPrefsManager {
 
             writeTo(d, file);
         } catch (Exception e) {
-            Log.e("andre", "", e);
+            Tuils.log(e);
+            Tuils.toFile(e);
             return e.toString();
         }
         return null;

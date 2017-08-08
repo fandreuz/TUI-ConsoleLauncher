@@ -1,8 +1,6 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
 import android.content.Intent;
-import android.os.Build;
-import android.provider.Settings;
 
 import java.io.File;
 
@@ -122,7 +120,7 @@ public class notifications extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 try {
-                    pack.context.startActivity(new Intent(Build.VERSION.SDK_INT >= 22 ? Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS : "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+                    pack.context.startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                 } catch (Exception e) {
                     return pack.context.getString(R.string.activity_not_found);
                 }

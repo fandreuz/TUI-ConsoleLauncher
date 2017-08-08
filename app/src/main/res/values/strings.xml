@@ -10,7 +10,7 @@
     <string name="output_rate">Thank you!</string>
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
-    <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt</string>
+    <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt in the "t-ui" folder</string>
 
     <!-- files -->
     <string name="output_error">An unknown error has occurred</string>
@@ -77,8 +77,7 @@
     <string name="output_stopped">Player stopped</string>
     <string name="output_nomusic">Player wasn\'t started</string>
     <string name="output_cantstop">Couldn\'t stop the player. Force stop t-ui from settings</string>
-    <string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain audio files.\nYou should set the right path
-        in settings.txt
+    <string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain audio files.\nYou should set the right path with "config -set songs_path"
     </string>
 
     <!-- command/args -->
@@ -142,9 +141,10 @@
     <string name="help_community">Show the t-ui community on Google+</string>
     <string name="help_config">Manage your config files.
         \nUsage:
-        \n-set [option] [value] -> set the value of a config node
+        \n-set [option] [value] -> set the value of an option
         \n-open [file] -> open a config file
         \n-get [option] -> get the value of an option
+        \n-reset [option] -> reset the value of an option
     </string>
     <string name="help_data">Toggle mobile data</string>
     <string name="help_donate">Offer a coffee to the developer (PayPal only)</string>

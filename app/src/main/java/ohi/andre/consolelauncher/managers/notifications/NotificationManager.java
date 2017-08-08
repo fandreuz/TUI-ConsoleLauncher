@@ -2,7 +2,7 @@ package ohi.andre.consolelauncher.managers.notifications;
 
 import android.annotation.TargetApi;
 import android.os.Build;
-import android.util.Log;
+import android.util.SparseArray;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,10 +16,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -68,11 +65,6 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             public String defaultValue() {
                 return "false";
             }
-
-            @Override
-            public String hasReplaced() {
-                return "enabled";
-            }
         },
         default_app_state {
             @Override
@@ -107,16 +99,11 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         public boolean is(String s) {
             return name().equals(s);
         }
-
-        @Override
-        public String hasReplaced() {
-            return null;
-        }
     }
 
     @Override
     public String[] deleted() {
-        return new String[0];
+        return new String[] {"enabled"};
     }
 
     @Override
@@ -132,7 +119,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     private static XMLPrefsManager.XMLPrefsList values;
     private static List<NotificatedApp> apps;
     private static List<FilterGroup> groups;
-    private static HashMap<Integer, String> applies;
+    private static SparseArray<List<String>> applies;
     private static boolean created = false;
 
     private NotificationManager() {}
@@ -145,7 +132,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
         apps = new ArrayList<>();
         groups = new ArrayList<>();
-        applies = new HashMap<>();
+        applies = new SparseArray<>();
         values = new XMLPrefsManager.XMLPrefsList();
 
         try {
@@ -174,35 +161,32 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             }
             NodeList nodes = root.getElementsByTagName("*");
 
-            Map<String, XMLPrefsManager.XMLPrefsSave> replacedValues = new HashMap<>();
-            for(XMLPrefsManager.XMLPrefsSave s : Options.values()) {
-                String r = s.hasReplaced();
-                if(r != null) replacedValues.put(r, s);
-            }
+            String[] deleted = instance.deleted();
+            boolean needToWrite = false;
 
             Main:
             for(int count = 0; count < nodes.getLength(); count++) {
                 Node node = nodes.item(count);
 
                 String nn = node.getNodeName();
-                if(Tuils.find(nn, (List) enums) != -1) {
+                if (Tuils.find(nn, (List) enums) != -1) {
                     values.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
 
-                    for(int en = 0; en < enums.size(); en++) {
-                        if(enums.get(en).label().equals(nn)) {
+                    for (int en = 0; en < enums.size(); en++) {
+                        if (enums.get(en).label().equals(nn)) {
                             enums.remove(en);
                             break;
                         }
                     }
-                } else if(nn.equals(FILTER_NODE)) {
-                    if(node.getNodeType() == Node.ELEMENT_NODE) {
+                } else if (nn.equals(FILTER_NODE)) {
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) node;
 
                         String regex = e.hasAttribute(VALUE_ATTRIBUTE) ? e.getAttribute(VALUE_ATTRIBUTE) : null;
-                        if(regex == null) continue;
+                        if (regex == null) continue;
 
                         String on = e.hasAttribute(ON_ATTRIBUTE) ? e.getAttribute(ON_ATTRIBUTE) : null;
-                        if(on == null) on = "text";
+                        if (on == null) on = "text";
 
                         int id;
                         try {
@@ -212,11 +196,11 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                         }
 
                         Filter filter = Filter.getInstance(regex, on.equals("title") ? TITLE : TEXT);
-                        if(filter == null) continue;
+                        if (filter == null) continue;
 
-                        if(id != -1) {
-                            for(FilterGroup group : groups) {
-                                if(id == group.id) {
+                        if (id != -1) {
+                            for (FilterGroup group : groups) {
+                                if (id == group.id) {
                                     group.add(filter);
                                     continue Main;
                                 }
@@ -227,8 +211,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                         group.add(filter);
                         groups.add(group);
                     }
-                } else if(nn.equals(APPLY_NODE)) {
-                    if(node.getNodeType() == Node.ELEMENT_NODE) {
+                } else if (nn.equals(APPLY_NODE)) {
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) node;
 
                         int id;
@@ -239,22 +223,27 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                         }
 
                         String pkg = e.hasAttribute(PACKAGE_ATTRIBUTE) ? e.getAttribute(PACKAGE_ATTRIBUTE) : null;
-                        if(pkg == null) continue;
+                        if (pkg == null) continue;
 
-                        applies.put(id, pkg);
+                        List<String> at = applies.get(id);
+                        if(at == null) {
+                            at = new ArrayList<>();
+                            at.add(pkg);
+                            applies.put(id, at);
+                        } else at.add(pkg);
                     }
-                } else if(replacedValues.containsKey(nn)) {
-                    XMLPrefsManager.XMLPrefsSave s = replacedValues.remove(nn);
+                } else {
 
-                    Element e = (Element) node;
-                    String oldValue = e.hasAttribute(VALUE_ATTRIBUTE) ? e.getAttribute(VALUE_ATTRIBUTE) : null;
-                    root.removeChild(e);
+                    int index = deleted == null ? -1 : Tuils.find(nn, deleted);
+                    if(index != -1) {
+                        deleted[index] = null;
+                        Element e = (Element) node;
+                        root.removeChild(e);
 
-                    replacedValues.put(oldValue, s);
-                }
-//                todo support delete
-                else {
-                    if(node.getNodeType() == Node.ELEMENT_NODE) {
+                        needToWrite = true;
+                    }
+
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) node;
 
                         NotificatedApp app;
@@ -262,7 +251,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                         boolean enabled = !e.hasAttribute(ENABLED_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(ENABLED_ATTRIBUTE));
 
                         String color = null;
-                        if(enabled) color = e.hasAttribute(COLOR_ATTRIBUTE) ? e.getAttribute(COLOR_ATTRIBUTE) : null;
+                        if (enabled)
+                            color = e.hasAttribute(COLOR_ATTRIBUTE) ? e.getAttribute(COLOR_ATTRIBUTE) : null;
 
                         app = new NotificatedApp(nn, color, enabled);
                         apps.add(app);
@@ -270,14 +260,9 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                 }
             }
 
-            if(enums.size() > 0) {
-                Set<Map.Entry<String, XMLPrefsManager.XMLPrefsSave>> es = replacedValues.entrySet();
-                for(XMLPrefsManager.XMLPrefsSave s : enums) {
-                    String value = null;
-                    for(Map.Entry<String, XMLPrefsManager.XMLPrefsSave> e : es) {
-                        if(e.getValue().equals(s)) value = e.getKey();
-                    }
-                    if(value == null) value = s.defaultValue();
+            if (enums.size() > 0) {
+                for (XMLPrefsManager.XMLPrefsSave s : enums) {
+                    String value = s.defaultValue();
 
                     Element em = d.createElement(s.label());
                     em.setAttribute(VALUE_ATTRIBUTE, value);
@@ -287,18 +272,24 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                 }
 
                 writeTo(d, file);
+            } else if (needToWrite) {
+                writeTo(d, file);
             }
         } catch (Exception e) {
-            Log.e("andre", "", e);
+            Tuils.log(e);
+            Tuils.toFile(e);
         }
 
         default_app_state = XMLPrefsManager.get(boolean.class, Options.default_app_state);
         default_color = XMLPrefsManager.get(String.class, Options.default_color);
 
         Out:
-        for(Map.Entry<Integer, String> e : applies.entrySet()) {
+        for(int count = 0; count < applies.size(); count++) {
+            int id = applies.keyAt(count);
+            List<String> pkgs = applies.get(id);
+
             for(FilterGroup g : groups) {
-                if(g.applyTo(e.getKey(), e.getValue())) continue Out;
+                if(g.applyTo(id, pkgs)) continue Out;
             }
         }
     }
@@ -309,7 +300,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     public static boolean match(String pkg, String text, String title) {
         for(FilterGroup group : groups) {
-            if(group.pkgs != null && !group.pkgs.contains(pkg)) continue;
+            if(group.pkgs == null || !group.pkgs.contains(pkg)) continue;
             if(group.check(title, text)) return true;
         }
         return false;
@@ -421,15 +412,23 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         }
 
         public boolean check(String title, String text) {
+            boolean matchTitle = false, matchText = false;
+
             for(Filter filter : brothers) {
                 String s;
-                if(filter.on == TITLE) s = title;
-                else s = text;
+                if(filter.on == TITLE) {
+                    s = title;
+                } else {
+                    s = text;
+                }
 
-                if(!filter.pattern.matcher(s).find()) return false;
+                boolean b = filter.pattern.matcher(s).find();
+
+                if(filter.on == TITLE) matchTitle = matchTitle || b;
+                else matchText = matchText || b;
             }
 
-            return true;
+            return matchText && matchTitle;
         }
 
         public boolean applyTo(int id, String s) {
@@ -437,6 +436,17 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                 if(pkgs == null) pkgs = new ArrayList<>();
 
                 pkgs.add(s);
+                return true;
+            }
+
+            return false;
+        }
+
+        public boolean applyTo(int id, List<String> ss) {
+            if(this.id == id) {
+                if(pkgs == null) pkgs = new ArrayList<>();
+
+                pkgs.addAll(ss);
                 return true;
             }
 

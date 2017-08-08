@@ -28,8 +28,8 @@ public class AliasManager implements Reloadable {
     public AliasManager() {
         reload();
 
-        paramMarker = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_marker);
-        paramSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_separator);
+        paramMarker = Pattern.quote(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_marker));
+        paramSeparator = Pattern.quote(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_separator));
         aliasLabelFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_content_format);
     }
 
@@ -76,13 +76,11 @@ public class AliasManager implements Reloadable {
     public String format(String aliasValue, String params) {
         params = params.trim();
 
-        String quoted = Pattern.quote(paramSeparator);
-
         if(params.length() == 0) return aliasValue;
-        String[] split = params.split(quoted);
+        String[] split = params.split(paramSeparator);
 
         for(String s : split) {
-            aliasValue = aliasValue.replaceFirst(quoted, s);
+            aliasValue = aliasValue.replaceFirst(paramMarker, s);
         }
 
         return aliasValue;

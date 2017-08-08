@@ -46,6 +46,7 @@ import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Hintable;
+import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
 import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.interfaces.SuggestionViewDecorer;
@@ -55,7 +56,6 @@ import ohi.andre.consolelauncher.tuils.stuff.TrashInterfaces;
 public class UIManager implements OnTouchListener {
 
     private final int RAM_DELAY = 3000;
-    private final int BATTERY_DELAY = 20 * 1000;
     private final int TIME_DELAY = 1000;
     private final int STORAGE_DELAY = 60 * 1000;
 
@@ -102,10 +102,10 @@ public class UIManager implements OnTouchListener {
         }
     };
 
-    private Runnable batteryRunnable = new Runnable() {
+    private OnBatteryUpdate batteryUpdate = new OnBatteryUpdate() {
         @Override
-        public void run() {
-            int percentage = Tuils.getBatteryPercentage(mContext);
+        public void update(float p) {
+            int percentage = (int) p;
 
             if(skinManager.manyColorsBattery) {
                 if(percentage > mediumPercentage) battery.setTextColor(skinManager.battery_color_high);
@@ -119,8 +119,6 @@ public class UIManager implements OnTouchListener {
 
             String cp = batteryFormat.replaceAll("%[vV]", String.valueOf(percentage)).replaceAll("%[nN]", Tuils.NEWLINE);
             battery.setText(cp);
-
-            battery.postDelayed(batteryRunnable, BATTERY_DELAY);
         }
     };
 
@@ -487,7 +485,7 @@ public class UIManager implements OnTouchListener {
         component = new ComponentName(context, PolicyReceiver.class);
 
         multipleCmdSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.multiple_cmd_separator);
-        selectFirstSuggestionEnter = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.enter_first_suggestion);
+//        selectFirstSuggestionEnter = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.enter_first_suggestion);
 
         mContext = context;
         this.info = (MainPack) info;
@@ -636,7 +634,7 @@ public class UIManager implements OnTouchListener {
             battery.setTextSize(skinManager.getTextSize());
             battery.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
 
-            battery.post(batteryRunnable);
+            Tuils.registerBatteryReceiver(context, batteryUpdate);
         } else {
             battery.setVisibility(View.GONE);
         }

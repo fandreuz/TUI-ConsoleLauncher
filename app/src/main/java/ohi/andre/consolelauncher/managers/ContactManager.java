@@ -25,81 +25,95 @@ public class ContactManager {
 
     public ContactManager(Context context) {
         this.context = context;
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            refreshContacts(context);
+        }
     }
 
-    public static void refreshContacts(ContactManager mgr, Context context) {
-        List<Contact> contacts = new ArrayList<>();
-
+    public void refreshContacts(final Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.READ_CONTACTS}, LauncherActivity.COMMAND_SUGGESTION_REQUEST_PERMISSION);
-            mgr.contacts = contacts;
             return;
         }
 
-        Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                new String[] {ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Data.CONTACT_ID, ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.Data.IS_SUPER_PRIMARY,}, null, null,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
 
-        if (phones != null) {
+                if(contacts == null) {
+                    contacts = new ArrayList<>();
+                } else {
+                    contacts.clear();
+                }
+                List<Contact> contacts = ContactManager.this.contacts;
 
-            int lastId = -1;
-            List<String> lastNumbers = new ArrayList<>();
-            List<String> nrml = new ArrayList<>();
-            int defaultNumber = 0;
-            String name = null, number;
-            int id, prim;
+                Cursor phones = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[] {ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Data.CONTACT_ID, ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.Data.IS_SUPER_PRIMARY,}, null, null,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
 
-            while (phones.moveToNext()) {
-                id = phones.getInt(phones.getColumnIndex(ContactsContract.Data.CONTACT_ID));
-                number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                if (phones != null) {
 
-                prim = phones.getInt(phones.getColumnIndex(ContactsContract.Data.IS_SUPER_PRIMARY));
-                if(prim > 0) {
-                    defaultNumber = lastNumbers.size();
+                    int lastId = -1;
+                    List<String> lastNumbers = new ArrayList<>();
+                    List<String> nrml = new ArrayList<>();
+                    int defaultNumber = 0;
+                    String name = null, number;
+                    int id, prim;
+
+                    while (phones.moveToNext()) {
+                        id = phones.getInt(phones.getColumnIndex(ContactsContract.Data.CONTACT_ID));
+                        number = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+                        prim = phones.getInt(phones.getColumnIndex(ContactsContract.Data.IS_SUPER_PRIMARY));
+                        if(prim > 0) {
+                            defaultNumber = lastNumbers.size();
+                        }
+
+                        if(number == null || number.length() == 0) continue;
+
+                        if(phones.isFirst()) {
+                            lastId = id;
+                            name = phones.getString(phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                        } else if(id != lastId || phones.isLast()) {
+                            lastId = id;
+
+                            contacts.add(new Contact(name, lastNumbers, defaultNumber));
+
+                            lastNumbers = new ArrayList<>();
+                            nrml = new ArrayList<>();
+                            name = null;
+                            defaultNumber = 0;
+
+                            name = phones.getString(phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                        }
+
+                        String normalized = number.replaceAll(Tuils.SPACE, Tuils.EMPTYSTRING);
+                        if(!nrml.contains(normalized)) {
+                            nrml.add(normalized);
+                            lastNumbers.add(number);
+                        }
+
+                        if(name != null && phones.isLast()) {
+                            contacts.add(new Contact(name, lastNumbers, defaultNumber));
+                        }
+                    }
+                    phones.close();
                 }
 
-                if(number == null || number.length() == 0) continue;
-
-                if(phones.isFirst()) {
-                    lastId = id;
-                    name = phones.getString(phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                } else if(id != lastId || phones.isLast()) {
-                    lastId = id;
-
-                    contacts.add(new Contact(name, lastNumbers, defaultNumber));
-
-                    lastNumbers = new ArrayList<>();
-                    nrml = new ArrayList<>();
-                    name = null;
-                    defaultNumber = 0;
-
-                    name = phones.getString(phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                List<Contact> cp = new ArrayList<>(contacts);
+                for(int count = 0; count < cp.size(); count++) {
+                    if(cp.get(count).numbers.size() == 0) contacts.remove(count--);
                 }
 
-                String normalized = number.replaceAll(Tuils.SPACE, Tuils.EMPTYSTRING);
-                if(!nrml.contains(normalized)) {
-                    nrml.add(normalized);
-                    lastNumbers.add(number);
-                }
-
-                if(name != null && phones.isLast()) {
-                    contacts.add(new Contact(name, lastNumbers, defaultNumber));
-                }
+                Collections.sort(contacts);
             }
-            phones.close();
-        }
-
-        List<Contact> cp = new ArrayList<>(contacts);
-        for(int count = 0; count < cp.size(); count++) {
-            if(cp.get(count).numbers.size() == 0) contacts.remove(count--);
-        }
-
-        mgr.contacts = contacts;
-        Collections.sort(mgr.contacts);
+        }.start();
     }
 
     public List<String> listNames() {
-        if(contacts == null || contacts.size() == 0) refreshContacts(this, context);
+        if(contacts == null || contacts.size() == 0) refreshContacts(context);
 
         List<String> names = new ArrayList<>();
         for(Contact c : contacts) names.add(c.name);
@@ -107,13 +121,13 @@ public class ContactManager {
     }
 
     public List<Contact> getContacts() {
-        if(contacts == null || contacts.size() == 0) refreshContacts(this, context);
+        if(contacts == null || contacts.size() == 0) refreshContacts(context);
 
         return contacts;
     }
 
     public List<String> listNamesAndNumbers() {
-        if(contacts == null || contacts.size() == 0) refreshContacts(this, context);
+        if(contacts == null || contacts.size() == 0) refreshContacts(context);
 
         List<String> c = new ArrayList<>();
 
@@ -211,7 +225,7 @@ public class ContactManager {
     }
 
     public String findNumber(String name) {
-        if(contacts == null) refreshContacts(this, context);
+        if(contacts == null) refreshContacts(context);
 
         for(int count = 0; count < contacts.size(); count++) {
             Contact c = contacts.get(count);
