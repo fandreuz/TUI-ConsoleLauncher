@@ -1,10 +1,15 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import java.io.File;
 
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 
@@ -23,6 +28,7 @@ public class SkinManager implements Parcelable {
     public int globalFontSize;
 
     public String deviceName;
+    public String userFontPath;
     public int deviceColor, inputColor, outputColor, ramColor, bgColor, overlayColor, toolbarColor, toolbarBg, enter_color, time_color, battery_color_high, battery_color_medium, battery_color_low,
             storageColor;
 
@@ -35,6 +41,7 @@ public class SkinManager implements Parcelable {
 
     public SkinManager() {
         systemFont = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_font);
+        userFontPath = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.user_font_file);
         inputBottom = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.input_bottom);
         showSubmit = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_enter_button);
 
@@ -156,6 +163,28 @@ public class SkinManager implements Parcelable {
             return new SkinManager[size];
         }
     };
+
+    public Typeface getUserFont(Typeface defaultTypeface) {
+        try
+        {
+            File userFontFile = new File(userFontPath);
+            if (userFontFile.exists())
+            {
+                if (userFontFile.isFile())
+                {
+                    return Typeface.createFromFile(userFontPath);
+                }
+                else
+                    throw new Exception("The specified file is not a file. Using built-in font.");
+            }
+            else
+                throw new Exception("The specified file is not found. Using built-in font.");
+        }
+        catch(Exception ex)
+        {
+            return defaultTypeface;
+        }
+    }
 
     public ColorDrawable getSuggestionBg(Integer type) {
         if(transparentSuggestions) {

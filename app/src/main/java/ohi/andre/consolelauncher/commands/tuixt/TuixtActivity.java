@@ -60,7 +60,6 @@ public class TuixtActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Typeface lucidaConsole = Typeface.createFromAsset(getAssets(), "lucida_console.ttf");
         final LinearLayout rootView = new LinearLayout(this);
 
         final Intent intent = getIntent();
@@ -114,7 +113,10 @@ public class TuixtActivity extends Activity {
 
         String prefix = skinManager.prefix;
 
-        prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        final Typeface userFont = skinManager.getUserFont(Typeface.createFromAsset(getAssets(), "lucida_console.ttf"));
+        final Typeface useTypeface = skinManager.systemFont ? Typeface.MONOSPACE : userFont;
+
+        prefixView.setTypeface(useTypeface);
         prefixView.setTextColor(skinManager.inputColor);
         prefixView.setTextSize(skinManager.getTextSize());
         prefixView.setText(prefix);
@@ -129,7 +131,7 @@ public class TuixtActivity extends Activity {
             });
         }
 
-        fileView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        fileView.setTypeface(useTypeface);
         fileView.setTextSize(skinManager.getTextSize());
         fileView.setTextColor(skinManager.outputColor);
         fileView.setOnTouchListener(new View.OnTouchListener() {
@@ -144,13 +146,13 @@ public class TuixtActivity extends Activity {
             }
         });
 
-        outputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        outputView.setTypeface(useTypeface);
         outputView.setTextSize(skinManager.getTextSize());
         outputView.setTextColor(skinManager.outputColor);
         outputView.setMovementMethod(new ScrollingMovementMethod());
         outputView.setVisibility(View.GONE);
 
-        inputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        inputView.setTypeface(useTypeface);
         inputView.setTextSize(skinManager.getTextSize());
         inputView.setTextColor(skinManager.inputColor);
         inputView.setHint(Tuils.getHint(skinManager, path));

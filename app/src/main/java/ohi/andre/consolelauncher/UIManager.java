@@ -493,37 +493,6 @@ public class UIManager implements OnTouchListener {
 
         trigger = tri;
 
-        // Try reading the font file from the specified user path.
-        // If this fails, the built-in font (Lucida Console) will be used.
-
-        String userFontPath = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.user_font_file);
-
-        Typeface resultTypeface;
-
-        try
-        {
-            File userFontFile = new File(userFontPath);
-            if (userFontFile.exists())
-            {
-                if (userFontFile.isFile())
-                {
-                    resultTypeface = Typeface.createFromFile(userFontPath);
-                }
-                else
-                    throw new Exception("The specified file is not a file. Using built-in font.");
-            }
-            else
-                throw new Exception("The specified file is not found. Using built-in font.");
-        }
-        catch(Exception ex)
-        {
-            resultTypeface = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-        }
-
-        // Put the resulted typeface into the final reference that would be used by the
-        // rest of the app.
-        final Typeface userFont = resultTypeface;
-
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         skinManager = new SkinManager();
 
@@ -596,13 +565,14 @@ public class UIManager implements OnTouchListener {
             }
         }
 
-        final Typeface globalTypeFace = skinManager.systemFont ? Typeface.MONOSPACE : userFont;
+        final Typeface userFont = skinManager.getUserFont(Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf"));
+        final Typeface useTypeface = skinManager.systemFont ? Typeface.MONOSPACE : userFont;
 
         boolean showRam = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ram);
         if (showRam) {
             ram.setTextColor(skinManager.ramColor);
             ram.setTextSize(skinManager.getTextSize());
-            ram.setTypeface(globalTypeFace);
+            ram.setTypeface(useTypeface);
 
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
@@ -617,7 +587,7 @@ public class UIManager implements OnTouchListener {
         if(showStorage) {
             storage.setTextColor(skinManager.storageColor);
             storage.setTextSize(skinManager.getTextSize());
-            storage.setTypeface(globalTypeFace);
+            storage.setTypeface(useTypeface);
 
             storage.post(storageRunnable);
         } else {
@@ -640,7 +610,7 @@ public class UIManager implements OnTouchListener {
             device.setText(deviceFormat);
             device.setTextColor(skinManager.deviceColor);
             device.setTextSize(skinManager.getTextSize());
-            device.setTypeface(globalTypeFace);
+            device.setTypeface(useTypeface);
         } else {
             device.setVisibility(View.GONE);
         }
@@ -649,7 +619,7 @@ public class UIManager implements OnTouchListener {
         if(showTime) {
             time.setTextColor(skinManager.time_color);
             time.setTextSize(skinManager.getTextSize());
-            time.setTypeface(globalTypeFace);
+            time.setTypeface(useTypeface);
 
             time.post(timeRunnable);
         } else {
@@ -664,7 +634,7 @@ public class UIManager implements OnTouchListener {
             if(mediumPercentage < lowPercentage) skinManager.manyColorsBattery = false;
 
             battery.setTextSize(skinManager.getTextSize());
-            battery.setTypeface(globalTypeFace);
+            battery.setTypeface(useTypeface);
 
             Tuils.registerBatteryReceiver(context, batteryUpdate);
         } else {
@@ -740,7 +710,7 @@ public class UIManager implements OnTouchListener {
                     textView.setLongClickable(false);
                     textView.setClickable(true);
 
-                    textView.setTypeface(globalTypeFace);
+                    textView.setTypeface(useTypeface);
                     textView.setTextSize(skinManager.getSuggestionSize());
 
                     textView.setPadding(SkinManager.SUGGESTION_PADDING_HORIZONTAL, SkinManager.SUGGESTION_PADDING_VERTICAL,
