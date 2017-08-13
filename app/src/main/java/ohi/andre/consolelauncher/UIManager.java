@@ -27,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -492,7 +493,36 @@ public class UIManager implements OnTouchListener {
 
         trigger = tri;
 
-        final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+        // Try reading the font file from the specified user path.
+        // If this fails, the built-in font (Lucida Console) will be used.
+
+        String userFontPath = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.user_font_file);
+
+        Typeface resultTypeface;
+
+        try
+        {
+            File userFontFile = new File(userFontPath);
+            if (userFontFile.exists())
+            {
+                if (userFontFile.isFile())
+                {
+                    resultTypeface = Typeface.createFromFile(userFontPath);
+                }
+                else
+                    throw new Exception("The specified file is not a file. Using built-in font.");
+            }
+            else
+                throw new Exception("The specified file is not found. Using built-in font.");
+        }
+        catch(Exception ex)
+        {
+            resultTypeface = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+        }
+
+        // Put the resulted typeface into the final reference that would be used by the
+        // rest of the app.
+        final Typeface userFont = resultTypeface;
 
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         skinManager = new SkinManager();
@@ -566,11 +596,13 @@ public class UIManager implements OnTouchListener {
             }
         }
 
+        final Typeface globalTypeFace = skinManager.systemFont ? Typeface.MONOSPACE : userFont;
+
         boolean showRam = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ram);
         if (showRam) {
             ram.setTextColor(skinManager.ramColor);
             ram.setTextSize(skinManager.getTextSize());
-            ram.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            ram.setTypeface(globalTypeFace);
 
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
@@ -585,7 +617,7 @@ public class UIManager implements OnTouchListener {
         if(showStorage) {
             storage.setTextColor(skinManager.storageColor);
             storage.setTextSize(skinManager.getTextSize());
-            storage.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            storage.setTypeface(globalTypeFace);
 
             storage.post(storageRunnable);
         } else {
@@ -608,7 +640,7 @@ public class UIManager implements OnTouchListener {
             device.setText(deviceFormat);
             device.setTextColor(skinManager.deviceColor);
             device.setTextSize(skinManager.getTextSize());
-            device.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            device.setTypeface(globalTypeFace);
         } else {
             device.setVisibility(View.GONE);
         }
@@ -617,7 +649,7 @@ public class UIManager implements OnTouchListener {
         if(showTime) {
             time.setTextColor(skinManager.time_color);
             time.setTextSize(skinManager.getTextSize());
-            time.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            time.setTypeface(globalTypeFace);
 
             time.post(timeRunnable);
         } else {
@@ -632,7 +664,7 @@ public class UIManager implements OnTouchListener {
             if(mediumPercentage < lowPercentage) skinManager.manyColorsBattery = false;
 
             battery.setTextSize(skinManager.getTextSize());
-            battery.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            battery.setTypeface(globalTypeFace);
 
             Tuils.registerBatteryReceiver(context, batteryUpdate);
         } else {
@@ -708,7 +740,7 @@ public class UIManager implements OnTouchListener {
                     textView.setLongClickable(false);
                     textView.setClickable(true);
 
-                    textView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+                    textView.setTypeface(globalTypeFace);
                     textView.setTextSize(skinManager.getSuggestionSize());
 
                     textView.setPadding(SkinManager.SUGGESTION_PADDING_HORIZONTAL, SkinManager.SUGGESTION_PADDING_VERTICAL,
