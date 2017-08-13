@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.managers;
 
-import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.Typeface;
@@ -112,6 +110,7 @@ public class SkinManager implements Parcelable {
 
     protected SkinManager(Parcel in) {
         globalFontSize = in.readInt();
+        userFontPath = in.readString();
         deviceName = in.readString();
         deviceColor = in.readInt();
         inputColor = in.readInt();
@@ -256,6 +255,7 @@ public class SkinManager implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(globalFontSize);
+        dest.writeString(userFontPath);
         dest.writeString(deviceName);
         dest.writeInt(deviceColor);
         dest.writeInt(inputColor);
