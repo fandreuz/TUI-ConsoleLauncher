@@ -593,6 +593,12 @@ public class XMLPrefsManager {
                 return "Internal Storage: %iavgb GB / %itotgb GB (%iav%%)";
             }
         },
+        external_storage_path {
+            @Override
+            public String defaultValue() {
+                return "/sdcard/";
+            }
+        },
         input_format {
             @Override
             public String defaultValue() {

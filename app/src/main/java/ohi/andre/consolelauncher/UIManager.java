@@ -194,7 +194,7 @@ public class UIManager implements OnTouchListener {
 
             copy = storagePatterns.get(11).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.TERA)));
             copy = storagePatterns.get(12).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA)));
-            copy = storagePatterns.get(14).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.MEGA)));
+            copy = storagePatterns.get(13).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.MEGA)));
             copy = storagePatterns.get(14).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.KILO)));
             copy = storagePatterns.get(15).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.BYTE)));
             copy = storagePatterns.get(16).matcher(copy).replaceAll(String.valueOf(Tuils.percentage(eav, etot)));
