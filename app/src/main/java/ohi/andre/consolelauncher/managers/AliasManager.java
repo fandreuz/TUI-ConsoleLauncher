@@ -1,5 +1,8 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.content.Context;
+import android.content.Intent;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,6 +18,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
@@ -23,10 +28,13 @@ public class AliasManager implements Reloadable {
     public static final String PATH = "alias.txt";
 
     private Map<String, String> aliases;
-
     private String paramMarker, paramSeparator, aliasLabelFormat;
 
-    public AliasManager() {
+    private Context context;
+
+    public AliasManager(Context c) {
+        this.context = c;
+
         reload();
 
         paramMarker = Pattern.quote(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_marker));
@@ -139,7 +147,20 @@ public class AliasManager implements Reloadable {
                     if(c != splatted.length - 1) value += "=";
                 }
 
-                aliases.put(name, value);
+                name = name.trim();
+                value = value.trim();
+
+                if(name.equalsIgnoreCase(value)) {
+                    Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                    intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias2));
+                    context.sendBroadcast(intent);
+                } else if(value.startsWith(name + Tuils.SPACE)) {
+                    Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                    intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias3));
+                    context.sendBroadcast(intent);
+                } else {
+                    aliases.put(name, value);
+                }
             }
         } catch (Exception e) {}
     }

@@ -128,7 +128,7 @@ public class MainManager {
         MusicManager2 music = new MusicManager2(mContext);
 
         AppsManager appsMgr = new AppsManager(c, sugg);
-        AliasManager aliasManager = new AliasManager();
+        AliasManager aliasManager = new AliasManager(mContext);
 
         ShellHolder shellHolder = new ShellHolder(out);
         interactive = shellHolder.build();
