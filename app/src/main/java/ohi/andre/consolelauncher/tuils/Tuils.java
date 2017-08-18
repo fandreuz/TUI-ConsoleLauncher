@@ -36,6 +36,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -43,13 +44,15 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.music.MusicManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager2;
+import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
@@ -109,23 +112,23 @@ public class Tuils {
         }
     }
 
-    public static List<File> getSongsInFolder(File folder) {
-        List<File> songs = new ArrayList<>();
+    public static List<Song> getSongsInFolder(File folder) {
+        List<Song> songs = new ArrayList<>();
 
         File[] files = folder.listFiles();
         if(files == null || files.length == 0) {
-            return null;
+            return songs;
         }
 
         for (File file : files) {
             if (file.isDirectory()) {
-                List<File> s = getSongsInFolder(file);
+                List<Song> s = getSongsInFolder(file);
                 if(s != null) {
                     songs.addAll(s);
                 }
             }
-            else if (containsExtension(MusicManager.MUSIC_EXTENSIONS, file.getName())) {
-                songs.add(file);
+            else if (containsExtension(MusicManager2.MUSIC_EXTENSIONS, file.getName())) {
+                songs.add(new Song(file));
             }
         }
 
@@ -176,9 +179,10 @@ public class Tuils {
         c.startActivity(intent);
     }
 
-    public static Intent requestAdmin(ComponentName component) {
+    public static Intent requestAdmin(ComponentName component, String explanation) {
         Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component);
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, explanation);
         return intent;
     }
 
@@ -373,16 +377,16 @@ public class Tuils {
         return -1;
     }
 
-    static Pattern pd = Pattern.compile("%d", Pattern.CASE_INSENSITIVE);
-    static Pattern pu = Pattern.compile("%u", Pattern.CASE_INSENSITIVE);
-    static Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
+    static Pattern pd = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    static Pattern pu = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    static Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     public static String getHint(SkinManager skinManager, String currentPath) {
         String format = skinManager.ssnInfoFormat;
         if(format.length() == 0) return null;
 
-        format = pd.matcher(format).replaceAll(skinManager.deviceName);
-        format = pu.matcher(format).replaceAll(skinManager.username);
-        format = pp.matcher(format).replaceAll(Tuils.getNicePath(currentPath));
+        format = pd.matcher(format).replaceAll(Matcher.quoteReplacement(skinManager.deviceName));
+        format = pu.matcher(format).replaceAll(Matcher.quoteReplacement(skinManager.username));
+        format = pp.matcher(format).replaceAll(Matcher.quoteReplacement(Tuils.getNicePath(currentPath)));
 
         return format;
     }
@@ -449,6 +453,10 @@ public class Tuils {
         } else {
             Log.e("andre", String.valueOf(o));
         }
+    }
+
+    public static <T> T getDefaultValue(Class<T> clazz) {
+        return (T) Array.get(Array.newInstance(clazz, 1), 0);
     }
 
     public static void toFile(Throwable e) {

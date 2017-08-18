@@ -30,6 +30,7 @@ import android.widget.TextView;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.ExecutePack;
@@ -137,38 +138,38 @@ public class UIManager implements OnTouchListener {
             if(storagePatterns == null) {
                 storagePatterns = new ArrayList<>();
 
-                storagePatterns.add(Pattern.compile(INT_AV + "tb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_AV + "gb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_AV + "mb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_AV + "kb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_AV + "b", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_AV + "%", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_AV + "tb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_AV + "gb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_AV + "mb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_AV + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_AV + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_AV + "%", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                storagePatterns.add(Pattern.compile(INT_TOT + "tb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_TOT + "gb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_TOT + "mb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_TOT + "kb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_TOT + "b", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_TOT + "tb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_TOT + "gb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_TOT + "mb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_TOT + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_TOT + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                storagePatterns.add(Pattern.compile(EXT_AV + "tb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_AV + "gb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_AV + "mb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_AV + "kb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_AV + "b", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_AV + "%", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_AV + "tb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_AV + "gb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_AV + "mb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_AV + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_AV + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_AV + "%", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                storagePatterns.add(Pattern.compile(EXT_TOT + "tb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_TOT + "gb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_TOT + "mb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_TOT + "kb", Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_TOT + "b", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "tb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "gb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "mb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_TOT + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                storagePatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                storagePatterns.add(Pattern.compile(INT_AV, Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(INT_TOT, Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_AV, Pattern.CASE_INSENSITIVE));
-                storagePatterns.add(Pattern.compile(EXT_TOT, Pattern.CASE_INSENSITIVE));
+                storagePatterns.add(Pattern.compile(INT_AV, Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(INT_TOT, Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_AV, Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Pattern.compile(EXT_TOT, Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
             }
 
             double iav = Tuils.getAvailableInternalMemorySize(Tuils.BYTE);
@@ -178,38 +179,38 @@ public class UIManager implements OnTouchListener {
 
             String copy = storageFormat;
 
-            copy = storagePatterns.get(0).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.TERA)));
-            copy = storagePatterns.get(1).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.GIGA)));
-            copy = storagePatterns.get(2).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.MEGA)));
-            copy = storagePatterns.get(3).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.KILO)));
-            copy = storagePatterns.get(4).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.BYTE)));
-            copy = storagePatterns.get(5).matcher(copy).replaceAll(String.valueOf(Tuils.percentage(iav, itot)));
+            copy = storagePatterns.get(0).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) iav, Tuils.TERA))));
+            copy = storagePatterns.get(1).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) iav, Tuils.GIGA))));
+            copy = storagePatterns.get(2).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) iav, Tuils.MEGA))));
+            copy = storagePatterns.get(3).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) iav, Tuils.KILO))));
+            copy = storagePatterns.get(4).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) iav, Tuils.BYTE))));
+            copy = storagePatterns.get(5).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.percentage(iav, itot))));
 
-            copy = storagePatterns.get(6).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.TERA)));
-            copy = storagePatterns.get(7).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.GIGA)));
-            copy = storagePatterns.get(8).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.MEGA)));
-            copy = storagePatterns.get(9).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.KILO)));
-            copy = storagePatterns.get(10).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.BYTE)));
+            copy = storagePatterns.get(6).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) itot, Tuils.TERA))));
+            copy = storagePatterns.get(7).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) itot, Tuils.GIGA))));
+            copy = storagePatterns.get(8).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) itot, Tuils.MEGA))));
+            copy = storagePatterns.get(9).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) itot, Tuils.KILO))));
+            copy = storagePatterns.get(10).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) itot, Tuils.BYTE))));
 
-            copy = storagePatterns.get(11).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.TERA)));
-            copy = storagePatterns.get(12).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA)));
-            copy = storagePatterns.get(14).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.MEGA)));
-            copy = storagePatterns.get(14).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.KILO)));
-            copy = storagePatterns.get(15).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.BYTE)));
-            copy = storagePatterns.get(16).matcher(copy).replaceAll(String.valueOf(Tuils.percentage(eav, etot)));
+            copy = storagePatterns.get(11).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.TERA))));
+            copy = storagePatterns.get(12).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA))));
+            copy = storagePatterns.get(14).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.MEGA))));
+            copy = storagePatterns.get(14).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.KILO))));
+            copy = storagePatterns.get(15).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.BYTE))));
+            copy = storagePatterns.get(16).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.percentage(eav, etot))));
 
-            copy = storagePatterns.get(17).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.TERA)));
-            copy = storagePatterns.get(18).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA)));
-            copy = storagePatterns.get(19).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.MEGA)));
-            copy = storagePatterns.get(20).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.KILO)));
-            copy = storagePatterns.get(21).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.BYTE)));
+            copy = storagePatterns.get(17).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.TERA))));
+            copy = storagePatterns.get(18).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA))));
+            copy = storagePatterns.get(19).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.MEGA))));
+            copy = storagePatterns.get(20).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.KILO))));
+            copy = storagePatterns.get(21).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.BYTE))));
 
-            copy = storagePatterns.get(22).matcher(copy).replaceAll(Tuils.NEWLINE);
+            copy = storagePatterns.get(22).matcher(copy).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            copy = storagePatterns.get(23).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) iav, Tuils.GIGA)));
-            copy = storagePatterns.get(24).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) itot, Tuils.GIGA)));
-            copy = storagePatterns.get(25).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA)));
-            copy = storagePatterns.get(26).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA)));
+            copy = storagePatterns.get(23).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) iav, Tuils.GIGA))));
+            copy = storagePatterns.get(24).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) itot, Tuils.GIGA))));
+            copy = storagePatterns.get(25).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA))));
+            copy = storagePatterns.get(26).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA))));
 
             storage.setText(copy);
             storage.postDelayed(this, STORAGE_DELAY);
@@ -240,20 +241,20 @@ public class UIManager implements OnTouchListener {
             if(ramPatterns == null) {
                 ramPatterns = new ArrayList<>();
 
-                ramPatterns.add(Pattern.compile(AV + "tb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(AV + "gb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(AV + "mb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(AV + "kb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(AV + "b", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(AV + "%", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(AV + "tb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(AV + "gb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(AV + "mb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(AV + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(AV + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(AV + "%", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                ramPatterns.add(Pattern.compile(TOT + "tb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(TOT + "gb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(TOT + "mb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(TOT + "kb", Pattern.CASE_INSENSITIVE));
-                ramPatterns.add(Pattern.compile(TOT + "b", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile(TOT + "tb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(TOT + "gb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(TOT + "mb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(TOT + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Pattern.compile(TOT + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                ramPatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE));
+                ramPatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
             }
 
             String copy = ramFormat;
@@ -261,20 +262,20 @@ public class UIManager implements OnTouchListener {
             double av = Tuils.freeRam(activityManager, memory);
             double tot = Tuils.totalRam() * 1024L;
 
-            copy = ramPatterns.get(0).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.TERA)));
-            copy = ramPatterns.get(1).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.GIGA)));
-            copy = ramPatterns.get(2).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.MEGA)));
-            copy = ramPatterns.get(3).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.KILO)));
-            copy = ramPatterns.get(4).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) av, Tuils.BYTE)));
-            copy = ramPatterns.get(5).matcher(copy).replaceAll(String.valueOf(Tuils.percentage(av, tot)));
+            copy = ramPatterns.get(0).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) av, Tuils.TERA))));
+            copy = ramPatterns.get(1).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) av, Tuils.GIGA))));
+            copy = ramPatterns.get(2).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) av, Tuils.MEGA))));
+            copy = ramPatterns.get(3).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) av, Tuils.KILO))));
+            copy = ramPatterns.get(4).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) av, Tuils.BYTE))));
+            copy = ramPatterns.get(5).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.percentage(av, tot))));
 
-            copy = ramPatterns.get(6).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.TERA)));
-            copy = ramPatterns.get(7).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.GIGA)));
-            copy = ramPatterns.get(8).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.MEGA)));
-            copy = ramPatterns.get(9).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.KILO)));
-            copy = ramPatterns.get(10).matcher(copy).replaceAll(String.valueOf(Tuils.formatSize((long) tot, Tuils.BYTE)));
+            copy = ramPatterns.get(6).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) tot, Tuils.TERA))));
+            copy = ramPatterns.get(7).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) tot, Tuils.GIGA))));
+            copy = ramPatterns.get(8).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) tot, Tuils.MEGA))));
+            copy = ramPatterns.get(9).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) tot, Tuils.KILO))));
+            copy = ramPatterns.get(10).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) tot, Tuils.BYTE))));
 
-            copy = ramPatterns.get(11).matcher(copy).replaceAll(Tuils.NEWLINE);
+            copy = ramPatterns.get(11).matcher(copy).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
             ram.setText(copy);
             ram.postDelayed(this, RAM_DELAY);
@@ -595,15 +596,15 @@ public class UIManager implements OnTouchListener {
         boolean showDevice = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_device_name);
         if (showDevice) {
 
-            Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE);
-            Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE);
-            Pattern NEWLINE = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
+            Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+            Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+            Pattern NEWLINE = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
             String deviceFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.device_format);
 
-            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(skinManager.username != null ? skinManager.username : "null");
-            deviceFormat = DV.matcher(deviceFormat).replaceAll(skinManager.deviceName != null ? skinManager.deviceName : "null");
-            deviceFormat = NEWLINE.matcher(deviceFormat).replaceAll(Tuils.NEWLINE);
+            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(skinManager.username != null ? skinManager.username : "null"));
+            deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(skinManager.deviceName != null ? skinManager.deviceName : "null"));
+            deviceFormat = NEWLINE.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
             device.setText(deviceFormat);
             device.setTextColor(skinManager.deviceColor);
@@ -775,6 +776,10 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.setOutput(s, category);
     }
 
+    public void setOutput(int color, CharSequence output) {
+        mTerminalAdapter.setOutput(color, output);
+    }
+
     public void disableSuggestions() {
         if(suggestionsView != null) {
             showSuggestions = false;
@@ -843,7 +848,7 @@ public class UIManager implements OnTouchListener {
                     boolean admin = policy.isAdminActive(component);
 
                     if (!admin) {
-                        Intent i = Tuils.requestAdmin(component);
+                        Intent i = Tuils.requestAdmin(component, mContext.getString(R.string.admin_permission));
                         mContext.startActivity(i);
                     } else {
                         policy.lockNow();

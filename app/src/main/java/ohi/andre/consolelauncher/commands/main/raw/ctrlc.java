@@ -1,14 +1,10 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
-import android.os.Environment;
-
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.tuils.libsuperuser.Shell;
-import ohi.andre.consolelauncher.tuils.libsuperuser.StreamGobbler;
 
 /**
  * Created by francescoandreuzzi on 26/07/2017.
@@ -27,22 +23,7 @@ public class ctrlc implements CommandAbstraction {
                 MainManager.interactive.close();
                 MainManager.interactive = null;
 
-                MainManager.interactive = new Shell.Builder()
-                        .setOnSTDOUTLineListener(new StreamGobbler.OnLineListener() {
-                            @Override
-                            public void onLine(String line) {
-                                ((MainPack) pack).outputable.onOutput(line);
-                            }
-                        })
-                        .setOnSTDERRLineListener(new StreamGobbler.OnLineListener() {
-                            @Override
-                            public void onLine(String line) {
-                                ((MainPack) pack).outputable.onOutput(line);
-                            }
-                        })
-                        .open();
-
-                MainManager.interactive.addCommand("cd " + Environment.getExternalStorageDirectory().getAbsolutePath());
+                MainManager.interactive = ((MainPack) pack).shellHolder.build();
             }
         }.start();
 

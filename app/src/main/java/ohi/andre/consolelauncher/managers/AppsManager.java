@@ -32,9 +32,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
-import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.VALUE_ATTRIBUTE;
@@ -57,8 +57,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
     private AppsHolder appsHolder;
     private List<LaunchInfo> hiddenApps;
-
-    private Outputable outputable;
 
     private final String PREFS = "apps";
     private SharedPreferences preferences;
@@ -149,12 +147,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         }
     };
 
-    public AppsManager(Context context, Outputable outputable, final Suggester s) {
+    public AppsManager(Context context, final Suggester s) {
         instance = this;
 
         this.context = context;
-
-        this.outputable = outputable;
 
         this.preferences = context.getSharedPreferences(PREFS, 0);
         this.editor = preferences.edit();
@@ -350,14 +346,18 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             LaunchInfo app = new LaunchInfo(packageName, activity, label);
             appsHolder.add(app);
 
-            outputable.onOutput(context.getString(R.string.app_installed) + Tuils.SPACE + packageName);
+            Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+            intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.app_installed) + Tuils.SPACE + packageName);
+            context.sendBroadcast(intent);
         } catch (Exception e) {}
     }
 
     private void appUninstalled(String packageName) {
-        if(outputable == null || appsHolder == null || context == null) return;
+        if(appsHolder == null || context == null) return;
 
-        outputable.onOutput(context.getString(R.string.app_uninstalled) + Tuils.SPACE + packageName);
+        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+        intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.app_uninstalled) + Tuils.SPACE + packageName);
+        context.sendBroadcast(intent);
 
         List<LaunchInfo> infos = AppUtils.findLaunchInfosWithPackage(packageName, appsHolder.getApps());
         for(LaunchInfo i : infos) appsHolder.remove(i);
@@ -809,7 +809,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             }
         }
 
-        static Pattern activityPattern = Pattern.compile("activity", Pattern.CASE_INSENSITIVE);
+        static Pattern activityPattern = Pattern.compile("activity", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         public static String insertActivityName(String oldLabel, String activityName) {
             String name;
 

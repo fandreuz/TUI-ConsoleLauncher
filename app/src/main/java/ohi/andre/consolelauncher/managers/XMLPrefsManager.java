@@ -897,19 +897,13 @@ public class XMLPrefsManager {
         }
     }
 
-    public static Object transform(String s, Class<?> c) {
-        if(s == null) return null;
+    public static Object transform(String s, Class<?> c) throws Exception {
+        if(c == int.class) return Integer.parseInt(s);
+        if(c == Color.class) return Color.parseColor(s);
+        if(c == boolean.class) return Boolean.parseBoolean(s);
+        if(c == String.class) return s;
 
-        try {
-            if(c == int.class) return Integer.parseInt(s);
-            if(c == Color.class) return Color.parseColor(s);
-            if(c == boolean.class) return Boolean.parseBoolean(s);
-            if(c == String.class) return s;
-        } catch (Exception e) {
-            return null;
-        }
-
-        return null;
+        return Tuils.getDefaultValue(c);
     }
 
     static final Pattern p1 = Pattern.compile(">");
@@ -1098,9 +1092,16 @@ public class XMLPrefsManager {
             try {
                 return (T) transform(prefsSave.parent().getValues().get(prefsSave).value, c);
             } catch (Exception e) {
-                return (T) transform(prefsSave.defaultValue(), c);
+
+                try {
+                    return (T) transform(prefsSave.defaultValue(), c);
+                } catch (Exception e1) {
+                    return Tuils.getDefaultValue(c);
+                }
             }
         }
+
+//        this won't ever happen, I think
         return null;
     }
 
@@ -1112,7 +1113,12 @@ public class XMLPrefsManager {
             if(def == null || def.length() == 0) {
                 return SkinManager.COLOR_NOT_SET;
             }
-            return (int) transform(def, Color.class);
+
+            try {
+                return (int) transform(def, Color.class);
+            } catch (Exception e1) {
+                return SkinManager.COLOR_NOT_SET;
+            }
         }
     }
 

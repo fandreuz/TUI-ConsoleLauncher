@@ -12,7 +12,7 @@ public class refresh implements CommandAbstraction {
         MainPack info = (MainPack) pack;
         info.appsManager.fill();
         info.aliasManager.reload();
-        info.player.refresh(info.context);
+        info.player.refresh();
         info.contacts.refreshContacts(info.context);
 
         return info.res.getString(R.string.output_refresh);

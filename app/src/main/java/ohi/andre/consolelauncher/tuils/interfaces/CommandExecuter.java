@@ -7,4 +7,5 @@ public interface CommandExecuter {
 
     String exec(String aliasValue, String aliasName);
     String exec(String input);
+    String exec(String input, boolean needWriteInput);
 }
