@@ -1,0 +1,335 @@
+package ohi.andre.consolelauncher.managers.music;
+
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.IBinder;
+import android.provider.MediaStore;
+import android.widget.MediaController;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.tuils.Tuils;
+
+/**
+ * Created by francescoandreuzzi on 17/08/2017.
+ */
+
+public class MusicManager2 implements MediaController.MediaPlayerControl {
+
+    public static final String[] MUSIC_EXTENSIONS = {".mp3", ".wav", ".ogg", ".flac"};
+
+    final int WAITING_NEXT = 10, WAITING_PREVIOUS = 11, WAITING_PLAY = 12, WAITING_LISTEN = 13;
+
+    Context mContext;
+
+    List<Song> songs;
+    List<String> titles;
+
+    MusicService musicSrv;
+    boolean musicBound=false;
+    Intent playIntent;
+
+    boolean playbackPaused=true, stopped = true;
+
+    Thread loader;
+
+    int waitingMethod = 0;
+    String savedParam;
+
+    public MusicManager2(Context c) {
+        mContext = c;
+        updateSongs();
+
+        init();
+    }
+
+    public void init() {
+        playIntent = new Intent(mContext, MusicService.class);
+        mContext.bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+        mContext.startService(playIntent);
+    }
+
+    public void refresh() {
+        destroy();
+        updateSongs();
+    }
+
+    public void destroy() {
+        if(musicSrv != null && musicBound) {
+            musicSrv.stop();
+            mContext.unbindService(musicConnection);
+            mContext.stopService(playIntent);
+            musicSrv = null;
+        }
+
+        musicBound = false;
+        playbackPaused = true;
+        stopped = true;
+    }
+
+    public String playNext() {
+        if(!musicBound) {
+            init();
+            waitingMethod = WAITING_NEXT;
+
+            return null;
+        }
+
+        playbackPaused=false;
+        stopped = false;
+
+        return musicSrv.playNext();
+    }
+
+    public String playPrev() {
+        if(!musicBound) {
+            init();
+            waitingMethod = WAITING_PREVIOUS;
+
+            return null;
+        }
+
+        playbackPaused = false;
+        stopped = false;
+
+        return musicSrv.playPrev();
+    }
+
+    @Override
+    public void pause() {
+        if(musicSrv == null) return;
+
+        playbackPaused=true;
+        musicSrv.pausePlayer();
+    }
+
+    public String play() {
+        if(!musicBound) {
+            init();
+            waitingMethod = WAITING_PLAY;
+
+            return null;
+        }
+
+        if(stopped) {
+            musicSrv.playSong();
+            playbackPaused = false;
+            stopped = false;
+        } else if(playbackPaused) {
+            playbackPaused = false;
+            musicSrv.playPlayer();
+        } else pause();
+
+        return null;
+    }
+
+    public String lsSongs() {
+        List<String> ss = new ArrayList<>();
+        for(Song s : songs) {
+            ss.add(s.getTitle());
+        }
+
+        Collections.sort(ss);
+        Tuils.addPrefix(ss, Tuils.DOUBLE_SPACE);
+        Tuils.insertHeaders(ss, false);
+
+        return Tuils.toPlanString(ss, Tuils.NEWLINE);
+    }
+
+    public void updateSongs() {
+        loader = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    if(songs == null) songs = new ArrayList<>();
+                    else songs.clear();
+
+                    if(titles == null) titles = new ArrayList<>();
+                    else titles.clear();
+
+                    if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.songs_from_mediastore)) {
+                        ContentResolver musicResolver = mContext.getContentResolver();
+                        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+                        if(musicCursor!=null && musicCursor.moveToFirst()){
+                            int titleColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+                            int idColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media._ID);
+                            do {
+                                long thisId = musicCursor.getLong(idColumn);
+                                String thisTitle = musicCursor.getString(titleColumn);
+                                songs.add(new Song(thisId, thisTitle));
+                                titles.add(thisTitle);
+                            }
+                            while (musicCursor.moveToNext());
+                        }
+                        musicCursor.close();
+                    } else {
+                        String path = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.songs_folder);
+                        if(path.length() > 0) {
+                            File dir = new File(path);
+                            if(dir.isDirectory()) songs.addAll(Tuils.getSongsInFolder(dir));
+
+                            for(Song s : songs) {
+                                titles.add(s.getTitle());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Tuils.toFile(e);
+                }
+
+                synchronized (songs) {
+                    songs.notify();
+                }
+            }
+        };
+        loader.start();
+    }
+
+    private ServiceConnection musicConnection = new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
+            musicSrv = binder.getService();
+            musicSrv.setShuffle(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.random_play));
+
+            if(songs == null || loader.isAlive()) {
+                synchronized (songs) {
+                    try {
+                        songs.wait();
+                    } catch (InterruptedException e) {}
+                }
+            }
+            musicSrv.setList(songs);
+            musicBound = true;
+
+            switch (waitingMethod) {
+                case WAITING_NEXT:
+                    playNext();
+                    break;
+                case WAITING_PREVIOUS:
+                    playPrev();
+                    break;
+                case WAITING_PLAY:
+                    play();
+                    break;
+                case WAITING_LISTEN:
+                    select(savedParam);
+                    break;
+            }
+
+            waitingMethod = 0;
+            savedParam = null;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            musicBound = false;
+        }
+    };
+
+    @Override
+    public boolean canPause() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekBackward() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekForward() {
+        return true;
+    }
+
+    @Override
+    public int getAudioSessionId() {
+        return 0;
+    }
+
+    @Override
+    public int getBufferPercentage() {
+        return 0;
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        if(musicSrv != null && musicBound && musicSrv.isPng())
+            return musicSrv.getPosn();
+        else return -1;
+    }
+
+    @Override
+    public int getDuration() {
+        if(musicSrv != null && musicBound && musicSrv.isPng())
+            return musicSrv.getDur();
+        else return -1;
+    }
+
+    public int getSongIndex() {
+        if(musicSrv != null) return musicSrv.getSongIndex();
+        return -1;
+    }
+
+    @Override
+    public boolean isPlaying() {
+        if(musicSrv != null && musicBound)
+            return musicSrv.isPng();
+        return false;
+    }
+
+    public void stop() {
+        destroy();
+    }
+
+    public Song get(int index) {
+        return songs.get(index);
+    }
+
+    @Override
+    public void seekTo(int pos) {
+        musicSrv.seek(pos);
+    }
+
+    public void select(String song) {
+        if(!musicBound) {
+            init();
+            waitingMethod = WAITING_LISTEN;
+            savedParam = song;
+
+            return;
+        }
+
+        int i = -1;
+        for(int index = 0; index < songs.size(); index++) {
+            if(songs.get(index).getTitle().equals(song)) i = index;
+        }
+
+        if(i == -1) {
+            return;
+        }
+
+        musicSrv.setSong(i);
+        musicSrv.playSong();
+    }
+
+    public List<String> getTitles() {
+        return titles;
+    }
+
+    @Override
+    public void start() {
+        musicSrv.go();
+    }
+}
