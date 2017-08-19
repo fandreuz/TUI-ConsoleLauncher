@@ -10,7 +10,7 @@ android {
         minSdkVersion 8
         targetSdkVersion 23
 
-        versionCode 121
+        versionCode 122
         versionName "6.2b"
     }
 

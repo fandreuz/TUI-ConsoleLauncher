@@ -67,13 +67,13 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                 return "false";
             }
         },
-        default_app_state {
+        app_notification_enabled_default {
             @Override
             public String defaultValue() {
                 return "true";
             }
         },
-        default_color {
+        default_notification_color {
             @Override
             public String defaultValue() {
                 return "#00FF00";
@@ -104,7 +104,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     @Override
     public String[] deleted() {
-        return new String[] {"enabled"};
+        return new String[] {"enabled", "default_color", "default_app_state"};
     }
 
     @Override
@@ -281,8 +281,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             Tuils.toFile(e);
         }
 
-        default_app_state = XMLPrefsManager.get(boolean.class, Options.default_app_state);
-        default_color = XMLPrefsManager.get(String.class, Options.default_color);
+        default_app_state = XMLPrefsManager.get(boolean.class, Options.app_notification_enabled_default);
+        default_color = XMLPrefsManager.get(String.class, Options.default_notification_color);
 
         Out:
         for(int count = 0; count < applies.size(); count++) {

@@ -346,29 +346,21 @@ public class MainManager {
         @Override
         public boolean trigger(final ExecutePack info, final String input) throws Exception {
 
-            final boolean[] returnValue = new boolean[1];
+            final Command command = CommandTuils.parse(input, info, false);
+            if(command == null) return false;
+
+            mainPack.lastCommand = input;
 
             new StoppableThread() {
                 @Override
                 public void run() {
                     super.run();
 
-                    mainPack.lastCommand = input;
-
                     try {
-                        Command command = CommandTuils.parse(input, info, false);
+                        String output = command.exec(mContext.getResources(), info);
 
-                        synchronized (returnValue) {
-                            returnValue[0] = command != null;
-                            returnValue.notify();
-                        }
-
-                        if (command != null) {
-                            String output = command.exec(mContext.getResources(), info);
-
-                            if(output != null) {
-                                out.onOutput(output);
-                            }
+                        if(output != null) {
+                            out.onOutput(output);
                         }
                     } catch (Exception e) {
                         out.onOutput(Tuils.getStackTrace(e));
@@ -377,10 +369,7 @@ public class MainManager {
                 }
             }.start();
 
-            synchronized (returnValue) {
-                returnValue.wait();
-                return returnValue[0];
-            }
+            return true;
         }
     }
 }

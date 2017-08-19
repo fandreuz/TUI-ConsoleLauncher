@@ -189,8 +189,14 @@ public class MusicService extends Service implements
     }
 
     public void stop() {
-        player.stop();
-        player.release();
+        try {
+            player.stop();
+        } catch (Exception e) {}
+
+        try {
+            player.release();
+        } catch (Exception e) {}
+
         setSong(0);
     }
 
