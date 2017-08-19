@@ -13,6 +13,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class call implements CommandAbstraction {
 
@@ -27,7 +28,13 @@ public class call implements CommandAbstraction {
         }
 
         String number = info.get(String.class, 0);
-        Uri uri = Uri.parse("tel:" + number);
+        String s = Tuils.EMPTYSTRING;
+        for(char c : number.toCharArray()) {
+            if(c == '#') s += Uri.encode("#");
+            else s += c;
+        }
+
+        Uri uri = Uri.parse("tel:" + s);
         Intent intent = new Intent(Intent.ACTION_CALL, uri);
 
         try {

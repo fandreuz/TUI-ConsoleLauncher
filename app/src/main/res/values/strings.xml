@@ -69,6 +69,7 @@
     <string name="tuixt_saved">Saved</string>
     <string name="tuixt_reading">Reading</string>
     <string name="tuixt_label">TUIXT</string>
+    <string name="tuixt_error">This file is too big, consider opening it with an other text editor</string>
 
     <!-- phone -->
     <string name="output_wifi">WiFi active:</string>
