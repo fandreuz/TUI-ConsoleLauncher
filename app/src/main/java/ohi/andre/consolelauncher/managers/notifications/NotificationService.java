@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
@@ -87,11 +88,11 @@ public class NotificationService extends NotificationListenerService {
     String format;
     int timeColor;
 
-    final Pattern patternPkg = Pattern.compile("%pkg", Pattern.CASE_INSENSITIVE);
-    final Pattern patternText = Pattern.compile("%txt", Pattern.CASE_INSENSITIVE);
-    final Pattern patternTitle = Pattern.compile("%ttl", Pattern.CASE_INSENSITIVE);
-    final Pattern patternAppname = Pattern.compile("%app", Pattern.CASE_INSENSITIVE);
-    final Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
+    final Pattern patternPkg = Pattern.compile("%pkg", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    final Pattern patternText = Pattern.compile("%txt", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    final Pattern patternTitle = Pattern.compile("%ttl", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    final Pattern patternAppname = Pattern.compile("%app", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    final Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
     PackageManager manager;
 
@@ -161,11 +162,11 @@ public class NotificationService extends NotificationListenerService {
         }
 
         String finalText = format;
-        finalText = patternPkg.matcher(finalText).replaceAll(pack);
-        finalText = patternAppname.matcher(finalText).replaceAll(appName);
-        finalText = patternText.matcher(finalText).replaceAll(text);
-        finalText = patternTitle.matcher(finalText).replaceAll(title);
-        finalText = patternNewline.matcher(finalText).replaceAll(Tuils.NEWLINE);
+        finalText = patternPkg.matcher(finalText).replaceAll(Matcher.quoteReplacement(pack));
+        finalText = patternAppname.matcher(finalText).replaceAll(Matcher.quoteReplacement(appName));
+        finalText = patternText.matcher(finalText).replaceAll(Matcher.quoteReplacement(text));
+        finalText = patternTitle.matcher(finalText).replaceAll(Matcher.quoteReplacement(title));
+        finalText = patternNewline.matcher(finalText).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
         SpannableString spannableString = new SpannableString(finalText);
         spannableString.setSpan(new ForegroundColorSpan(color), 0, finalText.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);

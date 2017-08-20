@@ -2,13 +2,13 @@ package ohi.andre.consolelauncher;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Environment;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 
 import java.io.File;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.Command;
@@ -22,7 +22,7 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.music.MusicManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -35,7 +35,7 @@ import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 import ohi.andre.consolelauncher.tuils.libsuperuser.Shell;
-import ohi.andre.consolelauncher.tuils.libsuperuser.StreamGobbler;
+import ohi.andre.consolelauncher.tuils.libsuperuser.ShellHolder;
 
 /*Copyright Francesco Andreuzzi
 
@@ -107,7 +107,7 @@ public class MainManager {
 
     private Hintable hintable;
 
-    protected MainManager(LauncherActivity c, Inputable i, Outputable o, Suggester sugg) {
+    protected MainManager(LauncherActivity c, Inputable i, Outputable o, Suggester sugg, CommandExecuter executer) {
         mContext = c;
 
         in = i;
@@ -125,43 +125,15 @@ public class MainManager {
             cont = new ContactManager(mContext);
         } catch (NullPointerException e) {}
 
-        CommandExecuter executer = new CommandExecuter() {
-            @Override
-            public String exec(String aliasValue, String alias) {
-                onCommand(aliasValue, alias);
-                return null;
-            }
+        MusicManager2 music = new MusicManager2(mContext);
 
-            @Override
-            public String exec(String input) {
-                onCommand(input, null);
-                return null;
-            }
-        };
+        AppsManager appsMgr = new AppsManager(c, sugg);
+        AliasManager aliasManager = new AliasManager(mContext);
 
-        MusicManager music = new MusicManager(mContext, out);
+        ShellHolder shellHolder = new ShellHolder(out);
+        interactive = shellHolder.build();
 
-        AppsManager appsMgr = new AppsManager(c, out, sugg);
-        AliasManager aliasManager = new AliasManager();
-
-        interactive = new Shell.Builder()
-                .setOnSTDOUTLineListener(new StreamGobbler.OnLineListener() {
-                    @Override
-                    public void onLine(String line) {
-                        out.onOutput(line);
-                    }
-                })
-                .setOnSTDERRLineListener(new StreamGobbler.OnLineListener() {
-                    @Override
-                    public void onLine(String line) {
-                        out.onOutput(line);
-                    }
-                })
-        .open();
-
-        interactive.addCommand("cd " + Environment.getExternalStorageDirectory().getAbsolutePath());
-
-        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, out, redirectator);
+        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, redirectator, shellHolder);
     }
 
 //    command manager
@@ -220,7 +192,16 @@ public class MainManager {
 
     public void destroy() {
         mainPack.destroy();
-        interactive.close();
+
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+
+                interactive.kill();
+                interactive.close();
+            }
+        }.start();
     }
 
     public MainPack getMainPack() {
@@ -318,10 +299,10 @@ public class MainManager {
         int timeColor;
         int outputColor;
 
-        Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE);
-        Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
-        Pattern pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE);
-        Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
+        Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        Pattern pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
         @Override
         public boolean trigger(ExecutePack info, String input) {
@@ -343,10 +324,10 @@ public class MainManager {
                 }
 
                 String a = new String(appFormat);
-                a = pa.matcher(a).replaceAll(intent.getComponent().getClassName());
-                a = pp.matcher(a).replaceAll(intent.getComponent().getPackageName());
-                a = pl.matcher(a).replaceAll(i.publicLabel);
-                a = pn.matcher(a).replaceAll(Tuils.NEWLINE);
+                a = pa.matcher(a).replaceAll(Matcher.quoteReplacement(intent.getComponent().getClassName()));
+                a = pp.matcher(a).replaceAll(Matcher.quoteReplacement(intent.getComponent().getPackageName()));
+                a = pl.matcher(a).replaceAll(Matcher.quoteReplacement(i.publicLabel));
+                a = pn.matcher(a).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
                 SpannableString text = new SpannableString(a);
                 text.setSpan(new ForegroundColorSpan(outputColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -365,29 +346,21 @@ public class MainManager {
         @Override
         public boolean trigger(final ExecutePack info, final String input) throws Exception {
 
-            final boolean[] returnValue = new boolean[1];
+            final Command command = CommandTuils.parse(input, info, false);
+            if(command == null) return false;
+
+            mainPack.lastCommand = input;
 
             new StoppableThread() {
                 @Override
                 public void run() {
                     super.run();
 
-                    mainPack.lastCommand = input;
-
                     try {
-                        Command command = CommandTuils.parse(input, info, false);
+                        String output = command.exec(mContext.getResources(), info);
 
-                        synchronized (returnValue) {
-                            returnValue[0] = command != null;
-                            returnValue.notify();
-                        }
-
-                        if (command != null) {
-                            String output = command.exec(mContext.getResources(), info);
-
-                            if(output != null) {
-                                out.onOutput(output);
-                            }
+                        if(output != null) {
+                            out.onOutput(output);
                         }
                     } catch (Exception e) {
                         out.onOutput(Tuils.getStackTrace(e));
@@ -396,10 +369,7 @@ public class MainManager {
                 }
             }.start();
 
-            synchronized (returnValue) {
-                returnValue.wait();
-                return returnValue[0];
-            }
+            return true;
         }
     }
 }

@@ -381,21 +381,14 @@ public class SuggestionsManager {
     }
 
     private void suggestSong(MainPack info, List<Suggestion> suggestions, String prev, String before) {
+        Tuils.log(info.player.getTitles().toString());
         if (prev == null || prev.length() == 0) {
-            for (String s : info.player.getNames())
+            for (String s : info.player.getTitles()) {
                 suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_SONG));
+            }
         }
-//        else if(prev.length() <= FIRST_INTERVAL) {
-//            prev = prev.trim().toLowerCase();
-//            List<String> names = info.player.getNames();
-//            for (String n : names) {
-//                if(n.toLowerCase().trim().startsWith(prev)) {
-//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_SONG));
-//                }
-//            }
-//        }
         else {
-            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(info.player.getNames(), prev, true);
+            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(info.player.getTitles(), prev, true);
             for(SimpleMutableEntry<String, Integer> i : infos) {
                 suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_SONG));
             }

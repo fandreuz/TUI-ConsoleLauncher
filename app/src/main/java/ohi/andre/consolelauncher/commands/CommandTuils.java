@@ -16,8 +16,8 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
-import ohi.andre.consolelauncher.managers.music.MusicManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -373,7 +373,7 @@ public class CommandTuils {
         return new ArgInfo(number, null, number != null, 1);
     }
 
-    private static ArgInfo song(String input, MusicManager music) {
+    private static ArgInfo song(String input, MusicManager2 music) {
         return new ArgInfo(input, null, true, 1);
     }
 

@@ -34,14 +34,14 @@ public class search extends ParamCommand {
                 return playstore(args, pack.context);
             }
         },
-        file {
-            @Override
-            public String exec(ExecutePack pack) {
-                List<String> args = pack.get(ArrayList.class, 1);
-                MainPack p = ((MainPack) pack);
-                return file(args, p.currentDirectory, p.res, p.outputable);
-            }
-        },
+//        file {
+//            @Override
+//            public String exec(ExecutePack pack) {
+//                List<String> args = pack.get(ArrayList.class, 1);
+//                MainPack p = ((MainPack) pack);
+//                return file(args, p.currentDirectory, p.res, p.outputable);
+//            }
+//        },
         gg {
             @Override
             public String exec(ExecutePack pack) {

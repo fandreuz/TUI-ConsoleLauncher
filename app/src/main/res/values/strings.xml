@@ -11,6 +11,7 @@
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
     <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt in the "t-ui" folder</string>
+    <string name="admin_permission">Lock the screen on double tap</string>
 
     <!-- files -->
     <string name="output_error">An unknown error has occurred</string>
@@ -51,6 +52,9 @@
     <!-- alias -->
     <string name="output_aliasnotfound">Alias not found:</string>
     <string name="output_problemaddingalias">There was a problem with your alias</string>
+    <string name="output_notaddingalias1">The name of your alias:</string>
+    <string name="output_notaddingalias2">is equal to its value. This may lead to bad behaviors, so it has been excluded. You should edit the name to use it</string>
+    <string name="output_notaddingalias3">is equal to the part of its value before the first space (i.e. aliasName=play ; aliasValue = play store). This may lead to crashes and freezes, so it has been excluded. You should edit the name to use it</string>
 
     <!-- tuixt -->
     <string name="help_tuixt_help">Print the list of commands, or info about a command
@@ -65,6 +69,7 @@
     <string name="tuixt_saved">Saved</string>
     <string name="tuixt_reading">Reading</string>
     <string name="tuixt_label">TUIXT</string>
+    <string name="tuixt_error">This file is too big, consider opening it with an other text editor</string>
 
     <!-- phone -->
     <string name="output_wifi">WiFi active:</string>
@@ -75,10 +80,7 @@
     <!-- music -->
     <string name="output_playing">Playing:</string>
     <string name="output_stopped">Player stopped</string>
-    <string name="output_nomusic">Player wasn\'t started</string>
-    <string name="output_cantstop">Couldn\'t stop the player. Force stop t-ui from settings</string>
-    <string name="output_musicfoldererror">Music folder doesn\'t exist, or doesn\'t contain audio files.\nYou should set the right path with "config -set songs_path"
-    </string>
+    <string name="output_songnotfound">Song not found</string>
 
     <!-- command/args -->
     <string name="output_commandnotfound">Command not found.\nTry to use \">>help\" or \">>tutorial\"</string>
@@ -138,7 +140,6 @@
     <string name="help_call">Make a call
         \nUsage: call [number] OR [contactName]
     </string>
-    <string name="help_community">Show the t-ui community on Google+</string>
     <string name="help_config">Manage your config files.
         \nUsage:
         \n-set [option] [value] -> set the value of an option
@@ -158,6 +159,15 @@
         \nUsage:
         \n>>listen [songName]
     </string>
+    <string name="help_music">Usage:
+        \n-next -> play the next song in the queue
+        \n-previous -> play the previous song in the queue
+        \n-play -> play/pause
+        \n-stop -> stop the player
+        \n-ls -> list your tracks
+        \n-select [song] -> play the selected song
+        \n-info -> get info about the current song
+        \n-seekto [seconds] -> seek to the selected part of the current song</string>
     <string name="help_previous">Play the last played track</string>
     <string name="help_rate">Leave a feedback on the Play Store page</string>
     <string name="help_refresh">Refresh apps, alias, music, contacts</string>
@@ -191,6 +201,9 @@
         \n-rm -> remove t-ui
         \n-about -> show info about the developer and the current version</string>
         \n-reset -> removes the t-ui folder and resets default settings (restart required)
+        \n-twitter -> show t-ui Twitter page
+        \n-googlep -> show the community on Google+
+        \n-telegram -> open the official Telegram group
         \n-folder -> print the path of the t-ui folder
     <string name="help_tutorial">Open the tutorial page on GitHub</string>
     <string name="help_uninstall">Uninstall an application

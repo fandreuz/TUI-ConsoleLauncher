@@ -29,6 +29,14 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <permission
+        android:name="android.permission.FLASHLIGHT"
+        android:description="@string/help_flash"
+        android:label="@string/help_flash"
+        android:permissionGroup="android.permission-group.HARDWARE_CONTROLS"
+        android:protectionLevel="normal" />
 
     <!-- features -->
     <uses-feature android:name="android.hardware.camera"
@@ -84,7 +92,8 @@
 
         <receiver
             android:name=".tuils.stuff.PolicyReceiver"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:description="@string/admin_permission">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/policy" />
@@ -99,6 +108,10 @@
             android:name=".tuils.KeeperService"
             android:enabled="true"
             android:exported="false" />
+
+        <service android:name=".managers.music.MusicService"
+            android:enabled="true"
+            android:exported="true"/>
 
         <activity
             android:name=".commands.tuixt.TuixtActivity"

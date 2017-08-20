@@ -20,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -212,7 +213,12 @@ public class TuixtActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            fileView.setText(builder.toString());
+                            try {
+                                fileView.setText(builder.toString());
+                            } catch (OutOfMemoryError e) {
+                                fileView.setText(Tuils.EMPTYSTRING);
+                                Toast.makeText(TuixtActivity.this, R.string.tuixt_error, Toast.LENGTH_LONG).show();
+                            }
                         }
                     });
                 } catch (Exception e) {

@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -66,13 +67,13 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                 return "false";
             }
         },
-        default_app_state {
+        app_notification_enabled_default {
             @Override
             public String defaultValue() {
                 return "true";
             }
         },
-        default_color {
+        default_notification_color {
             @Override
             public String defaultValue() {
                 return "#00FF00";
@@ -103,7 +104,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     @Override
     public String[] deleted() {
-        return new String[] {"enabled"};
+        return new String[] {"enabled", "default_color", "default_app_state"};
     }
 
     @Override
@@ -280,8 +281,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             Tuils.toFile(e);
         }
 
-        default_app_state = XMLPrefsManager.get(boolean.class, Options.default_app_state);
-        default_color = XMLPrefsManager.get(String.class, Options.default_color);
+        default_app_state = XMLPrefsManager.get(boolean.class, Options.app_notification_enabled_default);
+        default_color = XMLPrefsManager.get(String.class, Options.default_notification_color);
 
         Out:
         for(int count = 0; count < applies.size(); count++) {
@@ -299,9 +300,17 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public static boolean match(String pkg, String text, String title) {
+        if(pkg.equals(BuildConfig.APPLICATION_ID)) return true;
+
         for(FilterGroup group : groups) {
-            if(group.pkgs == null || !group.pkgs.contains(pkg)) continue;
-            if(group.check(title, text)) return true;
+
+            if(group.pkgs != null && !group.pkgs.contains(pkg)) {
+                continue;
+            }
+
+            if(group.check(title, text)) {
+                return true;
+            }
         }
         return false;
     }
@@ -413,13 +422,16 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
         public boolean check(String title, String text) {
             boolean matchTitle = false, matchText = false;
+            int titleCount = 0, textCount = 0;
 
             for(Filter filter : brothers) {
                 String s;
                 if(filter.on == TITLE) {
                     s = title;
+                    titleCount++;
                 } else {
                     s = text;
+                    textCount++;
                 }
 
                 boolean b = filter.pattern.matcher(s).find();
@@ -427,6 +439,9 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                 if(filter.on == TITLE) matchTitle = matchTitle || b;
                 else matchText = matchText || b;
             }
+
+            matchTitle = matchTitle || titleCount == 0;
+            matchText = matchText || textCount == 0;
 
             return matchText && matchTitle;
         }

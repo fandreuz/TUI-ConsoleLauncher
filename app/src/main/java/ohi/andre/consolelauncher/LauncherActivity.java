@@ -23,10 +23,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+import com.github.anrwatchdog.ANRError;
+import com.github.anrwatchdog.ANRWatchDog;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
@@ -37,6 +35,7 @@ import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.tuils.Assist;
+import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.KeeperService;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -71,9 +70,17 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         @Override
         public String exec(String input) {
+            exec(input, false);
+            return null;
+        }
+
+        @Override
+        public String exec(String input, boolean needWriteInput) {
+            if(ui != null && needWriteInput) ui.setOutput(input, TerminalManager.CATEGORY_INPUT);
             if(main != null) main.onCommand(input, null);
             return null;
         }
+
     };
 
     private Inputable in = new Inputable() {
@@ -115,6 +122,11 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         public void onOutput(CharSequence output, int category) {
             if(ui != null) ui.setOutput(output, category);
         }
+
+        @Override
+        public void onOutput(int color, CharSequence output) {
+            ui.setOutput(color, output);
+        }
     };
 
     private Suggester sugg = new Suggester() {
@@ -147,24 +159,22 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private void finishOnCreate() {
 
-//        new ANRWatchDog(5000)
-//                .setANRListener(new ANRWatchDog.ANRListener() {
-//                    @Override
-//                    public void onAppNotResponding(ANRError anrError) {
-//                        Tuils.log(anrError);
-//                        Tuils.toFile(anrError);
-//                    }
-//                })
-//                .setReportMainThreadOnly()
-//                .start();
+        new ANRWatchDog(5000)
+                .setANRListener(new ANRWatchDog.ANRListener() {
+                    @Override
+                    public void onAppNotResponding(ANRError anrError) {
+                        Tuils.log(anrError);
+                        Tuils.toFile(anrError);
+                    }
+                })
+                .setReportMainThreadOnly()
+                .start();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
                 Tuils.log(e);
-                try {
-                    e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
-                } catch (FileNotFoundException e1) {}
+                Tuils.toFile(e);
             }
         });
 
@@ -182,7 +192,9 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         if (showNotification) {
             startService(keeperIntent);
         } else {
-            stopService(keeperIntent);
+            try {
+                stopService(keeperIntent);
+            } catch (Exception e) {}
         }
 
         fullscreen = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.fullscreen);
@@ -228,7 +240,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         setContentView(R.layout.base_view);
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
-        main = new MainManager(this, in, out, sugg);
+        main = new MainManager(this, in, out, sugg, ex);
         ui = new UIManager(main.getMainPack(), this, mainView, ex, main.getMainPack(), canApplyTheme);
         main.setRedirectionListener(ui.buildRedirectionListener());
         main.setHintable(ui.getHintable());
@@ -249,6 +261,13 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             ui.setOutput(getString(R.string.firsthelp_text), TerminalManager.CATEGORY_OUTPUT);
             ui.setInput("tutorial");
         }
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(InputOutputReceiver.ACTION_CMD);
+        filter.addAction(InputOutputReceiver.ACTION_OUTPUT);
+
+        InputOutputReceiver inputOutputReceiver = new InputOutputReceiver(ex, out);
+        getApplicationContext().registerReceiver(inputOutputReceiver, filter);
 
         System.gc();
     }

@@ -22,20 +22,18 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
-import ohi.andre.consolelauncher.managers.music.MusicManager;
+import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
-import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
+import ohi.andre.consolelauncher.tuils.libsuperuser.ShellHolder;
 
 /**
  * Created by francescoandreuzzi on 24/01/2017.
  */
 
 public class MainPack extends ExecutePack {
-
-    public Outputable outputable;
 
     //	current directory
     public File currentDirectory;
@@ -62,7 +60,7 @@ public class MainPack extends ExecutePack {
     public ContactManager contacts;
 
     //	music
-    public MusicManager player;
+    public MusicManager2 player;
 
     //	apps & assocs
     public AliasManager aliasManager;
@@ -84,13 +82,15 @@ public class MainPack extends ExecutePack {
 
     public Redirectator redirectator;
 
-    public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager p,
-                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Outputable outputable, Redirectator redirectator) {
+    public ShellHolder shellHolder;
+
+    public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager2 p,
+                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder) {
         super(commandGroup);
 
         this.currentDirectory = Environment.getExternalStorageDirectory();
 
-        this.outputable = outputable;
+        this.shellHolder = shellHolder;
 
         this.res = context.getResources();
 
@@ -142,7 +142,7 @@ public class MainPack extends ExecutePack {
     }
 
     public void destroy() {
-        player.destroy(this.context);
+        player.destroy();
         appsManager.onDestroy();
     }
 }

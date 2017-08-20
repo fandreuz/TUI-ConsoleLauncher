@@ -45,6 +45,27 @@ public class tui extends ParamCommand {
                 return info.res.getString(R.string.version_label) + Tuils.SPACE + BuildConfig.VERSION_NAME + Tuils.NEWLINE + Tuils.NEWLINE + info.res.getString(R.string.output_about);
             }
         },
+        telegram {
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://t.me/tuilauncher"));
+                return null;
+            }
+        },
+        googlep {
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://plus.google.com/communities/103936578623101446195"));
+                return null;
+            }
+        },
+        twitter {
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://twitter.com/tui_launcher"));
+                return null;
+            }
+        },
         reset {
             @Override
             public String exec(ExecutePack pack) {
@@ -55,14 +76,6 @@ public class tui extends ParamCommand {
         folder {
             @Override
             public String exec(ExecutePack pack) {
-//                Intent intent = new Intent(Intent.ACTION_VIEW);
-//                intent.setData(Uri.fromFile(Tuils.getFolder()));
-//                pack.context.startActivity(intent);
-
-//                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-//                Uri uri = Uri.parse(Tuils.getFolder().getAbsolutePath());
-//                intent.setDataAndType(uri, "*/*");
-//                pack.context.startActivity(Intent.createChooser(intent, "Open folder"));
 
                 Uri selectedUri = Uri.parse(Tuils.getFolder().getAbsolutePath());
                 Intent intent = new Intent(Intent.ACTION_VIEW);

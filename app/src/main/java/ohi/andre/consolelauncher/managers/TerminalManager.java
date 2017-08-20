@@ -327,6 +327,25 @@ public class TerminalManager {
         writeToView(output, type);
     }
 
+    public void setOutput(int color, CharSequence output) {
+        if(output == null || output.length() == 0) return;
+
+        if(output.equals(clear.CLEAR)) {
+            clear();
+            return;
+        }
+
+        if(color == SkinManager.COLOR_NOT_SET) {
+            color = mSkinManager.outputColor;
+        }
+
+        SpannableString si = new SpannableString(output);
+        si.setSpan(new ForegroundColorSpan(color), 0, output.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        CharSequence s = TextUtils.concat(Tuils.NEWLINE, si);
+        writeToView(s);
+    }
+
     public void onBackPressed() {
         if(cmdList.size() > 0) {
 
@@ -361,13 +380,17 @@ public class TerminalManager {
     final String FORMAT_PREFIX = "%p";
     final String FORMAT_NEWLINE = "%n";
 
-    private void writeToView(final CharSequence text, final int type) {
+    private void writeToView(CharSequence text, int type) {
+        text = getFinalText(text, type);
+        text = TextUtils.concat(Tuils.NEWLINE, text);
+        writeToView(text);
+    }
+
+    private void writeToView(final CharSequence text) {
         mTerminalView.post(new Runnable() {
             @Override
             public void run() {
-
-                CharSequence s = getFinalText(text, type);
-                mTerminalView.append(TextUtils.concat(Tuils.NEWLINE, s));
+                mTerminalView.append(text);
                 scrollToEnd();
             }
         });
