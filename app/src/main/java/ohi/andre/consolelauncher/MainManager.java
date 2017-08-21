@@ -21,7 +21,7 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.ThemesManager;
+//import ohi.andre.consolelauncher.managers.ThemesManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -119,7 +119,7 @@ public class MainManager {
 
         multipleCmdSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.multiple_cmd_separator);
 
-        new ThemesManager();
+        //new ThemesManager();
 
         CommandGroup group = new CommandGroup(mContext, COMMANDS_PKG);
 
