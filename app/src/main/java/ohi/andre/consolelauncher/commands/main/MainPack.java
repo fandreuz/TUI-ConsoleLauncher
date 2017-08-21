@@ -22,6 +22,7 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.managers.WhatsAppManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
@@ -59,6 +60,9 @@ public class MainPack extends ExecutePack {
     //	contacts
     public ContactManager contacts;
 
+    //whatsapp
+    public WhatsAppManager whatsApp;
+
     //	music
     public MusicManager2 player;
 
@@ -85,7 +89,7 @@ public class MainPack extends ExecutePack {
     public ShellHolder shellHolder;
 
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager2 p,
-                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder) {
+                    ContactManager c, WhatsAppManager w, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder) {
         super(commandGroup);
 
         this.currentDirectory = Environment.getExternalStorageDirectory();
@@ -107,6 +111,8 @@ public class MainPack extends ExecutePack {
 
         this.player = p;
         this.contacts = c;
+
+        this.whatsApp = w;
 
         this.reloadable = r;
 

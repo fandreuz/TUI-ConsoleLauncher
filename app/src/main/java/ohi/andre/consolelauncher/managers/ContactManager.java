@@ -10,6 +10,7 @@ import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,8 +21,8 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class ContactManager {
 
-    private Context context;
-    private List<Contact> contacts;
+    protected Context context;
+    protected List<Contact> contacts;
 
     public ContactManager(Context context) {
         this.context = context;

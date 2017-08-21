@@ -1,5 +1,7 @@
 package ohi.andre.consolelauncher.managers.suggestions;
 
+import android.util.Log;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +19,7 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
+import ohi.andre.consolelauncher.managers.WhatsAppManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Compare;
@@ -272,6 +275,9 @@ public class SuggestionsManager {
             case CommandAbstraction.ALL_PACKAGES:
                 suggestAllPackages(info, suggestions, prev, before);
                 break;
+            case CommandAbstraction.WHATSAPPNUMBER:
+                suggestWhatsAppContact(info,suggestions,prev,before);
+                break;
         }
     }
 
@@ -370,6 +376,24 @@ public class SuggestionsManager {
 
         else {
             for(ContactManager.Contact contact : info.contacts.getContacts()) {
+                if(Thread.currentThread().isInterrupted()) return;
+
+                int rate = Compare.matches(contact.name, prev, true);
+                if(rate != -1) {
+                    suggestions.add(new Suggestion(before, contact.name, true, rate, Suggestion.TYPE_CONTACT, contact));
+                }
+            }
+        }
+    }
+
+    private void suggestWhatsAppContact(MainPack info, List<Suggestion> suggestions, String prev, String before) {
+        if (prev == null || prev.length() == 0) {
+            for (WhatsAppManager.Contact contact : info.whatsApp.getContacts())
+                suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
+        }
+
+        else {
+            for(WhatsAppManager.Contact contact : info.whatsApp.getContacts()) {
                 if(Thread.currentThread().isInterrupted()) return;
 
                 int rate = Compare.matches(contact.name, prev, true);

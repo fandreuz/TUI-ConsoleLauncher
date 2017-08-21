@@ -14,6 +14,7 @@ public class refresh implements CommandAbstraction {
         info.aliasManager.reload();
         info.player.refresh();
         info.contacts.refreshContacts(info.context);
+        info.whatsApp.refreshContacts(info.context);
 
         return info.res.getString(R.string.output_refresh);
     }

@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.github.anrwatchdog.ANRError;
@@ -407,6 +409,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         if(permissions.length > 0 && permissions[0].equals(Manifest.permission.READ_CONTACTS) && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             main.getMainPack().contacts.refreshContacts(this);
+            main.getMainPack().whatsApp.refreshContacts(this);
         }
 
         try {

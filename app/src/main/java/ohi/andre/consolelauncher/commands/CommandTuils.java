@@ -16,6 +16,7 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
+import ohi.andre.consolelauncher.managers.WhatsAppManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
@@ -123,6 +124,9 @@ public class CommandTuils {
         } else if (type == CommandAbstraction.CONTACTNUMBER && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return contactNumber(input, pack.contacts);
+        } else if (type == CommandAbstraction.WHATSAPPNUMBER && info instanceof MainPack){
+            MainPack pack = (MainPack) info;
+            return contactWhatsApp(input, pack.whatsApp);
         } else if (type == CommandAbstraction.PLAIN_TEXT) {
             return plainText(input);
         } else if (type == CommandAbstraction.VISIBLE_PACKAGE && info instanceof MainPack) {
@@ -369,6 +373,18 @@ public class CommandTuils {
             number = input;
         else
             number = contacts.findNumber(input);
+
+        return new ArgInfo(number, null, number != null, 1);
+    }
+
+
+    private static ArgInfo contactWhatsApp(String input, WhatsAppManager w) {
+        String number;
+
+        if (input.matches("[0-9]*@s\\.whatsapp\\.net"))
+            number = input;
+        else
+            number = w.findNumber(input);
 
         return new ArgInfo(number, null, number != null, 1);
     }

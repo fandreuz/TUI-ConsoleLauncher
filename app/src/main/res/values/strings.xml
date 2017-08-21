@@ -172,14 +172,14 @@
     <string name="help_rate">Leave a feedback on the Play Store page</string>
     <string name="help_refresh">Refresh apps, alias, music, contacts</string>
     <string name="help_restart">Restart t-ui and load modified values</string>
-    <string name="help_search">Search something somewhere
+    <string name="help_search"><![CDATA[Search something somewhere
         \n\nUsage:
-        \n-gg [search this...] -> Google Search
-        \n-ps [search this...] -> Google Play Store
-        \n-file [search this...] -> Files
-        \n-yt [search this...] -> YouTube
-        \n-dd [search this...] -> DuckDuck Go
-    </string>
+        \n-gg [search this…] -> Google Search
+        \n-ps [search this…] -> Google Play Store
+        \n-file [search this…] -> Files
+        \n-yt [search this…] -> YouTube
+        \n-dd [search this…] -> DuckDuck Go
+    ]]></string>
     <string name="help_share">Share a file
         \nUsage:
         \n>>share [pathToFile]
@@ -247,6 +247,12 @@
     <string name="help_open">Open a file
         \nUsage:
         \n>>open [pathToFile]
+    </string>
+    <string name="help_whatsapp">
+        Send an WhatsApp message.
+        \nUsage:
+        \n>>whatsapp [contactName] OR [number]
+        \n>>[text]
     </string>
 
 </resources>

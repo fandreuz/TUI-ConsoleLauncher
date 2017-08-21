@@ -22,6 +22,7 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 //import ohi.andre.consolelauncher.managers.ThemesManager;
+import ohi.andre.consolelauncher.managers.WhatsAppManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -126,7 +127,9 @@ public class MainManager {
         ContactManager cont = null;
         try {
             cont = new ContactManager(mContext);
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException ignored) {}
+
+        WhatsAppManager whatsApp = new WhatsAppManager(mContext);
 
         MusicManager2 music = new MusicManager2(mContext);
 
@@ -136,7 +139,7 @@ public class MainManager {
         ShellHolder shellHolder = new ShellHolder(out);
         interactive = shellHolder.build();
 
-        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, redirectator, shellHolder);
+        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, whatsApp, c, executer, redirectator, shellHolder);
     }
 
 //    command manager

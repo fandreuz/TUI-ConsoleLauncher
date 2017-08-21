@@ -23,6 +23,7 @@ public interface CommandAbstraction {
     int INT = 24;
     int DEFAULT_APP = 25;
     int ALL_PACKAGES = 26;
+    int WHATSAPPNUMBER = 27;
 
     String exec(ExecutePack pack) throws Exception;
 
