@@ -21,9 +21,9 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.ThemesManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
+import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -86,7 +86,8 @@ public class MainManager {
 
     private final String COMMANDS_PKG = "ohi.andre.consolelauncher.commands.main.raw";
 
-    private CmdTrigger[] triggers = new CmdTrigger[]{
+    private CmdTrigger[] triggers = new CmdTrigger[] {
+            new GroupTrigger(),
             new AliasTrigger(),
             new TuiCommandTrigger(),
             new AppTrigger(),
@@ -101,6 +102,7 @@ public class MainManager {
 
     private boolean showAliasValue;
     private boolean showAppHistory;
+    private int aliasContentColor;
 
     private String multipleCmdSeparator;
 
@@ -116,10 +118,9 @@ public class MainManager {
 
         showAliasValue = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_alias_content);
         showAppHistory = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_launch_history);
+        aliasContentColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.alias_content_color);
 
         multipleCmdSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.multiple_cmd_separator);
-
-        new ThemesManager();
 
         CommandGroup group = new CommandGroup(mContext, COMMANDS_PKG);
 
@@ -155,7 +156,7 @@ public class MainManager {
         }
 
         if(alias != null && showAliasValue) {
-            out.onOutput(mainPack.aliasManager.formatLabel(alias, input));
+            out.onOutput(aliasContentColor, mainPack.aliasManager.formatLabel(alias, input));
         }
 
         String[] cmds;
@@ -225,7 +226,6 @@ public class MainManager {
 
     private class AliasTrigger implements CmdTrigger {
 
-
         @Override
         public boolean trigger(ExecutePack info, String input) {
             String alias[] = mainPack.aliasManager.getAlias(input, true);
@@ -243,6 +243,39 @@ public class MainManager {
             mainPack.executer.exec(aliasValue, aliasName);
 
             return true;
+        }
+    }
+
+    private class GroupTrigger implements CmdTrigger {
+
+        @Override
+        public boolean trigger(ExecutePack info, String input) throws Exception {
+            int index = input.indexOf(Tuils.SPACE);
+            String name;
+
+            if(index != -1) {
+                name = input.substring(0,index);
+                input = input.substring(index + 1);
+            } else {
+                name = input;
+                input = null;
+            }
+
+            List<? extends Group> appGroups = AppsManager.groups;
+            if(appGroups != null) {
+                for(Group g : appGroups) {
+                    if(name.equals(g.name())) {
+                        if(input == null) {
+                            out.onOutput(AppsManager.AppUtils.printApps(AppsManager.AppUtils.labelList((List<AppsManager.LaunchInfo>) g.members(), false)));
+                            return true;
+                        } else {
+                            return g.use(mainPack, input);
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
     }
 
@@ -374,5 +407,11 @@ public class MainManager {
 
             return true;
         }
+    }
+
+    public interface Group {
+        List<? extends Compare.Stringable> members();
+        boolean use(MainPack mainPack, String input);
+        String name();
     }
 }

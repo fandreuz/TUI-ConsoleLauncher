@@ -71,6 +71,11 @@ public class cntcts extends ParamCommand {
             public int[] args() {
                 return new int[] {CommandAbstraction.CONTACTNUMBER};
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_numbernotfound);
+            }
         },
         edit {
             @Override
@@ -85,6 +90,11 @@ public class cntcts extends ParamCommand {
             @Override
             public int[] args() {
                 return new int[] {CommandAbstraction.CONTACTNUMBER};
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_numbernotfound);
             }
         },
         l {
@@ -104,6 +114,11 @@ public class cntcts extends ParamCommand {
             @Override
             public int[] args() {
                 return new int[] {CommandAbstraction.CONTACTNUMBER};
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_numbernotfound);
             }
         };
 
@@ -131,6 +146,16 @@ public class cntcts extends ParamCommand {
         public String label() {
             return Tuils.MINUS + name();
         }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int index) {
+            return null;
+        }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int n) {
+            return pack.context.getString(R.string.help_cntcts);
+        }
     }
 
     @Override
@@ -153,16 +178,6 @@ public class cntcts extends ParamCommand {
     }
 
     @Override
-    public int minArgs() {
-        return 1;
-    }
-
-    @Override
-    public int maxArgs() {
-        return 2;
-    }
-
-    @Override
     public int priority() {
         return 3;
     }
@@ -170,15 +185,5 @@ public class cntcts extends ParamCommand {
     @Override
     public int helpRes() {
         return R.string.help_cntcts;
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack pack, int indexNotFound) {
-        return pack.context.getString(R.string.output_numbernotfound);
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack pack, int nArgs) {
-        return pack.context.getString(helpRes());
     }
 }

@@ -1,5 +1,7 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 
 import org.w3c.dom.Document;
@@ -17,18 +19,30 @@ import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class XMLPrefsManager {
 
     public static final String XML_DEFAULT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-
     public static final String VALUE_ATTRIBUTE = "value";
+
+    private static DocumentBuilderFactory factory;
+    private static DocumentBuilder builder;
+
+    static {
+        factory = DocumentBuilderFactory.newInstance();
+        try {
+            builder = factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {}
+    }
 
     public interface XMLPrefsSave {
         String defaultValue();
@@ -121,6 +135,24 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "#80000000";
+            }
+        },
+        alias_content_color {
+            @Override
+            public String defaultValue() {
+                return "#1DE9B6";
+            }
+        },
+        statusbar_color {
+            @Override
+            public String defaultValue() {
+                return "#000000";
+            }
+        },
+        navigationbar_color {
+            @Override
+            public String defaultValue() {
+                return "#000000";
             }
         };
 
@@ -291,6 +323,12 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "0";
             }
+        },
+        ignore_bar_color {
+            @Override
+            public String defaultValue() {
+                return "false";
+            }
         };
 
         @Override
@@ -438,6 +476,12 @@ public class XMLPrefsManager {
                 return "true";
             }
         },
+        suggest_appgp_default {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
         click_to_launch {
             @Override
             public String defaultValue() {
@@ -463,7 +507,7 @@ public class XMLPrefsManager {
 
     public enum Behavior implements XMLPrefsSave {
 
-        double_tap_closes {
+        double_tap_lock {
             @Override
             public String defaultValue() {
                 return "true";
@@ -720,7 +764,7 @@ public class XMLPrefsManager {
         BEHAVIOR("behavior.xml", Behavior.values()) {
             @Override
             public String[] deleted() {
-                return new String[0];
+                return new String[] {"double_tap_closes"};
             }
         },
         SUGGESTIONS("suggestions.xml", Suggestions.values()) {
@@ -822,24 +866,30 @@ public class XMLPrefsManager {
 
     private XMLPrefsManager() {}
 
-    public static void create() throws Exception {
+    public static void create(Context context) throws Exception {
         File folder = Tuils.getFolder();
-
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
 
         for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
             File file = new File(folder, element.path);
-            if(!file.exists() && !file.createNewFile()) continue;
-
-            Document d;
-            try {
-                d = builder.parse(file);
-            } catch (Exception e) {
+            if(!file.exists()) {
                 resetFile(file, element.name());
-
-                d = builder.parse(file);
             }
+
+            Object[] o;
+            try {
+                o = buildDocument(file, element.name());
+            } catch (Exception e) {
+                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + element.name() + context.getString(R.string.output_xmlproblem2) +
+                        Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
+                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
+                context.sendBroadcast(intent);
+
+                continue;
+            }
+
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
 
             List<XMLPrefsSave> enums = element.enums;
             if(enums == null) continue;
@@ -847,7 +897,6 @@ public class XMLPrefsManager {
             String[] deleted = element.deleted();
             boolean needToWrite = false;
 
-            Element root = (Element) d.getElementsByTagName(element.name()).item(0);
             if(root == null) {
                 resetFile(file, element.name());
                 d = builder.parse(file);
@@ -898,6 +947,8 @@ public class XMLPrefsManager {
     }
 
     public static Object transform(String s, Class<?> c) throws Exception {
+        if(s == null) throw new UnsupportedOperationException();
+
         if(c == int.class) return Integer.parseInt(s);
         if(c == Color.class) return Color.parseColor(s);
         if(c == boolean.class) return Boolean.parseBoolean(s);
@@ -918,6 +969,15 @@ public class XMLPrefsManager {
 //        s = p2.matcher(s).replaceAll(p2s);
         s = p3.matcher(s).replaceAll(p3s);
         return s;
+    }
+
+//    [0] = document
+//    [1] = root
+    public static Object[] buildDocument(File file, String root) throws Exception {
+        Document d = builder.parse(file);
+        Element r = (Element) d.getElementsByTagName(root).item(0);
+
+        return new Object[] {d, r};
     }
 
     public static void writeTo(Document d, File f) {
@@ -942,17 +1002,15 @@ public class XMLPrefsManager {
 
     public static String add(File file, String rootName, String elementName, String[] attributeNames, String[] attributeValues) {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            Document d;
+            Object[] o;
             try {
-                d = builder.parse(file);
+                o = buildDocument(file, rootName);
             } catch (Exception e) {
                 return e.toString();
             }
 
-            Element root = (Element) d.getElementsByTagName(rootName).item(0);
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
 
             Element element = d.createElement(elementName);
             for(int c = 0; c < attributeNames.length; c++) {
@@ -977,17 +1035,16 @@ public class XMLPrefsManager {
 
     public static String setMany(File file, String rootName, String elementNames[], String[] attributeNames, String[][] attributeValues) {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            Document d;
+            Object[] o;
             try {
-                d = builder.parse(file);
+                o = buildDocument(file, rootName);
             } catch (Exception e) {
                 return e.toString();
             }
 
-            Element root = (Element) d.getElementsByTagName(rootName).item(0);
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
+
             NodeList nodes = root.getElementsByTagName("*");
 
             for(int count = 0; count < nodes.getLength(); count++) {
@@ -1026,48 +1083,74 @@ public class XMLPrefsManager {
         return null;
     }
 
-    public static boolean removeNode(File file, String rootName, String nodeName) {
+    public static String removeNode(File file, String rootName, String nodeName) {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            Document d;
+            Object[] o;
             try {
-                d = builder.parse(file);
+                o = buildDocument(file, rootName);
             } catch (Exception e) {
-                return false;
+                return e.toString();
             }
 
-            Element root = (Element) d.getElementsByTagName(rootName).item(0);
-            NodeList nodes = root.getElementsByTagName("*");
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
 
-            for(int count = 0; count < nodes.getLength(); count++) {
-                Node node = nodes.item(count);
+            Node node = findNode(root, nodeName);
 
-                if(node.getNodeName().equalsIgnoreCase(nodeName)) {
-                    root.removeChild(node);
-                    writeTo(d, file);
-                    return true;
-                }
-            }
-        } catch (Exception e) {}
+            if(node == null) return Tuils.EMPTYSTRING;
 
-        return false;
+            root.removeChild(node);
+            writeTo(d, file);
+            return null;
+        } catch (Exception e) {
+            return e.toString();
+        }
     }
 
-    public static String[] getAttrValues(File file, String rootName, String nodeName, String[] attrNames) {
+    public static Node findNode(File file, String rootName, String nodeName) {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            Document d;
+            Object[] o;
             try {
-                d = builder.parse(file);
+                o = buildDocument(file, rootName);
             } catch (Exception e) {
                 return null;
             }
 
-            Element root = (Element) d.getElementsByTagName(rootName).item(0);
+            Element root = (Element) o[1];
+
+            findNode(root, nodeName);
+        } catch (Exception e) {
+            return null;
+        }
+
+        return null;
+    }
+
+    public static Node findNode(Element root, String nodeName) {
+        NodeList nodes = root.getElementsByTagName("*");
+
+        for(int count = 0; count < nodes.getLength(); count++) {
+            Node node = nodes.item(count);
+
+            if(node.getNodeName().equalsIgnoreCase(nodeName)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    public static String[] getAttrValues(File file, String rootName, String nodeName, String[] attrNames) {
+        try {
+            Object[] o;
+            try {
+                o = buildDocument(file, rootName);
+            } catch (Exception e) {
+                return null;
+            }
+
+            Element root = (Element) o[1];
+
             NodeList nodes = root.getElementsByTagName("*");
 
             for(int count = 0; count < nodes.getLength(); count++) {

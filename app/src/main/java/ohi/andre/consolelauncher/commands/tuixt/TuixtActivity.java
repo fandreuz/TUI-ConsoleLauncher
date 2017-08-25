@@ -118,7 +118,7 @@ public class TuixtActivity extends Activity {
         prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
         prefixView.setTextColor(skinManager.inputColor);
         prefixView.setTextSize(skinManager.getTextSize());
-        prefixView.setText(prefix);
+        prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
 
         if (submitView != null) {
             submitView.setColorFilter(skinManager.inputColor);

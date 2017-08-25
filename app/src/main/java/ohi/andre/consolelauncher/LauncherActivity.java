@@ -20,11 +20,15 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.github.anrwatchdog.ANRError;
 import com.github.anrwatchdog.ANRWatchDog;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
@@ -37,6 +41,7 @@ import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.tuils.Assist;
 import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.KeeperService;
+import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
@@ -113,19 +118,74 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private Outputable out = new Outputable() {
 
+        private final int DELAY = 500;
+
+        Queue<SimpleMutableEntry<CharSequence,Integer>> textColor = new LinkedList<>();
+        Queue<SimpleMutableEntry<CharSequence,Integer>> textCategory = new LinkedList<>();
+
+        boolean charged = false;
+        Handler handler = new Handler();
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                if(ui == null) {
+                    handler.postDelayed(this, DELAY);
+                    return;
+                }
+
+                SimpleMutableEntry<CharSequence,Integer> sm;
+                while ((sm = textCategory.poll()) != null) {
+                    ui.setOutput(sm.getKey(), sm.getValue());
+                }
+
+                while ((sm = textColor.poll()) != null) {
+                    ui.setOutput(sm.getValue(), sm.getKey());
+                }
+
+                textCategory = null;
+                textColor = null;
+                handler = null;
+                r = null;
+            }
+        };
+
         @Override
         public void onOutput(CharSequence output) {
             if(ui != null) ui.setOutput(output, TerminalManager.CATEGORY_OUTPUT);
+            else {
+                textCategory.add(new SimpleMutableEntry<>(output, TerminalManager.CATEGORY_OUTPUT));
+
+                if(!charged) {
+                    charged = true;
+                    handler.postDelayed(r, DELAY);
+                }
+            }
         }
 
         @Override
         public void onOutput(CharSequence output, int category) {
             if(ui != null) ui.setOutput(output, category);
+            else {
+                textCategory.add(new SimpleMutableEntry<>(output, category));
+
+                if(!charged) {
+                    charged = true;
+                    handler.postDelayed(r, DELAY);
+                }
+            }
         }
 
         @Override
         public void onOutput(int color, CharSequence output) {
-            ui.setOutput(color, output);
+            if(ui != null) ui.setOutput(color, output);
+            else {
+                textColor.add(new SimpleMutableEntry<>(output, color));
+
+                if(!charged) {
+                    charged = true;
+                    handler.postDelayed(r, DELAY);
+                }
+            }
         }
     };
 
@@ -178,13 +238,30 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             }
         });
 
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(InputOutputReceiver.ACTION_CMD);
+        filter.addAction(InputOutputReceiver.ACTION_OUTPUT);
+
+        InputOutputReceiver inputOutputReceiver = new InputOutputReceiver(ex, out);
+        getApplicationContext().registerReceiver(inputOutputReceiver, filter);
+
         try {
-            XMLPrefsManager.create();
+            XMLPrefsManager.create(this);
             TimeManager.create();
         } catch (Exception e) {
             Tuils.log(Tuils.getStackTrace(e));
             Tuils.toFile(e);
             return;
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.ignore_bar_color)) {
+            Window window = getWindow();
+
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+            window.setStatusBarColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.statusbar_color));
+            window.setNavigationBarColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.navigationbar_color));
         }
 
         boolean showNotification = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.tui_notification);
@@ -215,11 +292,14 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         }
 
         try {
-            NotificationManager.create();
+            NotificationManager.create(this);
         } catch (Exception e) {
             Tuils.toFile(e);
         }
+
         boolean notifications = XMLPrefsManager.get(boolean.class, NotificationManager.Options.show_notifications);
+        if(!notifications) notifications = XMLPrefsManager.get(String.class, NotificationManager.Options.show_notifications).equalsIgnoreCase("enabled");
+
         if(notifications) {
             LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
             if(!Tuils.hasNotificationAccess(this)) {
@@ -261,13 +341,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             ui.setOutput(getString(R.string.firsthelp_text), TerminalManager.CATEGORY_OUTPUT);
             ui.setInput("tutorial");
         }
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(InputOutputReceiver.ACTION_CMD);
-        filter.addAction(InputOutputReceiver.ACTION_OUTPUT);
-
-        InputOutputReceiver inputOutputReceiver = new InputOutputReceiver(ex, out);
-        getApplicationContext().registerReceiver(inputOutputReceiver, filter);
 
         System.gc();
     }

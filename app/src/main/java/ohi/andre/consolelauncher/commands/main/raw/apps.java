@@ -21,6 +21,17 @@ public class apps extends ParamCommand {
 
     private enum Param implements ohi.andre.consolelauncher.commands.main.Param {
 
+        ls {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                return ((MainPack) pack).appsManager.printApps(AppsManager.SHOWN_APPS);
+            }
+        },
         lsh {
             @Override
             public int[] args() {
@@ -116,6 +127,15 @@ public class apps extends ParamCommand {
                     return pack.context.getString(R.string.invalid_integer);
                 }
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                int res;
+                if(index == 1) res = R.string.invalid_integer;
+                else res = R.string.output_appnotfound;
+
+                return pack.context.getString(res);
+            }
         },
         st {
             @Override
@@ -154,6 +174,127 @@ public class apps extends ParamCommand {
                 pack.context.startActivity(Tuils.openFile(new File(Tuils.getFolder(), AppsManager.PATH)));
                 return null;
             }
+        },
+        mkgp {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.NO_SPACE_STRING};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                String name = pack.get(String.class, 1);
+                return ((MainPack) pack).appsManager.createGroup(name);
+            }
+        },
+        rmgp {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.APP_GROUP};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                String name = pack.get(String.class, 1);
+                return ((MainPack) pack).appsManager.removeGroup(name);
+            }
+        },
+        gp_bg_color {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.APP_GROUP, CommandAbstraction.COLOR};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                String name = pack.get(String.class, 1);
+                String color = pack.get(String.class, 2);
+                return ((MainPack) pack).appsManager.groupBgColor(name, color);
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
+                if(n == 2) {
+                    String name = pack.get(String.class, 1);
+                    return ((MainPack) pack).appsManager.groupBgColor(name, Tuils.EMPTYSTRING);
+                }
+                return super.onNotArgEnough(pack, n);
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_invalidcolor);
+            }
+        },
+        gp_fore_color {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.APP_GROUP, CommandAbstraction.COLOR};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                String name = pack.get(String.class, 1);
+                String color = pack.get(String.class, 2);
+                return ((MainPack) pack).appsManager.groupForeColor(name, color);
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
+                if(n == 2) {
+                    String name = pack.get(String.class, 1);
+                    return ((MainPack) pack).appsManager.groupForeColor(name, Tuils.EMPTYSTRING);
+                }
+                return super.onNotArgEnough(pack, n);
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_invalidcolor);
+            }
+        },
+        lsgp {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.APP_GROUP};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                String name = pack.get(String.class, 1);
+                return ((MainPack) pack).appsManager.listGroup(name);
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
+                return ((MainPack) pack).appsManager.listGroups();
+            }
+        },
+        addtogp {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.APP_GROUP, CommandAbstraction.VISIBLE_PACKAGE};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                String name = pack.get(String.class, 1);
+                AppsManager.LaunchInfo app = pack.get(AppsManager.LaunchInfo.class, 2);
+                return ((MainPack) pack).appsManager.addAppToGroup(name, app);
+            }
+        },
+        rmfromgp {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.APP_GROUP, CommandAbstraction.VISIBLE_PACKAGE};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                String name = pack.get(String.class, 1);
+                AppsManager.LaunchInfo app = pack.get(AppsManager.LaunchInfo.class, 2);
+                return ((MainPack) pack).appsManager.removeAppFromGroup(name, app);
+            }
         };
 
         static Param get(String p) {
@@ -179,6 +320,16 @@ public class apps extends ParamCommand {
         @Override
         public String label() {
             return Tuils.MINUS + name();
+        }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int n) {
+            return pack.context.getString(R.string.help_apps);
+        }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int index) {
+            return pack.context.getString(R.string.output_appnotfound);
         }
     }
 
@@ -210,31 +361,8 @@ public class apps extends ParamCommand {
     }
 
     @Override
-    public int minArgs() {
-        return 1;
-    }
-
-    @Override
-    public int maxArgs() {
-        return 3;
-    }
-
-    @Override
     public int priority() {
         return 4;
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack info, int nArgs) {
-        MainPack pack = (MainPack) info;
-        if (nArgs > 0) return pack.res.getString(helpRes());
-        return pack.appsManager.printApps(AppsManager.SHOWN_APPS);
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack info, int index) {
-        MainPack pack = (MainPack) info;
-        return pack.res.getString(R.string.output_appnotfound);
     }
 
     @Override

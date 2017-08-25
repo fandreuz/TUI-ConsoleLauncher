@@ -7,21 +7,19 @@ import android.hardware.Camera;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Environment;
 
 import java.io.File;
 import java.lang.reflect.Method;
-import java.util.List;
 
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.commands.main.raw.flash;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
@@ -113,32 +111,35 @@ public class MainPack extends ExecutePack {
         this.redirectator = redirectator;
     }
 
-    public void initCamera() {
-        try {
-            this.camera = Camera.open();
-            this.parameters = this.camera.getParameters();
-            List<Camera.Size> sizes = this.parameters.getSupportedPreviewSizes();
-            if(sizes != null && sizes.size() > 0) {
-                this.parameters.setPreviewSize(sizes.get(0).width, sizes.get(0).height);
-            }
-        } catch (Exception e) {
-            this.camera = null;
-            this.parameters = null;
-        }
-    }
+//    public void initCamera() {
+//        try {
+//            this.camera = Camera.open();
+//            this.parameters = this.camera.getParameters();
+//            List<Camera.Size> sizes = this.parameters.getSupportedPreviewSizes();
+//            if(sizes != null && sizes.size() > 0) {
+//                this.parameters.setPreviewSize(sizes.get(0).width, sizes.get(0).height);
+//            }
+//        } catch (Exception e) {
+//            this.camera = null;
+//            this.parameters = null;
+//        }
+//    }
 
     public void dispose() {
-        if (this.camera == null || this.isFlashOn)
-            return;
+//        if (this.camera == null || this.isFlashOn)
+//            return;
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            flash.detachSurfaceTexture(null);
+//        }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            flash.detachSurfaceTexture(null);
-        }
+//        this.camera.stopPreview();
+//        this.camera.release();
+//        this.camera = null;
+//        this.parameters = null;
 
-        this.camera.stopPreview();
-        this.camera.release();
-        this.camera = null;
-        this.parameters = null;
+        TorchManager mgr = TorchManager.getInstance();
+        if(mgr.isOn()) mgr.turnOff();
     }
 
     public void destroy() {

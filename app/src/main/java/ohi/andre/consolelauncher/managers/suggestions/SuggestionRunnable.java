@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 
 public class SuggestionRunnable implements Runnable {
@@ -94,8 +95,36 @@ public class SuggestionRunnable implements Runnable {
                 toRecycle[count].setTag(R.id.suggestion_id, suggestions[count]);
 
                 toRecycle[count].setText(s);
-                toRecycle[count].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
-                toRecycle[count].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
+
+//                bg and fore
+                int bgColor = SkinManager.COLOR_NOT_SET;
+                int foreColor = SkinManager.COLOR_NOT_SET;
+                if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP ||
+                        suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APPGROUP) {
+
+                    Object o = suggestions[count].object;
+                    if(o != null && o instanceof AppsManager.LaunchInfo) {
+                        AppsManager.LaunchInfo i = (AppsManager.LaunchInfo) o;
+
+                        for(AppsManager.Group g : AppsManager.groups) {
+                            if(g.contains(i)) {
+                                o = g;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(o != null && o instanceof AppsManager.Group) {
+                        bgColor = ((AppsManager.Group) o).getBgColor();
+                        foreColor = ((AppsManager.Group) o).getForeColor();
+                    }
+                }
+
+                if(bgColor != SkinManager.COLOR_NOT_SET) toRecycle[count].setBackgroundColor(bgColor);
+                else toRecycle[count].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
+                if(foreColor != SkinManager.COLOR_NOT_SET) toRecycle[count].setTextColor(foreColor);
+                else toRecycle[count].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
+//                end bg and fore
 
                 if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_CONTACT) {
                     toRecycle[count].setLongClickable(true);
@@ -110,8 +139,36 @@ public class SuggestionRunnable implements Runnable {
                     toAdd[space].setTag(R.id.suggestion_id, suggestions[count]);
 
                     toAdd[space].setText(s);
-                    toAdd[space].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
-                    toAdd[space].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
+
+//                    bg and fore
+                    int bgColor = SkinManager.COLOR_NOT_SET;
+                    int foreColor = SkinManager.COLOR_NOT_SET;
+                    if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP ||
+                            suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APPGROUP) {
+
+                        Object o = suggestions[count].object;
+                        if(o != null && o instanceof AppsManager.LaunchInfo) {
+                            AppsManager.LaunchInfo i = (AppsManager.LaunchInfo) o;
+
+                            for(AppsManager.Group g : AppsManager.groups) {
+                                if(g.contains(i)) {
+                                    o = g;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if(o != null && o instanceof AppsManager.Group) {
+                            bgColor = ((AppsManager.Group) o).getBgColor();
+                            foreColor = ((AppsManager.Group) o).getForeColor();
+                        }
+                    }
+
+                    if(bgColor != SkinManager.COLOR_NOT_SET) toAdd[space].setBackgroundColor(bgColor);
+                    else toAdd[space].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
+                    if(foreColor != SkinManager.COLOR_NOT_SET) toAdd[space].setTextColor(foreColor);
+                    else toAdd[space].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
+//                    end bg and fore
 
                     if(toAdd[space].getParent() == null) {
                         suggestionsView.addView(toAdd[space], suggestionViewParams);

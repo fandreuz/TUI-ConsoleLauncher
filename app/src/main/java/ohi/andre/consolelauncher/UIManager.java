@@ -727,7 +727,7 @@ public class UIManager implements OnTouchListener {
             this.clickListener = null;
         }
 
-        lockOnDbTap = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.double_tap_closes);
+        lockOnDbTap = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.double_tap_lock);
         doubleTapCmd = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.double_tap_cmd);
         if(!lockOnDbTap && doubleTapCmd == null) {
             policy = null;

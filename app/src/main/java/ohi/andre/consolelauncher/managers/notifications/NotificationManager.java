@@ -1,6 +1,9 @@
 package ohi.andre.consolelauncher.managers.notifications;
 
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.util.SparseArray;
 
@@ -19,11 +22,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import ohi.andre.consolelauncher.BuildConfig;
+import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.VALUE_ATTRIBUTE;
@@ -125,7 +127,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     private NotificationManager() {}
 
-    public static void create() {
+    public static void create(Context context) {
         instance = new NotificationManager();
 
         if(created) return;
@@ -137,29 +139,28 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         values = new XMLPrefsManager.XMLPrefsList();
 
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
             File file = new File(Tuils.getFolder(), PATH);
-            if(!file.exists() && !file.createNewFile()) return;
-
-            Document d;
-            try {
-                d = builder.parse(file);
-            } catch (Exception e) {
+            if(!file.exists()) {
                 resetFile(file, NAME);
-
-                d = builder.parse(file);
             }
+
+            Object[] o;
+            try {
+                o = XMLPrefsManager.buildDocument(file, NAME);
+            } catch (Exception e) {
+                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + NAME + context.getString(R.string.output_xmlproblem2) +
+                        Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
+                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
+                context.sendBroadcast(intent);
+
+                return;
+            }
+
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
 
             List<Options> enums = new ArrayList<>(Arrays.asList(Options.values()));
-
-            Element root = (Element) d.getElementsByTagName(NAME).item(0);
-            if(root == null) {
-                resetFile(file, NAME);
-                d = builder.parse(file);
-                root = (Element) d.getElementsByTagName(NAME).item(0);
-            }
             NodeList nodes = root.getElementsByTagName("*");
 
             String[] deleted = instance.deleted();

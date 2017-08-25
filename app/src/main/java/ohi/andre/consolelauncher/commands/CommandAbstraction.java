@@ -2,9 +2,6 @@ package ohi.andre.consolelauncher.commands;
 
 public interface CommandAbstraction {
 
-    //	undefinied n of arguments
-    int UNDEFINIED = -1;
-
     //	arg type
     int PLAIN_TEXT = 10;
     int FILE = 11;
@@ -23,12 +20,12 @@ public interface CommandAbstraction {
     int INT = 24;
     int DEFAULT_APP = 25;
     int ALL_PACKAGES = 26;
+    int NO_SPACE_STRING = 27;
+    int APP_GROUP = 28;
 
     String exec(ExecutePack pack) throws Exception;
 
     int minArgs();
-
-    int maxArgs();
 
     int[] argType();
 

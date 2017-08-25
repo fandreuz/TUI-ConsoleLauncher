@@ -18,6 +18,7 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
@@ -33,24 +34,18 @@ public class SuggestionsManager {
 
     private final int MIN_COMMAND_PRIORITY = 5;
 
-//    private int min_command_rate = 4;
-//    private int min_apps_rate = 2;
-//    private int min_contacts_rate = 2;
-//    private int min_file_rate = 2;
-//    private int min_songs_rate = 2;
-
-//    use to place something at the top
     private final int MAX_RATE = 100;
     private final int NO_RATE = -1;
 
     private final int FIRST_INTERVAL = 6;
 
-    private boolean showAliasDefault, set = false, clickToLaunch;
+    private boolean showAliasDefault, set = false, clickToLaunch, showAppsGpDefault;
 
     public Suggestion[] getSuggestions(MainPack info, String before, String lastWord) {
 
         if(!set) {
             showAliasDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.suggest_alias_default);
+            showAppsGpDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.suggest_appgp_default);
             set = true;
             clickToLaunch = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.click_to_launch);
         }
@@ -65,7 +60,7 @@ public class SuggestionsManager {
 //            lastword = 0 && before = 0
 
             if (before.length() == 0) {
-                String[] apps = info.appsManager.getSuggestedApps();
+                AppsManager.LaunchInfo[] apps = info.appsManager.getSuggestedApps();
                 if (apps != null) {
                     for(int count = 0; count < apps.length; count++) {
                         if(apps[count] == null) {
@@ -74,11 +69,12 @@ public class SuggestionsManager {
 
                         float shift = count + 1;
                         float rate = 1f / shift;
-                        suggestionList.add(new Suggestion(before, apps[count], clickToLaunch, (int) Math.ceil(rate), Suggestion.TYPE_APP));
+                        suggestionList.add(new Suggestion(before, apps[count].getString(), clickToLaunch, (int) Math.ceil(rate), Suggestion.TYPE_APP, apps[count]));
                     }
                 }
 
                 if(showAliasDefault) suggestAlias(info.aliasManager, suggestionList, lastWord);
+                if(showAppsGpDefault) suggestAppGroup(suggestionList, lastWord, before);
 
                 return suggestionList.toArray(new Suggestion[suggestionList.size()]);
             }
@@ -97,7 +93,7 @@ public class SuggestionsManager {
                         suggestPermanentSuggestions(suggestionList, (PermanentSuggestionCommand) cmd.cmd);
                     }
 
-                    if (cmd.nArgs == cmd.cmd.maxArgs() || (cmd.mArgs != null && cmd.mArgs.length > 0 && cmd.cmd instanceof ParamCommand && cmd.nArgs >= 1 && ((Param) cmd.mArgs[0]).args().length + 1 == cmd.nArgs)) {
+                    if (cmd.mArgs != null && cmd.mArgs.length > 0 && cmd.cmd instanceof ParamCommand && cmd.nArgs >= 1 && ((Param) cmd.mArgs[0]).args().length + 1 == cmd.nArgs) {
                         return new Suggestion[0];
                     }
 
@@ -128,13 +124,12 @@ public class SuggestionsManager {
                         suggestFile(info, suggestionList, Tuils.EMPTYSTRING, before);
                     } else {
 //                        ==> app
-                        suggestApp(info, suggestionList, before, Tuils.EMPTYSTRING);
+                        suggestApp(info, suggestionList, before + Tuils.SPACE, Tuils.EMPTYSTRING);
                     }
 
                 }
             }
         }
-
 
 //        lastWord > 0
         else {
@@ -151,11 +146,11 @@ public class SuggestionsManager {
                         suggestPermanentSuggestions(suggestionList, (PermanentSuggestionCommand) cmd.cmd);
                     }
 
-                    if (cmd.cmd.maxArgs() == 1 && before.contains(Tuils.SPACE)) {
-                        int index = cmd.cmd.getClass().getSimpleName().length() + 1;
-
-                        lastWord = before.substring(index) + lastWord;
-                    }
+//                    if (cmd.cmd.maxArgs() == 1 && before.contains(Tuils.SPACE)) {
+//                        int index = cmd.cmd.getClass().getSimpleName().length() + 1;
+//
+//                        lastWord = before.substring(index) + lastWord;
+//                    }
 
                     if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) {
                         suggestParams(info, suggestionList, (ParamCommand) cmd.cmd, before, lastWord);
@@ -174,7 +169,7 @@ public class SuggestionsManager {
                     if(isShellCmd) {
                         suggestFile(info, suggestionList, lastWord, before);
                     } else {
-                        suggestApp(info, suggestionList, before + lastWord, Tuils.EMPTYSTRING);
+                        suggestApp(info, suggestionList, before + Tuils.SPACE + lastWord, Tuils.EMPTYSTRING);
                     }
                 }
 
@@ -183,6 +178,7 @@ public class SuggestionsManager {
                 suggestCommand(info, suggestionList, lastWord, before);
                 suggestAlias(info.aliasManager, suggestionList, lastWord);
                 suggestApp(info, suggestionList, lastWord, Tuils.EMPTYSTRING);
+                suggestAppGroup(suggestionList, lastWord, before);
             }
         }
 
@@ -272,6 +268,9 @@ public class SuggestionsManager {
             case CommandAbstraction.ALL_PACKAGES:
                 suggestAllPackages(info, suggestions, prev, before);
                 break;
+            case CommandAbstraction.APP_GROUP:
+                suggestAppGroup(suggestions, prev, before);
+                break;
         }
     }
 
@@ -354,22 +353,14 @@ public class SuggestionsManager {
     }
 
     private void suggestContact(MainPack info, List<Suggestion> suggestions, String prev, String before) {
+        List<ContactManager.Contact> contacts = info.contacts.getContacts();
+        if(contacts == null) return;
+
         if (prev == null || prev.length() == 0) {
-            for (ContactManager.Contact contact : info.contacts.getContacts())
-                suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
+            for (ContactManager.Contact contact : contacts) suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
         }
-
-//        else if(prev.length() <= FIRST_INTERVAL) {
-//            prev = prev.trim().toLowerCase();
-//
-//            for (ContactManager.Contact contact : info.contacts.getContacts())
-//                if(contact.name.toLowerCase().trim().startsWith(prev)) {
-//                    suggestions.add(new Suggestion(before, contact.name, true, NO_RATE, Suggestion.TYPE_CONTACT, contact));
-//                }
-//        }
-
         else {
-            for(ContactManager.Contact contact : info.contacts.getContacts()) {
+            for(ContactManager.Contact contact : contacts) {
                 if(Thread.currentThread().isInterrupted()) return;
 
                 int rate = Compare.matches(contact.name, prev, true);
@@ -381,16 +372,18 @@ public class SuggestionsManager {
     }
 
     private void suggestSong(MainPack info, List<Suggestion> suggestions, String prev, String before) {
-        Tuils.log(info.player.getTitles().toString());
+        List<Song> songs = info.player.getSongs();
+        if(songs == null) return;
+
         if (prev == null || prev.length() == 0) {
-            for (String s : info.player.getTitles()) {
-                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_SONG));
+            for (Song s : songs) {
+                suggestions.add(new Suggestion(before, s.getTitle(), clickToLaunch, NO_RATE, Suggestion.TYPE_SONG));
             }
         }
         else {
-            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(info.player.getTitles(), prev, true);
-            for(SimpleMutableEntry<String, Integer> i : infos) {
-                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_SONG));
+            List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.matchesWithRate(songs, true, prev);
+            for(SimpleMutableEntry<Compare.Stringable, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey().getString(), clickToLaunch, i.getValue(), Suggestion.TYPE_SONG));
             }
         }
     }
@@ -403,7 +396,10 @@ public class SuggestionsManager {
 
         if(prev.length() <= FIRST_INTERVAL) {
             prev = prev.toLowerCase().trim();
+
             String[] cmds = info.commandGroup.getCommandNames();
+            if(cmds == null) return;
+
             for (String s : cmds) {
                 if(Thread.currentThread().isInterrupted()) return;
 
@@ -424,7 +420,10 @@ public class SuggestionsManager {
     }
 
     private void suggestCommand(MainPack info, List<Suggestion> suggestions, String before) {
-        for (String s : info.commandGroup.getCommandNames()) {
+        String[] cmds = info.commandGroup.getCommandNames();
+        if(cmds == null) return;
+
+        for (String s : cmds) {
             if(Thread.currentThread().isInterrupted()) return;
 
             CommandAbstraction cmd = info.commandGroup.getCommandByName(s);
@@ -437,63 +436,84 @@ public class SuggestionsManager {
     }
 
     private void suggestApp(MainPack info, List<Suggestion> suggestions, String prev, String before) {
-        List<String> names = info.appsManager.getAppLabels();
-        if (prev == null || prev.length() == 0) {
-            for (String s : names) {
-                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
+//        try to find a group only if it was called outside a command
+        int index = prev.indexOf(Tuils.SPACE);
+        if(before.length() == 0 && index != -1) {
+            String temp = prev;
+
+            String gpName = prev.substring(0,index);
+            prev = prev.substring(index + 1);
+
+            int gpIndex = Tuils.find(gpName, AppsManager.groups);
+            if(gpIndex != -1) {
+                AppsManager.Group g = AppsManager.groups.get(gpIndex);
+
+                List<? extends Compare.Stringable> apps = g.members();
+                if(apps != null && apps.size() > 0) {
+                    if (prev.length() == 0) {
+                        for (Compare.Stringable s : apps) {
+                            suggestions.add(new Suggestion(before, s.getString(), clickToLaunch, NO_RATE, Suggestion.TYPE_APP, s));
+                        }
+                    }
+                    else {
+                        List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.matchesWithRate(apps, true, prev);
+                        for(SimpleMutableEntry<Compare.Stringable, Integer> i : infos) {
+                            suggestions.add(new Suggestion(before, i.getKey().getString(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP, i.getKey()));
+                        }
+                    }
+                    return;
+                }
+            }
+
+            prev = temp;
+        }
+
+//        group not found...
+        List<AppsManager.LaunchInfo> apps = info.appsManager.shownApps();
+        if(apps == null) return;
+
+        if (prev.length() == 0) {
+            for (AppsManager.LaunchInfo l : apps) {
+                suggestions.add(new Suggestion(before, l.publicLabel, clickToLaunch, NO_RATE, Suggestion.TYPE_APP, l));
             }
         }
-//        else if(prev.length() <= FIRST_INTERVAL) {
-//            prev = prev.trim().toLowerCase();
-//            for (String n : names) {
-//                if(n.toLowerCase().trim().startsWith(prev)) {
-//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
-//                }
-//            }
-//        }
         else {
-            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(names, prev, true);
-            for(SimpleMutableEntry<String, Integer> i : infos) {
-                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
+            List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.matchesWithRate(apps, true, prev);
+            for(SimpleMutableEntry<Compare.Stringable, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey().getString(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP, i.getKey()));
             }
         }
     }
 
     private void suggestHiddenApp(MainPack info, List<Suggestion> suggestions, String prev, String before) {
-        List<String> names = info.appsManager.getHiddenAppsLabels();
+        List<AppsManager.LaunchInfo> apps = info.appsManager.hiddenApps();
+        if(apps == null) return;
+
         if (prev == null || prev.length() == 0) {
-            for (String s : names) {
-                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
+            for (AppsManager.LaunchInfo a : apps) {
+                suggestions.add(new Suggestion(before, a.publicLabel, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
             }
         }
-//        else if(prev.length() <= FIRST_INTERVAL) {
-//            prev = prev.trim().toLowerCase();
-//            for (String n : names) {
-//                if(n.toLowerCase().trim().startsWith(prev)) {
-//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
-//                }
-//            }
-//        }
         else {
-            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(names, prev, true);
-            for(SimpleMutableEntry<String, Integer> i : infos) {
-                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
+            List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.matchesWithRate(apps, true, prev);
+            for(SimpleMutableEntry<Compare.Stringable, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey().getString(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
             }
         }
     }
 
     private void suggestAllPackages(MainPack info, List<Suggestion> suggestions, String prev, String before) {
-        List<String> apps = info.appsManager.getHiddenAppsLabels();
-        apps.addAll(info.appsManager.getAppLabels());
+        List<AppsManager.LaunchInfo> apps = new ArrayList<>(info.appsManager.shownApps());
+        apps.addAll(info.appsManager.hiddenApps());
 
         if (prev == null || prev.length() == 0) {
-            for (String s : apps) {
-                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
+            for (AppsManager.LaunchInfo a : apps) {
+                suggestions.add(new Suggestion(before, a.publicLabel, clickToLaunch, NO_RATE, Suggestion.TYPE_APP, a));
             }
         } else {
-            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(apps, prev, true);
-            for(SimpleMutableEntry<String, Integer> i : infos) {
-                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
+            List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.matchesWithRate(apps, true, prev);
+            for(SimpleMutableEntry<Compare.Stringable, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey().getString(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP, i.getKey()));
             }
         }
     }
@@ -502,24 +522,18 @@ public class SuggestionsManager {
         suggestions.add(new Suggestion(before, "most_used", false, MAX_RATE, Suggestion.TYPE_PERMANENT));
         suggestions.add(new Suggestion(before, "null", false, MAX_RATE, Suggestion.TYPE_PERMANENT));
 
-        List<String> names = info.appsManager.getAppLabels();
+        List<AppsManager.LaunchInfo> apps = info.appsManager.shownApps();
+        if(apps == null) return;
+
         if (prev == null || prev.length() == 0) {
-            for (String s : names) {
-                suggestions.add(new Suggestion(before, s, clickToLaunch, NO_RATE, Suggestion.TYPE_APP));
+            for (AppsManager.LaunchInfo a : apps) {
+                suggestions.add(new Suggestion(before, a.publicLabel, clickToLaunch, NO_RATE, Suggestion.TYPE_APP, a));
             }
         }
-//        else if(prev.length() <= FIRST_INTERVAL) {
-//            prev = prev.trim().toLowerCase();
-//            for (String n : names) {
-//                if(n.toLowerCase().trim().startsWith(prev)) {
-//                    suggestions.add(new Suggestion(before, n, true, MAX_RATE, Suggestion.TYPE_APP));
-//                }
-//            }
-//        }
         else {
-            List<SimpleMutableEntry<String, Integer>> infos = Compare.matchesWithRate(names, prev, true);
-            for(SimpleMutableEntry<String, Integer> i : infos) {
-                suggestions.add(new Suggestion(before, i.getKey(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP));
+            List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.matchesWithRate(apps, true, prev);
+            for(SimpleMutableEntry<Compare.Stringable, Integer> i : infos) {
+                suggestions.add(new Suggestion(before, i.getKey().getString(), clickToLaunch, i.getValue(), Suggestion.TYPE_APP, i.getKey()));
             }
         }
     }
@@ -540,15 +554,6 @@ public class SuggestionsManager {
                 suggestions.add(sg);
             }
         }
-//        else if(prev.length() <= FIRST_INTERVAL) {
-//            prev = prev.trim().toLowerCase();
-//            for (XMLPrefsManager.XMLPrefsSave s : xmlPrefsEntrys) {
-//                String label = s.label();
-//                if(label.startsWith(prev)) {
-//                    suggestions.add(new Suggestion(before, label, false, MAX_RATE, Suggestion.TYPE_COMMAND));
-//                }
-//            }
-//        }
         else {
             for (XMLPrefsManager.XMLPrefsSave s : xmlPrefsEntrys) {
                 if(Thread.currentThread().isInterrupted()) return;
@@ -588,6 +593,26 @@ public class SuggestionsManager {
         }
     }
 
+    private void suggestAppGroup(List<Suggestion> suggestions, String prev, String before) {
+        List<AppsManager.Group> groups = AppsManager.groups;
+
+        if(prev == null || prev.length() == 0) {
+            for(AppsManager.Group g : groups) {
+                Suggestion sg = new Suggestion(before, g.getName(), false, NO_RATE, Suggestion.TYPE_APPGROUP, g);
+                suggestions.add(sg);
+            }
+        }
+        else {
+            for(AppsManager.Group g : groups) {
+                String label = g.getName();
+                int rate = Compare.matches(label, prev, true);
+                if(rate != -1) {
+                    suggestions.add(new Suggestion(before, label, false, rate, Suggestion.TYPE_APPGROUP, g));
+                }
+            }
+        }
+    }
+
     public class Suggestion implements Comparable<Suggestion> {
 
         public static final int TYPE_APP = 10;
@@ -599,6 +624,7 @@ public class SuggestionsManager {
         public static final int TYPE_BOOLEAN = 16;
         public static final int TYPE_COLOR = 17;
         public static final int TYPE_PERMANENT = 18;
+        public static final int TYPE_APPGROUP = 19;
 
         public String text;
         public String textBefore;

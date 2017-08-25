@@ -22,11 +22,6 @@ public class clear implements CommandAbstraction {
     }
 
     @Override
-    public int maxArgs() {
-        return 0;
-    }
-
-    @Override
     public int[] argType() {
         return new int[0];
     }

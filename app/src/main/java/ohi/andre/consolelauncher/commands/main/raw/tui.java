@@ -69,7 +69,7 @@ public class tui extends ParamCommand {
         reset {
             @Override
             public String exec(ExecutePack pack) {
-                Tuils.getFolder().delete();
+                Tuils.delete(Tuils.getFolder());
                 return null;
             }
         },
@@ -120,6 +120,16 @@ public class tui extends ParamCommand {
         public String label() {
             return Tuils.MINUS + name();
         }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int index) {
+            return null;
+        }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int n) {
+            return null;
+        }
     }
 
     @Override
@@ -138,16 +148,6 @@ public class tui extends ParamCommand {
     }
 
     @Override
-    public int minArgs() {
-        return 1;
-    }
-
-    @Override
-    public int maxArgs() {
-        return 1;
-    }
-
-    @Override
     public int priority() {
         return 4;
     }
@@ -155,15 +155,5 @@ public class tui extends ParamCommand {
     @Override
     public int helpRes() {
         return R.string.help_tui;
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack pack, int indexNotFound) {
-        return null;
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack pack, int nArgs) {
-        return ((MainPack) pack).context.getString(helpRes());
     }
 }

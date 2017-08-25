@@ -132,6 +132,30 @@ public class Compare {
         return matchesWithRate(Arrays.asList(compared), comparator, allowSkip);
     }
 
+    public static List<SimpleMutableEntry<Stringable, Integer>> matchesWithRate(List<? extends Stringable> compared, boolean allowSkip, String comparator) {
+        List<SimpleMutableEntry<Stringable, Integer>> ms = new ArrayList<>();
+
+        for(Stringable s : compared) {
+            if(Thread.currentThread().isInterrupted()) return ms;
+
+            int rate = matches(s.getString(), comparator, allowSkip);
+            if(rate != -1) ms.add(new SimpleMutableEntry<>(s, rate));
+        }
+
+        Collections.sort(ms, new Comparator<SimpleMutableEntry<Stringable, Integer>>() {
+            @Override
+            public int compare(SimpleMutableEntry<Stringable, Integer> o1, SimpleMutableEntry<Stringable, Integer> o2) {
+                return o1.getValue() - o2.getValue();
+            }
+        });
+
+        return ms;
+    }
+
+    public static List<SimpleMutableEntry<Stringable, Integer>> matchesWithRate(Stringable[] compared, boolean allowSkip, String comparator) {
+        return matchesWithRate(Arrays.asList(compared), allowSkip, comparator);
+    }
+
     private static class ComparePack {
         String s;
         int index;
@@ -146,5 +170,9 @@ public class Compare {
         public int coefficient() {
             return index;
         }
+    }
+
+    public interface Stringable {
+        String getString();
     }
 }

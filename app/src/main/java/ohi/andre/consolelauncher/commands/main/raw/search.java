@@ -2,10 +2,8 @@ package ohi.andre.consolelauncher.commands.main.raw;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.net.Uri;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +13,6 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.tuils.Tuils;
-import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
 public class search extends ParamCommand {
 
@@ -100,6 +97,16 @@ public class search extends ParamCommand {
         public String label() {
             return Tuils.MINUS + name();
         }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int n) {
+            return pack.context.getString(R.string.help_search);
+        }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int index) {
+            return null;
+        }
     }
 
     @Override
@@ -166,47 +173,47 @@ public class search extends ParamCommand {
         return Tuils.EMPTYSTRING;
     }
 
-    private static String file(final List<String> args, final File cd, final Resources res, final Outputable outputable) {
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-
-                String name = Tuils.toPlanString(args);
-                List<String> paths = rightPaths(cd, name);
-                if(paths.size() == 0) {
-                    outputable.onOutput(res.getString(R.string.output_nothing_found));
-                } else {
-                    outputable.onOutput(Tuils.toPlanString(paths, Tuils.NEWLINE));
-                }
-            }
-        };
-
-        return Tuils.EMPTYSTRING;
-    }
-
-    private static List<String> rightPaths(File dir, String name) {
-        File[] files = dir.listFiles();
-        List<String> rightPaths = new ArrayList<>(files.length);
-
-        boolean check = false;
-        for (File file : files) {
-            if (fileMatch(file, name)) {
-                if (!check)
-                    rightPaths.add(dir.getAbsolutePath());
-                check = true;
-                rightPaths.add(Tuils.NEWLINE + Tuils.DOUBLE_SPACE + file.getAbsolutePath());
-            }
-            if (file.isDirectory())
-                rightPaths.addAll(rightPaths(file, name));
-        }
-
-        return rightPaths;
-    }
-
-    private static boolean fileMatch(File f, String name) {
-        return f.getName().equalsIgnoreCase(name);
-    }
+//    private static String file(final List<String> args, final File cd, final Resources res, final Outputable outputable) {
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                super.run();
+//
+//                String name = Tuils.toPlanString(args);
+//                List<String> paths = rightPaths(cd, name);
+//                if(paths.size() == 0) {
+//                    outputable.onOutput(res.getString(R.string.output_nothing_found));
+//                } else {
+//                    outputable.onOutput(Tuils.toPlanString(paths, Tuils.NEWLINE));
+//                }
+//            }
+//        };
+//
+//        return Tuils.EMPTYSTRING;
+//    }
+//
+//    private static List<String> rightPaths(File dir, String name) {
+//        File[] files = dir.listFiles();
+//        List<String> rightPaths = new ArrayList<>(files.length);
+//
+//        boolean check = false;
+//        for (File file : files) {
+//            if (fileMatch(file, name)) {
+//                if (!check)
+//                    rightPaths.add(dir.getAbsolutePath());
+//                check = true;
+//                rightPaths.add(Tuils.NEWLINE + Tuils.DOUBLE_SPACE + file.getAbsolutePath());
+//            }
+//            if (file.isDirectory())
+//                rightPaths.addAll(rightPaths(file, name));
+//        }
+//
+//        return rightPaths;
+//    }
+//
+//    private static boolean fileMatch(File f, String name) {
+//        return f.getName().equalsIgnoreCase(name);
+//    }
 
     private static String youTube(List<String> args, Context c) {
         String toSearch = Tuils.toPlanString(args, "+");
@@ -223,28 +230,7 @@ public class search extends ParamCommand {
     }
 
     @Override
-    public int minArgs() {
-        return 0;
-    }
-
-    @Override
-    public int maxArgs() {
-        return CommandAbstraction.UNDEFINIED;
-    }
-
-    @Override
     public int priority() {
         return 4;
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack pack, int nArgs) {
-        return pack.context.getString(helpRes());
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack pack, int index) {
-//        use default param
-        return pack.context.getString(helpRes());
     }
 }

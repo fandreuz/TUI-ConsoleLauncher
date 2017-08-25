@@ -258,6 +258,14 @@ public class Tuils {
         return round(result, 2);
     }
 
+    public static void delete(File dir) {
+        for(File f : dir.listFiles()) {
+            if(f.isDirectory()) delete(f);
+            f.delete();
+        }
+        dir.delete();
+    }
+
     public static void deepView(View v) {
         Tuils.log(v.toString());
 
@@ -431,11 +439,10 @@ public class Tuils {
             return Tuils.EMPTYSTRING;
         }
 
-        String output = "";
+        String output = Tuils.EMPTYSTRING;
         for (int count = 0; count < strings.length; count++) {
             output = output.concat(strings[count]);
-            if (count < strings.length - 1)
-                output = output.concat(separator);
+            if (count < strings.length - 1) output = output.concat(separator);
         }
         return output;
     }
@@ -445,6 +452,19 @@ public class Tuils {
             return Tuils.toPlanString(strings, Tuils.NEWLINE);
         }
         return Tuils.EMPTYSTRING;
+    }
+
+    public static String toPlanString(String separator, List<? extends Compare.Stringable> strings) {
+        if(strings == null) {
+            return Tuils.EMPTYSTRING;
+        }
+
+        String output = Tuils.EMPTYSTRING;
+        for (int count = 0; count < strings.size(); count++) {
+            output = output.concat(strings.get(count).getString());
+            if (count < strings.size() - 1) output = output.concat(separator);
+        }
+        return output;
     }
 
     public static void log(Object o) {

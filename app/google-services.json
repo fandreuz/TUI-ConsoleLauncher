@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "461882303040",
+    "firebase_url": "https://voltaic-charter-154600.firebaseio.com",
+    "project_id": "voltaic-charter-154600",
+    "storage_bucket": "voltaic-charter-154600.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461882303040:android:fb35e978c4e587f5",
+        "android_client_info": {
+          "package_name": "ohi.andre.consolelauncher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461882303040-hh2aic16bg8c6ivhrmkogrfus5cfdhfb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ohi.andre.consolelauncher",
+            "certificate_hash": "5b330e846d1dc49302993131a5bec9187936dba0"
+          }
+        },
+        {
+          "client_id": "461882303040-oe3oiuegut9vvub3jmt53v57lk9q2rk6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSnTQXJPlRBb1KwnPJ2nQXiKzJNfN7l10"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "461882303040-oe3oiuegut9vvub3jmt53v57lk9q2rk6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

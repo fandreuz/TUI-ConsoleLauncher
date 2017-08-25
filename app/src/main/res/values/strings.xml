@@ -5,7 +5,9 @@
     <string name="version_label">Version:</string>
     <string name="location_off">Turn on GPS or network location</string>
     <string name="share_label">Share</string>
-    <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer</string>
+    <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
+        \n\nLuke Winward (USA)\n\t-> Idea and design
+        \n\nAlexander King (Australia)\n\t-> t-ui theme website and db management</string>
     <string name="output_refresh">Refresh: apps, alias, music, contacts</string>
     <string name="output_rate">Thank you!</string>
     <string name="start_notification">T-UI started</string>
@@ -13,13 +15,17 @@
     <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt in the "t-ui" folder</string>
     <string name="admin_permission">Lock the screen on double tap</string>
 
+    <!-- theme -->
+    <string name="theme_done">Done</string>
+    <string name="theme_not_found">Theme not found</string>
+
     <!-- files -->
     <string name="output_error">An unknown error has occurred</string>
     <string name="output_isdirectory">This is a directory</string>
     <string name="output_filenotfound">File not found</string>
 
     <!-- notifications -->
-    <string name="notification_reader">Notification Reader</string>
+    <string name="notification_reader">T-UI notification reader</string>
     <string name="no_notification_access">Unfortunately t-ui can\'t redirect you to the \"Notification access\" page of your system settings</string>
 
     <!-- helps texts -->
@@ -48,6 +54,12 @@
     <string name="output_lessarg">Less arguments than expected</string>
     <string name="invalid_integer">Invalid integer</string>
     <string name="output_nothing_found">Nothing was found</string>
+    <string name="output_xmlproblem1">There was an XML problem with your file</string>
+    <string name="output_xmlproblem2">, t-ui will use default values.\nFix or delete the file to recover your options</string>
+    <string name="output_errorlabel">Error:</string>
+    <string name="output_invalidcolor">Invalid color</string>
+    <string name="output_groupnotfound">Group not found</string>
+    <string name="output_groupspace">Spaces are not allowed inside group names</string>
 
     <!-- alias -->
     <string name="output_aliasnotfound">Alias not found:</string>
@@ -84,7 +96,6 @@
 
     <!-- command/args -->
     <string name="output_commandnotfound">Command not found.\nTry to use \">>help\" or \">>tutorial\"</string>
-    <string name="output_toomanyargs">More arguments than expected</string>
     <string name="output_invalid_param">Invalid option:</string>
 
     <!-- flash -->
@@ -114,7 +125,8 @@
     </string>
     <string name="help_apps">Manage your apps
         \n\nUsage:
-        \n-lsh -> show hidden apps
+        \n-ls -> list your apps
+        \n-lsh -> list your hidden apps
         \n-show [appName] -> re-show an hidden app
         \n-hide [appName] -> hide an app
         \n-l [appName] -> show details about an app
@@ -123,14 +135,18 @@
         \n-default_app [index] [appName or most_used or null] -> set the default_app at the specified index
         \n-frc [appName] -> force t-ui to launch an app
         \n-file -> open apps.xml
+        \n-mkgp [groupName] -> create a new group with the given name
+        \n-rmgp [groupName] -> delete the group with the given name
+        \n-gpcolor [groupName] [color] -> set the color for the given group
+        \n-addtogp [groupName] [appName] -> add the given app to the given group
+        \n-rmfromgp [groupName] [appName] -> remove the given app from the given group
+        \n-lsgp [OPTIONAL: groupName] -> list your groups, or list the content of the given group
     </string>
     <string name="help_bluetooth">Toggle bluetooth</string>
     <string name="help_clear">Clear the screen</string>
     <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
         \nExample:
         \n\n>>calc 4+2-5
-        \n1
-        \n\n>>calc 7 % 3
         \n1
         \n\n>>calc 2 ^ (2*2)
         \n16
@@ -148,16 +164,13 @@
         \n-reset [option] -> reset the value of an option
     </string>
     <string name="help_data">Toggle mobile data</string>
+    <string name="help_devutils">Usage:
+        \nnotify [title] [text]</string>
     <string name="help_donate">Offer a coffee to the developer (PayPal only)</string>
     <string name="help_flash">Toggle the flashlight</string>
     <string name="help_help">Print a list of the available commands, or info about a command
         \nUsage:
         \n>>help [command]
-    </string>
-    <string name="help_next">Play the next track in the queue</string>
-    <string name="help_listen">Play a specific track
-        \nUsage:
-        \n>>listen [songName]
     </string>
     <string name="help_music">Usage:
         \n-next -> play the next song in the queue
@@ -168,7 +181,6 @@
         \n-select [song] -> play the selected song
         \n-info -> get info about the current song
         \n-seekto [seconds] -> seek to the selected part of the current song</string>
-    <string name="help_previous">Play the last played track</string>
     <string name="help_rate">Leave a feedback on the Play Store page</string>
     <string name="help_refresh">Refresh apps, alias, music, contacts</string>
     <string name="help_restart">Restart t-ui and load modified values</string>
@@ -186,12 +198,13 @@
     </string>
     <string name="help_shellcommands">Print the commands in /system/bin and /system/xbin</string>
     <string name="help_status">Get info about battery charge, wifi status and mobile data</string>
-    <string name="help_stop">Stop the player</string>
+    <string name="help_theme">Usage:
+        \n-apply [theme] -> apply the selected theme (case sensitive)
+        \n-view -> view the available themes
+        \n-create -> create a new theme</string>
     <string name="help_time">Print the current time with the given format
         \n\nUsage:
         \n$ time [index] (index means the index of the desired time_format</string>
-    <string name="help_track">Print info about the current track</string>
-    <string name="help_tracks">Print a list of the tracks in your music folder</string>
     <string name="help_tuixt">Open the text editor.
         \nUsage:
         \n>>tuixt [textFile]
