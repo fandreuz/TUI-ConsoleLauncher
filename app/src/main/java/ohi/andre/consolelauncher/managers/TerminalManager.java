@@ -112,8 +112,6 @@ public class TerminalManager {
 
         this.mContext = context;
 
-        final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-
         this.mSkinManager = skinManager;
         this.mainPack = mainPack;
 
@@ -127,7 +125,10 @@ public class TerminalManager {
         prefix = skinManager.prefix;
         suPrefix = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.input_root_prefix);
 
-        prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        final Typeface userFont = skinManager.getUserFont(Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf"));
+        final Typeface useTypeface = skinManager.systemFont ? Typeface.MONOSPACE : userFont;
+
+        prefixView.setTypeface(useTypeface);
         prefixView.setTextColor(this.mSkinManager.inputColor);
         prefixView.setTextSize(this.mSkinManager.getTextSize());
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
@@ -188,7 +189,7 @@ public class TerminalManager {
         }
 
         this.mTerminalView = terminalView;
-        this.mTerminalView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        this.mTerminalView.setTypeface(useTypeface);
         this.mTerminalView.setTextSize(mSkinManager.getTextSize());
         this.mTerminalView.setFocusable(false);
         setupScroller();
@@ -233,7 +234,7 @@ public class TerminalManager {
         this.mInputView = inputView;
         this.mInputView.setTextSize(mSkinManager.getTextSize());
         this.mInputView.setTextColor(mSkinManager.inputColor);
-        this.mInputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+        this.mInputView.setTypeface(useTypeface);
         this.mInputView.setHint(Tuils.getHint(skinManager, mainPack.currentDirectory.getAbsolutePath()));
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {

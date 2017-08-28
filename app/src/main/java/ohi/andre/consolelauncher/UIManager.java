@@ -27,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -493,8 +494,6 @@ public class UIManager implements OnTouchListener {
 
         trigger = tri;
 
-        final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         skinManager = new SkinManager();
 
@@ -567,11 +566,14 @@ public class UIManager implements OnTouchListener {
             }
         }
 
+        final Typeface userFont = skinManager.getUserFont(Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf"));
+        final Typeface useTypeface = skinManager.systemFont ? Typeface.MONOSPACE : userFont;
+
         boolean showRam = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ram);
         if (showRam) {
             ram.setTextColor(skinManager.ramColor);
             ram.setTextSize(skinManager.getTextSize());
-            ram.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            ram.setTypeface(useTypeface);
 
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
@@ -586,7 +588,7 @@ public class UIManager implements OnTouchListener {
         if(showStorage) {
             storage.setTextColor(skinManager.storageColor);
             storage.setTextSize(skinManager.getTextSize());
-            storage.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            storage.setTypeface(useTypeface);
 
             storage.post(storageRunnable);
         } else {
@@ -609,7 +611,7 @@ public class UIManager implements OnTouchListener {
             device.setText(deviceFormat);
             device.setTextColor(skinManager.deviceColor);
             device.setTextSize(skinManager.getTextSize());
-            device.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            device.setTypeface(useTypeface);
         } else {
             device.setVisibility(View.GONE);
         }
@@ -618,7 +620,7 @@ public class UIManager implements OnTouchListener {
         if(showTime) {
             time.setTextColor(skinManager.time_color);
             time.setTextSize(skinManager.getTextSize());
-            time.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            time.setTypeface(useTypeface);
 
             time.post(timeRunnable);
         } else {
@@ -633,7 +635,7 @@ public class UIManager implements OnTouchListener {
             if(mediumPercentage < lowPercentage) skinManager.manyColorsBattery = false;
 
             battery.setTextSize(skinManager.getTextSize());
-            battery.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+            battery.setTypeface(useTypeface);
 
             Tuils.registerBatteryReceiver(context, batteryUpdate);
         } else {
@@ -709,7 +711,7 @@ public class UIManager implements OnTouchListener {
                     textView.setLongClickable(false);
                     textView.setClickable(true);
 
-                    textView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+                    textView.setTypeface(useTypeface);
                     textView.setTextSize(skinManager.getSuggestionSize());
 
                     textView.setPadding(SkinManager.SUGGESTION_PADDING_HORIZONTAL, SkinManager.SUGGESTION_PADDING_VERTICAL,

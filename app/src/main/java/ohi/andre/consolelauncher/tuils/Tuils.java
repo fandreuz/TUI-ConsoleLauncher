@@ -198,9 +198,15 @@ public class Tuils {
         return getTotaleSpace(Environment.getDataDirectory(), unit);
     }
 
+    public static String getExternalStoragePath()
+    {
+        return XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.external_storage_path);
+    }
+
     public static double getAvailableExternalMemorySize(int unit) {
         try {
-            return getAvailableSpace(new File(System.getenv("SECONDARY_STORAGE")), unit);
+            String externalStoragePath = getExternalStoragePath();
+            return getAvailableSpace(new File(externalStoragePath), unit);
         } catch (Exception e) {
             return -1;
         }
@@ -208,22 +214,19 @@ public class Tuils {
 
     public static double getTotalExternalMemorySize(int unit) {
         try {
-            return getTotaleSpace(new File(System.getenv("SECONDARY_STORAGE")), unit);
+            String externalStoragePath = getExternalStoragePath();
+            return getTotaleSpace(new File(externalStoragePath), unit);
         } catch (Exception e) {
             return -1;
         }
     }
 
     public static double getAvailableSpace(File dir, int unit) {
-        StatFs statFs = new StatFs(dir.getAbsolutePath());
-        long blocks = statFs.getAvailableBlocks();
-        return formatSize(blocks * statFs.getBlockSize(), unit);
+        return formatSize(dir.getUsableSpace(), unit);
     }
 
     public static double getTotaleSpace(File dir, int unit) {
-        StatFs statFs = new StatFs(dir.getAbsolutePath());
-        long blocks = statFs.getBlockCount();
-        return formatSize(blocks * statFs.getBlockSize(), unit);
+        return formatSize(dir.getTotalSpace(), unit);
     }
 
     public static double percentage(double part, double total) {

@@ -186,6 +186,10 @@ public class XMLPrefsManager {
                 return "false";
             }
         },
+        user_font_file {
+            @Override
+            public String defaultValue() { return "/sdcard/t-ui/userfont.ttf"; }
+        },
         font_size {
             @Override
             public String defaultValue() {
@@ -631,6 +635,12 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "Internal Storage: %iavgb GB / %itotgb GB (%iav%%)";
+            }
+        },
+        external_storage_path {
+            @Override
+            public String defaultValue() {
+                return "/sdcard/";
             }
         },
         input_format {
