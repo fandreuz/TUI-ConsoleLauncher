@@ -21,6 +21,11 @@ public abstract class ParamCommand implements CommandAbstraction {
     }
 
     @Override
+    public int minArgs() {
+        return -1;
+    }
+
+    @Override
     public final String exec(ExecutePack pack) throws Exception {
         String o = doThings(pack);
         if(o != null) return o;
@@ -42,6 +47,16 @@ public abstract class ParamCommand implements CommandAbstraction {
         String def = pack.cmdPrefs.forCommand(getClass().getSimpleName()).get(CommandsPreferences.DEFAULT_PARAM);
         if(!def.startsWith("-")) def = "-" + def;
         return def;
+    }
+
+    @Override
+    public String onNotArgEnough(ExecutePack pack, int nArgs) {
+        return pack.context.getString(helpRes());
+    }
+
+    @Override
+    public String onArgNotFound(ExecutePack pack, int indexNotFound) {
+        return pack.context.getString(helpRes());
     }
 
     public abstract String[] params();

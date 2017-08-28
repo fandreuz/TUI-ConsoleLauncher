@@ -11,6 +11,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
@@ -28,10 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
+import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -49,11 +50,15 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
     public static final String PATH = "apps.xml";
     private final String NAME = "APPS";
+    private File file;
 
     private final String SHOW_ATTRIBUTE = "show";
+    private final String APPS_ATTRIBUTE = "apps";
+    private final String BGCOLOR_ATTRIBUTE = "bgColor";
+    private final String FORECOLOR_ATTRIBUTE = "foreColor";
+    private static final String APPS_SEPARATOR = ";";
 
     private Context context;
-    private File folder;
 
     private AppsHolder appsHolder;
     private List<LaunchInfo> hiddenApps;
@@ -65,6 +70,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private static XMLPrefsManager.XmlPrefsElement instance = null;
 
     private XMLPrefsManager.XMLPrefsList defaultApps;
+
+    public static List<Group> groups;
 
     public enum Options implements XMLPrefsManager.XMLPrefsSave {
 
@@ -152,10 +159,13 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         this.context = context;
 
+        this.file = new File(Tuils.getFolder(), PATH);
+
         this.preferences = context.getSharedPreferences(PREFS, 0);
         this.editor = preferences.edit();
 
-        this.folder = Tuils.getFolder();
+        this.groups = new ArrayList<>();
+
         initAppListener(context);
 
         new Thread() {
@@ -179,40 +189,39 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public void fill() {
-        List<LaunchInfo> allApps = createAppMap(context.getPackageManager());
+        final List<LaunchInfo> allApps = createAppMap(context.getPackageManager());
         hiddenApps = new ArrayList<>();
 
-        try {
+        groups.clear();
 
+        try {
             defaultApps = new XMLPrefsManager.XMLPrefsList();
 
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-
-            File file = new File(folder, PATH);
-            if (!file.exists() && !file.createNewFile()) return;
-
-            Document d;
-            try {
-                d = builder.parse(file);
-            } catch (Exception e) {
+            if(!file.exists()) {
                 resetFile(file, NAME);
-                d = builder.parse(file);
             }
+
+            Object[] o;
+            try {
+                o = XMLPrefsManager.buildDocument(file, NAME);
+            } catch (Exception e) {
+                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + NAME + context.getString(R.string.output_xmlproblem2) +
+                        Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
+                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
+                context.sendBroadcast(intent);
+
+                return;
+            }
+
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
 
             List<AppsManager.Options> enums = new ArrayList<>(Arrays.asList(AppsManager.Options.values()));
-
-            Element root = (Element) d.getElementsByTagName(NAME).item(0);
-            if (root == null) {
-                resetFile(file, NAME);
-
-                d = builder.parse(file);
-                root = (Element) d.getElementsByTagName(NAME).item(0);
-            }
-
             NodeList nodes = root.getElementsByTagName("*");
+
             for (int count = 0; count < nodes.getLength(); count++) {
-                Node node = nodes.item(count);
+                final Node node = nodes.item(count);
 
                 String nn = node.getNodeName();
                 int nodeIndex = Tuils.find(nn, (List) enums);
@@ -229,35 +238,100 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 //                todo support delete
                 else {
                     if (node.getNodeType() == Node.ELEMENT_NODE) {
-                        Element e = (Element) node;
+                        final Element e = (Element) node;
 
-                        boolean shown = !e.hasAttribute(SHOW_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(SHOW_ATTRIBUTE));
-                        if (!shown) {
-                            ComponentName name = null;
-
-                            String[] split = nn.split("-");
-                            if (split.length >= 2) {
-                                name = new ComponentName(split[0], split[1]);
-                            } else if (split.length == 1) {
-                                if (split[0].contains("Activity")) {
-                                    for (LaunchInfo i : allApps) {
-                                        if (i.componentName.getClassName().equals(split[0]))
-                                            name = i.componentName;
-                                    }
-                                } else {
-                                    for (LaunchInfo i : allApps) {
-                                        if (i.componentName.getPackageName().equals(split[0]))
-                                            name = i.componentName;
-                                    }
-                                }
+                        if(e.hasAttribute(APPS_ATTRIBUTE)) {
+                            final String name = e.getNodeName();
+                            if(name.contains(Tuils.SPACE)) {
+                                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                                intent.putExtra(InputOutputReceiver.TEXT, PATH + ": " + context.getString(R.string.output_groupspace) + ": " + name);
+                                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
+                                context.sendBroadcast(intent);
+                                continue;
                             }
 
-                            if (name == null) continue;
+                            new Thread() {
+                                @Override
+                                public void run() {
+                                    super.run();
 
-                            LaunchInfo removed = AppUtils.findLaunchInfoWithComponent(allApps, name);
-                            if (removed != null) {
-                                allApps.remove(removed);
-                                hiddenApps.add(removed);
+                                    Group g = new Group(name);
+
+                                    String apps = e.getAttribute(APPS_ATTRIBUTE);
+                                    String[] split = apps.split(APPS_SEPARATOR);
+
+                                    List<LaunchInfo> as = new ArrayList<>(allApps);
+
+                                    External:
+                                    for(String s : split) {
+                                        for(int c = 0; c < as.size(); c++) {
+                                            if(as.get(c).equals(s)) {
+                                                g.add(as.remove(c));
+                                                continue External;
+                                            }
+                                        }
+                                    }
+
+                                    if(e.hasAttribute(BGCOLOR_ATTRIBUTE)) {
+                                        String c = e.getAttribute(BGCOLOR_ATTRIBUTE);
+                                        if(c.length() > 0) {
+                                            try {
+                                                g.setBgColor(Color.parseColor(c));
+                                            } catch (Exception e) {
+                                                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                                                intent.putExtra(InputOutputReceiver.TEXT, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
+                                                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
+                                                context.sendBroadcast(intent);
+                                            }
+                                        }
+                                    }
+
+                                    if(e.hasAttribute(FORECOLOR_ATTRIBUTE)) {
+                                        String c = e.getAttribute(FORECOLOR_ATTRIBUTE);
+                                        if(c.length() > 0) {
+                                            try {
+                                                g.setForeColor(Color.parseColor(c));
+                                            } catch (Exception e) {
+                                                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                                                intent.putExtra(InputOutputReceiver.TEXT, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
+                                                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
+                                                context.sendBroadcast(intent);
+                                            }
+                                        }
+                                    }
+
+                                    groups.add(g);
+                                }
+                            }.start();
+                        } else {
+                            boolean shown = !e.hasAttribute(SHOW_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(SHOW_ATTRIBUTE));
+                            if (!shown) {
+                                ComponentName name = null;
+
+                                String[] split = nn.split("-");
+                                if (split.length >= 2) {
+                                    name = new ComponentName(split[0], split[1]);
+                                } else if (split.length == 1) {
+                                    if (split[0].contains("Activity")) {
+                                        for (LaunchInfo i : allApps) {
+                                            if (i.componentName.getClassName().equals(split[0]))
+                                                name = i.componentName;
+                                        }
+                                    } else {
+                                        for (LaunchInfo i : allApps) {
+                                            if (i.componentName.getPackageName().equals(split[0]))
+                                                name = i.componentName;
+                                        }
+                                    }
+                                }
+
+                                if (name == null) continue;
+
+                                LaunchInfo removed = AppUtils.findLaunchInfoWithComponent(allApps, name);
+                                if (removed != null) {
+                                    allApps.remove(removed);
+                                    hiddenApps.add(removed);
+                                }
                             }
                         }
                     }
@@ -393,7 +467,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public String hideActivity(LaunchInfo info) {
-        set(new File(folder, PATH), NAME, info.componentName.getPackageName() + "-" + info.componentName.getClassName(), new String[] {SHOW_ATTRIBUTE}, new String[] {false + Tuils.EMPTYSTRING});
+        set(file, NAME, info.write(), new String[] {SHOW_ATTRIBUTE}, new String[] {false + Tuils.EMPTYSTRING});
 
         appsHolder.remove(info);
         appsHolder.update(true);
@@ -404,7 +478,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public String showActivity(LaunchInfo info) {
-        set(new File(folder, PATH), NAME, info.componentName.getPackageName() + "-" + info.componentName.getClassName(), new String[] {SHOW_ATTRIBUTE}, new String[] {true + Tuils.EMPTYSTRING});
+        set(file, NAME, info.write(), new String[]{SHOW_ATTRIBUTE}, new String[]{true + Tuils.EMPTYSTRING});
 
         hiddenApps.remove(info);
         appsHolder.add(info);
@@ -413,24 +487,184 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         return info.publicLabel;
     }
 
-    public List<String> getAppLabels() {
-        if(appsHolder != null) {
-            return appsHolder.getAppLabels();
-        } return new ArrayList<>();
+    public String createGroup(String name) {
+        return XMLPrefsManager.set(file, NAME, name, new String[]{APPS_ATTRIBUTE}, new String[]{Tuils.EMPTYSTRING});
     }
 
-    public List<String> getHiddenAppsLabels() {
-        return AppUtils.labelList(hiddenApps, true);
+    public String groupBgColor(String name, String color) {
+        return XMLPrefsManager.set(file, NAME, name, new String[]{BGCOLOR_ATTRIBUTE}, new String[]{color});
     }
 
-    public String[] getSuggestedApps() {
-        if(appsHolder == null) return new String[0];
+    public String groupForeColor(String name, String color) {
+        return XMLPrefsManager.set(file, NAME, name, new String[]{FORECOLOR_ATTRIBUTE}, new String[]{color});
+    }
+
+    public String removeGroup(String name) {
+        String output = XMLPrefsManager.removeNode(file, NAME, name);
+
+        if(output == null) return null;
+        if(output.length() == 0) return context.getString(R.string.output_groupnotfound);
+        return output;
+    }
+
+    public String addAppToGroup(String group, LaunchInfo app) {
+        Object[] o;
+        try {
+            o = XMLPrefsManager.buildDocument(file, NAME);
+        } catch (Exception e) {
+            return e.toString();
+        }
+
+        Document d = (Document) o[0];
+        Element root = (Element) o[1];
+
+        Node node = XMLPrefsManager.findNode(root, group);
+        if(node == null) return context.getString(R.string.output_groupnotfound);
+
+        Element e = (Element) node;
+        String apps = e.getAttribute(APPS_ATTRIBUTE);
+
+        if(apps != null && app.isInside(apps)) return null;
+
+        apps = apps + APPS_SEPARATOR + app.write();
+        if(apps.startsWith(APPS_SEPARATOR)) apps = apps.substring(1);
+
+        e.setAttribute(APPS_ATTRIBUTE, apps);
+
+        XMLPrefsManager.writeTo(d, file);
+        return null;
+    }
+
+    public String removeAppFromGroup(String group, LaunchInfo app) {
+        Object[] o;
+        try {
+            o = XMLPrefsManager.buildDocument(file, NAME);
+        } catch (Exception e) {
+            return e.toString();
+        }
+
+        Document d = (Document) o[0];
+        Element root = (Element) o[1];
+
+        Node node = XMLPrefsManager.findNode(root, group);
+        if(node == null) return context.getString(R.string.output_groupnotfound);
+
+        Element e = (Element) node;
+
+        String apps = e.getAttribute(APPS_ATTRIBUTE);
+        if(apps == null) return null;
+
+        if(!app.isInside(apps)) return null;
+
+        String temp = apps.replaceAll(app.write(), Tuils.EMPTYSTRING);
+        if(temp.length() < apps.length()) apps = temp;
+        else apps = apps.replaceAll(app.componentName.getPackageName(), Tuils.EMPTYSTRING);
+
+        apps = apps.replaceAll(APPS_SEPARATOR + APPS_SEPARATOR, APPS_SEPARATOR);
+        if(apps.startsWith(APPS_SEPARATOR)) apps = apps.substring(1);
+        if(apps.endsWith(APPS_SEPARATOR)) apps = apps.substring(0, apps.length() - 1);
+
+        e.setAttribute(APPS_ATTRIBUTE, apps);
+
+        XMLPrefsManager.writeTo(d, file);
+        return null;
+    }
+
+    public String listGroup(String group) {
+        Object[] o;
+        try {
+            o = XMLPrefsManager.buildDocument(file, NAME);
+        } catch (Exception e) {
+            return e.toString();
+        }
+
+        Element root = (Element) o[1];
+
+        Node node = XMLPrefsManager.findNode(root, group);
+        if(node == null) return context.getString(R.string.output_groupnotfound);
+
+        Element e = (Element) node;
+
+        String apps = e.getAttribute(APPS_ATTRIBUTE);
+        if(apps == null) return "[]";
+
+        String labels = Tuils.EMPTYSTRING;
+
+        PackageManager manager = context.getPackageManager();
+        String[] split = apps.split(APPS_SEPARATOR);
+        for(String s : split) {
+            if(s.length() == 0) continue;
+
+            String label;
+
+            ComponentName name = LaunchInfo.componentInfo(s);
+            if(name == null) {
+                try {
+                    label = manager.getApplicationInfo(s, 0).loadLabel(manager).toString();
+                } catch (Exception e1) {
+                    continue;
+                }
+            } else {
+                try {
+                    label = manager.getActivityInfo(name, 0).loadLabel(manager).toString();
+                } catch (Exception e1) {
+                    continue;
+                }
+            }
+
+            labels = labels + Tuils.NEWLINE + label;
+        }
+
+        return labels.trim();
+    }
+
+    public String listGroups() {
+        Object[] o;
+        try {
+            o = XMLPrefsManager.buildDocument(file, NAME);
+        } catch (Exception e) {
+            return e.toString();
+        }
+
+        Element root = (Element) o[1];
+
+        String groups = Tuils.EMPTYSTRING;
+
+        NodeList list = root.getElementsByTagName("*");
+        for(int count = 0; count < list.getLength(); count++) {
+            Node node = list.item(count);
+            if(! (node instanceof Element)) continue;
+
+            Element e = (Element) node;
+            if(!e.hasAttribute(APPS_ATTRIBUTE)) continue;
+
+            groups = groups + Tuils.NEWLINE + e.getNodeName();
+        }
+
+        if(groups.length() == 0) return "[]";
+        return groups.trim();
+    }
+
+    public List<LaunchInfo> shownApps() {
+        return appsHolder.getApps();
+    }
+
+    public List<LaunchInfo> hiddenApps() {
+        return hiddenApps;
+    }
+
+    public LaunchInfo[] getSuggestedApps() {
+        if(appsHolder == null) return new LaunchInfo[0];
         return appsHolder.getSuggestedApps();
     }
 
     public String printApps(int type) {
-        List<String> labels = type == SHOWN_APPS ? appsHolder.appLabels : AppUtils.labelList(hiddenApps, true);
-        return AppUtils.printApps(labels);
+        try {
+            List<String> labels = AppUtils.labelList(type == SHOWN_APPS ? appsHolder.getApps() : hiddenApps, true);
+            return AppUtils.printApps(labels);
+        } catch (NullPointerException e) {
+            return "[]";
+        }
     }
 
     public void unregisterReceiver(Context context) {
@@ -441,7 +675,88 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         unregisterReceiver(context);
     }
 
-    public static class LaunchInfo {
+    public static class Group implements MainManager.Group {
+        List<LaunchInfo> apps;
+
+        int bgColor = SkinManager.COLOR_NOT_SET;
+        int foreColor = SkinManager.COLOR_NOT_SET;
+
+        String name;
+
+        public Group(String name) {
+            this.name = name;
+            apps = new ArrayList<>();
+        }
+
+        public void add(LaunchInfo info) {
+            apps.add(info);
+        }
+
+        public boolean contains(LaunchInfo info) {
+            return apps.contains(info);
+        }
+
+        public int getBgColor() {
+            return bgColor;
+        }
+
+        public void setBgColor(int color) {
+            this.bgColor = color;
+        }
+
+        public int getForeColor() {
+            return foreColor;
+        }
+
+        public void setForeColor(int foreColor) {
+            this.foreColor = foreColor;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public List<? extends Compare.Stringable> members() {
+            return apps;
+        }
+
+        @Override
+        public boolean use(MainPack mainPack, String input) {
+            LaunchInfo info = AppUtils.findLaunchInfoWithLabel(apps, input);
+            if(info == null) return false;
+
+            info.launchedTimes++;
+
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.setComponent(info.componentName);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            mainPack.context.startActivity(intent);
+
+            return true;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if(obj instanceof Group) {
+                return name.equals(((Group) obj).name());
+            } else if(obj instanceof String) {
+                return obj.equals(name);
+            }
+
+            return false;
+        }
+    }
+
+    public static class LaunchInfo implements Compare.Stringable {
+
+        private static final String COMPONENT_SEPARATOR = "-";
 
         public ComponentName componentName;
 
@@ -450,8 +765,38 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         public LaunchInfo(String packageName, String activityName, String label) {
             this.componentName = new ComponentName(packageName, activityName);
-
             this.publicLabel = label;
+        }
+
+        public boolean isInside(String apps) {
+            String[] split = apps.split(AppsManager.APPS_SEPARATOR);
+            for(String s : split) {
+                if(is(s)) return true;
+            }
+
+            return false;
+        }
+
+        public boolean is(String app) {
+            String[] split2 = app.split(COMPONENT_SEPARATOR);
+
+            if(split2.length == 1) {
+                if(componentName.getPackageName().equals(split2[0])) return true;
+            } else {
+                if(componentName.getPackageName().equals(split2[0]) && componentName.getClassName().equals(split2[1])) return true;
+            }
+
+            return false;
+        }
+
+        public static ComponentName componentInfo(String app) {
+            String[] split2 = app.split(COMPONENT_SEPARATOR);
+
+            if(split2.length == 1) {
+                return null;
+            } else {
+                return new ComponentName(split2[0], split2[1]);
+            }
         }
 
         @Override
@@ -472,7 +817,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 return this.componentName.equals(o);
             }
             else if(o instanceof String) {
-                return this.componentName.getClassName().equals(o);
+                return is((String) o) || this.componentName.getClassName().equals(o);
             }
 
             return false;
@@ -482,6 +827,15 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         public String toString() {
             return componentName.getPackageName() + " - " + componentName.getClassName() + " --> " + publicLabel + ", n=" + launchedTimes;
         }
+
+        public String write() {
+            return this.componentName.getPackageName() + COMPONENT_SEPARATOR + this.componentName.getClassName();
+        }
+
+        @Override
+        public String getString() {
+            return publicLabel;
+        }
     }
 
     private class AppsHolder {
@@ -489,7 +843,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         final int MOST_USED = 10, NULL = 11, USER_DEFINIED = 12;
 
         private List<LaunchInfo> infos;
-        private List<String> appLabels;
         private XMLPrefsManager.XMLPrefsList values;
 
         private SuggestedAppMgr suggestedAppMgr;
@@ -534,8 +887,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 }
 
                 sort();
-
-//                handler.postDelayed(runnable, 1000 * 60 * 5);
             }
 
             public int size() {
@@ -588,7 +939,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 sort();
             }
 
-            public List<String> labels() {
+            public List<LaunchInfo> apps() {
                 List<LaunchInfo> list = new ArrayList<>();
 
                 List<SuggestedApp> cp = new ArrayList<>(suggested);
@@ -603,27 +954,26 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                     SuggestedApp app = cp.get(count);
                     if(app.type != NULL && app.app != null) list.add(app.app);
                 }
-                return AppUtils.labelList(list, false);
+                return list;
             }
 
-//            private Handler handler = new Handler();
-//            private Runnable runnable = new Runnable() {
-//                @Override
-//                public void run() {
-//                    if(duplicates()) {
-//                        fillSuggestions();
-//                    }
-//                    handler.postDelayed(runnable, 1000 * 60 * 2);
-//                }
+//            public List<String> labels() {
+//                List<LaunchInfo> list = new ArrayList<>();
 //
-//                private boolean duplicates() {
-//                    for (int count =0; count < size(); count++)
-//                        for (int count2 = count+1 ; count2 < size(); count2++)
-//                            if (count != count2 && get(count) == get(count2))
-//                                return true;
-//                    return false;
+//                List<SuggestedApp> cp = new ArrayList<>(suggested);
+//                Collections.sort(cp, new Comparator<SuggestedApp>() {
+//                    @Override
+//                    public int compare(SuggestedApp o1, SuggestedApp o2) {
+//                        return o1.index - o2.index;
+//                    }
+//                });
+//
+//                for(int count = 0; count < cp.size(); count++) {
+//                    SuggestedApp app = cp.get(count);
+//                    if(app.type != NULL && app.app != null) list.add(app.app);
 //                }
-//            };
+//                return AppUtils.labelList(list, false);
+//            }
 
             private class SuggestedApp implements Comparable {
                 int type;
@@ -712,10 +1062,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             } catch (NullPointerException e) {}
         }
 
-        private void fillLabels() {
-            appLabels = AppUtils.labelList(infos, true);
-        }
-
         private void fillSuggestions() {
             suggestedAppMgr = new SuggestedAppMgr(values, getApps());
             for(LaunchInfo info : infos) {
@@ -730,23 +1076,18 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         private void update(boolean refreshSuggestions) {
             AppUtils.checkEquality(infos);
             sort();
-            fillLabels();
             if(refreshSuggestions) {
                 fillSuggestions();
             }
-        }
-
-        public List<String> getAppLabels() {
-            return appLabels;
         }
 
         public List<LaunchInfo> getApps() {
             return infos;
         }
 
-        public String[] getSuggestedApps() {
-            List<String> ls = suggestedAppMgr.labels();
-            return ls.toArray(new String[ls.size()]);
+        public LaunchInfo[] getSuggestedApps() {
+            List<LaunchInfo> apps = suggestedAppMgr.apps();
+            return apps.toArray(new LaunchInfo[apps.size()]);
         }
     }
 

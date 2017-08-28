@@ -34,6 +34,12 @@ public class config extends ParamCommand {
                 }
                 return null;
             }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
+                pack.args = new Object[] {pack.args[0], pack.args[1], Tuils.EMPTYSTRING};
+                return set.exec(pack);
+            }
         },
         open {
             @Override
@@ -46,6 +52,11 @@ public class config extends ParamCommand {
                 File file = new File(Tuils.getFolder(), pack.get(String.class, 1));
                 pack.context.startActivity(Tuils.openFile(file));
                 return null;
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_filenotfound);
             }
         },
         get {
@@ -98,6 +109,16 @@ public class config extends ParamCommand {
         public String label() {
             return Tuils.MINUS + name();
         }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int n) {
+            return pack.context.getString(R.string.help_config);
+        }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int index) {
+            return pack.context.getString(R.string.output_invalidarg);
+        }
     }
 
     @Override
@@ -116,16 +137,6 @@ public class config extends ParamCommand {
     }
 
     @Override
-    public int minArgs() {
-        return 2;
-    }
-
-    @Override
-    public int maxArgs() {
-        return 3;
-    }
-
-    @Override
     public int priority() {
         return 4;
     }
@@ -133,20 +144,5 @@ public class config extends ParamCommand {
     @Override
     public int helpRes() {
         return R.string.help_config;
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack pack, int indexNotFound) {
-        return pack.context.getString(R.string.output_invalidarg);
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack pack, int nArgs) {
-        if(nArgs == 2 && pack.get(ohi.andre.consolelauncher.commands.main.Param.class, 0).equals(Param.set)) {
-            pack.args = new Object[] {pack.args[0], pack.args[1], Tuils.EMPTYSTRING};
-            return Param.set.exec(pack);
-        }
-
-        return pack.context.getString(helpRes());
     }
 }

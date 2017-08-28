@@ -2,11 +2,13 @@ package ohi.andre.consolelauncher.managers.music;
 
 import java.io.File;
 
+import ohi.andre.consolelauncher.tuils.Compare;
+
 /**
  * Created by francescoandreuzzi on 17/08/2017.
  */
 
-public class Song {
+public class Song implements Compare.Stringable {
 
     private long id;
     private String title, path;
@@ -36,6 +38,11 @@ public class Song {
 
     public String getPath() {
         return path;
+    }
+
+    @Override
+    public String getString() {
+        return title;
     }
 }
 

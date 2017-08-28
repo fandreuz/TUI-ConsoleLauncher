@@ -21,11 +21,6 @@ public class time implements CommandAbstraction {
     }
 
     @Override
-    public int maxArgs() {
-        return 1;
-    }
-
-    @Override
     public int priority() {
         return 4;
     }

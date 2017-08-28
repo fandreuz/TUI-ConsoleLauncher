@@ -10,9 +10,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -38,17 +40,20 @@ public class NotificationService extends NotificationListenerService {
 
     private final int UPDATE_TIME = 1500;
 
-    Map<String, Long> recentNotifications = new HashMap<>();
+    Map<Integer, Long> recentNotifications = new HashMap<>();
     Handler handler = new Handler();
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        NotificationManager.create();
+        NotificationManager.create(this);
+
+        manager = getPackageManager();
+        format = NotificationManager.getFormat();
+        timeColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
 
         if(NotificationManager.apps() == 0) {
-//            some nice apps
             NotificationManager.notificationsChangeFor(new ArrayList<>(Arrays.asList(
                     new NotificatedApp("com.whatsapp", "#25D366", true),
                     new NotificatedApp("com.google.android.apps.inbox", "#03A9F4", true),
@@ -63,10 +68,10 @@ public class NotificationService extends NotificationListenerService {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Map<String, Long> copy = new HashMap<>(recentNotifications);
+                Map<Integer, Long> copy = new HashMap<>(recentNotifications);
 
                 long time = System.currentTimeMillis();
-                for(Map.Entry<String, Long> entry : copy.entrySet()) {
+                for(Map.Entry<Integer, Long> entry : copy.entrySet()) {
                     if(time - entry.getValue() > 1500) recentNotifications.remove(entry.getKey());
                 }
 
@@ -99,18 +104,12 @@ public class NotificationService extends NotificationListenerService {
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
 
-        if(recentNotifications.containsKey(sbn.getPackageName())) return;
-        recentNotifications.put(sbn.getPackageName(), System.currentTimeMillis());
+        if (recentNotifications.containsKey(sbn.getId())) return;
+        recentNotifications.put(sbn.getId(), System.currentTimeMillis());
 
         Notification notification = sbn.getNotification();
         if (notification == null) {
             return;
-        }
-
-        if(format == null) {
-            manager = getPackageManager();
-            format = NotificationManager.getFormat();
-            timeColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
         }
 
         String pack = sbn.getPackageName();
@@ -123,19 +122,27 @@ public class NotificationService extends NotificationListenerService {
         }
 
         NotificatedApp nApp = NotificationManager.getAppState(pack);
-        if( (nApp != null && !nApp.enabled)) {
+        if ((nApp != null && !nApp.enabled)) {
             return;
         }
 
-        if(nApp == null && !NotificationManager.default_app_state) {
+        if (nApp == null && !NotificationManager.default_app_state) {
             return;
         }
 
         CharSequence textSequence = null, titleSequence = null;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            textSequence = notification.extras.getCharSequence(Notification.EXTRA_TEXT);
-            titleSequence = notification.extras.getCharSequence(Notification.EXTRA_TITLE);
+        Bundle bundle = NotificationCompat.getExtras(notification);
+        if(bundle != null) {
+            textSequence = bundle.getCharSequence(NotificationCompat.EXTRA_TEXT);
+            titleSequence = bundle.getCharSequence(NotificationCompat.EXTRA_TITLE);
+
+            if (textSequence == null) {
+                CharSequence[] charText = (CharSequence[]) bundle.get(NotificationCompat.EXTRA_TEXT_LINES);
+                if (charText != null && charText.length > 0) {
+                    textSequence = charText[charText.length - 1].toString();
+                }
+            }
         } else {
             textSequence = notification.tickerText;
         }

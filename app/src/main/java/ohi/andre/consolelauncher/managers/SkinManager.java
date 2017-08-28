@@ -190,7 +190,7 @@ public class SkinManager implements Parcelable {
             return new ColorDrawable(Color.TRANSPARENT);
         } else {
             switch (type) {
-                case SuggestionsManager.Suggestion.TYPE_APP:
+                case SuggestionsManager.Suggestion.TYPE_APP:case SuggestionsManager.Suggestion.TYPE_APPGROUP:
                     return new ColorDrawable(suggAppBg);
                 case SuggestionsManager.Suggestion.TYPE_ALIAS:
                     return new ColorDrawable(suggAliasBg);

@@ -32,6 +32,11 @@ public class notifications extends ParamCommand {
             public int[] args() {
                 return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_appnotfound);
+            }
         },
         exc {
             @Override
@@ -44,11 +49,15 @@ public class notifications extends ParamCommand {
             public int[] args() {
                 return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_appnotfound);
+            }
         },
         clr {
             @Override
             public String exec(ExecutePack pack) {
-                if(pack.args.length < 3) return ((MainPack) pack).context.getString(R.string.help_notifications);
                 try {
                     NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(AppsManager.LaunchInfo.class, 2).componentName.getPackageName(), pack.get(String.class, 1), true));
                 } catch (Exception e) {}
@@ -58,6 +67,15 @@ public class notifications extends ParamCommand {
             @Override
             public int[] args() {
                 return new int[] {CommandAbstraction.COLOR, CommandAbstraction.VISIBLE_PACKAGE};
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                int res;
+                if(index == 1) res = R.string.output_invalidcolor;
+                else res = R.string.output_appnotfound;
+
+                return pack.context.getString(res);
             }
         },
         title_filter {
@@ -72,6 +90,11 @@ public class notifications extends ParamCommand {
             public int[] args() {
                 return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.invalid_integer);
+            }
         },
         text_filter {
             @Override
@@ -85,6 +108,11 @@ public class notifications extends ParamCommand {
             public int[] args() {
                 return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.invalid_integer);
+            }
         },
         apply_filter {
             @Override
@@ -97,6 +125,15 @@ public class notifications extends ParamCommand {
                 int id = pack.get(int.class, 1);
                 NotificationManager.applyFilter(id, pack.get(AppsManager.LaunchInfo.class, 2).componentName.getPackageName());
                 return null;
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                int res;
+                if(index == 1) res = R.string.invalid_integer;
+                else res = R.string.output_appnotfound;
+
+                return pack.context.getString(res);
             }
         },
         file {
@@ -152,6 +189,16 @@ public class notifications extends ParamCommand {
         public String label() {
             return Tuils.MINUS + name();
         }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int index) {
+            return null;
+        }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int n) {
+            return pack.context.getString(R.string.help_notifications);
+        }
     }
 
     @Override
@@ -170,16 +217,6 @@ public class notifications extends ParamCommand {
     }
 
     @Override
-    public int minArgs() {
-        return 1;
-    }
-
-    @Override
-    public int maxArgs() {
-        return 3;
-    }
-
-    @Override
     public int priority() {
         return 3;
     }
@@ -187,19 +224,5 @@ public class notifications extends ParamCommand {
     @Override
     public int helpRes() {
         return R.string.help_notifications;
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack pack, int index) {
-        String arg = pack.get(String.class, 0).toLowerCase();
-        if(index == 1 && (arg.equals(Param.title_filter.label()) || arg.equals(Param.text_filter.label()) || arg.equals(Param.apply_filter.label()))) {
-            return ((MainPack) pack).context.getString(R.string.invalid_integer);
-        }
-        return ((MainPack) pack).context.getString(R.string.output_appnotfound);
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack pack, int nArgs) {
-        return ((MainPack) pack).context.getString(helpRes());
     }
 }

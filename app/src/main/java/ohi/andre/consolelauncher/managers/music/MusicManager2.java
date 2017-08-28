@@ -32,7 +32,6 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
     Context mContext;
 
     List<Song> songs;
-    List<String> titles;
 
     MusicService musicSrv;
     boolean musicBound=false;
@@ -153,9 +152,6 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                     if(songs == null) songs = new ArrayList<>();
                     else songs.clear();
 
-                    if(titles == null) titles = new ArrayList<>();
-                    else titles.clear();
-
                     if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.songs_from_mediastore)) {
                         ContentResolver musicResolver = mContext.getContentResolver();
                         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -167,7 +163,6 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                                 long thisId = musicCursor.getLong(idColumn);
                                 String thisTitle = musicCursor.getString(titleColumn);
                                 songs.add(new Song(thisId, thisTitle));
-                                titles.add(thisTitle);
                             }
                             while (musicCursor.moveToNext());
                         }
@@ -177,10 +172,6 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                         if(path.length() > 0) {
                             File dir = new File(path);
                             if(dir.isDirectory()) songs.addAll(Tuils.getSongsInFolder(dir));
-
-                            for(Song s : songs) {
-                                titles.add(s.getTitle());
-                            }
                         }
                     }
                 } catch (Exception e) {
@@ -324,12 +315,12 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
         musicSrv.playSong();
     }
 
-    public List<String> getTitles() {
-        return titles;
-    }
-
     @Override
     public void start() {
         musicSrv.go();
+    }
+
+    public List<Song> getSongs() {
+        return songs;
     }
 }

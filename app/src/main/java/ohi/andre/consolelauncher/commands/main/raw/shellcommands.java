@@ -48,7 +48,10 @@ public class shellcommands implements CommandAbstraction {
         Set<String> commands = new HashSet<>();
 
         for (String s : path) {
-            commands.addAll(Arrays.asList(new File(s).list()));
+            String[] f = new File(s).list();
+            if(f != null) {
+                commands.addAll(Arrays.asList(f));
+            }
         }
 
         return commands;
@@ -56,11 +59,6 @@ public class shellcommands implements CommandAbstraction {
 
     @Override
     public int minArgs() {
-        return 0;
-    }
-
-    @Override
-    public int maxArgs() {
         return 0;
     }
 

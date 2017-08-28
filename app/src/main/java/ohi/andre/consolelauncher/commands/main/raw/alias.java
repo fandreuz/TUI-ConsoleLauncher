@@ -98,6 +98,16 @@ public class alias extends ParamCommand {
         public String label() {
             return Tuils.MINUS + name();
         }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int index) {
+            return pack.context.getString(R.string.help_alias);
+        }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int index) {
+            return null;
+        }
     }
 
 
@@ -122,27 +132,7 @@ public class alias extends ParamCommand {
     }
 
     @Override
-    public int minArgs() {
-        return 1;
-    }
-
-    @Override
-    public int maxArgs() {
-        return CommandAbstraction.UNDEFINIED;
-    }
-
-    @Override
     public int priority() {
         return 2;
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack info, int nArgs) {
-        return ((MainPack) info).aliasManager.printAliases();
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack info, int index) {
-        return null;
     }
 }

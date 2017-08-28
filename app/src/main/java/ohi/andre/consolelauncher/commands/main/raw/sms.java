@@ -46,11 +46,6 @@ public class sms extends RedirectCommand {
     }
 
     @Override
-    public int maxArgs() {
-        return 1;
-    }
-
-    @Override
     public int[] argType() {
         return new int[] {CommandAbstraction.CONTACTNUMBER};
     }

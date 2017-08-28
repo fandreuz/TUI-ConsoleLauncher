@@ -86,6 +86,11 @@ public class music extends ParamCommand {
                 ((MainPack) pack).player.select(s);
                 return null;
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int indexNotFound) {
+                return pack.context.getString(R.string.output_songnotfound);
+            }
         },
         info {
             @Override
@@ -133,6 +138,11 @@ public class music extends ParamCommand {
                 ((MainPack) pack).player.seekTo(pack.get(int.class, 1) * 1000);
                 return null;
             }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int indexNotFound) {
+                return pack.context.getString(R.string.invalid_integer);
+            }
         };
 
         static Param get(String p) {
@@ -159,21 +169,21 @@ public class music extends ParamCommand {
         public String label() {
             return Tuils.MINUS + name();
         }
+
+        @Override
+        public String onArgNotFound(ExecutePack pack, int indexNotFound) {
+            return null;
+        }
+
+        @Override
+        public String onNotArgEnough(ExecutePack pack, int n) {
+            return pack.context.getString(R.string.help_music);
+        }
     }
 
     @Override
     protected ohi.andre.consolelauncher.commands.main.Param paramForString(MainPack pack, String param) {
         return Param.get(param);
-    }
-
-    @Override
-    public int minArgs() {
-        return 0;
-    }
-
-    @Override
-    public int maxArgs() {
-        return 2;
     }
 
     @Override
@@ -184,16 +194,6 @@ public class music extends ParamCommand {
     @Override
     public int helpRes() {
         return R.string.help_music;
-    }
-
-    @Override
-    public String onArgNotFound(ExecutePack pack, int indexNotFound) {
-        return pack.context.getString(R.string.output_songnotfound);
-    }
-
-    @Override
-    public String onNotArgEnough(ExecutePack pack, int nArgs) {
-        return pack.context.getString(helpRes());
     }
 
     @Override

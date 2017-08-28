@@ -18,11 +18,11 @@ public class Command {
     public String exec(Resources resources, ExecutePack info) throws Exception {
         info.set(mArgs);
 
-        if (indexNotFound != -1) {
-            return cmd.onArgNotFound(info, indexNotFound);
-        }
-
         if(cmd instanceof ParamCommand) {
+            if(indexNotFound == 0) {
+                return cmd.onArgNotFound(info, indexNotFound);
+            }
+
             ParamCommand pCmd = (ParamCommand) cmd;
 
             if(mArgs == null || mArgs.length == 0) {
@@ -30,29 +30,33 @@ public class Command {
             }
 
             int[] args = info.get(Param.class, 0).args();
-            if(args == null) return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
+            if(args == null || !(mArgs[0] instanceof Param)) return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
+
+            Param param = (Param) mArgs[0];
+
+            if(indexNotFound != -1) {
+                param.onArgNotFound(info, indexNotFound);
+            }
 
             if(pCmd.supportDefaultParam()) {
-                if(args.length + 1 > nArgs + 1) {
-                    return cmd.onNotArgEnough(info, nArgs);
+                if(args.length > nArgs) {
+                    return param.onNotArgEnough(info, nArgs);
                 }
             } else {
                 if(args.length + 1 > nArgs) {
-                    return cmd.onNotArgEnough(info, nArgs);
+                    return param.onNotArgEnough(info, nArgs);
                 }
             }
         } else if (nArgs < cmd.minArgs() || (mArgs == null && cmd.minArgs() > 0)) {
             return cmd.onNotArgEnough(info, nArgs);
         }
 
-        if (cmd.maxArgs() != CommandAbstraction.UNDEFINIED && nArgs > cmd.maxArgs()) {
-            return resources.getString(R.string.output_toomanyargs);
+        if(indexNotFound != -1) {
+            return cmd.onArgNotFound(info, indexNotFound);
         }
 
         String output = cmd.exec(info);
-
         info.clear();
-
         return output;
     }
 

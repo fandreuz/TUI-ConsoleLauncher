@@ -28,11 +28,6 @@ public class calc extends PermanentSuggestionCommand {
     }
 
     @Override
-    public int maxArgs() {
-        return 1;
-    }
-
-    @Override
     public int[] argType() {
         return new int[] {CommandAbstraction.PLAIN_TEXT};
     }

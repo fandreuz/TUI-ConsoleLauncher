@@ -159,6 +159,10 @@ public class CommandTuils {
             return defaultApp(input, ((MainPack) info).appsManager);
         } else if(type == CommandAbstraction.ALL_PACKAGES) {
             return allPackages(input, ((MainPack) info).appsManager);
+        } else if(type == CommandAbstraction.NO_SPACE_STRING) {
+            return noSpaceString(input);
+        } else if(type == CommandAbstraction.APP_GROUP) {
+            return noSpaceString(input);
         }
 
         return null;
@@ -210,6 +214,15 @@ public class CommandTuils {
         List<String> arg = new ArrayList<>(Arrays.asList(strings));
 
         return new ArgInfo(arg, null, true, arg.size());
+    }
+
+    private static ArgInfo noSpaceString(String input) {
+        if(input == null) return null;
+
+        int index = input.indexOf(Tuils.SPACE);
+        if(index == -1) index = input.length();
+
+        return new ArgInfo(input.substring(0,index), input.length() > index ? input.substring(index + 1) : null, true, 1);
     }
 
     private static ArgInfo command(String string, CommandGroup active) {
@@ -380,10 +393,14 @@ public class CommandTuils {
     private static ArgInfo configEntry(String input) {
         int index = input.indexOf(Tuils.SPACE);
 
+        Tuils.log(input);
+
         if(xmlPrefsEntrys == null) {
             xmlPrefsEntrys = new ArrayList<>();
 
-            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) Collections.addAll(element.copy);
+            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
+                xmlPrefsEntrys.addAll(element.copy);
+            }
             Collections.addAll(xmlPrefsEntrys, AppsManager.Options.values());
             Collections.addAll(xmlPrefsEntrys, NotificationManager.Options.values());
         }

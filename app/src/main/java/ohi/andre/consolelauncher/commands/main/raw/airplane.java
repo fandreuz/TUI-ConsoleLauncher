@@ -46,11 +46,6 @@ public class airplane extends APICommand {
     }
 
     @Override
-    public int maxArgs() {
-        return 0;
-    }
-
-    @Override
     public int[] argType() {
         return new int[0];
     }

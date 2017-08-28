@@ -36,11 +36,6 @@ public class share implements CommandAbstraction {
     }
 
     @Override
-    public int maxArgs() {
-        return CommandAbstraction.UNDEFINIED;
-    }
-
-    @Override
     public int[] argType() {
         return new int[]{CommandAbstraction.FILE};
     }
