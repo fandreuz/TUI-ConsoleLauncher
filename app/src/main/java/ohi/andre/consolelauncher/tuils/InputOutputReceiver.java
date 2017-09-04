@@ -8,6 +8,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
 
 import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
@@ -25,6 +26,7 @@ public class InputOutputReceiver extends BroadcastReceiver {
     public static final String ACTION_CMD = "ohi.andre.consolelauncher.action_cmd";
     public static final String ACTION_OUTPUT = "ohi.andre.consolelauncher.action_output";
     public static final String TEXT = "ohi.andre.consolelauncher.text";
+    public static final String TYPE = "ohi.andre.consolelauncher.type";
     public static final String COLOR = "ohi.andre.consolelauncher.color";
 
     CommandExecuter executer;
@@ -47,7 +49,15 @@ public class InputOutputReceiver extends BroadcastReceiver {
                 executer.exec(text.toString());
             } else {
                 int color = intent.getIntExtra(COLOR, SkinManager.COLOR_NOT_SET);
-                outputable.onOutput(color, text);
+
+                if(color != SkinManager.COLOR_NOT_SET) {
+                    outputable.onOutput(color, text);
+                }
+                else {
+                    int type = intent.getIntExtra(TYPE, -1);
+                    if(type != -1) outputable.onOutput(text, type);
+                    else outputable.onOutput(text, TerminalManager.CATEGORY_OUTPUT);
+                }
             }
         } else {
             String cmd = remoteInput.getString(TEXT);

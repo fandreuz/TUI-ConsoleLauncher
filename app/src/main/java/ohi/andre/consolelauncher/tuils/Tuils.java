@@ -17,9 +17,13 @@ import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Process;
 import android.os.StatFs;
 import android.provider.Settings;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -53,6 +57,7 @@ import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
+import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
@@ -66,6 +71,26 @@ public class Tuils {
     public static final String EMPTYSTRING = "";
     private static final String TUI_FOLDER = "t-ui";
     public static final String MINUS = "-";
+
+    public static boolean notificationServiceIsRunning(Context context) {
+        ComponentName collectorComponent = new ComponentName(context, NotificationService.class);
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        boolean collectorRunning = false;
+        List<ActivityManager.RunningServiceInfo> runningServices = manager.getRunningServices(Integer.MAX_VALUE);
+        if (runningServices == null ) {
+            return false;
+        }
+
+        for (ActivityManager.RunningServiceInfo service : runningServices) {
+            if (service.service.equals(collectorComponent)) {
+                if (service.pid == Process.myPid()) {
+                    collectorRunning = true;
+                }
+            }
+        }
+
+        return collectorRunning;
+    }
 
     public static boolean arrayContains(int[] array, int value) {
         for(int i : array) {
@@ -200,7 +225,7 @@ public class Tuils {
 
     public static double getAvailableExternalMemorySize(int unit) {
         try {
-            return getAvailableSpace(new File(System.getenv("SECONDARY_STORAGE")), unit);
+            return getAvailableSpace(XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.external_storage_path), unit);
         } catch (Exception e) {
             return -1;
         }
@@ -208,19 +233,23 @@ public class Tuils {
 
     public static double getTotalExternalMemorySize(int unit) {
         try {
-            return getTotaleSpace(new File(System.getenv("SECONDARY_STORAGE")), unit);
+            return getTotaleSpace(XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.external_storage_path), unit);
         } catch (Exception e) {
             return -1;
         }
     }
 
     public static double getAvailableSpace(File dir, int unit) {
+        if(dir == null) return -1;
+
         StatFs statFs = new StatFs(dir.getAbsolutePath());
         long blocks = statFs.getAvailableBlocks();
         return formatSize(blocks * statFs.getBlockSize(), unit);
     }
 
     public static double getTotaleSpace(File dir, int unit) {
+        if(dir == null) return -1;
+
         StatFs statFs = new StatFs(dir.getAbsolutePath());
         long blocks = statFs.getBlockCount();
         return formatSize(blocks * statFs.getBlockSize(), unit);
@@ -258,12 +287,40 @@ public class Tuils {
         return round(result, 2);
     }
 
+    public static SpannableString color(String text, int color) {
+        SpannableString spannableString = new SpannableString(text);
+        spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return spannableString;
+    }
+
     public static void delete(File dir) {
         for(File f : dir.listFiles()) {
             if(f.isDirectory()) delete(f);
             f.delete();
         }
         dir.delete();
+    }
+
+    public static boolean insertOld(File oldFile) {
+        if(oldFile == null || !oldFile.exists()) return false;
+
+        String oldPath = oldFile.getAbsolutePath();
+
+        File oldFolder = new File(Tuils.getFolder(), "old");
+        if(!oldFolder.exists()) oldFolder.mkdir();
+
+        File dest = new File(oldFolder, oldFile.getName());
+        if(dest.exists()) dest.delete();
+
+        return oldFile.renameTo(dest) && new File(oldPath).delete();
+    }
+
+    public static File getOld(String name) {
+        File old = new File(Tuils.getFolder(), "old");
+        File file = new File(old, name);
+
+        if(file.exists()) return file;
+        return null;
     }
 
     public static void deepView(View v) {
@@ -276,6 +333,42 @@ public class Tuils {
         for(int c = 0; c < g.getChildCount(); c++) deepView(g.getChildAt(c));
 
         Tuils.log("end of parents of: " + v.toString());
+    }
+
+    public static void sendOutput(Context context, int res) {
+        sendOutput(SkinManager.COLOR_NOT_SET, context, res);
+    }
+
+    public static void sendOutput(int color, Context context, int res) {
+        sendOutput(color, context, context.getString(res));
+    }
+
+    public static void sendOutput(Context context, int res, int type) {
+        sendOutput(SkinManager.COLOR_NOT_SET, context, res, type);
+    }
+
+    public static void sendOutput(int color, Context context, int res, int type) {
+        sendOutput(color, context, context.getString(res), type);
+    }
+
+    public static void sendOutput(Context context, CharSequence s) {
+        sendOutput(SkinManager.COLOR_NOT_SET, context, s);
+    }
+
+    public static void sendOutput(int color, Context context, CharSequence s) {
+        sendOutput(color, context, s, -1);
+    }
+
+    public static void sendOutput(Context context, CharSequence s, int type) {
+        sendOutput(SkinManager.COLOR_NOT_SET, context, s, type);
+    }
+
+    public static void sendOutput(int color, Context context, CharSequence s, int type) {
+        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+        intent.putExtra(InputOutputReceiver.TEXT, s);
+        intent.putExtra(InputOutputReceiver.COLOR, color);
+        intent.putExtra(InputOutputReceiver.TYPE, type);
+        context.sendBroadcast(intent);
     }
 
     public static final int TERA = 0;
@@ -342,7 +435,7 @@ public class Tuils {
     }
 
     private static String getNicePath(String filePath) {
-        String home = Environment.getExternalStorageDirectory().getAbsolutePath();
+        String home = XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.home_path).getAbsolutePath();
 
         if(filePath.equals(home)) {
             return "~";
@@ -425,8 +518,9 @@ public class Tuils {
     }
 
     public static void addPrefix(List<String> list, String prefix) {
-        for (int count = 0; count < list.size(); count++)
+        for (int count = 0; count < list.size(); count++) {
             list.set(count, prefix.concat(list.get(count)));
+        }
     }
 
     public static void addSeparator(List<String> list, String separator) {

@@ -72,6 +72,18 @@ public class alias extends ParamCommand {
             public int[] args() {
                 return new int[0];
             }
+        },
+        tutorial {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher/wiki/Alias"));
+                return null;
+            }
         };
 
         static Param get(String p) {

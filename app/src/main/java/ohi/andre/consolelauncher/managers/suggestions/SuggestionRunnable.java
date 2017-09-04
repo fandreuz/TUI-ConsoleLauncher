@@ -99,8 +99,7 @@ public class SuggestionRunnable implements Runnable {
 //                bg and fore
                 int bgColor = SkinManager.COLOR_NOT_SET;
                 int foreColor = SkinManager.COLOR_NOT_SET;
-                if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP ||
-                        suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APPGROUP) {
+                if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP) {
 
                     Object o = suggestions[count].object;
                     if(o != null && o instanceof AppsManager.LaunchInfo) {
@@ -143,8 +142,7 @@ public class SuggestionRunnable implements Runnable {
 //                    bg and fore
                     int bgColor = SkinManager.COLOR_NOT_SET;
                     int foreColor = SkinManager.COLOR_NOT_SET;
-                    if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP ||
-                            suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APPGROUP) {
+                    if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP) {
 
                         Object o = suggestions[count].object;
                         if(o != null && o instanceof AppsManager.LaunchInfo) {

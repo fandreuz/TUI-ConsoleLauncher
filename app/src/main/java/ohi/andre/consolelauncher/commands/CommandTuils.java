@@ -135,6 +135,8 @@ public class CommandTuils {
             return textList(input);
         } else if (type == CommandAbstraction.SONG && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
+            if(pack.player == null) return null;
+
             return song(input, pack.player);
         } else if (type == CommandAbstraction.FILE_LIST && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
@@ -163,6 +165,8 @@ public class CommandTuils {
             return noSpaceString(input);
         } else if(type == CommandAbstraction.APP_GROUP) {
             return noSpaceString(input);
+        } else if(type == CommandAbstraction.APP_INSIDE_GROUP) {
+            return activityName(input, ((MainPack) info).appsManager);
         }
 
         return null;
@@ -392,8 +396,6 @@ public class CommandTuils {
 
     private static ArgInfo configEntry(String input) {
         int index = input.indexOf(Tuils.SPACE);
-
-        Tuils.log(input);
 
         if(xmlPrefsEntrys == null) {
             xmlPrefsEntrys = new ArrayList<>();

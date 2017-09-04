@@ -47,12 +47,11 @@ public class Command {
                     return param.onNotArgEnough(info, nArgs);
                 }
             }
-        } else if (nArgs < cmd.minArgs() || (mArgs == null && cmd.minArgs() > 0)) {
-            return cmd.onNotArgEnough(info, nArgs);
-        }
-
-        if(indexNotFound != -1) {
+        } else if(indexNotFound != -1) {
             return cmd.onArgNotFound(info, indexNotFound);
+        }
+        else if (nArgs < cmd.minArgs() || (mArgs == null && cmd.minArgs() > 0)) {
+            return cmd.onNotArgEnough(info, nArgs);
         }
 
         String output = cmd.exec(info);

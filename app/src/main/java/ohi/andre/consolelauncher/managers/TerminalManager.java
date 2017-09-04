@@ -66,6 +66,8 @@ public class TerminalManager {
     private TextView mPrefix;
     private boolean suMode;
 
+    private MessagesManager messagesManager;
+
     private List<String> cmdList = new ArrayList<>(CMD_LIST_SIZE);
     private int howBack = -1;
 
@@ -80,15 +82,13 @@ public class TerminalManager {
     private SkinManager mSkinManager;
 
     private UIManager.OnNewInputListener mInputListener;
-    private UIManager.SuggestionNavigator mSuggestionNavigator;
-
-    private List<Messager> messagers = new ArrayList<>();
+//    private UIManager.SuggestionNavigator mSuggestionNavigator;
 
     private MainPack mainPack;
 
     private boolean defaultHint = true;
 
-    private int clearCmdsCount= 0, messagesCmdsCount = 0;
+    private int clearCmdsCount= 0;
 
     private int clearAfterCmds, clearAfterMs, maxLines;
     private Runnable clearRunnable = new Runnable() {
@@ -267,10 +267,6 @@ public class TerminalManager {
         });
     }
 
-    public void addMessager(Messager messager) {
-        messagers.add(messager);
-    }
-
     private void setupNewInput() {
         mInputView.setText(Tuils.EMPTYSTRING);
 
@@ -290,11 +286,10 @@ public class TerminalManager {
 
         if(input.length() > 0) {
             clearCmdsCount++;
-            messagesCmdsCount++;
 
             if(clearCmdsCount != 0 && clearAfterCmds > 0 && clearCmdsCount % clearAfterCmds == 0) clear();
 
-            for (Messager messager : messagers) if (messagesCmdsCount != 0 && messagesCmdsCount % messager.n == 0) writeToView(messager.message, CATEGORY_OUTPUT);
+            if(messagesManager != null) messagesManager.onCmd();
 
             writeToView(input, CATEGORY_INPUT);
 
@@ -396,7 +391,6 @@ public class TerminalManager {
     }
 
     private CharSequence getFinalText(CharSequence t, int type) {
-
         CharSequence s;
         switch (type) {
             case CATEGORY_INPUT:
@@ -404,8 +398,7 @@ public class TerminalManager {
 
                 boolean su = t.toString().startsWith("su ") || suMode;
 
-                SpannableString si = new SpannableString(inputFormat);
-                si.setSpan(new ForegroundColorSpan(mSkinManager.inputColor), 0, inputFormat.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                SpannableString si = Tuils.color(inputFormat, mSkinManager.inputColor);
 
                 s = TimeManager.replace(si, mSkinManager.time_color);
                 s = TextUtils.replace(s,
@@ -417,8 +410,7 @@ public class TerminalManager {
             case CATEGORY_OUTPUT:
                 t = t.toString().trim();
 
-                SpannableString so = new SpannableString(outputFormat);
-                so.setSpan(new ForegroundColorSpan(mSkinManager.outputColor), 0, outputFormat.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                SpannableString so = Tuils.color(outputFormat, mSkinManager.outputColor);
 
                 s = TextUtils.replace(so,
                         new String[] {FORMAT_OUTPUT, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
@@ -468,13 +460,17 @@ public class TerminalManager {
         }
     }
 
+    public void setMessagesManager(MessagesManager msg) {
+        this.messagesManager = msg;
+    }
+
     public void setInputListener(UIManager.OnNewInputListener listener) {
         this.mInputListener = listener;
     }
 
-    public void setSuggestionNavigator(UIManager.SuggestionNavigator navigator) {
-        this.mSuggestionNavigator = navigator;
-    }
+//    public void setSuggestionNavigator(UIManager.SuggestionNavigator navigator) {
+//        this.mSuggestionNavigator = navigator;
+//    }
 
     public void focusInputEnd() {
         mInputView.setSelection(getInput().length());
@@ -531,17 +527,6 @@ public class TerminalManager {
                 });
             }
         };
-    }
-
-    public static class Messager {
-
-        int n;
-        String message;
-
-        public Messager(int n, String message) {
-            this.n = n;
-            this.message = message;
-        }
     }
 
 }

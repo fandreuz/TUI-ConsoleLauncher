@@ -33,7 +33,6 @@ import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.tuils.Compare;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
@@ -72,6 +71,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private XMLPrefsManager.XMLPrefsList defaultApps;
 
     public static List<Group> groups;
+
+    private Pattern pp, pl, pn;
+    private String appInstalledFormat, appUninstalledFormat;
+    int appInstalledColor, appUninstalledColor;
 
     public enum Options implements XMLPrefsManager.XMLPrefsSave {
 
@@ -159,6 +162,22 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         this.context = context;
 
+        appInstalledFormat = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_app_installed) ? XMLPrefsManager.get(XMLPrefsManager.Behavior.app_installed_format) : null;
+        appUninstalledFormat = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_app_uninstalled) ? XMLPrefsManager.get(XMLPrefsManager.Behavior.app_uninstalled_format) : null;
+
+        if(appInstalledFormat != null || appUninstalledFormat != null) {
+            pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
+            pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE);
+            pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
+
+            appInstalledColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.app_installed_color);
+            appUninstalledColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.app_uninstalled_color);
+        } else {
+            pp = null;
+            pl = null;
+            pn = null;
+        }
+
         this.file = new File(Tuils.getFolder(), PATH);
 
         this.preferences = context.getSharedPreferences(PREFS, 0);
@@ -205,12 +224,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             try {
                 o = XMLPrefsManager.buildDocument(file, NAME);
             } catch (Exception e) {
-                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + NAME + context.getString(R.string.output_xmlproblem2) +
-                        Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
-                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
-                context.sendBroadcast(intent);
-
+                Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) +
+                                Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
                 return;
             }
 
@@ -243,10 +258,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                         if(e.hasAttribute(APPS_ATTRIBUTE)) {
                             final String name = e.getNodeName();
                             if(name.contains(Tuils.SPACE)) {
-                                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                                intent.putExtra(InputOutputReceiver.TEXT, PATH + ": " + context.getString(R.string.output_groupspace) + ": " + name);
-                                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
-                                context.sendBroadcast(intent);
+                                Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_groupspace) + ": " + name);
                                 continue;
                             }
 
@@ -278,10 +290,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                                             try {
                                                 g.setBgColor(Color.parseColor(c));
                                             } catch (Exception e) {
-                                                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                                                intent.putExtra(InputOutputReceiver.TEXT, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
-                                                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
-                                                context.sendBroadcast(intent);
+                                                Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
                                             }
                                         }
                                     }
@@ -292,10 +301,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                                             try {
                                                 g.setForeColor(Color.parseColor(c));
                                             } catch (Exception e) {
-                                                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                                                intent.putExtra(InputOutputReceiver.TEXT, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
-                                                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
-                                                context.sendBroadcast(intent);
+                                                Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
                                             }
                                         }
                                     }
@@ -410,6 +416,28 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         try {
             PackageManager manager = context.getPackageManager();
 
+            PackageInfo packageInfo = manager.getPackageInfo(packageName, 0);
+
+            if(appInstalledFormat != null) {
+                String cp = appInstalledFormat;
+
+                cp = pp.matcher(cp).replaceAll(packageName);
+                if(packageInfo != null) {
+                    CharSequence sequence = packageInfo.applicationInfo.loadLabel(manager);
+                    if(sequence != null) cp = pl.matcher(cp).replaceAll(sequence.toString());
+                } else {
+                    int index = packageName.lastIndexOf(Tuils.DOT);
+                    if(index == -1) cp = pl.matcher(cp).replaceAll(Tuils.EMPTYSTRING);
+                    else {
+                        cp = pl.matcher(cp).replaceAll(packageName.substring(index + 1));
+                    }
+                }
+
+                cp = pn.matcher(cp).replaceAll(Tuils.NEWLINE);
+
+                Tuils.sendOutput(appInstalledColor, context, cp);
+            }
+
             Intent i = manager.getLaunchIntentForPackage(packageName);
             if(i == null) return;
 
@@ -419,21 +447,32 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
             LaunchInfo app = new LaunchInfo(packageName, activity, label);
             appsHolder.add(app);
-
-            Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-            intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.app_installed) + Tuils.SPACE + packageName);
-            context.sendBroadcast(intent);
         } catch (Exception e) {}
     }
 
     private void appUninstalled(String packageName) {
         if(appsHolder == null || context == null) return;
 
-        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-        intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.app_uninstalled) + Tuils.SPACE + packageName);
-        context.sendBroadcast(intent);
-
         List<LaunchInfo> infos = AppUtils.findLaunchInfosWithPackage(packageName, appsHolder.getApps());
+
+        if(appUninstalledFormat != null) {
+            String cp = appUninstalledFormat;
+
+            cp = pp.matcher(cp).replaceAll(packageName);
+            if(infos.size() > 0) {
+                cp = pl.matcher(cp).replaceAll(infos.get(0).publicLabel);
+            } else {
+                int index = packageName.lastIndexOf(Tuils.DOT);
+                if(index == -1) cp = pl.matcher(cp).replaceAll(Tuils.EMPTYSTRING);
+                else {
+                    cp = pl.matcher(cp).replaceAll(packageName.substring(index + 1));
+                }
+            }
+            cp = pn.matcher(cp).replaceAll(Tuils.NEWLINE);
+
+            Tuils.sendOutput(appUninstalledColor, context, cp);
+        }
+
         for(LaunchInfo i : infos) appsHolder.remove(i);
     }
 
@@ -448,16 +487,22 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         return AppUtils.findLaunchInfoWithLabel(appList, label);
     }
 
-    public Intent getIntent(LaunchInfo info) {
-        info.launchedTimes++;
-        appsHolder.requestSuggestionUpdate(info);
-
-        editor.putInt(info.componentName.getPackageName() + "-" + info.componentName.getClassName(), info.launchedTimes);
+    public void writeLaunchTimes(LaunchInfo info) {
+        editor.putInt(info.write(), info.launchedTimes);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
             editor.apply();
         } else {
             editor.commit();
         }
+
+        if(appsHolder != null) appsHolder.update(true);
+    }
+
+    public Intent getIntent(LaunchInfo info) {
+        info.launchedTimes++;
+        appsHolder.requestSuggestionUpdate(info);
+
+        writeLaunchTimes(info);
 
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setComponent(info.componentName);
@@ -488,14 +533,32 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public String createGroup(String name) {
-        return XMLPrefsManager.set(file, NAME, name, new String[]{APPS_ATTRIBUTE}, new String[]{Tuils.EMPTYSTRING});
+        int index = Tuils.find(name, groups);
+        if(index == -1) {
+            groups.add(new Group(name));
+            return XMLPrefsManager.set(file, NAME, name, new String[]{APPS_ATTRIBUTE}, new String[]{Tuils.EMPTYSTRING});
+        }
+
+        return context.getString(R.string.output_groupexists);
     }
 
     public String groupBgColor(String name, String color) {
+        int index = Tuils.find(name, groups);
+        if(index == -1) {
+            return context.getString(R.string.output_groupnotfound);
+        }
+
+        groups.get(index).setBgColor(Color.parseColor(color));
         return XMLPrefsManager.set(file, NAME, name, new String[]{BGCOLOR_ATTRIBUTE}, new String[]{color});
     }
 
     public String groupForeColor(String name, String color) {
+        int index = Tuils.find(name, groups);
+        if(index == -1) {
+            return context.getString(R.string.output_groupnotfound);
+        }
+
+        groups.get(index).setForeColor(Color.parseColor(color));
         return XMLPrefsManager.set(file, NAME, name, new String[]{FORECOLOR_ATTRIBUTE}, new String[]{color});
     }
 
@@ -504,6 +567,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         if(output == null) return null;
         if(output.length() == 0) return context.getString(R.string.output_groupnotfound);
+
+        int index = Tuils.find(name, groups);
+        if(index != -1) groups.remove(index);
+
         return output;
     }
 
@@ -532,6 +599,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         e.setAttribute(APPS_ATTRIBUTE, apps);
 
         XMLPrefsManager.writeTo(d, file);
+
+        int index = Tuils.find(group, groups);
+        if(index != -1) groups.get(index).add(app);
+
         return null;
     }
 
@@ -567,6 +638,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         e.setAttribute(APPS_ATTRIBUTE, apps);
 
         XMLPrefsManager.writeTo(d, file);
+
+        int index = Tuils.find(group, groups);
+        if(index != -1) groups.get(index).remove(app);
+
         return null;
     }
 
@@ -646,6 +721,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public List<LaunchInfo> shownApps() {
+        if(appsHolder == null) return new ArrayList<>();
         return appsHolder.getApps();
     }
 
@@ -690,6 +766,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         public void add(LaunchInfo info) {
             apps.add(info);
+        }
+
+        public void remove(LaunchInfo info) {
+            apps.remove(info);
         }
 
         public boolean contains(LaunchInfo info) {
@@ -1198,11 +1278,12 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             }
         }
 
-        public static String format(PackageInfo info) {
+        public static String format(LaunchInfo app, PackageInfo info) {
             StringBuilder builder = new StringBuilder();
 
             builder.append(info.packageName).append(Tuils.NEWLINE);
             builder.append("vrs: ").append(info.versionCode).append(" - ").append(info.versionName).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+            builder.append("launched_times: ").append(app.launchedTimes).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
                 builder.append("Install: ").append(TimeManager.replace("%t0", info.firstInstallTime, SkinManager.COLOR_NOT_SET)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);

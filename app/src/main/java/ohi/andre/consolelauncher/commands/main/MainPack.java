@@ -1,13 +1,10 @@
 package ohi.andre.consolelauncher.commands.main;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.hardware.Camera;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
-import android.os.Environment;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -19,6 +16,7 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
@@ -42,9 +40,9 @@ public class MainPack extends ExecutePack {
     public Resources res;
 
     //	flashlight
-    public boolean isFlashOn = false, canUseFlash = false;
-    public Camera camera;
-    public Camera.Parameters parameters;
+//    public boolean isFlashOn = false, canUseFlash = false;
+//    public Camera camera;
+//    public Camera.Parameters parameters;
 
     //	internet
     public WifiManager wifi;
@@ -86,7 +84,7 @@ public class MainPack extends ExecutePack {
                     ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder) {
         super(commandGroup);
 
-        this.currentDirectory = Environment.getExternalStorageDirectory();
+        this.currentDirectory = XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.home_path);
 
         this.shellHolder = shellHolder;
 
@@ -99,7 +97,7 @@ public class MainPack extends ExecutePack {
         this.aliasManager = alMgr;
         this.appsManager = appmgr;
 
-        this.canUseFlash = context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
+//        this.canUseFlash = context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
 
         this.cmdPrefs = new CommandsPreferences();
 
@@ -143,7 +141,7 @@ public class MainPack extends ExecutePack {
     }
 
     public void destroy() {
-        player.destroy();
+        if(player != null) player.destroy();
         appsManager.onDestroy();
     }
 }

@@ -16,8 +16,10 @@
     <string name="admin_permission">Lock the screen on double tap</string>
 
     <!-- theme -->
-    <string name="theme_done">Done</string>
     <string name="theme_not_found">Theme not found</string>
+    <string name="theme_invalid">Invalid theme</string>
+    <string name="theme_old_not_found">You don\'t have an old theme</string>
+    <string name="theme_reverted">Reverted to the previous theme</string>
 
     <!-- files -->
     <string name="output_error">An unknown error has occurred</string>
@@ -29,11 +31,30 @@
     <string name="no_notification_access">Unfortunately t-ui can\'t redirect you to the \"Notification access\" page of your system settings</string>
 
     <!-- helps texts -->
-    <string name="rate_donate_text">\nDo you like my work? Rate on Play Store (command: >>rate) or offer me a coffee (command: >>donate). Thank you for using T-UI.
-        \n\nYou can disable this message with the command\nconfig -set donation_message false</string>
     <string name="firsthelp_text">First time with t-ui? Use the command \"tutorial\" or \"help\"</string>
     <string name="permissions_toast">You have to grant Storage permission</string>
     <string name="output_usedefapp">You can use "apps -default_app" instead</string>
+
+    <!-- hints -->
+    <string name="hint_donate">\nDo you like my work?\nIf yes, rate t-ui on Play Store (cmd: $ rate) or offer me a coffee (cmd: $ donate). Thank you!</string>
+    <string name="hint_twitter">Did you know? t-ui is on Twitter. You can have a look with the cmd \"$ tui -twitter\"</string>
+    <string name="hint_telegram">Did you know? There\'s a Telegram group with many enthusiastic users, where you can discuss, share and chat with the developer.\nJust use the cmd \"$ tui -telegram\"</string>
+    <string name="hint_googlep">Did you know? Our official Google+ community is full of tips, experimental apks and discussions.\nYou can have a look with the cmd \"$ tui -googlep\"</string>
+    <string name="hint_tutorial">Did you read the tutorial? If you don\'t remember how to view it, the cmd is \"$ tutorial\"</string>
+    <string name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</string>
+    <string name="hint_theme2">Did you know? You can create your custom theme and share it to other users. Have a look at the cmd \"$ theme -new\"</string>
+    <string name="hint_help">Are you having any doubts about a command? Just use the cmd \"$ help cmdName\"</string>
+    <string name="hint_music">Did you know? You can listen your music without launching other apps but t-ui. Have a look at the cmd \"$ music\"</string>
+    <string name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups, a feature that let\'s you customize your app suggestions, creating different categories.\nYou can get more details with the cmd
+        \"$ apps -tutorial\"</string>
+    <string name="hint_notifications">Did you know? You can see your notifications directly from t-ui.\nIf you\'re interested, have a look at the tutorial: \"$ notifications -tutorial\"</string>
+    <string name="hint_clear">Are you sick of clearing your screen? Have a look at the options \"clear_after_cmds\", \"clear_after_seconds\" and \"maxlines\"</string>
+    <string name="hint_wallpaper">Do you want to use your wallpaper as t-ui background? Use the cmd: \"$ config -set system_wallpaper true\"</string>
+    <string name="hint_config">Are you having doubts about any config option? Use the cmd \"$ config -tutorial\" and look for that option inside the table</string>
+    <string name="hint_alias">Did you know that t-ui supports aliases? It also supports parameterized aliases.\nFor more info, use the cmd \"$ alias -tutorial\"</string>
+    <string name="hint_musicdisable">Do you want to make t-ui lighter? Use the cmd \"$ config -set enable_music false\" to disable the music player and save resources</string>
+
+    <string name="hint_disable">You can disable this messages with the cmd \"$ config -set show_hints false\"</string>
 
     <!-- apps -->
     <string name="output_appnotfound">Application not found</string>
@@ -59,6 +80,7 @@
     <string name="output_errorlabel">Error:</string>
     <string name="output_invalidcolor">Invalid color</string>
     <string name="output_groupnotfound">Group not found</string>
+    <string name="output_groupexists">This group already exists</string>
     <string name="output_groupspace">Spaces are not allowed inside group names</string>
 
     <!-- alias -->
@@ -93,6 +115,7 @@
     <string name="output_playing">Playing:</string>
     <string name="output_stopped">Player stopped</string>
     <string name="output_songnotfound">Song not found</string>
+    <string name="output_musicdisabled">enable_music is false!</string>
 
     <!-- command/args -->
     <string name="output_commandnotfound">Command not found.\nTry to use \">>help\" or \">>tutorial\"</string>
@@ -135,6 +158,7 @@
         \n-default_app [index] [appName or most_used or null] -> set the default_app at the specified index
         \n-frc [appName] -> force t-ui to launch an app
         \n-file -> open apps.xml
+        \n-refresh [appName] -> refresh the \"launched_times\" value of the given app to 0
         \n-mkgp [groupName] -> create a new group with the given name
         \n-rmgp [groupName] -> delete the group with the given name
         \n-gpcolor [groupName] [color] -> set the color for the given group
@@ -156,12 +180,12 @@
     <string name="help_call">Make a call
         \nUsage: call [number] OR [contactName]
     </string>
-    <string name="help_config">Manage your config files.
-        \nUsage:
+    <string name="help_config">Usage:
         \n-set [option] [value] -> set the value of an option
-        \n-open [file] -> open a config file
+        \n-file [file] -> open a config file
         \n-get [option] -> get the value of an option
         \n-reset [option] -> reset the value of an option
+        \n-apply [file] -> move a file to the t-ui directory
     </string>
     <string name="help_data">Toggle mobile data</string>
     <string name="help_devutils">Usage:
@@ -199,9 +223,10 @@
     <string name="help_shellcommands">Print the commands in /system/bin and /system/xbin</string>
     <string name="help_status">Get info about battery charge, wifi status and mobile data</string>
     <string name="help_theme">Usage:
-        \n-apply [theme] -> apply the selected theme (case sensitive)
+        \n-apply [theme] -> apply the selected theme (case sensitive). require internet connection. may take some seconds
         \n-view -> view the available themes
-        \n-create -> create a new theme</string>
+        \n-create -> create a new theme
+        \n-old -> re-apply the theme that was replaced by the current one</string>
     <string name="help_time">Print the current time with the given format
         \n\nUsage:
         \n$ time [index] (index means the index of the desired time_format</string>

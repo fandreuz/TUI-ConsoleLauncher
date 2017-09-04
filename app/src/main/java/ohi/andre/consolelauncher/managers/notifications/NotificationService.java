@@ -15,18 +15,17 @@ import android.os.Handler;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -40,7 +39,7 @@ public class NotificationService extends NotificationListenerService {
 
     private final int UPDATE_TIME = 1500;
 
-    Map<Integer, Long> recentNotifications = new HashMap<>();
+    SparseArray<Long> ids = new SparseArray<>();
     Handler handler = new Handler();
 
     @Override
@@ -51,7 +50,8 @@ public class NotificationService extends NotificationListenerService {
 
         manager = getPackageManager();
         format = NotificationManager.getFormat();
-        timeColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
+        enabled = XMLPrefsManager.get(boolean.class, NotificationManager.Options.show_notifications) ||
+                XMLPrefsManager.get(String.class, NotificationManager.Options.show_notifications).equalsIgnoreCase("enabled");
 
         if(NotificationManager.apps() == 0) {
             NotificationManager.notificationsChangeFor(new ArrayList<>(Arrays.asList(
@@ -68,11 +68,14 @@ public class NotificationService extends NotificationListenerService {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                Map<Integer, Long> copy = new HashMap<>(recentNotifications);
+                SparseArray<Long> clone = ids.clone();
 
                 long time = System.currentTimeMillis();
-                for(Map.Entry<Integer, Long> entry : copy.entrySet()) {
-                    if(time - entry.getValue() > 1500) recentNotifications.remove(entry.getKey());
+                for(int c = 0; c < clone.size(); c++) {
+                    int key = clone.keyAt(c);
+                    long tm = clone.valueAt(c);
+
+                    if(time - tm > UPDATE_TIME) ids.remove(key);
                 }
 
                 handler.postDelayed(this, UPDATE_TIME);
@@ -82,6 +85,12 @@ public class NotificationService extends NotificationListenerService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if(intent != null) {
+            timeColor = intent.getIntExtra(XMLPrefsManager.Theme.time_color.label(), Color.parseColor(XMLPrefsManager.Theme.time_color.defaultValue()));
+        } else {
+            timeColor = Color.parseColor(XMLPrefsManager.Theme.time_color.defaultValue());
+        }
+
         return START_STICKY;
     }
 
@@ -92,6 +101,7 @@ public class NotificationService extends NotificationListenerService {
 
     String format;
     int timeColor;
+    boolean enabled;
 
     final Pattern patternPkg = Pattern.compile("%pkg", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     final Pattern patternText = Pattern.compile("%txt", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
@@ -104,8 +114,13 @@ public class NotificationService extends NotificationListenerService {
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
 
-        if (recentNotifications.containsKey(sbn.getId())) return;
-        recentNotifications.put(sbn.getId(), System.currentTimeMillis());
+        if(!enabled) return;
+
+        for(int c = 0; c < ids.size(); c++) {
+            int key = ids.keyAt(c);
+            if(key == sbn.getId()) return;
+        }
+        ids.put(sbn.getId(), System.currentTimeMillis());
 
         Notification notification = sbn.getNotification();
         if (notification == null) {
@@ -185,10 +200,7 @@ public class NotificationService extends NotificationListenerService {
             return;
         }
 
-        Intent msgrcv = new Intent("Msg");
-        msgrcv.putExtra("text", s);
-
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(msgrcv);
+        Tuils.sendOutput(this, s, TerminalManager.CATEGORY_NOTIFICATION);
     }
 
     @Override

@@ -1,8 +1,7 @@
 package ohi.andre.consolelauncher;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -13,7 +12,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -36,6 +34,7 @@ import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.notifications.NotificationMonitorService;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.tuils.Assist;
@@ -63,7 +62,9 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     private UIManager ui;
     private MainManager main;
 
-    private boolean openKeyboardOnStart, fullscreen, canApplyTheme;
+    private InputOutputReceiver ioReceiver;
+
+    private boolean openKeyboardOnStart, canApplyTheme;
 
     private CommandExecuter ex = new CommandExecuter() {
 
@@ -242,8 +243,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         filter.addAction(InputOutputReceiver.ACTION_CMD);
         filter.addAction(InputOutputReceiver.ACTION_OUTPUT);
 
-        InputOutputReceiver inputOutputReceiver = new InputOutputReceiver(ex, out);
-        getApplicationContext().registerReceiver(inputOutputReceiver, filter);
+        ioReceiver = new InputOutputReceiver(ex, out);
+        getApplicationContext().registerReceiver(ioReceiver, filter);
 
         try {
             XMLPrefsManager.create(this);
@@ -259,7 +260,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-
             window.setStatusBarColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.statusbar_color));
             window.setNavigationBarColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.navigationbar_color));
         }
@@ -274,7 +274,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             } catch (Exception e) {}
         }
 
-        fullscreen = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.fullscreen);
+        boolean fullscreen = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.fullscreen);
 
         boolean useSystemWP = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_wallpaper);
         if (useSystemWP) {
@@ -297,11 +297,15 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             Tuils.toFile(e);
         }
 
-        boolean notifications = XMLPrefsManager.get(boolean.class, NotificationManager.Options.show_notifications);
-        if(!notifications) notifications = XMLPrefsManager.get(String.class, NotificationManager.Options.show_notifications).equalsIgnoreCase("enabled");
+
+        boolean notifications = XMLPrefsManager.get(boolean.class, NotificationManager.Options.show_notifications) ||
+                XMLPrefsManager.get(String.class, NotificationManager.Options.show_notifications).equalsIgnoreCase("enabled");
 
         if(notifications) {
-            LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
+            ComponentName thisComponent = new ComponentName(this, NotificationService.class);
+            PackageManager pm = getPackageManager();
+            pm.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+
             if(!Tuils.hasNotificationAccess(this)) {
                 Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
                 if(i.resolveActivity(getPackageManager()) == null) {
@@ -310,6 +314,14 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                     startActivity(i);
                 }
             }
+
+            Intent monitor = new Intent(this, NotificationMonitorService.class);
+            startService(monitor);
+
+            Intent timeColorIntent = new Intent(this, NotificationService.class);
+            Tuils.log(XMLPrefsManager.get(XMLPrefsManager.Theme.time_color));
+            timeColorIntent.putExtra(XMLPrefsManager.Theme.time_color.label(), XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color));
+            startService(timeColorIntent);
         }
 
         openKeyboardOnStart = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.auto_show_keyboard);
@@ -375,9 +387,9 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         try {
             stopService(new Intent(this, KeeperService.class));
-            stopService(new Intent(this, NotificationService.class));
-        } catch (NoClassDefFoundError e) {}
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(onNotice);
+            stopService(new Intent(this, NotificationMonitorService.class));
+            getApplicationContext().unregisterReceiver(ioReceiver);
+        } catch (NoClassDefFoundError | Exception e) {}
 
         overridePendingTransition(0,0);
 
@@ -526,14 +538,4 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         if(ui != null) ui.scrollToEnd();
     }
-
-    private BroadcastReceiver onNotice = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            CharSequence text = intent.getCharSequenceExtra("text");
-
-            if(ui != null) ui.setOutput(text, TerminalManager.CATEGORY_NOTIFICATION);
-        }
-    };
 }

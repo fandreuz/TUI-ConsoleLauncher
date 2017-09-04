@@ -129,7 +129,7 @@ public class MainManager {
             cont = new ContactManager(mContext);
         } catch (NullPointerException e) {}
 
-        MusicManager2 music = new MusicManager2(mContext);
+        MusicManager2 music = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.enable_music) ? new MusicManager2(mContext) : null;
 
         AppsManager appsMgr = new AppsManager(c, sugg);
         AliasManager aliasManager = new AliasManager(mContext);

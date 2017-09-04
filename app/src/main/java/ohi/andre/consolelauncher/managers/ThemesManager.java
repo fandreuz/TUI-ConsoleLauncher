@@ -1,10 +1,10 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.content.Context;
-import android.content.Intent;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -12,15 +12,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -29,18 +27,10 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class ThemesManager {
 
-    static DocumentBuilderFactory factory;
-    static DocumentBuilder builder;
-
-    static {
-        factory = DocumentBuilderFactory.newInstance();
-        try {
-            builder = factory.newDocumentBuilder();
-        } catch (ParserConfigurationException e) {}
-    }
-
     public static void apply(final Context context, final String name) {
-        FirebaseDatabase.getInstance().getReference().addListenerForSingleValueEvent(new ValueEventListener() {
+        final DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -53,28 +43,83 @@ public class ThemesManager {
                     String themePath = currentTheme.getAbsolutePath();
                     String suggestionsPath = currentSuggestions.getAbsolutePath();
 
-                    File old = new File(Tuils.getFolder(), "old");
-                    if(old.exists()) Tuils.delete(old);
-                    old.mkdir();
+                    Tuils.insertOld(currentTheme);
+                    Tuils.insertOld(currentSuggestions);
 
-                    currentTheme.renameTo(new File(old, "theme.xml"));
-                    currentSuggestions.renameTo(new File(old, "suggestions.xml"));
+                    Object o;
+
+                    String author = Tuils.EMPTYSTRING;
+                    if(theme.hasChild("author")) {
+                        o = theme.child("author").getValue();
+                        if(o != null) {
+                            author = o.toString();
+                        }
+                    }
+
+                    if(theme.hasChild("downloads")) {
+                        o = theme.child("downloads").getValue();
+                        if (o != null) {
+                            try {
+                                long downloads = Long.parseLong(o.toString());
+                                reference.child("themes").child(name).child("downloads").setValue(downloads + 1);
+                            } catch (Exception e) {
+                                Tuils.log(e);
+                            }
+                        }
+                    }
 
                     theme = theme.child("files");
+                    if(theme == null || !theme.exists()) {
+                        Tuils.sendOutput(context, R.string.theme_invalid);
+                        return;
+                    }
+
                     DataSnapshot t = theme.child("THEME");
                     DataSnapshot s = theme.child("SUGGESTIONS");
+
+                    if(t == null || !t.exists() || s == null || !s.exists()) {
+                        Tuils.sendOutput(context, R.string.theme_invalid);
+                        return;
+                    }
 
                     createFile(themePath, "THEME", t);
                     createFile(suggestionsPath, "SUGGESTIONS", s);
 
-                    Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                    intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.theme_done));
-                    context.sendBroadcast(intent);
+                    Tuils.sendOutput(context, "Applied theme " + name + (author.length() > 0 ? " by " + author : Tuils.EMPTYSTRING));
                 } else {
-                    Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                    intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.theme_not_found));
-                    context.sendBroadcast(intent);
+                    Tuils.sendOutput(context, R.string.theme_not_found);
                 }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Tuils.sendOutput(context, databaseError.getMessage());
+            }
+        });
+    }
+
+    public static void ls(final Context context) {
+        FirebaseDatabase.getInstance().getReference().addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                List<String> strings = new ArrayList<>();
+
+                DataSnapshot themes = dataSnapshot.child("themes");
+                for(DataSnapshot s : themes.getChildren()) {
+                    String name = s.getKey();
+                    if(name.startsWith("custom_theme")) continue;
+
+                    strings.add(s.getKey());
+                }
+
+                Collections.sort(strings);
+                Tuils.addPrefix(strings, Tuils.DOUBLE_SPACE);
+                Tuils.insertHeaders(strings, false);
+
+                Tuils.log(strings.toString());
+
+                Tuils.sendOutput(context, Tuils.toPlanString(strings, Tuils.NEWLINE));
             }
 
             @Override
@@ -84,24 +129,31 @@ public class ThemesManager {
 
     private static Pattern rgbaExtractor = Pattern.compile("rgba\\(([0-9]+),([0-9]+),([0-9]+),([0-9]+)\\)");
 
-    private static void createFile(String path, String root, DataSnapshot s) {
+    private static void createFile(String path, String r, DataSnapshot s) {
         File file = new File(path);
-        XMLPrefsManager.resetFile(file, root);
+        XMLPrefsManager.resetFile(file, r);
 
         try {
-            Document document = builder.parse(file);
-            Element r = (Element) document.getElementsByTagName(root).item(0);
+            Object[] o;
+            try {
+                o = XMLPrefsManager.buildDocument(file, r);
+            } catch (Exception e) {
+                return;
+            }
+
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
 
             for(DataSnapshot ds : s.getChildren()) {
                 String value = ds.getValue().toString();
                 if(value.startsWith("rgba(")) value = rgbaToHex(value);
 
-                Element em = document.createElement(ds.getKey());
+                Element em = d.createElement(ds.getKey());
                 em.setAttribute(XMLPrefsManager.VALUE_ATTRIBUTE, value);
-                r.appendChild(em);
+                root.appendChild(em);
             }
 
-            XMLPrefsManager.writeTo(document, file);
+            XMLPrefsManager.writeTo(d, file);
 
         } catch (Exception e) {
             Tuils.log(e);

@@ -81,7 +81,7 @@ public class apps extends ParamCommand {
                     AppsManager.LaunchInfo i = pack.get(AppsManager.LaunchInfo.class, 1);
 
                     PackageInfo info = pack.context.getPackageManager().getPackageInfo(i.componentName.getPackageName(), PackageManager.GET_PERMISSIONS | PackageManager.GET_ACTIVITIES | PackageManager.GET_SERVICES | PackageManager.GET_RECEIVERS);
-                    return AppsManager.AppUtils.format(info);
+                    return AppsManager.AppUtils.format(i, info);
                 } catch (PackageManager.NameNotFoundException e) {
                     return e.toString();
                 }
@@ -172,6 +172,21 @@ public class apps extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 pack.context.startActivity(Tuils.openFile(new File(Tuils.getFolder(), AppsManager.PATH)));
+                return null;
+            }
+        },
+        reset {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                AppsManager.LaunchInfo app = pack.get(AppsManager.LaunchInfo.class, 1);
+                app.launchedTimes = 0;
+                ((MainPack) pack).appsManager.writeLaunchTimes(app);
+
                 return null;
             }
         },
@@ -286,7 +301,7 @@ public class apps extends ParamCommand {
         rmfromgp {
             @Override
             public int[] args() {
-                return new int[] {CommandAbstraction.APP_GROUP, CommandAbstraction.VISIBLE_PACKAGE};
+                return new int[] {CommandAbstraction.APP_GROUP, CommandAbstraction.APP_INSIDE_GROUP};
             }
 
             @Override
@@ -294,6 +309,18 @@ public class apps extends ParamCommand {
                 String name = pack.get(String.class, 1);
                 AppsManager.LaunchInfo app = pack.get(AppsManager.LaunchInfo.class, 2);
                 return ((MainPack) pack).appsManager.removeAppFromGroup(name, app);
+            }
+        },
+        tutorial {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher/wiki/Apps"));
+                return null;
             }
         };
 

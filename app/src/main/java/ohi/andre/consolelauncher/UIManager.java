@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.GestureDetector;
@@ -36,12 +37,13 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
+import ohi.andre.consolelauncher.managers.MessagesManager;
 import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
-import ohi.andre.consolelauncher.tuils.Sequence;
+import ohi.andre.consolelauncher.tuils.AllowEqualsSequence;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -73,11 +75,9 @@ public class UIManager implements OnTouchListener {
     private CommandExecuter trigger;
     private TerminalManager mTerminalAdapter;
 
-    private TextView ram;
-    private TextView device;
-    private TextView battery;
-    private TextView time;
-    private TextView storage;
+    private TextView[] ts;
+    private CharSequence deviceText, ramText, storageText, batteryText, timeText;
+    private int deviceIndex, ramIndex, storageIndex, batteryIndex, timeIndex;
 
     int mediumPercentage, lowPercentage;
     String batteryFormat;
@@ -85,7 +85,7 @@ public class UIManager implements OnTouchListener {
 
     private String multipleCmdSeparator;
 
-    private boolean selectFirstSuggestionEnter = false;
+//    private boolean selectFirstSuggestionEnter = false;
     private OnNewInputListener inputListener = new OnNewInputListener() {
         @Override
         public void onNewInput(String input) {
@@ -108,18 +108,21 @@ public class UIManager implements OnTouchListener {
         public void update(float p) {
             int percentage = (int) p;
 
+            int color;
+
             if(skinManager.manyColorsBattery) {
-                if(percentage > mediumPercentage) battery.setTextColor(skinManager.battery_color_high);
-                else if(percentage > lowPercentage) battery.setTextColor(skinManager.battery_color_medium);
-                else battery.setTextColor(skinManager.battery_color_low);
+                if(percentage > mediumPercentage) color = skinManager.battery_color_high;
+                else if(percentage > lowPercentage) color = skinManager.battery_color_medium;
+                else color = skinManager.battery_color_low;
             } else {
-                battery.setTextColor(skinManager.battery_color_high);
+                color = skinManager.battery_color_high;
             }
 
             if(batteryFormat == null) batteryFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.battery_format);
 
             String cp = batteryFormat.replaceAll("%[vV]", String.valueOf(percentage)).replaceAll("%[nN]", Tuils.NEWLINE);
-            battery.setText(cp);
+            batteryText = Tuils.color(cp, color);
+            UIManager.this.update(batteryIndex);
         }
     };
 
@@ -212,16 +215,18 @@ public class UIManager implements OnTouchListener {
             copy = storagePatterns.get(25).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA))));
             copy = storagePatterns.get(26).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA))));
 
-            storage.setText(copy);
-            storage.postDelayed(this, STORAGE_DELAY);
+            storageText = Tuils.color(copy, info.skinManager.storageColor);
+            update(storageIndex);
+            ts[storageIndex].postDelayed(this, STORAGE_DELAY);
         }
     };
 
     private Runnable timeRunnable = new Runnable() {
         @Override
         public void run() {
-            time.setText(TimeManager.replace("%t0"));
-            time.postDelayed(this, TIME_DELAY);
+            timeText = TimeManager.replace("%t0", skinManager.time_color);
+            update(timeIndex);
+            ts[timeIndex].postDelayed(this, TIME_DELAY);
         }
     };
 
@@ -277,10 +282,37 @@ public class UIManager implements OnTouchListener {
 
             copy = ramPatterns.get(11).matcher(copy).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            ram.setText(copy);
-            ram.postDelayed(this, RAM_DELAY);
+            ramText = Tuils.color(copy, info.skinManager.ramColor);
+            update(ramIndex);
+            ts[ramIndex].postDelayed(this, RAM_DELAY);
         }
     };
+
+    private void update(int index) {
+        CharSequence sequence = Tuils.EMPTYSTRING;
+
+        if(deviceIndex == index && deviceText != null) {
+            sequence = deviceText;
+        }
+
+        if(batteryIndex == index && batteryText != null) {
+            sequence = TextUtils.concat(sequence, batteryText);
+        }
+
+        if(storageIndex == index && storageText != null) {
+            sequence = TextUtils.concat(sequence, storageText);
+        }
+
+        if(ramIndex == index && ramText != null) {
+            sequence = TextUtils.concat(sequence, ramText);
+        }
+
+        if(timeIndex == index && timeText != null) {
+            sequence = TextUtils.concat(sequence, timeText);
+        }
+
+        ts[index].setText(sequence);
+    }
 
     private boolean showSuggestions;
     private LinearLayout suggestionsView;
@@ -288,7 +320,7 @@ public class UIManager implements OnTouchListener {
     private SuggestionRunnable suggestionRunnable;
     private LinearLayout.LayoutParams suggestionViewParams;
     private SuggestionsManager suggestionsManager;
-    private boolean navigatingWithSpace = false;
+//    private boolean navigatingWithSpace = false;
 
     private TextView terminalView;
     private Thread lastSuggestionThread;
@@ -333,7 +365,7 @@ public class UIManager implements OnTouchListener {
                 if(multipleCmdSeparator.length() > 0) {
                     String[] split = input.split(multipleCmdSeparator);
                     if(split.length == 0) return;
-                    if(split.length == 1) mTerminalAdapter.setInput(text);
+                    if(split.length == 1) mTerminalAdapter.setInput(text + Tuils.SPACE);
                     else {
                         split[split.length - 1] = Tuils.EMPTYSTRING;
 
@@ -342,10 +374,10 @@ public class UIManager implements OnTouchListener {
                             beforeInputs = beforeInputs + split[count] + multipleCmdSeparator;
                         }
 
-                        mTerminalAdapter.setInput(beforeInputs + text);
+                        mTerminalAdapter.setInput(beforeInputs + text + Tuils.SPACE);
                     }
                 } else {
-                    mTerminalAdapter.setInput(text);
+                    mTerminalAdapter.setInput(text + Tuils.SPACE);
                 }
             }
 
@@ -477,7 +509,9 @@ public class UIManager implements OnTouchListener {
             }
         };
 
-        lastSuggestionThread.start();
+        try {
+            lastSuggestionThread.start();
+        } catch (InternalError e) {}
     }
 
     protected UIManager(ExecutePack info, final Context context, final ViewGroup rootView, final CommandExecuter tri, MainPack mainPack, boolean canApplyTheme) {
@@ -528,7 +562,8 @@ public class UIManager implements OnTouchListener {
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
         rootView.setPadding(Tuils.mmToPx(metrics, leftMM), Tuils.mmToPx(metrics, topMM), Tuils.mmToPx(metrics, rightMM), Tuils.mmToPx(metrics, bottomMM));
 
-        TextView[] ts = {
+//        batt, ram, ...
+        ts = new TextView[] {
                 (TextView) rootView.findViewById(R.id.tv0),
                 (TextView) rootView.findViewById(R.id.tv1),
                 (TextView) rootView.findViewById(R.id.tv2),
@@ -536,66 +571,71 @@ public class UIManager implements OnTouchListener {
                 (TextView) rootView.findViewById(R.id.tv4)
         };
 
-        int ramIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.ram_index);
-        int deviceIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.device_index);
-        int batteryIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.battery_index);
-        int timeIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.time_index);
-        int storageIndex = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.storage_index);
+        boolean showRam = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ram);
+        boolean showStorage = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_storage_info);
+        boolean showDevice = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_device_name);
+        boolean showTime = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_time);
+        boolean showBattery = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_battery);
 
-        final int RAM = 10, DEVICE = 11, TIME = 12, BATTERY = 13, STORAGE = 14;
-        Sequence s = new Sequence(new int[] {ramIndex, deviceIndex, batteryIndex, timeIndex, storageIndex}, new Integer[] {RAM, DEVICE, BATTERY, TIME, STORAGE});
+        int rIndex = showRam ? XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.ram_index) : Integer.MAX_VALUE;
+        int dIndex = showDevice ? XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.device_index) : Integer.MAX_VALUE;
+        int bIndex = showBattery ? XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.battery_index) : Integer.MAX_VALUE;
+        int tIndex = showTime ? XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.time_index) : Integer.MAX_VALUE;
+        int sIndex = showStorage ? XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.storage_index) : Integer.MAX_VALUE;
 
-        for(int count = 0; count < s.size(); count++) {
-            int i = (int) s.get(count);
+        final int RAM = 1;
+        final int DEVICE = 2;
+        final int TIME = 3;
+        final int BATTERY = 4;
+        final int STORAGE = 5;
 
-            switch (i) {
-                case RAM:
-                    ram = ts[count];
-                    break;
-                case DEVICE:
-                    device = ts[count];
-                    break;
-                case BATTERY:
-                    battery = ts[count];
-                    break;
-                case STORAGE:
-                    storage = ts[count];
-                    break;
-                case TIME:
-                    time = ts[count];
-                    break;
+        Typeface t = skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole;
+
+        AllowEqualsSequence sequence = new AllowEqualsSequence(new int[] {rIndex, dIndex, bIndex, tIndex, sIndex}, new Integer[] {RAM, DEVICE, BATTERY, TIME, STORAGE});
+        for(int count = 0; count < ts.length; count++) {
+            Object[] os = sequence.get(count);
+
+            for(Object o : os) {
+                int i = (Integer) o;
+
+                switch (i) {
+                    case RAM:
+                        this.ramIndex = count;
+                        break;
+                    case DEVICE:
+                        this.deviceIndex = count;
+                        break;
+                    case BATTERY:
+                        this.batteryIndex = count;
+                        break;
+                    case STORAGE:
+                        this.storageIndex = count;
+                        break;
+                    case TIME:
+                        this.timeIndex = count;
+                        break;
+                }
+            }
+
+            if(count >= sequence.getMinKey() && count <= sequence.getMaxKey() && os.length > 0) {
+                ts[count].setTypeface(t);
+                ts[count].setTextSize(skinManager.getTextSize());
+            } else {
+                ts[count].setVisibility(View.GONE);
             }
         }
 
-        boolean showRam = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_ram);
         if (showRam) {
-            ram.setTextColor(skinManager.ramColor);
-            ram.setTextSize(skinManager.getTextSize());
-            ram.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
-
-            ram.post(ramRunnable);
-        } else {
-            ram.setVisibility(View.GONE);
-            ram = null;
+            ts[this.ramIndex].post(ramRunnable);
         }
 
-        boolean showStorage = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_storage_info);
         if(showStorage) {
-            storage.setTextColor(skinManager.storageColor);
-            storage.setTextSize(skinManager.getTextSize());
-            storage.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-
-            storage.post(storageRunnable);
-        } else {
-            storage.setVisibility(View.GONE);
+            ts[this.storageIndex].post(storageRunnable);
         }
 
-        boolean showDevice = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_device_name);
         if (showDevice) {
-
             Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
             Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
             Pattern NEWLINE = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
@@ -606,39 +646,25 @@ public class UIManager implements OnTouchListener {
             deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(skinManager.deviceName != null ? skinManager.deviceName : "null"));
             deviceFormat = NEWLINE.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            device.setText(deviceFormat);
-            device.setTextColor(skinManager.deviceColor);
-            device.setTextSize(skinManager.getTextSize());
-            device.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        } else {
-            device.setVisibility(View.GONE);
+            deviceText = Tuils.color(deviceFormat, skinManager.deviceColor);
+            update(this.deviceIndex);
         }
 
-        boolean showTime = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_time);
         if(showTime) {
-            time.setTextColor(skinManager.time_color);
-            time.setTextSize(skinManager.getTextSize());
-            time.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-
-            time.post(timeRunnable);
-        } else {
-            time.setVisibility(View.GONE);
+            ts[this.timeIndex].post(timeRunnable);
         }
 
-        boolean showBattery = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_battery);
         if(showBattery) {
             mediumPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_medium);
             lowPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_low);
 
             if(mediumPercentage < lowPercentage) skinManager.manyColorsBattery = false;
 
-            battery.setTextSize(skinManager.getTextSize());
-            battery.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-
             Tuils.registerBatteryReceiver(context, batteryUpdate);
         } else {
-            battery.setVisibility(View.GONE);
+            batteryUpdate = null;
         }
+//        batt, ram, ...
 
         final boolean inputBottom = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.input_bottom);
         int layoutId = inputBottom ? R.layout.input_down_layout : R.layout.input_up_layout;
@@ -737,8 +763,28 @@ public class UIManager implements OnTouchListener {
 
         mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, skinManager, context, mainPack);
         mTerminalAdapter.setInputListener(inputListener);
-        if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.donation_message)) {
-            mTerminalAdapter.addMessager(new TerminalManager.Messager(20, context.getString(R.string.rate_donate_text)));
+
+        if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_hints)) {
+            MessagesManager messagesManager = new MessagesManager(context,
+                    new MessagesManager.Message(context.getString(R.string.hint_alias)),
+                    new MessagesManager.Message(context.getString(R.string.hint_appgroups)),
+                    new MessagesManager.Message(context.getString(R.string.hint_clear)),
+                    new MessagesManager.Message(context.getString(R.string.hint_config)),
+                    new MessagesManager.Message(context.getString(R.string.hint_disable)),
+                    new MessagesManager.Message(context.getString(R.string.hint_donate)),
+                    new MessagesManager.Message(context.getString(R.string.hint_googlep)),
+                    new MessagesManager.Message(context.getString(R.string.hint_help)),
+                    new MessagesManager.Message(context.getString(R.string.hint_music)),
+                    new MessagesManager.Message(context.getString(R.string.hint_notifications)),
+                    new MessagesManager.Message(context.getString(R.string.hint_telegram)),
+                    new MessagesManager.Message(context.getString(R.string.hint_theme)),
+                    new MessagesManager.Message(context.getString(R.string.hint_theme2)),
+                    new MessagesManager.Message(context.getString(R.string.hint_tutorial)),
+                    new MessagesManager.Message(context.getString(R.string.hint_twitter)),
+                    new MessagesManager.Message(context.getString(R.string.hint_wallpaper)),
+                    new MessagesManager.Message(context.getString(R.string.hint_musicdisable)));
+
+            mTerminalAdapter.setMessagesManager(messagesManager);
         }
     }
 

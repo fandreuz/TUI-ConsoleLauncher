@@ -5,6 +5,7 @@ import android.support.v4.app.NotificationManagerCompat;
 
 import java.util.List;
 
+import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
@@ -44,6 +45,17 @@ public class devutils extends ParamCommand {
             @Override
             public int[] args() {
                 return new int[] {CommandAbstraction.TEXTLIST};
+            }
+        },
+        check_notifications {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                return "Notification access: " + NotificationManagerCompat.getEnabledListenerPackages(pack.context).contains(BuildConfig.APPLICATION_ID) + Tuils.NEWLINE + "Notification service running: " + Tuils.notificationServiceIsRunning(pack.context);
             }
         };
 

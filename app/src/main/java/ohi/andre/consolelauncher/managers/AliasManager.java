@@ -1,7 +1,7 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.Color;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,7 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
@@ -151,13 +150,11 @@ public class AliasManager implements Reloadable {
                 value = value.trim();
 
                 if(name.equalsIgnoreCase(value)) {
-                    Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                    intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias2));
-                    context.sendBroadcast(intent);
+                    Tuils.sendOutput(Color.RED, context,
+                            context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias2));
                 } else if(value.startsWith(name + Tuils.SPACE)) {
-                    Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                    intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias3));
-                    context.sendBroadcast(intent);
+                    Tuils.sendOutput(Color.RED, context,
+                            context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias3));
                 } else {
                     aliases.put(name, value);
                 }

@@ -20,6 +20,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 String title = ((MainPack) pack).player.playNext();
                 if(title != null) return pack.context.getString(R.string.output_playing) + Tuils.SPACE + title;
                 return null;
@@ -33,6 +35,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 String title = ((MainPack) pack).player.playPrev();
                 if(title != null) return pack.context.getString(R.string.output_playing) + Tuils.SPACE + title;
                 return null;
@@ -46,6 +50,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 return ((MainPack) pack).player.lsSongs();
             }
         },
@@ -57,6 +63,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 String title = ((MainPack) pack).player.play();
                 if(title == null) return null;
                 return pack.context.getString(R.string.output_playing) + Tuils.SPACE + title;
@@ -70,6 +78,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 ((MainPack) pack).player.stop();
                 return null;
             }
@@ -82,6 +92,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 String s = pack.get(String.class, 1);
                 ((MainPack) pack).player.select(s);
                 return null;
@@ -100,6 +112,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 StringBuilder builder = new StringBuilder();
 
                 MusicManager2 m = ((MainPack) pack).player;
@@ -135,6 +149,8 @@ public class music extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+
                 ((MainPack) pack).player.seekTo(pack.get(int.class, 1) * 1000);
                 return null;
             }

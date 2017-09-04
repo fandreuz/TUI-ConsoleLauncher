@@ -163,6 +163,18 @@ public class notifications extends ParamCommand {
                 }
                 return null;
             }
+        },
+        tutorial {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher/wiki/Notifications"));
+                return null;
+            }
         };
 
         static Param get(String p) {

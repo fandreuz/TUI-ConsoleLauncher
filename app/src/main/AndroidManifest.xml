@@ -204,6 +204,8 @@
 
         </service>
 
+        <service android:name=".managers.notifications.NotificationMonitorService"/>
+
         <activity
             android:name=".tuils.stuff.FakeLauncherActivity"
             android:enabled="false">

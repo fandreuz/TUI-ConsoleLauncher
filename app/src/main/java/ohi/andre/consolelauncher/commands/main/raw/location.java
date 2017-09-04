@@ -3,7 +3,6 @@ package ohi.andre.consolelauncher.commands.main.raw;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -18,7 +17,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.APICommand;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by francescoandreuzzi on 10/05/2017.
@@ -28,7 +27,7 @@ public class location extends APICommand {
 
     @Override
     public String exec(final ExecutePack pack) throws Exception {
-        Context context = ((MainPack) pack).context;
+        final Context context = ((MainPack) pack).context;
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                 ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -44,9 +43,7 @@ public class location extends APICommand {
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                intent.putExtra(InputOutputReceiver.TEXT, "Lat: " + location.getLatitude() + "; Long: " + location.getLongitude());
-                pack.context.sendBroadcast(intent);
+                Tuils.sendOutput(context, "Lat: " + location.getLatitude() + "; Long: " + location.getLongitude());
             }
 
             @Override

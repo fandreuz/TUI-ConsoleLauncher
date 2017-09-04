@@ -11,8 +11,8 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
 
-        versionCode 125
-        versionName "6.3b"
+        versionCode 136
+        versionName "6.3j"
     }
 
     buildTypes {

@@ -89,7 +89,25 @@ public class tui extends ParamCommand {
 
                 return null;
             }
-        };
+        }
+//        ,
+//        exclude_message {
+//            @Override
+//            public int[] args() {
+//                return new int[] {CommandAbstraction.INT};
+//            }
+//
+//            @Override
+//            public String exec(ExecutePack pack) {
+//                return null;
+//            }
+//
+//            @Override
+//            public String onNotArgEnough(ExecutePack pack, int n) {
+//
+//            }
+//        }
+        ;
 
         @Override
         public int[] args() {

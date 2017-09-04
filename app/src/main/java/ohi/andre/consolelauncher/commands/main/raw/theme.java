@@ -1,10 +1,13 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import java.io.File;
+
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.managers.ThemesManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -23,11 +26,9 @@ public class theme extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                return "Hehehehe you wanted! Wait some days...";
-
-//                String theme = pack.get(String.class, 1);
-//                ThemesManager.apply(pack.context, theme);
-//                return null;
+                String theme = pack.get(String.class, 1);
+                ThemesManager.apply(pack.context, theme);
+                return null;
             }
         },
         view {
@@ -51,6 +52,55 @@ public class theme extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 pack.context.startActivity(Tuils.webPage("http://tui-launcher.surge.sh/create"));
+                return null;
+            }
+        },
+        ls {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                ThemesManager.ls(pack.context);
+                return null;
+            }
+        },
+        old {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                File theme = Tuils.getOld("theme.xml");
+                File suggestions = Tuils.getOld("suggestions.xml");
+
+                if(theme == null || suggestions == null) return pack.context.getString(R.string.theme_old_not_found);
+
+                File themeDest = new File(Tuils.getFolder(), "theme.xml");
+                File suggestionsDest = new File(Tuils.getFolder(), "suggestions.xml");
+
+                if(themeDest.exists()) themeDest.delete();
+                if(suggestionsDest.exists()) suggestionsDest.delete();
+
+                theme.renameTo(themeDest);
+                suggestions.renameTo(suggestionsDest);
+
+                return pack.context.getString(R.string.theme_reverted);
+            }
+        },
+        tutorial {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher/wiki/Themes"));
                 return null;
             }
         };

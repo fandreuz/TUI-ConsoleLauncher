@@ -2,7 +2,6 @@ package ohi.andre.consolelauncher.managers.notifications;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.util.SparseArray;
@@ -22,10 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static ohi.andre.consolelauncher.managers.XMLPrefsManager.VALUE_ATTRIBUTE;
@@ -128,10 +125,13 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     private NotificationManager() {}
 
     public static void create(Context context) {
-        instance = new NotificationManager();
 
-        if(created) return;
+        if(created) {
+            return;
+        }
         created = true;
+
+        instance = new NotificationManager();
 
         apps = new ArrayList<>();
         groups = new ArrayList<>();
@@ -148,12 +148,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             try {
                 o = XMLPrefsManager.buildDocument(file, NAME);
             } catch (Exception e) {
-                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + NAME + context.getString(R.string.output_xmlproblem2) +
+                Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) +
                         Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
-                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
-                context.sendBroadcast(intent);
-
                 return;
             }
 
@@ -301,7 +297,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public static boolean match(String pkg, String text, String title) {
-        if(pkg.equals(BuildConfig.APPLICATION_ID)) return true;
+//        if(pkg.equals(BuildConfig.APPLICATION_ID)) return true;
 
         for(FilterGroup group : groups) {
 
@@ -434,6 +430,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                     s = text;
                     textCount++;
                 }
+
+                if(s == null) continue;
 
                 boolean b = filter.pattern.matcher(s).find();
 

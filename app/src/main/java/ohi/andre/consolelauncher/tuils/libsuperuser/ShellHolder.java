@@ -1,7 +1,8 @@
 package ohi.andre.consolelauncher.tuils.libsuperuser;
 
-import android.os.Environment;
+import java.io.File;
 
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
 /**
@@ -31,7 +32,7 @@ public class ShellHolder {
                     }
                 })
                 .open();
-        interactive.addCommand("cd " + Environment.getExternalStorageDirectory().getAbsolutePath());
+        interactive.addCommand("cd " + XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.home_path));
         return interactive;
     }
 }

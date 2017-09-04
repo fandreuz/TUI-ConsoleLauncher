@@ -1,8 +1,8 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
+import android.os.Environment;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -26,7 +26,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class XMLPrefsManager {
@@ -153,6 +152,24 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "#000000";
+            }
+        },
+        app_installed_color {
+            @Override
+            public String defaultValue() {
+                return "#FF7043";
+            }
+        },
+        app_uninstalled_color {
+            @Override
+            public String defaultValue() {
+                return "#FF7043";
+            }
+        },
+        hint_color {
+            @Override
+            public String defaultValue() {
+                return "#4CAF50";
             }
         };
 
@@ -328,6 +345,18 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "false";
+            }
+        },
+        show_app_installed {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        show_app_uninstalled {
+            @Override
+            public String defaultValue() {
+                return "true";
             }
         };
 
@@ -555,7 +584,7 @@ public class XMLPrefsManager {
                 return "true";
             }
         },
-        donation_message {
+        show_hints {
             @Override
             public String defaultValue() {
                 return "true";
@@ -576,7 +605,7 @@ public class XMLPrefsManager {
         clear_after_cmds {
             @Override
             public String defaultValue() {
-                return "20";
+                return "-1";
             }
         },
         clear_after_seconds {
@@ -588,7 +617,7 @@ public class XMLPrefsManager {
         max_lines {
             @Override
             public String defaultValue() {
-                return "300";
+                return "-1";
             }
         },
         time_format {
@@ -692,6 +721,42 @@ public class XMLPrefsManager {
             public String defaultValue() {
                 return "%a --> [%v]";
             }
+        },
+        external_storage_path {
+            @Override
+            public String defaultValue() {
+                String path = System.getenv("SECONDARY_STORAGE");
+                if(path == null) return Tuils.EMPTYSTRING;
+
+                File file = new File(path);
+                if(file != null && file.exists()) return file.getAbsolutePath();
+
+                return Tuils.EMPTYSTRING;
+            }
+        },
+        home_path {
+            @Override
+            public String defaultValue() {
+                return Environment.getExternalStorageDirectory().getAbsolutePath();
+            }
+        },
+        app_installed_format {
+            @Override
+            public String defaultValue() {
+                return "App installed: %p";
+            }
+        },
+        app_uninstalled_format {
+            @Override
+            public String defaultValue() {
+                return "App uninstalled: %p";
+            }
+        },
+        enable_music {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
         };
 
         @Override
@@ -758,13 +823,13 @@ public class XMLPrefsManager {
         UI("ui.xml", Ui.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"show_timestamp_before_cmd", "linux_like", "show_username_ssninfo", "show_ssninfo", "show_path_ssninfo", "show_devicename_ssninfo", "show_alias_suggestions"};
+                return new String[] {"show_timestamp_before_cmd", "linux_like", "show_username_ssninfo", "show_ssninfo", "show_path_ssninfo", "show_devicename_ssninfo", "show_alias_suggestions", "transparent_bars"};
             }
         },
         BEHAVIOR("behavior.xml", Behavior.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"double_tap_closes"};
+                return new String[] {"double_tap_closes", "donation_message"};
             }
         },
         SUGGESTIONS("suggestions.xml", Suggestions.values()) {
@@ -859,7 +924,7 @@ public class XMLPrefsManager {
 
         public List<String> values() {
             List<String> vs = new ArrayList<>();
-            for(XMLPrefsEntry entry : list) vs.add(entry.value);
+            for(XMLPrefsEntry entry : list) vs.add(entry.key + "=" + entry.value);
             return vs;
         }
     }
@@ -879,12 +944,8 @@ public class XMLPrefsManager {
             try {
                 o = buildDocument(file, element.name());
             } catch (Exception e) {
-                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                intent.putExtra(InputOutputReceiver.TEXT, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + element.name() + context.getString(R.string.output_xmlproblem2) +
+                Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + element.path + context.getString(R.string.output_xmlproblem2) +
                         Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
-                intent.putExtra(InputOutputReceiver.COLOR, Color.parseColor("#ff0000"));
-                context.sendBroadcast(intent);
-
                 continue;
             }
 
@@ -953,6 +1014,14 @@ public class XMLPrefsManager {
         if(c == Color.class) return Color.parseColor(s);
         if(c == boolean.class) return Boolean.parseBoolean(s);
         if(c == String.class) return s;
+        if(c == File.class) {
+            if(s.length() == 0) return null;
+
+            File file = new File(s);
+            if(!file.exists()) throw new UnsupportedOperationException();
+
+            return file;
+        }
 
         return Tuils.getDefaultValue(c);
     }
@@ -1186,6 +1255,10 @@ public class XMLPrefsManager {
 
 //        this won't ever happen, I think
         return null;
+    }
+
+    public static String get(XMLPrefsManager.XMLPrefsSave prefsSave) {
+        return get(String.class, prefsSave);
     }
 
     public static int getColor(XMLPrefsManager.XMLPrefsSave prefsSave) {
