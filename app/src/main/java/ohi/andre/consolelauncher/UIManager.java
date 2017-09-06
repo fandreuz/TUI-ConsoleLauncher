@@ -527,8 +527,6 @@ public class UIManager implements OnTouchListener {
 
         trigger = tri;
 
-        final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         skinManager = new SkinManager();
 
@@ -589,7 +587,7 @@ public class UIManager implements OnTouchListener {
         final int BATTERY = 4;
         final int STORAGE = 5;
 
-        Typeface t = skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole;
+        final Typeface t = skinManager.getFont(Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf"));
 
         AllowEqualsSequence sequence = new AllowEqualsSequence(new int[] {rIndex, dIndex, bIndex, tIndex, sIndex}, new Integer[] {RAM, DEVICE, BATTERY, TIME, STORAGE});
         for(int count = 0; count < ts.length; count++) {
@@ -735,7 +733,7 @@ public class UIManager implements OnTouchListener {
                     textView.setLongClickable(false);
                     textView.setClickable(true);
 
-                    textView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
+                    textView.setTypeface(t);
                     textView.setTextSize(skinManager.getSuggestionSize());
 
                     textView.setPadding(SkinManager.SUGGESTION_PADDING_HORIZONTAL, SkinManager.SUGGESTION_PADDING_VERTICAL,
