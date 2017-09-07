@@ -23,6 +23,7 @@ import android.provider.Settings;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -53,7 +54,6 @@ import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.BuildConfig;
-import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
@@ -287,10 +287,23 @@ public class Tuils {
         return round(result, 2);
     }
 
-    public static SpannableString color(String text, int color) {
+    public static SpannableString span(String text, int color) {
+        return span(null, text, color, Integer.MAX_VALUE);
+    }
+
+    public static SpannableString span(Context context, int size, String text) {
+        return span(context, text, Integer.MAX_VALUE, size);
+    }
+
+    public static SpannableString span(Context context, String text, int color, int size) {
         SpannableString spannableString = new SpannableString(text);
-        spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if(size != Integer.MAX_VALUE && context != null) spannableString.setSpan(new AbsoluteSizeSpan(convertSpToPixels(size, context)), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if(color != Integer.MAX_VALUE) spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return spannableString;
+    }
+
+    public static int convertSpToPixels(float sp, Context context) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
     }
 
     public static void delete(File dir) {
@@ -336,7 +349,7 @@ public class Tuils {
     }
 
     public static void sendOutput(Context context, int res) {
-        sendOutput(SkinManager.COLOR_NOT_SET, context, res);
+        sendOutput(Integer.MAX_VALUE, context, res);
     }
 
     public static void sendOutput(int color, Context context, int res) {
@@ -344,7 +357,7 @@ public class Tuils {
     }
 
     public static void sendOutput(Context context, int res, int type) {
-        sendOutput(SkinManager.COLOR_NOT_SET, context, res, type);
+        sendOutput(Integer.MAX_VALUE, context, res, type);
     }
 
     public static void sendOutput(int color, Context context, int res, int type) {
@@ -352,7 +365,7 @@ public class Tuils {
     }
 
     public static void sendOutput(Context context, CharSequence s) {
-        sendOutput(SkinManager.COLOR_NOT_SET, context, s);
+        sendOutput(Integer.MAX_VALUE, context, s);
     }
 
     public static void sendOutput(int color, Context context, CharSequence s) {
@@ -360,7 +373,7 @@ public class Tuils {
     }
 
     public static void sendOutput(Context context, CharSequence s, int type) {
-        sendOutput(SkinManager.COLOR_NOT_SET, context, s, type);
+        sendOutput(Integer.MAX_VALUE, context, s, type);
     }
 
     public static void sendOutput(int color, Context context, CharSequence s, int type) {
@@ -481,12 +494,22 @@ public class Tuils {
     static Pattern pd = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     static Pattern pu = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     static Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-    public static String getHint(SkinManager skinManager, String currentPath) {
-        String format = skinManager.ssnInfoFormat;
+    public static String getHint(String currentPath) {
+        if(!XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_session_info)) return null;
+
+        String format = XMLPrefsManager.get(XMLPrefsManager.Behavior.session_info_format);
         if(format.length() == 0) return null;
 
-        format = pd.matcher(format).replaceAll(Matcher.quoteReplacement(skinManager.deviceName));
-        format = pu.matcher(format).replaceAll(Matcher.quoteReplacement(skinManager.username));
+        String deviceName = XMLPrefsManager.get(XMLPrefsManager.Ui.deviceName);
+        if(deviceName == null || deviceName.length() == 0) {
+            deviceName = Build.DEVICE;
+        }
+
+        String username = XMLPrefsManager.get(XMLPrefsManager.Ui.username);
+        if(username == null) username = Tuils.EMPTYSTRING;
+
+        format = pd.matcher(format).replaceAll(Matcher.quoteReplacement(deviceName));
+        format = pu.matcher(format).replaceAll(Matcher.quoteReplacement(username));
         format = pp.matcher(format).replaceAll(Matcher.quoteReplacement(Tuils.getNicePath(currentPath)));
 
         return format;
@@ -562,6 +585,8 @@ public class Tuils {
     }
 
     public static void log(Object o) {
+//        Log.e("andre", Arrays.toString(Thread.currentThread().getStackTrace()));
+
         if(o instanceof Throwable) {
             Log.e("andre", "", (Throwable) o);
         } else {

@@ -42,7 +42,7 @@
     <string name="hint_googlep">Did you know? Our official Google+ community is full of tips, experimental apks and discussions.\nYou can have a look with the cmd \"$ tui -googlep\"</string>
     <string name="hint_tutorial">Did you read the tutorial? If you don\'t remember how to view it, the cmd is \"$ tutorial\"</string>
     <string name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</string>
-    <string name="hint_theme2">Did you know? You can create your custom theme and share it to other users. Have a look at the cmd \"$ theme -new\"</string>
+    <string name="hint_theme2">Did you know? You can create your custom theme and share it to other users. Have a look at the cmd \"$ theme -create\"</string>
     <string name="hint_help">Are you having any doubts about a command? Just use the cmd \"$ help cmdName\"</string>
     <string name="hint_music">Did you know? You can listen your music without launching other apps but t-ui. Have a look at the cmd \"$ music\"</string>
     <string name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups, a feature that let\'s you customize your app suggestions, creating different categories.\nYou can get more details with the cmd

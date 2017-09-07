@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
 
-import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
@@ -48,9 +47,9 @@ public class InputOutputReceiver extends BroadcastReceiver {
             if(intent.getAction().equals(ACTION_CMD)) {
                 executer.exec(text.toString());
             } else {
-                int color = intent.getIntExtra(COLOR, SkinManager.COLOR_NOT_SET);
+                int color = intent.getIntExtra(COLOR, Integer.MAX_VALUE);
 
-                if(color != SkinManager.COLOR_NOT_SET) {
+                if(color != Integer.MAX_VALUE) {
                     outputable.onOutput(color, text);
                 }
                 else {

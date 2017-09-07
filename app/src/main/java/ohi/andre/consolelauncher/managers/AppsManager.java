@@ -754,8 +754,8 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     public static class Group implements MainManager.Group {
         List<LaunchInfo> apps;
 
-        int bgColor = SkinManager.COLOR_NOT_SET;
-        int foreColor = SkinManager.COLOR_NOT_SET;
+        int bgColor = Integer.MAX_VALUE;
+        int foreColor = Integer.MAX_VALUE;
 
         String name;
 
@@ -1286,7 +1286,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             builder.append("launched_times: ").append(app.launchedTimes).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-                builder.append("Install: ").append(TimeManager.replace("%t0", info.firstInstallTime, SkinManager.COLOR_NOT_SET)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+                builder.append("Install: ").append(TimeManager.replace("%t0", info.firstInstallTime, Integer.MAX_VALUE)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
             }
 
             ActivityInfo[] a = info.activities;

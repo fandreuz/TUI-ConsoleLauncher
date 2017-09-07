@@ -117,8 +117,6 @@ public class ThemesManager {
                 Tuils.addPrefix(strings, Tuils.DOUBLE_SPACE);
                 Tuils.insertHeaders(strings, false);
 
-                Tuils.log(strings.toString());
-
                 Tuils.sendOutput(context, Tuils.toPlanString(strings, Tuils.NEWLINE));
             }
 

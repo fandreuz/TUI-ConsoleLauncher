@@ -15,7 +15,6 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
@@ -33,8 +32,6 @@ public class MainPack extends ExecutePack {
 
     //	current directory
     public File currentDirectory;
-
-    public SkinManager skinManager;
 
     //	resources references
     public Resources res;

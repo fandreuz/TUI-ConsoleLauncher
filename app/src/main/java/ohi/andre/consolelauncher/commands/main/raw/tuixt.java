@@ -32,7 +32,6 @@ public class tuixt implements CommandAbstraction {
         Intent intent = new Intent(info.context, TuixtActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(TuixtActivity.PATH, file.getAbsolutePath());
-        intent.putExtra(TuixtActivity.SKIN, info.skinManager);
         ((Activity) info.context).startActivityForResult(intent, LauncherActivity.TUIXT_REQUEST);
 
         return Tuils.EMPTYSTRING;
@@ -82,7 +81,6 @@ public class tuixt implements CommandAbstraction {
 
         Intent intent = new Intent(info.context, TuixtActivity.class);
         intent.putExtra(TuixtActivity.PATH, file.getAbsolutePath());
-        intent.putExtra(TuixtActivity.SKIN, info.skinManager);
         ((Activity) info.context).startActivityForResult(intent, LauncherActivity.TUIXT_REQUEST);
 
         return Tuils.EMPTYSTRING;

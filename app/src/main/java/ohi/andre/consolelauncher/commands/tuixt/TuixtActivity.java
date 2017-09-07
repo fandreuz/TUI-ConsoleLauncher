@@ -3,7 +3,6 @@ package ohi.andre.consolelauncher.commands.tuixt;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,7 +30,7 @@ import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.managers.FileManager;
-import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -47,7 +46,6 @@ public class TuixtActivity extends Activity {
     private long lastEnter;
 
     public static String PATH = "path";
-    public static String SKIN = "skin";
 
     public static String ERROR_KEY = "error";
 
@@ -77,23 +75,19 @@ public class TuixtActivity extends Activity {
 
         CommandGroup group = new CommandGroup(this, "ohi.andre.consolelauncher.commands.tuixt.raw");
 
-        SkinManager skinManager = intent.getParcelableExtra(SKIN);
-        if(skinManager == null) {
-            try {
-                Resources res = getResources();
-                skinManager = new SkinManager();
-            } catch (Exception e) {
-                return;
-            }
+        try {
+            XMLPrefsManager.create(this);
+        } catch (Exception e) {
+            finish();
         }
 
-        if (!skinManager.useSystemWp) {
-            rootView.setBackgroundColor(skinManager.bgColor);
+        if (!XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_wallpaper)) {
+            rootView.setBackgroundColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.bg_color));
         } else {
             setTheme(R.style.Custom_SystemWP);
         }
 
-        final boolean inputBottom = skinManager.inputBottom;
+        final boolean inputBottom = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.input_bottom);
         int layoutId = inputBottom ? R.layout.tuixt_view_input_down : R.layout.tuixt_view_input_up;
 
         LayoutInflater inflater = getLayoutInflater();
@@ -107,21 +101,26 @@ public class TuixtActivity extends Activity {
         TextView prefixView = (TextView) inputOutputView.findViewById(R.id.prefix_view);
 
         ImageButton submitView = (ImageButton) inputOutputView.findViewById(R.id.submit_tv);
-        boolean showSubmit = skinManager.showSubmit;
+        boolean showSubmit = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_enter_button);
         if (!showSubmit) {
             submitView.setVisibility(View.GONE);
             submitView = null;
         }
 
-        String prefix = skinManager.prefix;
+        String prefix = XMLPrefsManager.get(XMLPrefsManager.Ui.input_prefix);
 
-        prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        prefixView.setTextColor(skinManager.inputColor);
-        prefixView.setTextSize(skinManager.getTextSize());
+        Typeface t = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_font) ? Typeface.DEFAULT : lucidaConsole;
+        int ioSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.input_output_size);
+        int outputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
+        int inputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color);
+
+        prefixView.setTypeface(t);
+        prefixView.setTextColor(inputColor);
+        prefixView.setTextSize(ioSize);
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
 
         if (submitView != null) {
-            submitView.setColorFilter(skinManager.inputColor);
+            submitView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.enter_color));
             submitView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -130,9 +129,9 @@ public class TuixtActivity extends Activity {
             });
         }
 
-        fileView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        fileView.setTextSize(skinManager.getTextSize());
-        fileView.setTextColor(skinManager.outputColor);
+        fileView.setTypeface(t);
+        fileView.setTextSize(ioSize);
+        fileView.setTextColor(outputColor);
         fileView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -145,16 +144,16 @@ public class TuixtActivity extends Activity {
             }
         });
 
-        outputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        outputView.setTextSize(skinManager.getTextSize());
-        outputView.setTextColor(skinManager.outputColor);
+        outputView.setTypeface(t);
+        outputView.setTextSize(ioSize);
+        outputView.setTextColor(outputColor);
         outputView.setMovementMethod(new ScrollingMovementMethod());
         outputView.setVisibility(View.GONE);
 
-        inputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        inputView.setTextSize(skinManager.getTextSize());
-        inputView.setTextColor(skinManager.inputColor);
-        inputView.setHint(Tuils.getHint(skinManager, path));
+        inputView.setTypeface(t);
+        inputView.setTextSize(ioSize);
+        inputView.setTextColor(inputColor);
+        inputView.setHint(Tuils.getHint(path));
 
         inputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         inputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {

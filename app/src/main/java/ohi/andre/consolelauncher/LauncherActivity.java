@@ -319,7 +319,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             startService(monitor);
 
             Intent timeColorIntent = new Intent(this, NotificationService.class);
-            Tuils.log(XMLPrefsManager.get(XMLPrefsManager.Theme.time_color));
             timeColorIntent.putExtra(XMLPrefsManager.Theme.time_color.label(), XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color));
             startService(timeColorIntent);
         }

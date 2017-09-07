@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -28,7 +29,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -38,7 +38,6 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.MessagesManager;
-import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
@@ -63,8 +62,6 @@ public class UIManager implements OnTouchListener {
     private final int STORAGE_DELAY = 60 * 1000;
 
     protected Context mContext;
-
-    private SkinManager skinManager;
 
     private DevicePolicyManager policy;
     private ComponentName component;
@@ -103,40 +100,62 @@ public class UIManager implements OnTouchListener {
         }
     };
 
+    int batterySize, ramSize, storageSize, timeSize;
+
     private OnBatteryUpdate batteryUpdate = new OnBatteryUpdate() {
+
+        boolean manyStatus, loaded;
+        int colorHigh, colorMedium, colorLow;
+
         @Override
         public void update(float p) {
+            if(!loaded) {
+                loaded = true;
+
+                manyStatus = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.enable_battery_status);
+                colorHigh = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_high);
+                colorMedium = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_medium);
+                colorLow = XMLPrefsManager.getColor(XMLPrefsManager.Theme.battery_color_low);
+            }
+
             int percentage = (int) p;
 
             int color;
 
-            if(skinManager.manyColorsBattery) {
-                if(percentage > mediumPercentage) color = skinManager.battery_color_high;
-                else if(percentage > lowPercentage) color = skinManager.battery_color_medium;
-                else color = skinManager.battery_color_low;
+            if(manyStatus) {
+                if(percentage > mediumPercentage) color = colorHigh;
+                else if(percentage > lowPercentage) color = colorMedium;
+                else color = colorLow;
             } else {
-                color = skinManager.battery_color_high;
+                color = colorHigh;
             }
 
             if(batteryFormat == null) batteryFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.battery_format);
 
             String cp = batteryFormat.replaceAll("%[vV]", String.valueOf(percentage)).replaceAll("%[nN]", Tuils.NEWLINE);
-            batteryText = Tuils.color(cp, color);
+            batteryText = Tuils.span(mContext, cp, color, batterySize);
             UIManager.this.update(batteryIndex);
         }
     };
 
-    private final String INT_AV = "%iav";
-    private final String INT_TOT = "%itot";
-    private final String EXT_AV = "%eav";
-    private final String EXT_TOT = "%etot";
-
-    private List<Pattern> storagePatterns;
-    private String storageFormat;
     private Runnable storageRunnable = new Runnable() {
+
+        private final String INT_AV = "%iav";
+        private final String INT_TOT = "%itot";
+        private final String EXT_AV = "%eav";
+        private final String EXT_TOT = "%etot";
+
+        private List<Pattern> storagePatterns;
+        private String storageFormat;
+
+        int color;
+
         @Override
         public void run() {
-            if(storageFormat == null) storageFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.storage_format);
+            if(storageFormat == null) {
+                storageFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.storage_format);
+                color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.storage_color);
+            }
 
             if(storagePatterns == null) {
                 storagePatterns = new ArrayList<>();
@@ -215,16 +234,25 @@ public class UIManager implements OnTouchListener {
             copy = storagePatterns.get(25).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA))));
             copy = storagePatterns.get(26).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA))));
 
-            storageText = Tuils.color(copy, info.skinManager.storageColor);
+            storageText = Tuils.span(mContext, copy, color, storageSize);
             update(storageIndex);
             ts[storageIndex].postDelayed(this, STORAGE_DELAY);
         }
     };
 
     private Runnable timeRunnable = new Runnable() {
+
+        boolean active;
+        int color;
+
         @Override
         public void run() {
-            timeText = TimeManager.replace("%t0", skinManager.time_color);
+            if(!active) {
+                active = true;
+                color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
+            }
+
+            timeText = TimeManager.replace(mContext, timeSize, "%t0", color);
             update(timeIndex);
             ts[timeIndex].postDelayed(this, TIME_DELAY);
         }
@@ -233,15 +261,23 @@ public class UIManager implements OnTouchListener {
     private ActivityManager.MemoryInfo memory;
     private ActivityManager activityManager;
 
-    private final String AV = "%av";
-    private final String TOT = "%tot";
-
-    List<Pattern> ramPatterns;
-    String ramFormat;
     private Runnable ramRunnable = new Runnable() {
+
+        private final String AV = "%av";
+        private final String TOT = "%tot";
+
+        List<Pattern> ramPatterns;
+        String ramFormat;
+
+        int color;
+
         @Override
         public void run() {
-            if(ramFormat == null) ramFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.ram_format);
+            if(ramFormat == null) {
+                ramFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.ram_format);
+
+                color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.ram_color);
+            }
 
             if(ramPatterns == null) {
                 ramPatterns = new ArrayList<>();
@@ -282,7 +318,7 @@ public class UIManager implements OnTouchListener {
 
             copy = ramPatterns.get(11).matcher(copy).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            ramText = Tuils.color(copy, info.skinManager.ramColor);
+            ramText = Tuils.span(mContext, copy, color, ramSize);
             update(ramIndex);
             ts[ramIndex].postDelayed(this, RAM_DELAY);
         }
@@ -324,7 +360,7 @@ public class UIManager implements OnTouchListener {
 
     private TextView terminalView;
     private Thread lastSuggestionThread;
-    private Handler activityHandler;
+    private Handler handler = new Handler();
     private Runnable removeAllSuggestions = new Runnable() {
         @Override
         public void run() {
@@ -397,29 +433,19 @@ public class UIManager implements OnTouchListener {
 
         if (suggestionViewParams == null) {
             suggestionViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            suggestionViewParams.setMargins(SkinManager.SUGGESTION_MARGIN, 0, SkinManager.SUGGESTION_MARGIN, 0);
+            suggestionViewParams.setMargins(15, 0, 15, 0);
             suggestionViewParams.gravity = Gravity.CENTER_VERTICAL;
         }
 
         if(suggestionRunnable == null) {
-            suggestionRunnable = new SuggestionRunnable(skinManager, suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent());
-        }
-
-        if(activityHandler == null) {
-            Field field;
-            try {
-                field = mContext.getClass().getSuperclass().getDeclaredField("mHandler");
-                field.setAccessible(true);
-                activityHandler = (Handler) field.get(mContext);
-            }
-            catch (Exception e) {}
+            suggestionRunnable = new SuggestionRunnable(suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent());
         }
 
         if (lastSuggestionThread != null) {
             lastSuggestionThread.interrupt();
             suggestionRunnable.interrupt();
-            if(activityHandler != null) {
-                activityHandler.removeCallbacks(suggestionRunnable);
+            if(handler != null) {
+                handler.removeCallbacks(suggestionRunnable);
             }
         }
 
@@ -530,14 +556,11 @@ public class UIManager implements OnTouchListener {
         final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
 
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-        skinManager = new SkinManager();
 
-        this.info.skinManager = skinManager;
-
-        if (!skinManager.useSystemWp || !canApplyTheme) {
-            rootView.setBackgroundColor(skinManager.bgColor);
+        if (!XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_wallpaper) || !canApplyTheme) {
+            rootView.setBackgroundColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.bg_color));
         } else {
-            rootView.setBackgroundColor(skinManager.overlayColor);
+            rootView.setBackgroundColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.overlay_color));
         }
 
 //        scrolllllll
@@ -558,6 +581,11 @@ public class UIManager implements OnTouchListener {
         leftMM = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.left_margin_mm);
         topMM = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.top_margin_mm);
         bottomMM = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.bottom_margin_mm);
+
+        timeSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.time_size);
+        ramSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.ram_size);
+        batterySize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.battery_size);
+        storageSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.storage_size);
 
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
         rootView.setPadding(Tuils.mmToPx(metrics, leftMM), Tuils.mmToPx(metrics, topMM), Tuils.mmToPx(metrics, rightMM), Tuils.mmToPx(metrics, bottomMM));
@@ -589,7 +617,7 @@ public class UIManager implements OnTouchListener {
         final int BATTERY = 4;
         final int STORAGE = 5;
 
-        Typeface t = skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole;
+        final Typeface t = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_font) ? Typeface.DEFAULT : lucidaConsole;
 
         AllowEqualsSequence sequence = new AllowEqualsSequence(new int[] {rIndex, dIndex, bIndex, tIndex, sIndex}, new Integer[] {RAM, DEVICE, BATTERY, TIME, STORAGE});
         for(int count = 0; count < ts.length; count++) {
@@ -619,7 +647,6 @@ public class UIManager implements OnTouchListener {
 
             if(count >= sequence.getMinKey() && count <= sequence.getMaxKey() && os.length > 0) {
                 ts[count].setTypeface(t);
-                ts[count].setTextSize(skinManager.getTextSize());
             } else {
                 ts[count].setVisibility(View.GONE);
             }
@@ -642,11 +669,17 @@ public class UIManager implements OnTouchListener {
 
             String deviceFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.device_format);
 
-            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(skinManager.username != null ? skinManager.username : "null"));
-            deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(skinManager.deviceName != null ? skinManager.deviceName : "null"));
+            String username = XMLPrefsManager.get(XMLPrefsManager.Ui.username);
+            String deviceName = XMLPrefsManager.get(XMLPrefsManager.Ui.deviceName);
+            if (deviceName == null || deviceName.length() == 0) {
+                deviceName = Build.DEVICE;
+            }
+
+            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(username != null ? username : "null"));
+            deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(deviceName));
             deviceFormat = NEWLINE.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            deviceText = Tuils.color(deviceFormat, skinManager.deviceColor);
+            deviceText = Tuils.span(mContext, deviceFormat, XMLPrefsManager.getColor(XMLPrefsManager.Theme.device_color), XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.device_size));
             update(this.deviceIndex);
         }
 
@@ -657,8 +690,6 @@ public class UIManager implements OnTouchListener {
         if(showBattery) {
             mediumPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_medium);
             lowPercentage = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.battery_low);
-
-            if(mediumPercentage < lowPercentage) skinManager.manyColorsBattery = false;
 
             Tuils.registerBatteryReceiver(context, batteryUpdate);
         } else {
@@ -705,7 +736,7 @@ public class UIManager implements OnTouchListener {
             pasteView = (ImageButton) inputOutputView.findViewById(R.id.paste_view);
         }
 
-        if (skinManager.showSuggestions) {
+        if (XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.show_suggestions)) {
             showSuggestions = true;
 
             HorizontalScrollView sv = (HorizontalScrollView) rootView.findViewById(R.id.suggestions_container);
@@ -726,6 +757,9 @@ public class UIManager implements OnTouchListener {
             suggestionsManager = new SuggestionsManager();
 
             this.suggestionViewDecorer = new SuggestionViewDecorer() {
+
+                final int PADDING = 15;
+
                 @Override
                 public TextView getSuggestionView(Context context) {
                     TextView textView = new TextView(mContext);
@@ -735,14 +769,14 @@ public class UIManager implements OnTouchListener {
                     textView.setLongClickable(false);
                     textView.setClickable(true);
 
-                    textView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-                    textView.setTextSize(skinManager.getSuggestionSize());
+                    textView.setTypeface(t);
+                    textView.setTextSize(XMLPrefsManager.get(int.class, XMLPrefsManager.Suggestions.suggestions_size));
 
-                    textView.setPadding(SkinManager.SUGGESTION_PADDING_HORIZONTAL, SkinManager.SUGGESTION_PADDING_VERTICAL,
-                            SkinManager.SUGGESTION_PADDING_HORIZONTAL, SkinManager.SUGGESTION_PADDING_VERTICAL);
+                    textView.setPadding(PADDING, PADDING, PADDING, PADDING);
 
                     textView.setLines(1);
                     textView.setMaxLines(1);
+
                     return textView;
                 }
             };
@@ -761,7 +795,7 @@ public class UIManager implements OnTouchListener {
             det = null;
         } else initDetector();
 
-        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, skinManager, context, mainPack);
+        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, context, mainPack);
         mTerminalAdapter.setInputListener(inputListener);
 
         if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_hints)) {

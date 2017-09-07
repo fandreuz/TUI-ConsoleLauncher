@@ -1,16 +1,17 @@
 package ohi.andre.consolelauncher.tuils;
 
+import android.content.Context;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.format.Time;
+import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.managers.SkinManager;
 import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 
 /**
@@ -44,7 +45,7 @@ public class TimeManager {
     }
 
     public static CharSequence replace(CharSequence cs) {
-        return replace(cs, -1, SkinManager.COLOR_NOT_SET);
+        return replace(cs, -1, Integer.MAX_VALUE);
     }
 
     public static CharSequence replace(CharSequence cs, int color) {
@@ -52,6 +53,14 @@ public class TimeManager {
     }
 
     public static CharSequence replace(CharSequence cs, long tm, int color) {
+        return replace(null, Integer.MAX_VALUE, cs, tm, color);
+    }
+
+    public static CharSequence replace(Context context, int size, CharSequence cs, int color) {
+        return replace(context, size, cs, -1, color);
+    }
+
+    public static CharSequence replace(Context context, int size, CharSequence cs, long tm, int color) {
         if(tm == -1) {
             time.setToNow();
         } else {
@@ -66,13 +75,16 @@ public class TimeManager {
 
                 String tf = time.format(t);
 
-                SpannableString spannableString = null;
-                if(color != SkinManager.COLOR_NOT_SET) {
-                    spannableString = new SpannableString(tf);
-                    spannableString.setSpan(new ForegroundColorSpan(color), 0, tf.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+                SpannableString spannableString = new SpannableString(tf);
+                if(color != Integer.MAX_VALUE) {
+                    spannableString.setSpan(new ForegroundColorSpan(color), 0, tf.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
 
-                cs = TextUtils.replace(cs, new String[] {"%t" + matcher.group(count)}, new CharSequence[] {spannableString != null ? spannableString : tf});
+                if(size != Integer.MAX_VALUE && context != null) {
+                    spannableString.setSpan(new AbsoluteSizeSpan(Tuils.convertSpToPixels(size, context)), 0, tf.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+
+                cs = TextUtils.replace(cs, new String[] {"%t" + matcher.group(count)}, new CharSequence[] {spannableString});
             }
         }
 
@@ -82,7 +94,7 @@ public class TimeManager {
         String tf = time.format(t);
 
         SpannableString spannableString = null;
-        if(color != SkinManager.COLOR_NOT_SET) {
+        if(color != Integer.MAX_VALUE) {
             spannableString = new SpannableString(tf);
             spannableString.setSpan(new ForegroundColorSpan(color), 0, tf.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         }

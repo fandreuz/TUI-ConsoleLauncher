@@ -15,6 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 
 import android.app.Activity;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
@@ -23,7 +26,7 @@ import android.widget.TextView;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.SkinManager;
+import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 
 public class SuggestionRunnable implements Runnable {
 
@@ -44,12 +47,9 @@ public class SuggestionRunnable implements Runnable {
 
     private SuggestionsManager.Suggestion[] suggestions;
 
-    private SkinManager skinManager;
-
     private boolean interrupted;
 
-    public SuggestionRunnable(SkinManager skinManager, ViewGroup suggestionsView, LinearLayout.LayoutParams suggestionViewParams, HorizontalScrollView parent) {
-        this.skinManager = skinManager;
+    public SuggestionRunnable(ViewGroup suggestionsView, LinearLayout.LayoutParams suggestionViewParams, HorizontalScrollView parent) {
         this.suggestionsView = suggestionsView;
         this.suggestionViewParams = suggestionViewParams;
         this.scrollView = parent;
@@ -97,8 +97,8 @@ public class SuggestionRunnable implements Runnable {
                 toRecycle[count].setText(s);
 
 //                bg and fore
-                int bgColor = SkinManager.COLOR_NOT_SET;
-                int foreColor = SkinManager.COLOR_NOT_SET;
+                int bgColor = Integer.MAX_VALUE;
+                int foreColor = Integer.MAX_VALUE;
                 if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP) {
 
                     Object o = suggestions[count].object;
@@ -119,10 +119,10 @@ public class SuggestionRunnable implements Runnable {
                     }
                 }
 
-                if(bgColor != SkinManager.COLOR_NOT_SET) toRecycle[count].setBackgroundColor(bgColor);
-                else toRecycle[count].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
-                if(foreColor != SkinManager.COLOR_NOT_SET) toRecycle[count].setTextColor(foreColor);
-                else toRecycle[count].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
+                if(bgColor != Integer.MAX_VALUE) toRecycle[count].setBackgroundColor(bgColor);
+                else toRecycle[count].setBackgroundDrawable(getSuggestionBg(suggestions[count].type));
+                if(foreColor != Integer.MAX_VALUE) toRecycle[count].setTextColor(foreColor);
+                else toRecycle[count].setTextColor(getSuggestionTextColor(suggestions[count].type));
 //                end bg and fore
 
                 if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_CONTACT) {
@@ -140,8 +140,8 @@ public class SuggestionRunnable implements Runnable {
                     toAdd[space].setText(s);
 
 //                    bg and fore
-                    int bgColor = SkinManager.COLOR_NOT_SET;
-                    int foreColor = SkinManager.COLOR_NOT_SET;
+                    int bgColor = Integer.MAX_VALUE;
+                    int foreColor = Integer.MAX_VALUE;
                     if(suggestions[count].type == SuggestionsManager.Suggestion.TYPE_APP) {
 
                         Object o = suggestions[count].object;
@@ -162,10 +162,12 @@ public class SuggestionRunnable implements Runnable {
                         }
                     }
 
-                    if(bgColor != SkinManager.COLOR_NOT_SET) toAdd[space].setBackgroundColor(bgColor);
-                    else toAdd[space].setBackgroundDrawable(skinManager.getSuggestionBg(suggestions[count].type));
-                    if(foreColor != SkinManager.COLOR_NOT_SET) toAdd[space].setTextColor(foreColor);
-                    else toAdd[space].setTextColor(skinManager.getSuggestionTextColor(suggestions[count].type));
+                    if(bgColor != Integer.MAX_VALUE) toAdd[space].setBackgroundColor(bgColor);
+                    else toAdd[space].setBackgroundDrawable(getSuggestionBg(suggestions[count].type));
+                    if(foreColor != Integer.MAX_VALUE) toAdd[space].setTextColor(foreColor);
+                    else {
+                        toAdd[space].setTextColor(getSuggestionTextColor(suggestions[count].type));
+                    }
 //                    end bg and fore
 
                     if(toAdd[space].getParent() == null) {
@@ -194,5 +196,90 @@ public class SuggestionRunnable implements Runnable {
 
     public void reset() {
         interrupted = false;
+    }
+
+    static boolean transparentSuggestions, bgLoad = false, textLoad = false;
+    static int suggAppBg, suggAliasBg, suggCmdBg, suggContactBg, suggFileBg, suggSongBg, suggDefaultBg;
+    static int suggAppText, suggAliasText, suggCmdText, suggContactText, suggFileText, suggSongText, suggDefaultText;
+
+    public static Drawable getSuggestionBg(int type) {
+        if(!bgLoad) {
+            bgLoad = true;
+
+            transparentSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.transparent_suggestions);
+            if(!transparentSuggestions) {
+                suggAppBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.apps_bg_color);
+                suggAliasBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.alias_bg_color);
+                suggCmdBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.cmd_bg_color);
+                suggContactBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.contact_bg_color);
+                suggFileBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.file_bg_color);
+                suggSongBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_bg_color);
+                suggDefaultBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_bg_color);
+            }
+        }
+
+        if(transparentSuggestions) {
+            return new ColorDrawable(Color.TRANSPARENT);
+        } else {
+            switch (type) {
+                case SuggestionsManager.Suggestion.TYPE_APP:
+                    return new ColorDrawable(suggAppBg);
+                case SuggestionsManager.Suggestion.TYPE_ALIAS:
+                    return new ColorDrawable(suggAliasBg);
+                case SuggestionsManager.Suggestion.TYPE_COMMAND:
+                    return new ColorDrawable(suggCmdBg);
+                case SuggestionsManager.Suggestion.TYPE_CONTACT:
+                    return new ColorDrawable(suggContactBg);
+                case SuggestionsManager.Suggestion.TYPE_FILE:
+                    return new ColorDrawable(suggFileBg);
+                case SuggestionsManager.Suggestion.TYPE_SONG:
+                    return new ColorDrawable(suggSongBg);
+                default:
+                    return new ColorDrawable(suggDefaultBg);
+            }
+        }
+    }
+
+    public static int getSuggestionTextColor(int type) {
+        if(!textLoad) {
+            textLoad = true;
+
+            suggAppText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.apps_text_color);
+            suggAliasText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.alias_text_color);
+            suggCmdText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.cmd_text_color);
+            suggContactText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.contact_text_color);
+            suggDefaultText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_text_color);
+            suggFileText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.file_text_color);
+            suggSongText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_text_color);
+        }
+
+        int chosen;
+
+        switch (type) {
+            case SuggestionsManager.Suggestion.TYPE_APP:
+                chosen = suggAppText;
+                break;
+            case SuggestionsManager.Suggestion.TYPE_ALIAS:
+                chosen = suggAliasText;
+                break;
+            case SuggestionsManager.Suggestion.TYPE_COMMAND:
+                chosen = suggCmdText;
+                break;
+            case SuggestionsManager.Suggestion.TYPE_CONTACT:
+                chosen = suggContactText;
+                break;
+            case SuggestionsManager.Suggestion.TYPE_FILE:
+                chosen = suggFileText;
+                break;
+            case SuggestionsManager.Suggestion.TYPE_SONG:
+                chosen = suggSongText;
+                break;
+            default:
+                chosen = suggDefaultText;
+                break;
+        }
+
+        if(chosen == Integer.MAX_VALUE) chosen = suggDefaultText;
+        return chosen;
     }
 }

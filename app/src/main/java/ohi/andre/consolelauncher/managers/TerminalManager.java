@@ -79,8 +79,6 @@ public class TerminalManager {
         }
     };
 
-    private SkinManager mSkinManager;
-
     private UIManager.OnNewInputListener mInputListener;
 //    private UIManager.SuggestionNavigator mSuggestionNavigator;
 
@@ -106,15 +104,14 @@ public class TerminalManager {
     private Context mContext;
 
     public TerminalManager(final TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
-                           ImageButton pasteView, SkinManager skinManager, final Context context, MainPack mainPack) {
-        if (terminalView == null || inputView == null || prefixView == null || skinManager == null)
+                           ImageButton pasteView, final Context context, MainPack mainPack) {
+        if (terminalView == null || inputView == null || prefixView == null)
             throw new UnsupportedOperationException();
 
         this.mContext = context;
 
         final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
 
-        this.mSkinManager = skinManager;
         this.mainPack = mainPack;
 
         this.clearAfterMs = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_seconds) * 1000;
@@ -124,17 +121,20 @@ public class TerminalManager {
         inputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.input_format);
         outputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.output_format);
 
-        prefix = skinManager.prefix;
+        prefix = XMLPrefsManager.get(XMLPrefsManager.Ui.input_prefix);
         suPrefix = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.input_root_prefix);
 
-        prefixView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        prefixView.setTextColor(this.mSkinManager.inputColor);
-        prefixView.setTextSize(this.mSkinManager.getTextSize());
+        int ioSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.input_output_size);
+
+        Typeface t = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_font) ? Typeface.DEFAULT : lucidaConsole;
+        prefixView.setTypeface(t);
+        prefixView.setTextColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color));
+        prefixView.setTextSize(ioSize);
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
         this.mPrefix = prefixView;
 
         if (submitView != null) {
-            submitView.setColorFilter(mSkinManager.enter_color);
+            submitView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.enter_color));
             submitView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -144,8 +144,8 @@ public class TerminalManager {
         }
 
         if (backView != null) {
-            ((View) backView.getParent()).setBackgroundColor(mSkinManager.toolbarBg);
-            backView.setColorFilter(this.mSkinManager.toolbarColor);
+            ((View) backView.getParent()).setBackgroundColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_bg));
+            backView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
             backView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -155,7 +155,7 @@ public class TerminalManager {
         }
 
         if (nextView != null) {
-            nextView.setColorFilter(this.mSkinManager.toolbarColor);
+            nextView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
             nextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -165,7 +165,7 @@ public class TerminalManager {
         }
 
         if (pasteView != null) {
-            pasteView.setColorFilter(this.mSkinManager.toolbarColor);
+            pasteView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
             pasteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -178,7 +178,7 @@ public class TerminalManager {
         }
 
         if (deleteView != null) {
-            deleteView.setColorFilter(this.mSkinManager.toolbarColor);
+            deleteView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
             deleteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -188,8 +188,8 @@ public class TerminalManager {
         }
 
         this.mTerminalView = terminalView;
-        this.mTerminalView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        this.mTerminalView.setTextSize(mSkinManager.getTextSize());
+        this.mTerminalView.setTypeface(t);
+        this.mTerminalView.setTextSize(ioSize);
         this.mTerminalView.setFocusable(false);
         setupScroller();
 
@@ -231,10 +231,10 @@ public class TerminalManager {
         this.mScrollView = (ScrollView) v;
 
         this.mInputView = inputView;
-        this.mInputView.setTextSize(mSkinManager.getTextSize());
-        this.mInputView.setTextColor(mSkinManager.inputColor);
-        this.mInputView.setTypeface(skinManager.systemFont ? Typeface.DEFAULT : lucidaConsole);
-        this.mInputView.setHint(Tuils.getHint(skinManager, mainPack.currentDirectory.getAbsolutePath()));
+        this.mInputView.setTextSize(ioSize);
+        this.mInputView.setTextColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color));
+        this.mInputView.setTypeface(t);
+        this.mInputView.setHint(Tuils.getHint(mainPack.currentDirectory.getAbsolutePath()));
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 
@@ -271,7 +271,7 @@ public class TerminalManager {
         mInputView.setText(Tuils.EMPTYSTRING);
 
         if(defaultHint) {
-            mInputView.setHint(Tuils.getHint(mSkinManager, mainPack.currentDirectory.getAbsolutePath()));
+            mInputView.setHint(Tuils.getHint(mainPack.currentDirectory.getAbsolutePath()));
         }
 
         requestInputFocus();
@@ -329,8 +329,8 @@ public class TerminalManager {
             return;
         }
 
-        if(color == SkinManager.COLOR_NOT_SET) {
-            color = mSkinManager.outputColor;
+        if(color == Integer.MAX_VALUE) {
+            color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
         }
 
         SpannableString si = new SpannableString(output);
@@ -398,9 +398,9 @@ public class TerminalManager {
 
                 boolean su = t.toString().startsWith("su ") || suMode;
 
-                SpannableString si = Tuils.color(inputFormat, mSkinManager.inputColor);
+                SpannableString si = Tuils.span(inputFormat, XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color));
 
-                s = TimeManager.replace(si, mSkinManager.time_color);
+                s = TimeManager.replace(si,XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color));
                 s = TextUtils.replace(s,
                         new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE,
                                 FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
@@ -410,7 +410,7 @@ public class TerminalManager {
             case CATEGORY_OUTPUT:
                 t = t.toString().trim();
 
-                SpannableString so = Tuils.color(outputFormat, mSkinManager.outputColor);
+                SpannableString so = Tuils.span(outputFormat, XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color));
 
                 s = TextUtils.replace(so,
                         new String[] {FORMAT_OUTPUT, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
@@ -456,7 +456,7 @@ public class TerminalManager {
         defaultHint = true;
 
         if(mInputView != null) {
-            mInputView.setHint(Tuils.getHint(mSkinManager, mainPack.currentDirectory.getAbsolutePath()));
+            mInputView.setHint(Tuils.getHint(mainPack.currentDirectory.getAbsolutePath()));
         }
     }
 

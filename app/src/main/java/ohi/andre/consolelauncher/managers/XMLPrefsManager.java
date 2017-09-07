@@ -2,6 +2,7 @@ package ohi.andre.consolelauncher.managers;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Environment;
 
 import org.w3c.dom.Document;
@@ -203,10 +204,40 @@ public class XMLPrefsManager {
                 return "false";
             }
         },
-        font_size {
+        ram_size {
             @Override
             public String defaultValue() {
-                return "15";
+                return "13";
+            }
+        },
+        battery_size {
+            @Override
+            public String defaultValue() {
+                return "13";
+            }
+        },
+        device_size {
+            @Override
+            public String defaultValue() {
+                return "13";
+            }
+        },
+        time_size {
+            @Override
+            public String defaultValue() {
+                return "13";
+            }
+        },
+        storage_size {
+            @Override
+            public String defaultValue() {
+                return "13";
+            }
+        },
+        input_output_size {
+            @Override
+            public String defaultValue() {
+                return "13";
             }
         },
         input_bottom {
@@ -260,7 +291,7 @@ public class XMLPrefsManager {
         deviceName {
             @Override
             public String defaultValue() {
-                return "";
+                return Build.DEVICE;
             }
         },
         system_wallpaper {
@@ -354,6 +385,12 @@ public class XMLPrefsManager {
             }
         },
         show_app_uninstalled {
+            @Override
+            public String defaultValue() {
+                return "true";
+            }
+        },
+        show_session_info {
             @Override
             public String defaultValue() {
                 return "true";
@@ -515,6 +552,12 @@ public class XMLPrefsManager {
             @Override
             public String defaultValue() {
                 return "true";
+            }
+        },
+        suggestions_size {
+            @Override
+            public String defaultValue() {
+                return "12";
             }
         };
 
@@ -931,7 +974,11 @@ public class XMLPrefsManager {
 
     private XMLPrefsManager() {}
 
+    static boolean called = false;
     public static void create(Context context) throws Exception {
+        if(called) return;
+        called = true;
+
         File folder = Tuils.getFolder();
 
         for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
@@ -1267,13 +1314,13 @@ public class XMLPrefsManager {
         } catch (Exception e) {
             String def = prefsSave.defaultValue();
             if(def == null || def.length() == 0) {
-                return SkinManager.COLOR_NOT_SET;
+                return Integer.MAX_VALUE;
             }
 
             try {
                 return (int) transform(def, Color.class);
             } catch (Exception e1) {
-                return SkinManager.COLOR_NOT_SET;
+                return Integer.MAX_VALUE;
             }
         }
     }
