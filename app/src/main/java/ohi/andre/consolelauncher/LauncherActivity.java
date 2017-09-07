@@ -22,9 +22,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.github.anrwatchdog.ANRError;
-import com.github.anrwatchdog.ANRWatchDog;
-
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -219,17 +216,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     }
 
     private void finishOnCreate() {
-
-        new ANRWatchDog(5000)
-                .setANRListener(new ANRWatchDog.ANRListener() {
-                    @Override
-                    public void onAppNotResponding(ANRError anrError) {
-                        Tuils.log(anrError);
-                        Tuils.toFile(anrError);
-                    }
-                })
-                .setReportMainThreadOnly()
-                .start();
+        FlavorUtils.startANR();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
