@@ -240,7 +240,7 @@ public class search extends ParamCommand {
 
     private static String youTube(List<String> args, Context c) {
         try {
-            String toSearch = Tuils.toPlanString(args, " 
+            String toSearch = Tuils.toPlanString(args, " ");
             Intent intent = new Intent(Intent.ACTION_SEARCH);
             intent.setPackage(YOUTUBE_PACKAGE);
             intent.putExtra("query", toSearch);
