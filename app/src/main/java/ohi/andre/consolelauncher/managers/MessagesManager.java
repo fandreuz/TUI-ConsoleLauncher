@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -37,7 +39,7 @@ public class MessagesManager {
         count = 0;
         random = new Random();
 
-        color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.hint_color);
+        color = XMLPrefsManager.getColor(Theme.hint_color);
     }
 
     public void onCmd() {

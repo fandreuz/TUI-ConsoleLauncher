@@ -14,7 +14,8 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class apps extends ParamCommand {
@@ -51,7 +52,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                AppsManager.LaunchInfo i = pack.get(AppsManager.LaunchInfo.class, 1);
+                AppsManager.LaunchInfo i = pack.getLaunchInfo();
                 ((MainPack) pack).appsManager.showActivity(i);
                 return null;
             }
@@ -64,7 +65,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                AppsManager.LaunchInfo i = pack.get(AppsManager.LaunchInfo.class, 1);
+                AppsManager.LaunchInfo i = pack.getLaunchInfo();
                 ((MainPack) pack).appsManager.hideActivity(i);
                 return null;
             }
@@ -78,7 +79,7 @@ public class apps extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 try {
-                    AppsManager.LaunchInfo i = pack.get(AppsManager.LaunchInfo.class, 1);
+                    AppsManager.LaunchInfo i = pack.getLaunchInfo();
 
                     PackageInfo info = pack.context.getPackageManager().getPackageInfo(i.componentName.getPackageName(), PackageManager.GET_PERMISSIONS | PackageManager.GET_ACTIVITIES | PackageManager.GET_SERVICES | PackageManager.GET_RECEIVERS);
                     return AppsManager.AppUtils.format(i, info);
@@ -95,7 +96,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                openPlaystore(pack.context, pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName());
+                openPlaystore(pack.context, pack.getLaunchInfo().componentName.getPackageName());
                 return null;
             }
         },
@@ -107,9 +108,9 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                int index = pack.get(int.class, 1);
+                int index = pack.getInt();
 
-                Object o = pack.get(Object.class, 2);
+                Object o = pack.get();
 
                 String marker;
                 if(o instanceof AppsManager.LaunchInfo) {
@@ -120,7 +121,7 @@ public class apps extends ParamCommand {
                 }
 
                 try {
-                    XMLPrefsManager.XMLPrefsSave save = AppsManager.Options.valueOf("default_app_n" + index);
+                    XMLPrefsManager.XMLPrefsSave save = Apps.valueOf("default_app_n" + index);
                     save.parent().write(save, marker);
                     return null;
                 } catch (Exception e) {
@@ -145,7 +146,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                openSettings(pack.context, pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName());
+                openSettings(pack.context, pack.getLaunchInfo().componentName.getPackageName());
                 return null;
             }
         },
@@ -157,7 +158,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                Intent intent = ((MainPack) pack).appsManager.getIntent(pack.get(AppsManager.LaunchInfo.class, 1));
+                Intent intent = ((MainPack) pack).appsManager.getIntent(pack.getLaunchInfo());
                 pack.context.startActivity(intent);
 
                 return null;
@@ -175,6 +176,86 @@ public class apps extends ParamCommand {
                 return null;
             }
         },
+//        services {
+//            @Override
+//            public int[] args() {
+//                return new int[] {CommandAbstraction.VISIBLE_PACKAGE};
+//            }
+//
+//            @Override
+//            public String exec(ExecutePack pack) {
+//                AppsManager.LaunchInfo info = pack.get(AppsManager.LaunchInfo.class, 1);
+//
+//                List<String> services = new ArrayList<>();
+//
+//                ActivityManager activityManager = (ActivityManager) pack.context.getSystemService(Context.ACTIVITY_SERVICE);
+//                for(ActivityManager.RunningServiceInfo i : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+//                    ComponentName name = i.service;
+//
+//                    if(info.equals(name.getPackageName())) {
+//                        services.add(name.getClassName().replace(name.getPackageName(), Tuils.EMPTYSTRING));
+//                    }
+//                }
+//
+//                if(services.size() == 0) return "[]";
+//                Collections.sort(services);
+//                return Tuils.toPlanString(services, Tuils.NEWLINE);
+//            }
+//
+//            @Override
+//            public String onNotArgEnough(ExecutePack pack, int n) {
+//
+//                List<SimpleMutableEntry<String, ArrayList<String>>> services = new ArrayList<>();
+//
+//                ActivityManager activityManager = (ActivityManager) pack.context.getSystemService(Context.ACTIVITY_SERVICE);
+//                Tuils.log(activityManager.getRunningServices(Integer.MAX_VALUE).toString());
+//                for(ActivityManager.RunningServiceInfo i : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+//
+//                    boolean check = false;
+//                    for(SimpleMutableEntry<String, ArrayList<String>> s : services) {
+//                        if(s.getKey().equals(i.service.getPackageName())) {
+//                            s.getValue().add(i.service.getClassName().replace(i.service.getPackageName(), Tuils.EMPTYSTRING));
+//
+//                            check = true;
+//                            break;
+//                        }
+//                    }
+//
+//                    if(!check) {
+//                        SimpleMutableEntry<String,ArrayList<String>> s = new SimpleMutableEntry<>(i.service.getPackageName(), new ArrayList<String>());
+//                        s.getValue().add(i.service.getClassName().replace(i.service.getPackageName(), Tuils.EMPTYSTRING));
+//                        services.add(s);
+//                    }
+//                }
+//
+//                if(services.size() == 0) return "[]";
+//                Collections.sort(services, new Comparator<SimpleMutableEntry<String, ArrayList<String>>>() {
+//                    @Override
+//                    public int compare(SimpleMutableEntry<String, ArrayList<String>> o1, SimpleMutableEntry<String, ArrayList<String>> o2) {
+//                        return o1.getKey().compareTo(o2.getKey());
+//                    }
+//                });
+//
+//                PackageManager manager = pack.context.getPackageManager();
+//                StringBuilder b = new StringBuilder();
+//                for(SimpleMutableEntry<String, ArrayList<String>> s : services) {
+//                    String appName = null;
+//                    try {
+//                        appName = manager.getApplicationInfo(s.getKey(), 0).loadLabel(manager).toString();
+//                    } catch (PackageManager.NameNotFoundException e) {}
+//
+//                    if(appName != null) b.append(appName).append(Tuils.SPACE).append("(").append(s.getKey()).append(")");
+//                    else b.append(s.getKey());
+//                    b.append(Tuils.NEWLINE);
+//
+//                    for(String st : s.getValue()) {
+//                        b.append(" - ").append(st).append(Tuils.NEWLINE);
+//                    }
+//                    b.append(Tuils.NEWLINE);
+//                }
+//                return b.toString().trim();
+//            }
+//        },
         reset {
             @Override
             public int[] args() {
@@ -183,7 +264,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                AppsManager.LaunchInfo app = pack.get(AppsManager.LaunchInfo.class, 1);
+                AppsManager.LaunchInfo app = pack.getLaunchInfo();
                 app.launchedTimes = 0;
                 ((MainPack) pack).appsManager.writeLaunchTimes(app);
 
@@ -198,7 +279,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String name = pack.get(String.class, 1);
+                String name = pack.getString();
                 return ((MainPack) pack).appsManager.createGroup(name);
             }
         },
@@ -210,7 +291,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String name = pack.get(String.class, 1);
+                String name = pack.getString();
                 return ((MainPack) pack).appsManager.removeGroup(name);
             }
         },
@@ -222,15 +303,15 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String name = pack.get(String.class, 1);
-                String color = pack.get(String.class, 2);
+                String name = pack.getString();
+                String color = pack.getString();
                 return ((MainPack) pack).appsManager.groupBgColor(name, color);
             }
 
             @Override
             public String onNotArgEnough(ExecutePack pack, int n) {
                 if(n == 2) {
-                    String name = pack.get(String.class, 1);
+                    String name = pack.getString();
                     return ((MainPack) pack).appsManager.groupBgColor(name, Tuils.EMPTYSTRING);
                 }
                 return super.onNotArgEnough(pack, n);
@@ -249,15 +330,15 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String name = pack.get(String.class, 1);
-                String color = pack.get(String.class, 2);
+                String name = pack.getString();
+                String color = pack.getString();
                 return ((MainPack) pack).appsManager.groupForeColor(name, color);
             }
 
             @Override
             public String onNotArgEnough(ExecutePack pack, int n) {
                 if(n == 2) {
-                    String name = pack.get(String.class, 1);
+                    String name = pack.getString();
                     return ((MainPack) pack).appsManager.groupForeColor(name, Tuils.EMPTYSTRING);
                 }
                 return super.onNotArgEnough(pack, n);
@@ -276,7 +357,7 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String name = pack.get(String.class, 1);
+                String name = pack.getString();
                 return ((MainPack) pack).appsManager.listGroup(name);
             }
 
@@ -293,8 +374,8 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String name = pack.get(String.class, 1);
-                AppsManager.LaunchInfo app = pack.get(AppsManager.LaunchInfo.class, 2);
+                String name = pack.getString();
+                AppsManager.LaunchInfo app = pack.getLaunchInfo();
                 return ((MainPack) pack).appsManager.addAppToGroup(name, app);
             }
         },
@@ -306,8 +387,8 @@ public class apps extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String name = pack.get(String.class, 1);
-                AppsManager.LaunchInfo app = pack.get(AppsManager.LaunchInfo.class, 2);
+                String name = pack.getString();
+                AppsManager.LaunchInfo app = pack.getLaunchInfo();
                 return ((MainPack) pack).appsManager.removeAppFromGroup(name, app);
             }
         },

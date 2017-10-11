@@ -26,7 +26,8 @@ import android.widget.TextView;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
 
 public class SuggestionRunnable implements Runnable {
 
@@ -206,15 +207,15 @@ public class SuggestionRunnable implements Runnable {
         if(!bgLoad) {
             bgLoad = true;
 
-            transparentSuggestions = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.transparent_suggestions);
+            transparentSuggestions = XMLPrefsManager.getBoolean(Suggestions.transparent_suggestions);
             if(!transparentSuggestions) {
-                suggAppBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.apps_bg_color);
-                suggAliasBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.alias_bg_color);
-                suggCmdBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.cmd_bg_color);
-                suggContactBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.contact_bg_color);
-                suggFileBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.file_bg_color);
-                suggSongBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_bg_color);
-                suggDefaultBg = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_bg_color);
+                suggAppBg = XMLPrefsManager.getColor(Suggestions.apps_bg_color);
+                suggAliasBg = XMLPrefsManager.getColor(Suggestions.alias_bg_color);
+                suggCmdBg = XMLPrefsManager.getColor(Suggestions.cmd_bg_color);
+                suggContactBg = XMLPrefsManager.getColor(Suggestions.contact_bg_color);
+                suggFileBg = XMLPrefsManager.getColor(Suggestions.file_bg_color);
+                suggSongBg = XMLPrefsManager.getColor(Suggestions.song_bg_color);
+                suggDefaultBg = XMLPrefsManager.getColor(Suggestions.default_bg_color);
             }
         }
 
@@ -244,13 +245,13 @@ public class SuggestionRunnable implements Runnable {
         if(!textLoad) {
             textLoad = true;
 
-            suggAppText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.apps_text_color);
-            suggAliasText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.alias_text_color);
-            suggCmdText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.cmd_text_color);
-            suggContactText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.contact_text_color);
-            suggDefaultText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.default_text_color);
-            suggFileText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.file_text_color);
-            suggSongText = XMLPrefsManager.getColor(XMLPrefsManager.Suggestions.song_text_color);
+            suggAppText = XMLPrefsManager.getColor(Suggestions.apps_text_color);
+            suggAliasText = XMLPrefsManager.getColor(Suggestions.alias_text_color);
+            suggCmdText = XMLPrefsManager.getColor(Suggestions.cmd_text_color);
+            suggContactText = XMLPrefsManager.getColor(Suggestions.contact_text_color);
+            suggDefaultText = XMLPrefsManager.getColor(Suggestions.default_text_color);
+            suggFileText = XMLPrefsManager.getColor(Suggestions.file_text_color);
+            suggSongText = XMLPrefsManager.getColor(Suggestions.song_text_color);
         }
 
         int chosen;

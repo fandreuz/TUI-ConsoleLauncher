@@ -23,6 +23,7 @@ public interface CommandAbstraction {
     int NO_SPACE_STRING = 27;
     int APP_GROUP = 28;
     int APP_INSIDE_GROUP = 29;
+    int LONG = 30;
 
     String exec(ExecutePack pack) throws Exception;
 

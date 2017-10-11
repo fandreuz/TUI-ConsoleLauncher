@@ -23,7 +23,7 @@ public class devutils extends ParamCommand {
         notify {
             @Override
             public String exec(ExecutePack pack) {
-                List<String> text = pack.get(List.class, 1);
+                List<String> text = pack.getList();
 
                 String title, txt = null;
                 if(text.size() == 0) return null;

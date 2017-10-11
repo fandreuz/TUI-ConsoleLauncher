@@ -63,7 +63,7 @@ public class cntcts extends ParamCommand {
                     return pack.context.getString(R.string.output_waitingpermission);
                 }
 
-                ((MainPack) pack).contacts.delete(pack.get(String.class, 1));
+                ((MainPack) pack).contacts.delete(pack.getString());
                 return null;
             }
 
@@ -81,7 +81,7 @@ public class cntcts extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 Intent editIntent = new Intent(Intent.ACTION_EDIT);
-                editIntent.setDataAndType(((MainPack) pack).contacts.fromPhone(pack.get(String.class, 1)), ContactsContract.Contacts.CONTENT_ITEM_TYPE);
+                editIntent.setDataAndType(((MainPack) pack).contacts.fromPhone(pack.getString()), ContactsContract.Contacts.CONTENT_ITEM_TYPE);
                 pack.context.startActivity(editIntent);
 
                 return null;
@@ -100,7 +100,7 @@ public class cntcts extends ParamCommand {
         l {
             @Override
             public String exec(ExecutePack pack) {
-                String[] about = ((MainPack) pack).contacts.about(pack.get(String.class, 1));
+                String[] about = ((MainPack) pack).contacts.about(pack.getString());
                 StringBuilder builder = new StringBuilder();
 
                 builder.append(about[ContactManager.NAME]).append(Tuils.NEWLINE);

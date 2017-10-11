@@ -15,7 +15,7 @@ public class share implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
-        File f = info.get(File.class, 0);
+        File f = info.get(File.class);
         if (f.isDirectory())
             return info.res.getString(R.string.output_isdirectory);
 

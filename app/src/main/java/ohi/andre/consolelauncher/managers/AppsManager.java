@@ -32,15 +32,20 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Apps;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.resetFile;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.set;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.set;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
 
 public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
@@ -66,7 +71,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
-    private static XMLPrefsManager.XmlPrefsElement instance = null;
+    public static XMLPrefsManager.XmlPrefsElement instance = null;
 
     private XMLPrefsManager.XMLPrefsList defaultApps;
 
@@ -75,58 +80,6 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private Pattern pp, pl, pn;
     private String appInstalledFormat, appUninstalledFormat;
     int appInstalledColor, appUninstalledColor;
-
-    public enum Options implements XMLPrefsManager.XMLPrefsSave {
-
-        default_app_n1 {
-            @Override
-            public String defaultValue() {
-                return MOST_USED;
-            }
-        },
-        default_app_n2 {
-            @Override
-            public String defaultValue() {
-                return MOST_USED;
-            }
-        },
-        default_app_n3 {
-            @Override
-            public String defaultValue() {
-                return "com.android.vending";
-            }
-        },
-        default_app_n4 {
-            @Override
-            public String defaultValue() {
-                return NULL;
-            }
-        },
-        default_app_n5 {
-            @Override
-            public String defaultValue() {
-                return NULL;
-            }
-        };
-
-        public static final String MOST_USED = "most_used";
-        public static final String NULL = "null";
-
-        @Override
-        public String label() {
-            return name();
-        }
-
-        @Override
-        public XMLPrefsManager.XmlPrefsElement parent() {
-            return instance;
-        }
-
-        @Override
-        public boolean is(String s) {
-            return name().equals(s);
-        }
-    }
 
     @Override
     public String[] deleted() {
@@ -162,16 +115,16 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         this.context = context;
 
-        appInstalledFormat = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_app_installed) ? XMLPrefsManager.get(XMLPrefsManager.Behavior.app_installed_format) : null;
-        appUninstalledFormat = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_app_uninstalled) ? XMLPrefsManager.get(XMLPrefsManager.Behavior.app_uninstalled_format) : null;
+        appInstalledFormat = XMLPrefsManager.getBoolean(Ui.show_app_installed) ? XMLPrefsManager.get(Behavior.app_installed_format) : null;
+        appUninstalledFormat = XMLPrefsManager.getBoolean(Ui.show_app_uninstalled) ? XMLPrefsManager.get(Behavior.app_uninstalled_format) : null;
 
         if(appInstalledFormat != null || appUninstalledFormat != null) {
             pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
             pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE);
             pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
 
-            appInstalledColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.app_installed_color);
-            appUninstalledColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.app_uninstalled_color);
+            appInstalledColor = XMLPrefsManager.getColor(Theme.app_installed_color);
+            appUninstalledColor = XMLPrefsManager.getColor(Theme.app_uninstalled_color);
         } else {
             pp = null;
             pl = null;
@@ -232,7 +185,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             Document d = (Document) o[0];
             Element root = (Element) o[1];
 
-            List<AppsManager.Options> enums = new ArrayList<>(Arrays.asList(AppsManager.Options.values()));
+            List<Apps> enums = new ArrayList<>(Arrays.asList(Apps.values()));
             NodeList nodes = root.getElementsByTagName("*");
 
             for (int count = 0; count < nodes.getLength(); count++) {
@@ -474,6 +427,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         }
 
         for(LaunchInfo i : infos) appsHolder.remove(i);
+
+//        for(Group g : groups) {
+//            removeAppFromGroup(g.getName(), packageName);
+//        }
     }
 
     public LaunchInfo findLaunchInfoWithLabel(String label, int type) {
@@ -484,7 +441,12 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             appList = hiddenApps;
         }
 
-        return AppUtils.findLaunchInfoWithLabel(appList, label);
+        LaunchInfo i = AppUtils.findLaunchInfoWithLabel(appList, label);
+        if(i != null) return i;
+
+        List<LaunchInfo> is = AppUtils.findLaunchInfosWithPackage(label, appList);
+        if(is == null || is.size() == 0) return null;
+        return is.get(0);
     }
 
     public void writeLaunchTimes(LaunchInfo info) {
@@ -628,22 +590,65 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         if(!app.isInside(apps)) return null;
 
         String temp = apps.replaceAll(app.write(), Tuils.EMPTYSTRING);
-        if(temp.length() < apps.length()) apps = temp;
-        else apps = apps.replaceAll(app.componentName.getPackageName(), Tuils.EMPTYSTRING);
+        if(temp.length() < apps.length()) {
+            apps = temp;
+            apps = apps.replaceAll(APPS_SEPARATOR + APPS_SEPARATOR, APPS_SEPARATOR);
+            if(apps.startsWith(APPS_SEPARATOR)) apps = apps.substring(1);
+            if(apps.endsWith(APPS_SEPARATOR)) apps = apps.substring(0, apps.length() - 1);
 
-        apps = apps.replaceAll(APPS_SEPARATOR + APPS_SEPARATOR, APPS_SEPARATOR);
-        if(apps.startsWith(APPS_SEPARATOR)) apps = apps.substring(1);
-        if(apps.endsWith(APPS_SEPARATOR)) apps = apps.substring(0, apps.length() - 1);
+            e.setAttribute(APPS_ATTRIBUTE, apps);
 
-        e.setAttribute(APPS_ATTRIBUTE, apps);
+            XMLPrefsManager.writeTo(d, file);
 
-        XMLPrefsManager.writeTo(d, file);
-
-        int index = Tuils.find(group, groups);
-        if(index != -1) groups.get(index).remove(app);
+            int index = Tuils.find(group, groups);
+            if(index != -1) groups.get(index).remove(app);
+        }
 
         return null;
     }
+
+//    public String removeAppFromGroup(String group, String app) {
+//        Object[] o;
+//        try {
+//            o = XMLPrefsManager.buildDocument(file, NAME);
+//        } catch (Exception e) {
+//            return e.toString();
+//        }
+//
+//        Document d = (Document) o[0];
+//        Element root = (Element) o[1];
+//
+//        Node node = XMLPrefsManager.findNode(root, group);
+//        if(node == null) return context.getString(R.string.output_groupnotfound);
+//
+//        Element e = (Element) node;
+//
+//        String apps = e.getAttribute(APPS_ATTRIBUTE);
+//        if(apps == null) return null;
+//
+//        if(!apps.contains(app)) return null;
+//
+//        String temp = Pattern.compile(app.replaceAll(".", "\\.") + "(" + LaunchInfo.COMPONENT_SEPARATOR + "[^\\" + APPS_SEPARATOR + "]+)?").matcher(apps).replaceAll(Tuils.EMPTYSTRING);
+//        if(temp.length() < apps.length()) {
+//            apps = temp;
+//
+//            apps = apps.replaceAll(APPS_SEPARATOR + APPS_SEPARATOR, APPS_SEPARATOR);
+//            if(apps.startsWith(APPS_SEPARATOR)) apps = apps.substring(1);
+//            if(apps.endsWith(APPS_SEPARATOR)) apps = apps.substring(0, apps.length() - 1);
+//
+//            e.setAttribute(APPS_ATTRIBUTE, apps);
+//
+//            XMLPrefsManager.writeTo(d, file);
+//
+//            int index = Tuils.find(group, groups);
+//            if(index != -1) {
+//                Group g = groups.get(index);
+//                g.remove(app);
+//            }
+//        }
+//
+//        return null;
+//    }
 
     public String listGroup(String group) {
         Object[] o;
@@ -772,6 +777,13 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             apps.remove(info);
         }
 
+        public void remove(String app) {
+            List<LaunchInfo> cp = new ArrayList<>(apps);
+            for(LaunchInfo i : cp) {
+                if(i.componentName.getPackageName().equals(app)) apps.remove(i);
+            }
+        }
+
         public boolean contains(LaunchInfo info) {
             return apps.contains(info);
         }
@@ -832,6 +844,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
             return false;
         }
+
     }
 
     public static class LaunchInfo implements Compare.Stringable {
@@ -935,11 +948,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 suggested = new ArrayList<>();
 
                 final String PREFIX = "default_app_n";
-                for(int count = 0; count < Options.values().length; count++) {
-                    String vl = values.get(Options.valueOf(PREFIX + (count + 1))).value;
+                for(int count = 0; count < Apps.values().length; count++) {
+                    String vl = values.get(Apps.valueOf(PREFIX + (count + 1))).value;
 
-                    if(vl.equals(Options.NULL)) continue;
-                    if(vl.equals(Options.MOST_USED)) suggested.add(new SuggestedApp(MOST_USED, count + 1));
+                    if(vl.equals(Apps.NULL)) continue;
+                    if(vl.equals(Apps.MOST_USED)) suggested.add(new SuggestedApp(MOST_USED, count + 1));
                     else {
                         ComponentName name = null;
 

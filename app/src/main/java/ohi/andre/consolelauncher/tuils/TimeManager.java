@@ -12,7 +12,8 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 
 /**
  * Created by francescoandreuzzi on 26/07/2017.
@@ -26,8 +27,8 @@ public class TimeManager {
     static Pattern extractor = Pattern.compile("%t([0-9]+)", Pattern.CASE_INSENSITIVE);
 
     public static void create() {
-        String format = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format);
-        String separator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.time_format_separator);
+        String format = XMLPrefsManager.get(Behavior.time_format);
+        String separator = XMLPrefsManager.get(Behavior.time_format_separator);
 
         time = new Time();
 
@@ -93,12 +94,15 @@ public class TimeManager {
 
         String tf = time.format(t);
 
-        SpannableString spannableString = null;
+        SpannableString spannableString = new SpannableString(tf);
         if(color != Integer.MAX_VALUE) {
-            spannableString = new SpannableString(tf);
-            spannableString.setSpan(new ForegroundColorSpan(color), 0, tf.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+            spannableString.setSpan(new ForegroundColorSpan(color), 0, tf.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
-        cs = TextUtils.replace(cs, new String[] {"%t"}, new CharSequence[] {spannableString != null ? spannableString : tf});
+        if(size != Integer.MAX_VALUE && context != null) {
+            spannableString.setSpan(new AbsoluteSizeSpan(Tuils.convertSpToPixels(size, context)), 0, tf.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        cs = TextUtils.replace(cs, new String[] {"%t"}, new CharSequence[] {spannableString});
 
         return cs;
     }

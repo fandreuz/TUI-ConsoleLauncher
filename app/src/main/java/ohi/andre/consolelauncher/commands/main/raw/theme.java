@@ -26,17 +26,12 @@ public class theme extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String theme = pack.get(String.class, 1);
+                String theme = pack.getString();
                 ThemesManager.apply(pack.context, theme);
                 return null;
             }
         },
         view {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
-
             @Override
             public String exec(ExecutePack pack) {
                 pack.context.startActivity(Tuils.webPage("http://tui-launcher.surge.sh/"));
@@ -45,11 +40,6 @@ public class theme extends ParamCommand {
         },
         create {
             @Override
-            public int[] args() {
-                return new int[0];
-            }
-
-            @Override
             public String exec(ExecutePack pack) {
                 pack.context.startActivity(Tuils.webPage("http://tui-launcher.surge.sh/create"));
                 return null;
@@ -57,22 +47,12 @@ public class theme extends ParamCommand {
         },
         ls {
             @Override
-            public int[] args() {
-                return new int[0];
-            }
-
-            @Override
             public String exec(ExecutePack pack) {
                 ThemesManager.ls(pack.context);
                 return null;
             }
         },
         old {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
-
             @Override
             public String exec(ExecutePack pack) {
                 File theme = Tuils.getOld("theme.xml");
@@ -93,11 +73,6 @@ public class theme extends ParamCommand {
             }
         },
         tutorial {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
-
             @Override
             public String exec(ExecutePack pack) {
                 pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher/wiki/Themes"));
@@ -138,6 +113,11 @@ public class theme extends ParamCommand {
         @Override
         public String onArgNotFound(ExecutePack pack, int index) {
             return null;
+        }
+
+        @Override
+        public int[] args() {
+            return new int[0];
         }
     }
 

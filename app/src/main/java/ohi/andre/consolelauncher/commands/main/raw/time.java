@@ -11,7 +11,7 @@ import ohi.andre.consolelauncher.tuils.TimeManager;
 public class time implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
-        int index = pack.get(int.class, 0);
+        int index = pack.getInt();
         return TimeManager.replace("%t" + index).toString();
     }
 

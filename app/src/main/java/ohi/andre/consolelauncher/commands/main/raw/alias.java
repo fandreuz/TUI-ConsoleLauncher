@@ -21,7 +21,7 @@ public class alias extends ParamCommand {
         add {
             @Override
             public String exec(ExecutePack pack) {
-                ArrayList<String> args = pack.get(ArrayList.class, 1);
+                ArrayList<String> args = pack.getList();
                 if(args.size() < 2) return pack.context.getString(R.string.output_lessarg);
 
                 if( ((MainPack) pack).aliasManager.add(args.remove(0), Tuils.toPlanString(args, Tuils.SPACE)) ) {
@@ -39,7 +39,7 @@ public class alias extends ParamCommand {
         rm {
             @Override
             public String exec(ExecutePack pack) {
-                ArrayList<String> args = pack.get(ArrayList.class, 1);
+                ArrayList<String> args = pack.getList();
                 if(args.size() < 1) return pack.context.getString(R.string.output_lessarg);
                 if(((MainPack) pack).aliasManager.remove(args.get(0))) return null;
                 else return pack.context.getString(R.string.output_aliasnotfound) + Tuils.SPACE + args.get(0);

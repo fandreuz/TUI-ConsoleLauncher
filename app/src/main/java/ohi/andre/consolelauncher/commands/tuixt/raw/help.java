@@ -22,7 +22,7 @@ public class help implements CommandAbstraction {
     public String exec(ExecutePack info) throws Exception {
         TuixtPack pack = (TuixtPack) info;
 
-        CommandAbstraction cmd = info.get(CommandAbstraction.class, 0);
+        CommandAbstraction cmd = info.get(CommandAbstraction.class);
         int res = cmd == null ? R.string.output_commandnotfound : cmd.helpRes();
         return pack.resources.getString(res);
     }

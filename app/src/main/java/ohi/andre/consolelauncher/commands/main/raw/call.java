@@ -27,7 +27,7 @@ public class call implements CommandAbstraction {
             return info.context.getString(R.string.output_waitingpermission);
         }
 
-        String number = info.get(String.class, 0);
+        String number = info.getString();
         String s = Tuils.EMPTYSTRING;
         for(char c : number.toCharArray()) {
             if(c == '#') s += Uri.encode("#");

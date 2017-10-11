@@ -17,9 +17,12 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Apps;
+import ohi.andre.consolelauncher.managers.xml.options.Notifications;
+import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
 import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -44,10 +47,10 @@ public class SuggestionsManager {
     public Suggestion[] getSuggestions(MainPack info, String before, String lastWord) {
 
         if(!set) {
-            showAliasDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.suggest_alias_default);
-            showAppsGpDefault = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.suggest_appgp_default);
+            showAliasDefault = XMLPrefsManager.getBoolean(Suggestions.suggest_alias_default);
+            showAppsGpDefault = XMLPrefsManager.getBoolean(Suggestions.suggest_appgp_default);
             set = true;
-            clickToLaunch = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Suggestions.click_to_launch);
+            clickToLaunch = XMLPrefsManager.getBoolean(Suggestions.click_to_launch);
         }
 
         List<Suggestion> suggestionList = new ArrayList<>();
@@ -93,7 +96,8 @@ public class SuggestionsManager {
                         suggestPermanentSuggestions(suggestionList, (PermanentSuggestionCommand) cmd.cmd);
                     }
 
-                    if (cmd.mArgs != null && cmd.mArgs.length > 0 && cmd.cmd instanceof ParamCommand && cmd.nArgs >= 1 && ((Param) cmd.mArgs[0]).args().length + 1 == cmd.nArgs) {
+                    if (cmd.mArgs != null && cmd.mArgs.length > 0 && cmd.cmd instanceof ParamCommand && cmd.nArgs >= 1 && cmd.mArgs[0] instanceof Param &&
+                            ((Param) cmd.mArgs[0]).args().length + 1 == cmd.nArgs) {
                         return new Suggestion[0];
                     }
 
@@ -104,7 +108,7 @@ public class SuggestionsManager {
 //                        suggestArgs(info, cmd.cmd instanceof ParamCommand ? ((ParamCommand) cmd.cmd).argsForParam((String) cmd.mArgs[0])[cmd.nArgs - 1] : cmd.cmd.argType()[cmd.nArgs], suggestionList, lastWord, before);
 //                    }
 
-                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) {
+                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0 || cmd.mArgs[0] instanceof String)) {
                         suggestParams(info, suggestionList, (ParamCommand) cmd.cmd, before, null);
                     }
                     else suggestArgs(info, cmd.nextArg(), suggestionList, before);
@@ -152,7 +156,7 @@ public class SuggestionsManager {
 //                        lastWord = before.substring(index) + lastWord;
 //                    }
 
-                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0)) {
+                    if(cmd.cmd instanceof ParamCommand && (cmd.mArgs == null || cmd.mArgs.length == 0 || cmd.mArgs[0] instanceof String)) {
                         suggestParams(info, suggestionList, (ParamCommand) cmd.cmd, before, lastWord);
                     } else suggestArgs(info, cmd.nextArg(), suggestionList, lastWord, before);
                 } else {
@@ -516,8 +520,8 @@ public class SuggestionsManager {
 
             for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) xmlPrefsEntrys.addAll(element.copy);
 
-            Collections.addAll(xmlPrefsEntrys, AppsManager.Options.values());
-            Collections.addAll(xmlPrefsEntrys, NotificationManager.Options.values());
+            Collections.addAll(xmlPrefsEntrys, Apps.values());
+            Collections.addAll(xmlPrefsEntrys, Notifications.values());
         }
 
         if(prev == null || prev.length() == 0) {

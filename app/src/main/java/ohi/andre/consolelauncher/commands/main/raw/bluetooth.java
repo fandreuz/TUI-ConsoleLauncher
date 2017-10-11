@@ -14,7 +14,7 @@ public class bluetooth implements CommandAbstraction {
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        if(adapter.getState() == BluetoothAdapter.STATE_ON) {
+        if(adapter.isEnabled()) {
             adapter.disable();
             return info.context.getString(R.string.output_bluetooth) + Tuils.SPACE + "false";
         } else {

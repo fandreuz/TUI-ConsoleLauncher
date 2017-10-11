@@ -20,9 +20,12 @@ import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
+import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.TimeManager;
@@ -116,11 +119,11 @@ public class MainManager {
         in = i;
         out = o;
 
-        showAliasValue = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_alias_content);
-        showAppHistory = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.show_launch_history);
-        aliasContentColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.alias_content_color);
+        showAliasValue = XMLPrefsManager.getBoolean(Behavior.show_alias_content);
+        showAppHistory = XMLPrefsManager.getBoolean(Behavior.show_launch_history);
+        aliasContentColor = XMLPrefsManager.getColor(Theme.alias_content_color);
 
-        multipleCmdSeparator = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.multiple_cmd_separator);
+        multipleCmdSeparator = XMLPrefsManager.get(Behavior.multiple_cmd_separator);
 
         CommandGroup group = new CommandGroup(mContext, COMMANDS_PKG);
 
@@ -129,7 +132,7 @@ public class MainManager {
             cont = new ContactManager(mContext);
         } catch (NullPointerException e) {}
 
-        MusicManager2 music = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.enable_music) ? new MusicManager2(mContext) : null;
+        MusicManager2 music = XMLPrefsManager.getBoolean(Behavior.enable_music) ? new MusicManager2(mContext) : null;
 
         AppsManager appsMgr = new AppsManager(c, sugg);
         AliasManager aliasManager = new AliasManager(mContext);
@@ -137,7 +140,9 @@ public class MainManager {
         ShellHolder shellHolder = new ShellHolder(out);
         interactive = shellHolder.build();
 
-        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, redirectator, shellHolder);
+        RssManager rss = new RssManager(mContext);
+
+        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, redirectator, shellHolder, rss);
     }
 
 //    command manager
@@ -354,9 +359,9 @@ public class MainManager {
 
             if(showAppHistory) {
                 if(appFormat == null) {
-                    appFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.app_launch_format);
-                    timeColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color);
-                    outputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
+                    appFormat = XMLPrefsManager.get(Behavior.app_launch_format);
+                    timeColor = XMLPrefsManager.getColor(Theme.time_color);
+                    outputColor = XMLPrefsManager.getColor(Theme.output_color);
                 }
 
                 String a = new String(appFormat);

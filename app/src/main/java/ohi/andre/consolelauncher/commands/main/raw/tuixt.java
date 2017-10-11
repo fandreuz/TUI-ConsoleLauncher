@@ -24,7 +24,7 @@ public class tuixt implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
-        File file = info.get(File.class, 0);
+        File file = info.get(File.class);
         if(file.isDirectory()) {
             return info.res.getString(R.string.output_isdirectory);
         }
@@ -61,7 +61,7 @@ public class tuixt implements CommandAbstraction {
     public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
 
-        String path = info.get(String.class, 0);
+        String path = info.getString();
         if(path == null || path.length() == 0) {
             return onNotArgEnough(info, info.args.length);
         }

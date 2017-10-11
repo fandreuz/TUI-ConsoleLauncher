@@ -5,6 +5,8 @@
 -keep public class ohi.andre.consolelauncher.managers.notifications.NotificationService
 -keep public class ohi.andre.consolelauncher.tuils.KeeperService
 
+-keep public class ohi.andre.consolelauncher.managers.options.**
+
 -dontwarn ohi.andre.consolelauncher.commands.main.raw.**
 
 -dontwarn javax.annotation.**

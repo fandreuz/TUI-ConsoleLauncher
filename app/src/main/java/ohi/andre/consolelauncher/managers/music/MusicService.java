@@ -31,8 +31,6 @@ public class MusicService extends Service implements
 
     public static final int NOTIFY_ID=100001;
 
-    public static final String SONGTITLE_KEY = "songTitle";
-
     private MediaPlayer player;
     private List<Song> songs;
     private int songPosn;

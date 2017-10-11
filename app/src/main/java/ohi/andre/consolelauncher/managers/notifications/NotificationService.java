@@ -26,7 +26,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Notifications;
+import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -50,8 +52,8 @@ public class NotificationService extends NotificationListenerService {
 
         manager = getPackageManager();
         format = NotificationManager.getFormat();
-        enabled = XMLPrefsManager.get(boolean.class, NotificationManager.Options.show_notifications) ||
-                XMLPrefsManager.get(String.class, NotificationManager.Options.show_notifications).equalsIgnoreCase("enabled");
+        enabled = XMLPrefsManager.getBoolean(Notifications.show_notifications) ||
+                XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
 
         if(NotificationManager.apps() == 0) {
             NotificationManager.notificationsChangeFor(new ArrayList<>(Arrays.asList(
@@ -86,9 +88,9 @@ public class NotificationService extends NotificationListenerService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent != null) {
-            timeColor = intent.getIntExtra(XMLPrefsManager.Theme.time_color.label(), Color.parseColor(XMLPrefsManager.Theme.time_color.defaultValue()));
+            timeColor = intent.getIntExtra(Theme.time_color.label(), Color.parseColor(Theme.time_color.defaultValue()));
         } else {
-            timeColor = Color.parseColor(XMLPrefsManager.Theme.time_color.defaultValue());
+            timeColor = Color.parseColor(Theme.time_color.defaultValue());
         }
 
         return START_STICKY;
@@ -97,6 +99,7 @@ public class NotificationService extends NotificationListenerService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
     }
 
     String format;

@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -24,6 +25,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.AbsoluteSizeSpan;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -37,7 +39,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -54,10 +58,13 @@ import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.BuildConfig;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
@@ -71,6 +78,44 @@ public class Tuils {
     public static final String EMPTYSTRING = "";
     private static final String TUI_FOLDER = "t-ui";
     public static final String MINUS = "-";
+
+    public static final String FONT_PATH = "font";
+    private static Typeface globalTypeface = null;
+    public static Typeface getTypeface(Context context) {
+        if(globalTypeface == null) {
+            try {
+                XMLPrefsManager.create(context);
+            } catch (Exception e) {
+                return null;
+            }
+
+            boolean systemFont = XMLPrefsManager.getBoolean(Ui.system_font);
+            if(systemFont) globalTypeface = Typeface.DEFAULT;
+            else {
+                File tui = Tuils.getFolder();
+
+                File font = null;
+                for(File f : tui.listFiles()) {
+                    if(f.getName().startsWith(FONT_PATH)) {
+                        font = f;
+                        break;
+                    }
+                }
+
+                if(font != null) {
+                    try {
+                        globalTypeface = Typeface.createFromFile(font);
+                        if(globalTypeface == null) throw new UnsupportedOperationException();
+                    } catch (Exception e) {
+                        globalTypeface = null;
+                    }
+                }
+            }
+
+            if(globalTypeface == null) globalTypeface = systemFont ? Typeface.DEFAULT : Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+        }
+        return globalTypeface;
+    }
 
     public static boolean notificationServiceIsRunning(Context context) {
         ComponentName collectorComponent = new ComponentName(context, NotificationService.class);
@@ -104,6 +149,9 @@ public class Tuils {
     public static void registerBatteryReceiver(Context context, OnBatteryUpdate listener) {
         try {
             IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            iFilter.addAction(Intent.ACTION_POWER_CONNECTED);
+            iFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+
             context.registerReceiver(batteryReceiver, iFilter);
 
             batteryUpdate = listener;
@@ -118,8 +166,18 @@ public class Tuils {
         public void onReceive(Context context, Intent intent) {
             if(batteryUpdate == null) return;
 
-            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-            batteryUpdate.update(level);
+            switch (intent.getAction()) {
+                case Intent.ACTION_BATTERY_CHANGED:
+                    int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+                    batteryUpdate.update(level);
+                    break;
+                case Intent.ACTION_POWER_CONNECTED:
+                    batteryUpdate.onCharging();
+                    break;
+                case Intent.ACTION_POWER_DISCONNECTED:
+                    batteryUpdate.onNotCharging();
+                    break;
+            }
         }
     };
 
@@ -158,6 +216,34 @@ public class Tuils {
         }
 
         return songs;
+    }
+
+    public static void download(InputStream in, File file) throws Exception {
+        OutputStream out = new FileOutputStream(file, false);
+
+        byte data[] = new byte[1024];
+
+        int count;
+        while ((count = in.read(data)) != -1) {
+            out.write(data, 0, count);
+        }
+
+        out.flush();
+        out.close();
+        in.close();
+    }
+
+    public static void write(File file, String separator, String... ss) throws Exception {
+        FileOutputStream headerStream = new FileOutputStream(file, false);
+
+        for(int c = 0; c < ss.length - 1; c++) {
+            headerStream.write(ss[c].getBytes());
+            headerStream.write(separator.getBytes());
+        }
+        headerStream.write(ss[ss.length - 1].getBytes());
+
+        headerStream.flush();
+        headerStream.close();
     }
 
     public static float dpToPx(Context context, float valueInDp) {
@@ -225,7 +311,7 @@ public class Tuils {
 
     public static double getAvailableExternalMemorySize(int unit) {
         try {
-            return getAvailableSpace(XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.external_storage_path), unit);
+            return getAvailableSpace(XMLPrefsManager.get(File.class, Behavior.external_storage_path), unit);
         } catch (Exception e) {
             return -1;
         }
@@ -233,7 +319,7 @@ public class Tuils {
 
     public static double getTotalExternalMemorySize(int unit) {
         try {
-            return getTotaleSpace(XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.external_storage_path), unit);
+            return getTotaleSpace(XMLPrefsManager.get(File.class, Behavior.external_storage_path), unit);
         } catch (Exception e) {
             return -1;
         }
@@ -302,16 +388,45 @@ public class Tuils {
         return spannableString;
     }
 
+    public static SpannableString span(int bgColor, int foreColor, String text) {
+        SpannableString spannableString = new SpannableString(text);
+        spannableString.setSpan(new BackgroundColorSpan(bgColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(foreColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return spannableString;
+    }
+
+    public static int span(int bgColor, SpannableString text, String section, int fromIndex) {
+        int index = text.toString().indexOf(section, fromIndex);
+        if(index == -1) return index;
+
+        text.setSpan(new BackgroundColorSpan(bgColor), index, index + section.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return index + section.length();
+    }
+
     public static int convertSpToPixels(float sp, Context context) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
     }
 
     public static void delete(File dir) {
+        File[] files = dir.listFiles();
+        if(files == null) return;
+
         for(File f : dir.listFiles()) {
             if(f.isDirectory()) delete(f);
             f.delete();
         }
         dir.delete();
+    }
+
+    public static void deleteContent(File dir) {
+        File[] files = dir.listFiles();
+        if(files == null) return;
+
+        for(File f : dir.listFiles()) {
+            if(f.isDirectory()) delete(f);
+            f.delete();
+        }
     }
 
     public static boolean insertOld(File oldFile) {
@@ -369,7 +484,7 @@ public class Tuils {
     }
 
     public static void sendOutput(int color, Context context, CharSequence s) {
-        sendOutput(color, context, s, -1);
+        sendOutput(color, context, s, TerminalManager.CATEGORY_GENERAL);
     }
 
     public static void sendOutput(Context context, CharSequence s, int type) {
@@ -448,7 +563,7 @@ public class Tuils {
     }
 
     private static String getNicePath(String filePath) {
-        String home = XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.home_path).getAbsolutePath();
+        String home = XMLPrefsManager.get(File.class, Behavior.home_path).getAbsolutePath();
 
         if(filePath.equals(home)) {
             return "~";
@@ -495,17 +610,17 @@ public class Tuils {
     static Pattern pu = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     static Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     public static String getHint(String currentPath) {
-        if(!XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_session_info)) return null;
+        if(!XMLPrefsManager.getBoolean(Ui.show_session_info)) return null;
 
-        String format = XMLPrefsManager.get(XMLPrefsManager.Behavior.session_info_format);
+        String format = XMLPrefsManager.get(Behavior.session_info_format);
         if(format.length() == 0) return null;
 
-        String deviceName = XMLPrefsManager.get(XMLPrefsManager.Ui.deviceName);
+        String deviceName = XMLPrefsManager.get(Ui.deviceName);
         if(deviceName == null || deviceName.length() == 0) {
             deviceName = Build.DEVICE;
         }
 
-        String username = XMLPrefsManager.get(XMLPrefsManager.Ui.username);
+        String username = XMLPrefsManager.get(Ui.username);
         if(username == null) username = Tuils.EMPTYSTRING;
 
         format = pd.matcher(format).replaceAll(Matcher.quoteReplacement(deviceName));
@@ -677,7 +792,7 @@ public class Tuils {
         return true;
     }
 
-    public static boolean isNumber(String s) {
+    public static boolean isPhoneNumber(String s) {
         if(s == null) {
             return false;
         }
@@ -690,6 +805,23 @@ public class Tuils {
         }
 
         return true;
+    }
+
+//    return -1 if only digit
+    public static char firstNonDigit(String s) {
+        if(s == null) {
+            return 0;
+        }
+
+        char[] chars = s.toCharArray();
+
+        for (char c : chars) {
+            if (!Character.isDigit(c)) {
+                return c;
+            }
+        }
+
+        return 0;
     }
 
     public static Intent openFile(File url) {
@@ -817,25 +949,22 @@ public class Tuils {
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
-    private static final int FILEUPDATE_DELAY = 300;
+    private static final int FILEUPDATE_DELAY = 75;
     private static File folder = null;
     public static File getFolder() {
         if(folder != null) return folder;
 
-        final File tuiFolder = Tuils.getTuiFolder();
-
         while (true) {
-            if (tuiFolder != null && (tuiFolder.isDirectory() || tuiFolder.mkdir())) {
-                break;
+            File tuiFolder = Tuils.getTuiFolder();
+            if(tuiFolder != null && ((tuiFolder.exists() && tuiFolder.isDirectory()) || tuiFolder.mkdir())) {
+                folder = tuiFolder;
+                return folder;
             }
 
             try {
                 Thread.sleep(FILEUPDATE_DELAY);
             } catch (InterruptedException e) {}
         }
-
-        folder = tuiFolder;
-        return folder;
     }
 
     public static int alphabeticCompare(String s1, String s2) {

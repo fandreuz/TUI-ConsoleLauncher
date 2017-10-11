@@ -16,9 +16,11 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.xml.options.Apps;
+import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -56,8 +58,12 @@ public class CommandTuils {
             if(cmd instanceof ParamCommand) {
                 ArgInfo arg = param((MainPack) info, (ParamCommand) cmd, input);
                 if(arg == null || !arg.found) {
+                    command.indexNotFound = 0;
+                    args.add(input);
+                    command.nArgs = 1;
+                    command.mArgs = args.toArray(new Object[args.size()]);
                     return command;
-                }
+                } else
 
                 input = arg.residualString;
                 Param p = (Param) arg.arg;
@@ -167,6 +173,8 @@ public class CommandTuils {
             return noSpaceString(input);
         } else if(type == CommandAbstraction.APP_INSIDE_GROUP) {
             return activityName(input, ((MainPack) info).appsManager);
+        } else if(type == CommandAbstraction.LONG) {
+            return numberLong(input);
         }
 
         return null;
@@ -174,6 +182,22 @@ public class CommandTuils {
 
 
 //	args extractors {
+
+    private static ArgInfo numberLong(String input) {
+        String[] split = input.split(Tuils.SPACE);
+
+        try {
+            long l = Long.parseLong(split[0]);
+
+            StringBuilder builder = new StringBuilder();
+            for(int c = 1; c < split.length; c++) {
+                builder.append(split[c]).append(Tuils.SPACE);
+            }
+            return new ArgInfo(l, builder.toString().trim(), true, 1);
+        } catch (Exception e) {
+            return new ArgInfo(null, input, false, 0);
+        }
+    }
 
     private static ArgInfo color(String input) {
         input = input.trim();
@@ -382,7 +406,7 @@ public class CommandTuils {
     private static ArgInfo contactNumber(String input, ContactManager contacts) {
         String number;
 
-        if (Tuils.isNumber(input))
+        if (Tuils.isPhoneNumber(input))
             number = input;
         else
             number = contacts.findNumber(input);
@@ -403,8 +427,8 @@ public class CommandTuils {
             for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
                 xmlPrefsEntrys.addAll(element.copy);
             }
-            Collections.addAll(xmlPrefsEntrys, AppsManager.Options.values());
-            Collections.addAll(xmlPrefsEntrys, NotificationManager.Options.values());
+            Collections.addAll(xmlPrefsEntrys, Apps.values());
+            Collections.addAll(xmlPrefsEntrys, Notifications.values());
         }
 
         String candidate = index == -1 ? input : input.substring(0,index);

@@ -15,9 +15,11 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
@@ -77,13 +79,17 @@ public class MainPack extends ExecutePack {
 
     public ShellHolder shellHolder;
 
+    public RssManager rssManager;
+
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager2 p,
-                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder) {
+                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder, RssManager rssManager) {
         super(commandGroup);
 
-        this.currentDirectory = XMLPrefsManager.get(File.class, XMLPrefsManager.Behavior.home_path);
+        this.currentDirectory = XMLPrefsManager.get(File.class, Behavior.home_path);
 
         this.shellHolder = shellHolder;
+
+        this.rssManager = rssManager;
 
         this.res = context.getResources();
 
@@ -140,5 +146,6 @@ public class MainPack extends ExecutePack {
     public void destroy() {
         if(player != null) player.destroy();
         appsManager.onDestroy();
+        if(rssManager != null) rssManager.dispose();
     }
 }

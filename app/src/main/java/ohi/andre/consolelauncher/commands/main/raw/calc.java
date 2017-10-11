@@ -16,7 +16,7 @@ public class calc extends PermanentSuggestionCommand {
     @Override
     public String exec(ExecutePack pack) throws Exception {
         try {
-            return String.valueOf(Tuils.eval(pack.get(String.class, 0)));
+            return String.valueOf(Tuils.eval(pack.getString()));
         } catch (Exception e) {
             return e.toString();
         }

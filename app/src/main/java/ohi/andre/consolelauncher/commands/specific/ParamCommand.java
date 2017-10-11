@@ -30,8 +30,10 @@ public abstract class ParamCommand implements CommandAbstraction {
         String o = doThings(pack);
         if(o != null) return o;
 
-        Param param = pack.get(Param.class, 0);
-        if(param == null) return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + pack.get(String.class, 0);
+        Param param = pack.get(Param.class);
+        if(param == null) {
+            return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + pack.get(String.class, 0);
+        }
         return param.exec(pack);
     }
 
@@ -56,6 +58,13 @@ public abstract class ParamCommand implements CommandAbstraction {
 
     @Override
     public String onArgNotFound(ExecutePack pack, int indexNotFound) {
+        if(indexNotFound == 0) {
+            String param = pack.get(String.class, 0);
+            if(param.length() == 0) return pack.context.getString(helpRes());
+
+            return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + param;
+        }
+
         return pack.context.getString(helpRes());
     }
 

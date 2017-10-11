@@ -27,6 +27,7 @@ public class InputOutputReceiver extends BroadcastReceiver {
     public static final String TEXT = "ohi.andre.consolelauncher.text";
     public static final String TYPE = "ohi.andre.consolelauncher.type";
     public static final String COLOR = "ohi.andre.consolelauncher.color";
+    public static final String SHOW_CONTENT = "ohi.andre.consolelauncher.show_content";
 
     CommandExecuter executer;
     Outputable outputable;
@@ -45,17 +46,16 @@ public class InputOutputReceiver extends BroadcastReceiver {
             if(text == null) return;
 
             if(intent.getAction().equals(ACTION_CMD)) {
-                executer.exec(text.toString());
+                executer.exec(text.toString(), intent.getBooleanExtra(SHOW_CONTENT, true));
             } else {
                 int color = intent.getIntExtra(COLOR, Integer.MAX_VALUE);
 
                 if(color != Integer.MAX_VALUE) {
                     outputable.onOutput(color, text);
-                }
-                else {
+                } else {
                     int type = intent.getIntExtra(TYPE, -1);
                     if(type != -1) outputable.onOutput(text, type);
-                    else outputable.onOutput(text, TerminalManager.CATEGORY_OUTPUT);
+                    else outputable.onOutput(text, TerminalManager.CATEGORY_GENERAL);
                 }
             }
         } else {

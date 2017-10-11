@@ -8,19 +8,19 @@ import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.libsuperuser.Shell;
 
 public class music extends ParamCommand {
 
     private enum Param implements ohi.andre.consolelauncher.commands.main.Param {
         next {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
 
             @Override
             public String exec(ExecutePack pack) {
-                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+                if(((MainPack) pack).player == null) {
+                    execute("NEXT");
+                    return null;
+                }
 
                 String title = ((MainPack) pack).player.playNext();
                 if(title != null) return pack.context.getString(R.string.output_playing) + Tuils.SPACE + title;
@@ -28,14 +28,13 @@ public class music extends ParamCommand {
             }
         },
         previous {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
 
             @Override
             public String exec(ExecutePack pack) {
-                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+                if(((MainPack) pack).player == null) {
+                    execute("PREVIOUS");
+                    return null;
+                }
 
                 String title = ((MainPack) pack).player.playPrev();
                 if(title != null) return pack.context.getString(R.string.output_playing) + Tuils.SPACE + title;
@@ -43,10 +42,6 @@ public class music extends ParamCommand {
             }
         },
         ls {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
 
             @Override
             public String exec(ExecutePack pack) {
@@ -56,14 +51,13 @@ public class music extends ParamCommand {
             }
         },
         play {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
 
             @Override
             public String exec(ExecutePack pack) {
-                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+                if(((MainPack) pack).player == null) {
+                    execute("PLAY_PAUSE");
+                    return null;
+                }
 
                 String title = ((MainPack) pack).player.play();
                 if(title == null) return null;
@@ -71,14 +65,13 @@ public class music extends ParamCommand {
             }
         },
         stop {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
 
             @Override
             public String exec(ExecutePack pack) {
-                if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
+                if(((MainPack) pack).player == null) {
+                    execute("CLOSE");
+                    return null;
+                }
 
                 ((MainPack) pack).player.stop();
                 return null;
@@ -94,7 +87,7 @@ public class music extends ParamCommand {
             public String exec(ExecutePack pack) {
                 if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
 
-                String s = pack.get(String.class, 1);
+                String s = pack.getString();
                 ((MainPack) pack).player.select(s);
                 return null;
             }
@@ -105,10 +98,6 @@ public class music extends ParamCommand {
             }
         },
         info {
-            @Override
-            public int[] args() {
-                return new int[0];
-            }
 
             @Override
             public String exec(ExecutePack pack) {
@@ -151,7 +140,7 @@ public class music extends ParamCommand {
             public String exec(ExecutePack pack) {
                 if(((MainPack) pack).player == null) return pack.context.getString(R.string.output_musicdisabled);
 
-                ((MainPack) pack).player.seekTo(pack.get(int.class, 1) * 1000);
+                ((MainPack) pack).player.seekTo(pack.getInt() * 1000);
                 return null;
             }
 
@@ -195,6 +184,15 @@ public class music extends ParamCommand {
         public String onNotArgEnough(ExecutePack pack, int n) {
             return pack.context.getString(R.string.help_music);
         }
+
+        @Override
+        public int[] args() {
+            return new int[0];
+        }
+    }
+
+    private static void execute(String code) {
+        Shell.SH.run("input keyevent KEYCODE_MEDIA_" + code);
     }
 
     @Override

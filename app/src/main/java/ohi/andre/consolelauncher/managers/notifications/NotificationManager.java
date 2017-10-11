@@ -12,9 +12,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,14 +19,15 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.resetFile;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.set;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.setMany;
-import static ohi.andre.consolelauncher.managers.XMLPrefsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.set;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.setMany;
+import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
 
 /**
  * Created by francescoandreuzzi on 29/04/2017.
@@ -53,53 +51,10 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     public static final String PATH = "notifications.xml";
     private static final String NAME = "NOTIFICATIONS";
 
-    private static XMLPrefsManager.XmlPrefsElement instance = null;
+    public static XMLPrefsManager.XmlPrefsElement instance = null;
 
     public static boolean default_app_state;
     public static String default_color;
-
-    public enum Options implements XMLPrefsManager.XMLPrefsSave {
-
-        show_notifications {
-            @Override
-            public String defaultValue() {
-                return "false";
-            }
-        },
-        app_notification_enabled_default {
-            @Override
-            public String defaultValue() {
-                return "true";
-            }
-        },
-        default_notification_color {
-            @Override
-            public String defaultValue() {
-                return "#00FF00";
-            }
-        },
-        notification_format {
-            @Override
-            public String defaultValue() {
-                return "[%t] %pkg: %ttl --- %txt";
-            }
-        };
-
-        @Override
-        public XMLPrefsManager.XmlPrefsElement parent() {
-            return instance;
-        }
-
-        @Override
-        public String label() {
-            return name();
-        }
-
-        @Override
-        public boolean is(String s) {
-            return name().equals(s);
-        }
-    }
 
     @Override
     public String[] deleted() {
@@ -120,17 +75,14 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
     private static List<NotificatedApp> apps;
     private static List<FilterGroup> groups;
     private static SparseArray<List<String>> applies;
-    private static boolean created = false;
 
     private NotificationManager() {}
 
     public static void create(Context context) {
 
-        if(created) {
+        if(instance != null) {
             return;
         }
-        created = true;
-
         instance = new NotificationManager();
 
         apps = new ArrayList<>();
@@ -156,7 +108,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             Document d = (Document) o[0];
             Element root = (Element) o[1];
 
-            List<Options> enums = new ArrayList<>(Arrays.asList(Options.values()));
+            List<Notifications> enums = new ArrayList<>(Arrays.asList(Notifications.values()));
             NodeList nodes = root.getElementsByTagName("*");
 
             String[] deleted = instance.deleted();
@@ -278,8 +230,8 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             Tuils.toFile(e);
         }
 
-        default_app_state = XMLPrefsManager.get(boolean.class, Options.app_notification_enabled_default);
-        default_color = XMLPrefsManager.get(String.class, Options.default_notification_color);
+        default_app_state = XMLPrefsManager.getBoolean(Notifications.app_notification_enabled_default);
+        default_color = XMLPrefsManager.get(Notifications.default_notification_color);
 
         Out:
         for(int count = 0; count < applies.size(); count++) {
@@ -314,14 +266,10 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
 
     public static String getFormat() {
         try {
-            return values.get(Options.notification_format).value;
+            return values.get(Notifications.notification_format).value;
         } catch (Exception e) {
-
-            try {
-                e.printStackTrace(new PrintStream(new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true)));
-            } catch (FileNotFoundException e1) {}
-
-            return Options.notification_format.defaultValue();
+            Tuils.toFile(e);
+            return Notifications.notification_format.defaultValue();
         }
     }
 
@@ -356,6 +304,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         int index = Tuils.find(pkg, apps);
         if(index == -1) return null;
         return apps.get(index);
+
     }
 
     public static class NotificatedApp {

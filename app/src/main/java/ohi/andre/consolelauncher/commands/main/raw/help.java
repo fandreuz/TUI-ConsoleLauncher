@@ -17,7 +17,7 @@ public class help implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) throws Exception {
         MainPack info = (MainPack) pack;
-        CommandAbstraction cmd = info.get(CommandAbstraction.class, 0);
+        CommandAbstraction cmd = info.get(CommandAbstraction.class);
         int res = cmd == null ? R.string.output_commandnotfound : cmd.helpRes();
         return info.res.getString(res);
     }

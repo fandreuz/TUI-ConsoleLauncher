@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import ohi.andre.consolelauncher.R;
@@ -27,7 +26,7 @@ public class search extends ParamCommand {
         ps {
             @Override
             public String exec(ExecutePack pack) {
-                List<String> args = pack.get(ArrayList.class, 1);
+                List<String> args = pack.getList();
                 return playstore(args, pack.context);
             }
         },
@@ -42,28 +41,28 @@ public class search extends ParamCommand {
         gg {
             @Override
             public String exec(ExecutePack pack) {
-                List<String> args = pack.get(ArrayList.class, 1);
+                List<String> args = pack.getList();
                 return google(args, pack.context);
             }
         },
         yt {
             @Override
             public String exec(ExecutePack pack) {
-                List<String> args = pack.get(ArrayList.class, 1);
+                List<String> args = pack.getList();
                 return youTube(args, pack.context);
             }
         },
         u {
             @Override
             public String exec(ExecutePack pack) {
-                List<String> args = pack.get(ArrayList.class, 1);
+                List<String> args = pack.getList();
                 return url(Tuils.toPlanString(args, Tuils.SPACE), pack.context);
             }
         },
         dd {
             @Override
             public String exec(ExecutePack pack) {
-                List<String> args = pack.get(ArrayList.class, 1);
+                List<String> args = pack.getList();
                 return duckDuck(args, pack.context);
             }
         };

@@ -8,12 +8,16 @@
     <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
         \n\nLuke Winward (USA)\n\t-> Idea and design
         \n\nAlexander King (Australia)\n\t-> t-ui theme website and db management</string>
-    <string name="output_refresh">Refresh: apps, alias, music, contacts</string>
+    <string name="output_refresh">Refresh: apps, alias, music, contacts, rss feeds</string>
     <string name="output_rate">Thank you!</string>
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
     <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt in the "t-ui" folder</string>
     <string name="admin_permission">Lock the screen on double tap</string>
+
+    <!-- regex -->
+    <string name="regex_not_found">Couldn\'t find a Regex with this ID</string>
+    <string name="regex_exists">An other Regex is already using this ID</string>
 
     <!-- theme -->
     <string name="theme_not_found">Theme not found</string>
@@ -70,7 +74,6 @@
     <string name="output_nopermissions">You didn\'t grant the permission</string>
     <string name="output_waitingpermission">Waiting permission</string>
     <string name="output_problemcamera">There was a problem while connecting to your device camera</string>
-    <string name="output_numberformat">Wrong number format</string>
     <string name="output_invalidarg">Invalid argument</string>
     <string name="output_lessarg">Less arguments than expected</string>
     <string name="invalid_integer">Invalid integer</string>
@@ -82,6 +85,13 @@
     <string name="output_groupnotfound">Group not found</string>
     <string name="output_groupexists">This group already exists</string>
     <string name="output_groupspace">Spaces are not allowed inside group names</string>
+    <string name="output_notification_error">The notification service couldn\'t be started:</string>
+
+    <!-- rss -->
+    <string name="rss_not_found">Invalid ID: no RSS feed found</string>
+    <string name="id_already">This ID has already been used</string>
+    <string name="id_notfound">Invalid ID</string>
+
 
     <!-- alias -->
     <string name="output_aliasnotfound">Alias not found:</string>
@@ -92,14 +102,14 @@
 
     <!-- tuixt -->
     <string name="help_tuixt_help">Print the list of commands, or info about a command
-        \nUsage:
+        \n\nUsage:
         \nhelp [command]
         \n\nExample:
-        \nhelp exit
+        \n$ help exit
     </string>
     <string name="help_tuixt_exit">Exit from tuixt</string>
     <string name="help_tuixt_save">Save changes</string>
-    <string name="tuixt_back_pressed">You pressed back key</string>
+    <string name="tuixt_back_pressed">You pressed the back key</string>
     <string name="tuixt_saved">Saved</string>
     <string name="tuixt_reading">Reading</string>
     <string name="tuixt_label">TUIXT</string>
@@ -118,7 +128,7 @@
     <string name="output_musicdisabled">enable_music is false!</string>
 
     <!-- command/args -->
-    <string name="output_commandnotfound">Command not found.\nTry to use \">>help\" or \">>tutorial\"</string>
+    <string name="output_commandnotfound">Command not found.\nTry to use \"$ help\" or \"$ tutorial\"</string>
     <string name="output_invalid_param">Invalid option:</string>
 
     <!-- flash -->
@@ -127,7 +137,7 @@
     <string name="output_flashlightnotavailable">Your device doesn\'t support flashlight</string>
 
     <!-- status -->
-    <string name="battery_charge">Battery charge:</string>
+    <string name="battery_charge">Battery:</string>
     <string name="mobile_data">Mobile data:</string>
     <string name="wifi">WiFi:</string>
 
@@ -139,16 +149,12 @@
 
 
     <string name="help_airplane">Toggle airplane mode</string>
-    <string name="help_alias">Manage your aliases
-        \n\nUsage:
-        \n-add [aliasName] [alias content] -> add a new alias
+    <string name="help_alias">-add [aliasName] [alias content] -> add a new alias
         \n-rm [aliasName] -> remove an existing alias
         \n-ls -> list your aliases
         \n-file -> open alias.xml
     </string>
-    <string name="help_apps">Manage your apps
-        \n\nUsage:
-        \n-ls -> list your apps
+    <string name="help_apps">-ls -> list your apps
         \n-lsh -> list your hidden apps
         \n-show [appName] -> re-show an hidden app
         \n-hide [appName] -> hide an app
@@ -158,7 +164,7 @@
         \n-default_app [index] [appName or most_used or null] -> set the default_app at the specified index
         \n-frc [appName] -> force t-ui to launch an app
         \n-file -> open apps.xml
-        \n-refresh [appName] -> refresh the \"launched_times\" value of the given app to 0
+        \n-reset [appName] -> reset the \"launched_times\" value of the given app to 0
         \n-mkgp [groupName] -> create a new group with the given name
         \n-rmgp [groupName] -> delete the group with the given name
         \n-gpcolor [groupName] [color] -> set the color for the given group
@@ -170,36 +176,36 @@
     <string name="help_clear">Clear the screen</string>
     <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
         \nExample:
-        \n\n>>calc 4+2-5
+        \n\n$ calc 4+2-5
         \n1
-        \n\n>>calc 2 ^ (2*2)
+        \n\n$ calc 2 ^ (2*2)
         \n16
-        \n\n>>calc sqrt25
+        \n\n$ calc sqrt25
         \n5
     </string>
-    <string name="help_call">Make a call
-        \nUsage: call [number] OR [contactName]
+    <string name="help_call">Call someone
+        \n\nUsage:
+        \n$ call [number] OR [contactName]
     </string>
-    <string name="help_config">Usage:
-        \n-set [option] [value] -> set the value of an option
+    <string name="help_config">-set [option] [value] -> set the value of an option
+        \n-append [option] [value] -> append the given string to the value of the selected option
         \n-file [file] -> open a config file
         \n-get [option] -> get the value of an option
         \n-reset [option] -> reset the value of an option
         \n-apply [file] -> move a file to the t-ui directory
+        \n-tutorial -> open the tutorial page
     </string>
     <string name="help_data">Toggle mobile data</string>
-    <string name="help_devutils">Usage:
-        \nnotify [title] [text]</string>
+    <string name="help_devutils">There\'s nothing interesting there</string>
     <string name="help_donate">Offer a coffee to the developer (PayPal only)</string>
     <string name="help_flash">Toggle the flashlight</string>
-    <string name="help_help">Print a list of the available commands, or info about a command
-        \nUsage:
-        \n>>help [command]
+    <string name="help_help">Print the available commands, or info about a command
+        \n\nUsage:
+        \n$ help [command]
     </string>
-    <string name="help_music">Usage:
-        \n-next -> play the next song in the queue
-        \n-previous -> play the previous song in the queue
-        \n-play -> play/pause
+    <string name="help_music">-next -> play the next song
+        \n-previous -> play the previous song
+        \n-play -> play/pause the player
         \n-stop -> stop the player
         \n-ls -> list your tracks
         \n-select [song] -> play the selected song
@@ -207,23 +213,21 @@
         \n-seekto [seconds] -> seek to the selected part of the current song</string>
     <string name="help_rate">Leave a feedback on the Play Store page</string>
     <string name="help_refresh">Refresh apps, alias, music, contacts</string>
+    <string name="help_regex">-add [ID] [regex] -> add a new regex with the given ID
+        \n-rm [ID] -> remove the regex with the given ID
+        \n-test [ID] [string] -> test the corresponding regex over the given string</string>
     <string name="help_restart">Restart t-ui and load modified values</string>
-    <string name="help_search">Search something somewhere
-        \n\nUsage:
-        \n-gg [search this...] -> Google Search
+    <string name="help_search">-gg [search this...] -> Google Search
         \n-ps [search this...] -> Google Play Store
         \n-file [search this...] -> Files
         \n-yt [search this...] -> YouTube
         \n-dd [search this...] -> DuckDuck Go
     </string>
-    <string name="help_share">Share a file
-        \nUsage:
-        \n>>share [pathToFile]
+    <string name="help_share">$ share [pathToFile]
     </string>
     <string name="help_shellcommands">Print the commands in /system/bin and /system/xbin</string>
     <string name="help_status">Get info about battery charge, wifi status and mobile data</string>
-    <string name="help_theme">Usage:
-        \n-apply [theme] -> apply the selected theme (case sensitive). require internet connection. may take some seconds
+    <string name="help_theme">-apply [theme] -> apply the selected theme (case sensitive). require internet connection. may take some seconds
         \n-view -> view the available themes
         \n-create -> create a new theme
         \n-old -> re-apply the theme that was replaced by the current one</string>
@@ -231,12 +235,10 @@
         \n\nUsage:
         \n$ time [index] (index means the index of the desired time_format</string>
     <string name="help_tuixt">Open the text editor.
-        \nUsage:
-        \n>>tuixt [textFile]
+        \n\nUsage:
+        \n$ tuixt [textFile]
     </string>
-    <string name="help_tui">
-        Usage:
-        \n-rm -> remove t-ui
+    <string name="help_tui">-rm -> uninstall t-ui
         \n-about -> show info about the developer and the current version</string>
         \n-reset -> removes the t-ui folder and resets default settings (restart required)
         \n-twitter -> show t-ui Twitter page
@@ -245,24 +247,26 @@
         \n-folder -> print the path of the t-ui folder
     <string name="help_tutorial">Open the tutorial page on GitHub</string>
     <string name="help_uninstall">Uninstall an application
-        \nUsage:
-        \n>>uninstall [appName]
+        \n\nUsage:
+        \n$ uninstall [appName]
     </string>
     <string name="help_wifi">Toggle wifi</string>
     <string name="help_sms">Send an SMS.
-        \nUsage:
-        \n>>sms [contactName] OR [number]
-        \n>>[text]
-    </string>
-    <string name="help_vibrate">Vibrate your device.
-        \nUsage:
-        \n>>vibrate [milliseconds]</string>
-    <string name="help_beep">Emit a beep.
-        \nUsage:
-        \n>>beep</string>
-    <string name="help_notifications">Manage your notifications.
         \n\nUsage:
-        \n-inc [appName] -> include an application
+        \n$ sms [contactName] OR [number]
+        \n$ [text]
+    </string>
+    <string name="help_vibrate">Make your device vibrate.
+        \n\nUsage:
+        \n$ vibrate [milliseconds]
+        \n$ vibrate [pattern: wait, vibrate, wait, vibrate, wait, ...]
+        \n\nExample:
+        \n$ vibrate 300
+        \n$ vibrate 0,300,500,300</string>
+    <string name="help_beep">Emit a \"beep\".
+        \n\nUsage:
+        \n$ beep</string>
+    <string name="help_notifications">-inc [appName] -> include an application
         \n-exc [appName] -> exclude an application
         \n-clr [color] [appName] -> set the color to be used for the application
         \n-file -> open notifications.xml
@@ -270,21 +274,36 @@
         \n-text_filter [ID] [regex] -> set a filter over notifications text with a given ID
         \n-apply_filter [ID] [appName] -> apply a filter (or a group of filters) to a single application
         \n-access -> show the system settings page dedicated to the Notification Access</string>
-    <string name="help_location">Show the current location</string>
-    <string name="help_cntcts">Manage your contacts.
-        \n\nUsage:
-        \n-ls -> list your contacts
+    <string name="help_location">Show your current location</string>
+    <string name="help_cntcts">-ls -> list your contacts
         \n-l [contactName] -> show details about a contact
         \n-add -> create a new contact
         \n-edit [contactName] -> edit an existing contact
         \n-rm [contactName] -> remove a contact</string>
-    <string name="help_exit">Close T-UI and reset launcher preferences</string>
+    <string name="help_exit">Close T-UI and reset the default launcher</string>
+    <string name="help_rss">-add [ID] [update_time_in_seconds] [url] -> add a new RSS feed. t-ui will try to get new contents every [update_time_in_seconds] seconds
+        \n-rm [ID] -> remove this RSS feed
+        \n-ls -> list your RSS feeds
+        \n-l [ID] -> show the whole content of the corresponding RSS feed
+        \n-show [ID] [boolean] -> toggle the [show] property of the given saved RSS feed
+        \n-time [ID] [update_time_in_seconds] -> set the update time of the corresponding RSS feed
+        \n-format [ID] [format] -> set the format of the corresponding RSS feed ([format] can be both a string or the ID of an existing format)
+        \n-color [ID] [color] -> set the base color of the corresponding RSS feed
+        \n-wifi_only [ID] [boolean] -> if [boolean] is true, the corresponding feed will be updated only if your device is connected to a WiFi network
+        \n-last_check [ID] -> show the last time t-ui checked this RSS feed
+        \n-frc [ID] -> update the corresponding RSS feed and eventually show new updates
+        \n-info [ID] -> show info about the corresponding RSS feed settings
+        \n-include_if_matches [ID] [regex] -> if the given regex matches on an RSS feed item, it will be shown ([regex] can be both a string or the ID of a regex saved inside regex.xml)
+        \n-exclude_if_matches [ID] [regex] -> if the given regex matches on an RSS feed item, it won\'t be shown ([regex] can be both a string or the ID of a regex saved inside regex.xml)
+        \n-add_format [ID] [format] -> create a new format that you will be able to use for more than one RSS feed
+        \n-rm_format [ID] [format] -> remove an existing format
+        \n-file -> open the file RSS.xml</string>
 
     <!-- linux -->
     <string name="help_ctrlc">Interrupt the current shell process and create a new one</string>
     <string name="help_open">Open a file
         \nUsage:
-        \n>>open [pathToFile]
+        \n$ open [pathToFile]
     </string>
 
 </resources>

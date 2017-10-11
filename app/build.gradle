@@ -11,8 +11,8 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
 
-        versionCode 136
-        versionName "6.3j"
+        versionCode 137
+        versionName "6.3k"
     }
 
     buildTypes {
@@ -48,8 +48,12 @@ android {
                     output.outputFile.name.replace("app-release.apk", "${x}/${variant.applicationId}_${variant.versionName}_${new Date().format("dd-MM_hh.mm.ss")}.apk"))
         }
     }
+
+    configurations {
+        all*.exclude group: 'com.google.firebase', module: 'firebase-core'
+        all*.exclude group: 'com.google.firebase', module: 'firebase-iid'
+    }
 }
 dependencies {
-    compile files('libs/anrwatchdog-1.3.0.jar')
     compile 'com.google.firebase:firebase-database:9.0.0'
 }

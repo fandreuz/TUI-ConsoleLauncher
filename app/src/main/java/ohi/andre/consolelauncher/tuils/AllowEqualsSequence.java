@@ -14,12 +14,12 @@ public class AllowEqualsSequence {
 
     List<Entry> sequence;
 
-    public AllowEqualsSequence(int[] keys, Object[] values) {
+    public AllowEqualsSequence(float[] values, Object[] objs) {
         this.sequence = new ArrayList<>();
 
-        for (int count = 0; count < keys.length; count++) {
-            if(keys[count] == Integer.MAX_VALUE) continue;
-            sequence.add(new Entry(keys[count], values[count]));
+        for (int count = 0; count < values.length; count++) {
+            if(values[count] == Integer.MAX_VALUE) continue;
+            sequence.add(new Entry(values[count], objs[count]));
         }
         Collections.sort(this.sequence);
 
@@ -27,19 +27,18 @@ public class AllowEqualsSequence {
         for(int count = 0; count < sequence.size(); count++) {
             Entry entry = sequence.get(count);
 
-            int key = entry.key;
-            if(key != last) {
-                counter++;
-            }
+            int i = (int) entry.value;
+            if(i != last) counter++;
+
             entry.key = counter;
-            last = key;
+            last = counter;
         }
     }
 
     public Object[] get(int key) {
         List<Object> o = new ArrayList<>();
         for(Entry entry : sequence) {
-            if(entry.key == key) o.add(entry.value);
+            if(entry.key == key) o.add(entry.obj);
             else if(o.size() > 0) break;
         }
 
@@ -61,22 +60,29 @@ public class AllowEqualsSequence {
     }
 
     private class Entry implements Comparable<Entry> {
-        int key;
-        Object value;
 
-        public Entry(int key, Object value) {
-            this.key = key;
+        float value;
+        Object obj;
+
+        int key;
+
+        public Entry(float value, Object obj) {
             this.value = value;
+            this.obj = obj;
         }
 
         @Override
         public int compareTo(@NonNull Entry o) {
-            return this.key - o.key;
+            float result = value - o.value;
+
+            if(result == 0) return 0;
+            if(result < 0) return -1;
+            return 1;
         }
 
         @Override
         public String toString() {
-            return key + ": " + value.toString();
+            return value + ": " + obj.toString();
         }
     }
 }

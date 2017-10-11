@@ -22,9 +22,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.github.anrwatchdog.ANRError;
-import com.github.anrwatchdog.ANRWatchDog;
-
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -32,11 +29,15 @@ import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationMonitorService;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.xml.options.Notifications;
+import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Assist;
 import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.KeeperService;
@@ -65,6 +66,13 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     private InputOutputReceiver ioReceiver;
 
     private boolean openKeyboardOnStart, canApplyTheme;
+
+    private Runnable stopActivity = new Runnable() {
+        @Override
+        public void run() {
+            finish();
+        }
+    };
 
     private CommandExecuter ex = new CommandExecuter() {
 
@@ -126,6 +134,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         boolean charged = false;
         Handler handler = new Handler();
+
         Runnable r = new Runnable() {
             @Override
             public void run() {
@@ -188,6 +197,11 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                 }
             }
         }
+
+        @Override
+        public void dispose() {
+            handler.removeCallbacksAndMessages(null);
+        }
     };
 
     private Suggester sugg = new Suggester() {
@@ -220,24 +234,12 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private void finishOnCreate() {
 
-        new ANRWatchDog(5000)
-                .setANRListener(new ANRWatchDog.ANRListener() {
-                    @Override
-                    public void onAppNotResponding(ANRError anrError) {
-                        Tuils.log(anrError);
-                        Tuils.toFile(anrError);
-                    }
-                })
-                .setReportMainThreadOnly()
-                .start();
-
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                Tuils.log(e);
-                Tuils.toFile(e);
-            }
-        });
+//        Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+//            @Override
+//            public void uncaughtException(Thread t, Throwable e) {
+//                Tuils.toFile(e);
+//            }
+//        });
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(InputOutputReceiver.ACTION_CMD);
@@ -255,16 +257,16 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             return;
         }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.ignore_bar_color)) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color)) {
             Window window = getWindow();
 
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.statusbar_color));
-            window.setNavigationBarColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.navigationbar_color));
+            window.setStatusBarColor(XMLPrefsManager.getColor(Theme.statusbar_color));
+            window.setNavigationBarColor(XMLPrefsManager.getColor(Theme.navigationbar_color));
         }
 
-        boolean showNotification = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.tui_notification);
+        boolean showNotification = XMLPrefsManager.getBoolean(Behavior.tui_notification);
         Intent keeperIntent = new Intent(this, KeeperService.class);
         if (showNotification) {
             startService(keeperIntent);
@@ -274,9 +276,9 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             } catch (Exception e) {}
         }
 
-        boolean fullscreen = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.fullscreen);
+        boolean fullscreen = XMLPrefsManager.getBoolean(Ui.fullscreen);
 
-        boolean useSystemWP = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_wallpaper);
+        boolean useSystemWP = XMLPrefsManager.getBoolean(Ui.system_wallpaper);
         if (useSystemWP) {
             if(fullscreen) {
                 setTheme(R.style.Custom_SystemWP_Fullscreen);
@@ -298,32 +300,37 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         }
 
 
-        boolean notifications = XMLPrefsManager.get(boolean.class, NotificationManager.Options.show_notifications) ||
-                XMLPrefsManager.get(String.class, NotificationManager.Options.show_notifications).equalsIgnoreCase("enabled");
+        boolean notifications = XMLPrefsManager.getBoolean(Notifications.show_notifications) ||
+                XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
 
         if(notifications) {
-            ComponentName thisComponent = new ComponentName(this, NotificationService.class);
-            PackageManager pm = getPackageManager();
-            pm.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            try {
+                ComponentName thisComponent = new ComponentName(this, NotificationService.class);
+                PackageManager pm = getPackageManager();
+                pm.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
 
-            if(!Tuils.hasNotificationAccess(this)) {
-                Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                if(i.resolveActivity(getPackageManager()) == null) {
-                    Toast.makeText(this, R.string.no_notification_access, Toast.LENGTH_LONG).show();
-                } else {
-                    startActivity(i);
+                if(!Tuils.hasNotificationAccess(this)) {
+                    Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                    if(i.resolveActivity(getPackageManager()) == null) {
+                        Toast.makeText(this, R.string.no_notification_access, Toast.LENGTH_LONG).show();
+                    } else {
+                        startActivity(i);
+                    }
                 }
+
+                Intent monitor = new Intent(this, NotificationMonitorService.class);
+                startService(monitor);
+
+                Intent timeColorIntent = new Intent(this, NotificationService.class);
+                timeColorIntent.putExtra(Theme.time_color.label(), XMLPrefsManager.getColor(Theme.time_color));
+                startService(timeColorIntent);
+            } catch (NoClassDefFoundError er) {
+                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+                intent.putExtra(InputOutputReceiver.TEXT, getString(R.string.output_notification_error) + Tuils.SPACE + er.toString());
             }
-
-            Intent monitor = new Intent(this, NotificationMonitorService.class);
-            startService(monitor);
-
-            Intent timeColorIntent = new Intent(this, NotificationService.class);
-            timeColorIntent.putExtra(XMLPrefsManager.Theme.time_color.label(), XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color));
-            startService(timeColorIntent);
         }
 
-        openKeyboardOnStart = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.auto_show_keyboard);
+        openKeyboardOnStart = XMLPrefsManager.getBoolean(Behavior.auto_show_keyboard);
         if (!openKeyboardOnStart) {
             this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         }
@@ -392,9 +399,10 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         overridePendingTransition(0,0);
 
-        if(main != null) {
-            main.destroy();
-        }
+        if(main != null) main.destroy();
+        if(ui != null) ui.dispose();
+
+        out.dispose();
 
         System.exit(0);
     }
@@ -418,18 +426,18 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     @Override
     public void reload() {
-        runOnUiThread(new Runnable() {
+        new Thread() {
             @Override
             public void run() {
-                Handler h = new Handler();
-                h.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        finish();
-                    }
-                }, 1000);
+                super.run();
+
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {}
+
+                runOnUiThread(stopActivity);
             }
-        });
+        }.start();
     }
 
     @Override
@@ -509,12 +517,18 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                     while(count < permissions.length && count < grantResults.length) {
                         if(grantResults[count] == PackageManager.PERMISSION_DENIED) {
                             Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
-                            new Handler().postDelayed(new Runnable() {
+                            new Thread() {
                                 @Override
                                 public void run() {
-                                    finish();
+                                    super.run();
+
+                                    try {
+                                        sleep(2000);
+                                    } catch (InterruptedException e) {}
+
+                                    runOnUiThread(stopActivity);
                                 }
-                            }, 2000);
+                            }.start();
                             return;
                         }
                         count++;

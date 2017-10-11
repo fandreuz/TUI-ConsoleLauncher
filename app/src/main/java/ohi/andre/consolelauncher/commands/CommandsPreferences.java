@@ -4,7 +4,8 @@ import android.util.SparseArray;
 
 import java.util.HashMap;
 
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Cmd;
 
 /**
  * Created by francescoandreuzzi on 06/01/2017.
@@ -21,7 +22,7 @@ public class CommandsPreferences {
 
 //        search
         Preference searchP = new Preference();
-        searchP.add(XMLPrefsManager.get(String.class, XMLPrefsManager.Cmd.default_search), DEFAULT_PARAM);
+        searchP.add(XMLPrefsManager.get(Cmd.default_search), DEFAULT_PARAM);
         preferenceHashMap.put("search", searchP);
     }
 

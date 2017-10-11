@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
-import android.provider.Settings;
+
+import java.lang.reflect.Method;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
@@ -24,6 +24,7 @@ public class status implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
+
         ConnectivityManager connManager = (ConnectivityManager) info.context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         boolean wifiConnected = mWifi.isConnected();
@@ -37,20 +38,21 @@ public class status implements CommandAbstraction {
         }
         level *= 100;
 
-        boolean connected = false;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                connected = Settings.Global.getInt(info.context.getContentResolver(), "mobile_data", 0) == 1;
-            }
-        } else {
-            ConnectivityManager cm = (ConnectivityManager) info.context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            boolean isMobile = activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE;
-        }
+        boolean mobileOn = false;
+        Class cmClass;
+        Method method;
+        try {
+            cmClass = Class.forName(connManager.getClass().getName());
+            method = cmClass.getDeclaredMethod("getMobileDataEnabled");
+            method.setAccessible(true);
+
+            mobileOn = (Boolean) method.invoke(connManager);
+        } catch (Exception e) {}
+
 
         return info.res.getString(R.string.battery_charge) + Tuils.SPACE + (int) level + PERCENTAGE + Tuils.NEWLINE +
                 info.res.getString(R.string.wifi) + Tuils.SPACE + wifiConnected + Tuils.NEWLINE +
-                info.res.getString(R.string.mobile_data) + Tuils.SPACE + connected;
+                info.res.getString(R.string.mobile_data) + Tuils.SPACE + mobileOn;
     }
 
     @Override

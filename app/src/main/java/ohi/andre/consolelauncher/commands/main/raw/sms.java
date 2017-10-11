@@ -29,7 +29,7 @@ public class sms extends RedirectCommand {
             return info.context.getString(R.string.output_waitingpermission);
         }
 
-        beforeObjects.add(pack.get(String.class, 0));
+        beforeObjects.add(pack.getString());
 
         if(afterObjects.size() == 0) {
             info.redirectator.prepareRedirection(this);

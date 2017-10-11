@@ -16,7 +16,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -152,7 +153,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                     if(songs == null) songs = new ArrayList<>();
                     else songs.clear();
 
-                    if(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.songs_from_mediastore)) {
+                    if(XMLPrefsManager.getBoolean(Behavior.songs_from_mediastore)) {
                         ContentResolver musicResolver = mContext.getContentResolver();
                         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
@@ -168,7 +169,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                         }
                         musicCursor.close();
                     } else {
-                        String path = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.songs_folder);
+                        String path = XMLPrefsManager.get(Behavior.songs_folder);
                         if(path.length() > 0) {
                             File dir = new File(path);
                             if(dir.isDirectory()) songs.addAll(Tuils.getSongsInFolder(dir));
@@ -192,7 +193,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
             musicSrv = binder.getService();
-            musicSrv.setShuffle(XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.random_play));
+            musicSrv.setShuffle(XMLPrefsManager.getBoolean(Behavior.random_play));
 
             if(songs == null || loader.isAlive()) {
                 synchronized (songs) {

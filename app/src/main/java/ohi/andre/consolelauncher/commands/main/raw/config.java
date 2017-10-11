@@ -10,8 +10,10 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.xml.options.Apps;
+import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -30,8 +32,8 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.get(XMLPrefsManager.XMLPrefsSave.class, 1);
-                save.parent().write(save, pack.get(String.class, 2));
+                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+                save.parent().write(save, pack.getString());
 
                 if(save.label().startsWith("default_app_n")) {
                     return pack.context.getString(R.string.output_usedefapp);
@@ -53,7 +55,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                File file = new File(Tuils.getFolder(), pack.get(String.class, 1));
+                File file = new File(Tuils.getFolder(), pack.getString());
                 pack.context.startActivity(Tuils.openFile(file));
                 return null;
             }
@@ -61,6 +63,26 @@ public class config extends ParamCommand {
             @Override
             public String onArgNotFound(ExecutePack pack, int index) {
                 return pack.context.getString(R.string.output_filenotfound);
+            }
+        },
+        append {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.CONFIG_ENTRY, CommandAbstraction.PLAIN_TEXT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+                save.parent().write(save, XMLPrefsManager.get(save) + pack.getString());
+
+                return null;
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
+                pack.args = new Object[] {pack.args[0], pack.args[1], Tuils.EMPTYSTRING};
+                return set.exec(pack);
             }
         },
         get {
@@ -71,7 +93,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.get(XMLPrefsManager.XMLPrefsSave.class, 1);
+                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
                 String s = XMLPrefsManager.get(String.class, save);
                 if(s.length() == 0) return "\"\"";
                 return s;
@@ -85,7 +107,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                File file = new File(Tuils.getFolder(), pack.get(String.class, 1));
+                File file = new File(Tuils.getFolder(), pack.getString());
                 String name = file.getName();
 
                 for(XMLPrefsManager.XMLPrefsRoot r : XMLPrefsManager.XMLPrefsRoot.values()) {
@@ -111,11 +133,11 @@ public class config extends ParamCommand {
                     }
                 }
                 ss.add(AppsManager.PATH);
-                for(XMLPrefsManager.XMLPrefsSave save : AppsManager.Options.values()) {
+                for(XMLPrefsManager.XMLPrefsSave save : Apps.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
                 ss.add(NotificationManager.PATH);
-                for(XMLPrefsManager.XMLPrefsSave save : NotificationManager.Options.values()) {
+                for(XMLPrefsManager.XMLPrefsSave save : Notifications.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
 
@@ -135,7 +157,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.get(XMLPrefsManager.XMLPrefsSave.class, 1);
+                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
                 save.parent().write(save, save.defaultValue());
                 return null;
             }
@@ -148,14 +170,32 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                File file = pack.get(File.class, 1);
+                File file = pack.get(File.class);
 
-                File old = new File(Tuils.getFolder(), file.getName());
-                Tuils.insertOld(old);
+                if(!file.getName().endsWith(".xml")) {
+//                    is font
+                    File font = new File(Tuils.getFolder(), Tuils.FONT_PATH);
+                    if(font.exists()) {
+                        File[] files = font.listFiles();
+                        if(files.length > 0) Tuils.insertOld(files[0]);
+                        Tuils.deleteContent(font);
+                    } else {
+                        font.mkdir();
+                    }
 
-                file.renameTo(new File(Tuils.getFolder(), file.getName()));
+                    File dest = new File(font, file.getName());
+                    file.renameTo(dest);
 
-                return null;
+                    return "Path: " + dest.getAbsolutePath();
+                } else {
+                    File old = new File(Tuils.getFolder(), file.getName());
+                    Tuils.insertOld(old);
+
+                    File dest = new File(Tuils.getFolder(), file.getName());
+                    file.renameTo(dest);
+
+                    return "Path: " + dest.getAbsolutePath();
+                }
             }
         },
         tutorial {

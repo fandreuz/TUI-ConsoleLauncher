@@ -14,7 +14,7 @@ public class open implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
-        File file = info.get(File.class, 0);
+        File file = info.get(File.class);
 
         int result = FileManager.openFile(info.context, file);
 

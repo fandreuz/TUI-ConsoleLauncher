@@ -9,7 +9,6 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -24,7 +23,7 @@ public class notifications extends ParamCommand {
         inc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName(), null, true));
+                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.getLaunchInfo().componentName.getPackageName(), null, true));
                 return null;
             }
 
@@ -41,7 +40,7 @@ public class notifications extends ParamCommand {
         exc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(AppsManager.LaunchInfo.class, 1).componentName.getPackageName(), null, false));
+                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.getLaunchInfo().componentName.getPackageName(), null, false));
                 return null;
             }
 
@@ -59,7 +58,9 @@ public class notifications extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 try {
-                    NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.get(AppsManager.LaunchInfo.class, 2).componentName.getPackageName(), pack.get(String.class, 1), true));
+                    String s = pack.getString();
+
+                    NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.getLaunchInfo().componentName.getPackageName(), s, true));
                 } catch (Exception e) {}
                 return null;
             }
@@ -81,8 +82,8 @@ public class notifications extends ParamCommand {
         title_filter {
             @Override
             public String exec(ExecutePack pack) {
-                int id = pack.get(int.class, 1);
-                NotificationManager.excludeRegex(pack.get(String.class, 2), "title", id);
+                int id = pack.getInt();
+                NotificationManager.excludeRegex(pack.getString(), "title", id);
                 return null;
             }
 
@@ -99,8 +100,8 @@ public class notifications extends ParamCommand {
         text_filter {
             @Override
             public String exec(ExecutePack pack) {
-                int id = pack.get(int.class, 1);
-                NotificationManager.excludeRegex(pack.get(String.class, 2), "text", id);
+                int id = pack.getInt();
+                NotificationManager.excludeRegex(pack.getString(), "text", id);
                 return null;
             }
 
@@ -122,8 +123,8 @@ public class notifications extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                int id = pack.get(int.class, 1);
-                NotificationManager.applyFilter(id, pack.get(AppsManager.LaunchInfo.class, 2).componentName.getPackageName());
+                int id = pack.getInt();
+                NotificationManager.applyFilter(id, pack.getLaunchInfo().componentName.getPackageName());
                 return null;
             }
 

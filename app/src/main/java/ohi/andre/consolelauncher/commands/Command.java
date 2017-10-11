@@ -29,10 +29,13 @@ public class Command {
                 return cmd.onNotArgEnough(info, 0);
             }
 
-            int[] args = info.get(Param.class, 0).args();
-            if(args == null || !(mArgs[0] instanceof Param)) return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
-
             Param param = (Param) mArgs[0];
+
+            int[] args = param.args();
+            if(args == null || mArgs[0] instanceof String) {
+                if(((String) mArgs[0]).length() == 0) cmd.onNotArgEnough(info, 0);
+                else return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
+            }
 
             if(indexNotFound != -1) {
                 param.onArgNotFound(info, indexNotFound);
@@ -64,7 +67,8 @@ public class Command {
 
         int[] args;
         if (useParamArgs) {
-            args = ((Param) mArgs[0]).args();
+            if(!(mArgs[0] instanceof Param)) args = null;
+            else args = ((Param) mArgs[0]).args();
         } else {
             args = cmd.argType();
         }

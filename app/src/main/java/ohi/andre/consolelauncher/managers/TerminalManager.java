@@ -2,8 +2,8 @@ package ohi.andre.consolelauncher.managers;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Typeface;
 import android.os.IBinder;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Layout;
 import android.text.SpannableString;
@@ -26,6 +26,10 @@ import java.util.List;
 import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.clear;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
@@ -53,6 +57,7 @@ public class TerminalManager {
     public static final int CATEGORY_OUTPUT = 11;
     public static final int CATEGORY_NOTIFICATION = 12;
     public static final int CATEGORY_GENERAL = 13;
+    public static final int CATEGORY_RSS = 14;
 
     private long lastEnter;
 
@@ -84,7 +89,7 @@ public class TerminalManager {
 
     private MainPack mainPack;
 
-    private boolean defaultHint = true;
+    private boolean defaultHint = true, autoLowerFirstChar;
 
     private int clearCmdsCount= 0;
 
@@ -110,31 +115,30 @@ public class TerminalManager {
 
         this.mContext = context;
 
-        final Typeface lucidaConsole = Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-
         this.mainPack = mainPack;
 
-        this.clearAfterMs = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_seconds) * 1000;
-        this.clearAfterCmds = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.clear_after_cmds);
-        this.maxLines = XMLPrefsManager.get(int.class, XMLPrefsManager.Behavior.max_lines);
+        this.autoLowerFirstChar = XMLPrefsManager.getBoolean(Behavior.autolower_firstchar);
 
-        inputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.input_format);
-        outputFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.output_format);
+        this.clearAfterMs = XMLPrefsManager.getInt(Behavior.clear_after_seconds) * 1000;
+        this.clearAfterCmds = XMLPrefsManager.getInt(Behavior.clear_after_cmds);
+        this.maxLines = XMLPrefsManager.getInt(Behavior.max_lines);
 
-        prefix = XMLPrefsManager.get(XMLPrefsManager.Ui.input_prefix);
-        suPrefix = XMLPrefsManager.get(String.class, XMLPrefsManager.Ui.input_root_prefix);
+        inputFormat = XMLPrefsManager.get(Behavior.input_format);
+        outputFormat = XMLPrefsManager.get(Behavior.output_format);
 
-        int ioSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.input_output_size);
+        prefix = XMLPrefsManager.get(Ui.input_prefix);
+        suPrefix = XMLPrefsManager.get(Ui.input_root_prefix);
 
-        Typeface t = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_font) ? Typeface.DEFAULT : lucidaConsole;
-        prefixView.setTypeface(t);
-        prefixView.setTextColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color));
+        int ioSize = XMLPrefsManager.getInt(Ui.input_output_size);
+
+        prefixView.setTypeface(Tuils.getTypeface(context));
+        prefixView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
         prefixView.setTextSize(ioSize);
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
         this.mPrefix = prefixView;
 
         if (submitView != null) {
-            submitView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.enter_color));
+            submitView.setColorFilter(XMLPrefsManager.getColor(Theme.enter_color));
             submitView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -144,8 +148,8 @@ public class TerminalManager {
         }
 
         if (backView != null) {
-            ((View) backView.getParent()).setBackgroundColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_bg));
-            backView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
+            ((View) backView.getParent()).setBackgroundColor(XMLPrefsManager.getColor(Theme.toolbar_bg));
+            backView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
             backView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -155,7 +159,7 @@ public class TerminalManager {
         }
 
         if (nextView != null) {
-            nextView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
+            nextView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
             nextView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -165,7 +169,7 @@ public class TerminalManager {
         }
 
         if (pasteView != null) {
-            pasteView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
+            pasteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
             pasteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -178,7 +182,7 @@ public class TerminalManager {
         }
 
         if (deleteView != null) {
-            deleteView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.toolbar_color));
+            deleteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
             deleteView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -188,7 +192,7 @@ public class TerminalManager {
         }
 
         this.mTerminalView = terminalView;
-        this.mTerminalView.setTypeface(t);
+        this.mTerminalView.setTypeface(Tuils.getTypeface(context));
         this.mTerminalView.setTextSize(ioSize);
         this.mTerminalView.setFocusable(false);
         setupScroller();
@@ -232,8 +236,8 @@ public class TerminalManager {
 
         this.mInputView = inputView;
         this.mInputView.setTextSize(ioSize);
-        this.mInputView.setTextColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color));
-        this.mInputView.setTypeface(t);
+        this.mInputView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
+        this.mInputView.setTypeface(Tuils.getTypeface(context));
         this.mInputView.setHint(Tuils.getHint(mainPack.currentDirectory.getAbsolutePath()));
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -265,6 +269,20 @@ public class TerminalManager {
                 return true;
             }
         });
+        if(autoLowerFirstChar) {
+            this.mInputView.setFilters(new InputFilter[] {new InputFilter() {
+                @Override
+                public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                    if (dstart == 0 && dend == 0 && start == 0 && end == 1) {
+                        if(source.length() > 0) {
+                            return TextUtils.concat(source.toString().toLowerCase().charAt(0) + Tuils.EMPTYSTRING, source.subSequence(1,source.length()));
+                        }
+                    }
+
+                    return source;
+                }
+            }});
+        }
     }
 
     private void setupNewInput() {
@@ -330,7 +348,7 @@ public class TerminalManager {
         }
 
         if(color == Integer.MAX_VALUE) {
-            color = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
+            color = XMLPrefsManager.getColor(Theme.output_color);
         }
 
         SpannableString si = new SpannableString(output);
@@ -398,9 +416,9 @@ public class TerminalManager {
 
                 boolean su = t.toString().startsWith("su ") || suMode;
 
-                SpannableString si = Tuils.span(inputFormat, XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color));
+                SpannableString si = Tuils.span(inputFormat, XMLPrefsManager.getColor(Theme.input_color));
 
-                s = TimeManager.replace(si,XMLPrefsManager.getColor(XMLPrefsManager.Theme.time_color));
+                s = TimeManager.replace(si,XMLPrefsManager.getColor(Theme.time_color));
                 s = TextUtils.replace(s,
                         new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE,
                                 FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
@@ -410,14 +428,14 @@ public class TerminalManager {
             case CATEGORY_OUTPUT:
                 t = t.toString().trim();
 
-                SpannableString so = Tuils.span(outputFormat, XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color));
+                SpannableString so = Tuils.span(outputFormat, XMLPrefsManager.getColor(Theme.output_color));
 
                 s = TextUtils.replace(so,
                         new String[] {FORMAT_OUTPUT, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
                         new CharSequence[] {t, Tuils.NEWLINE, t, Tuils.NEWLINE});
 
                 break;
-            case CATEGORY_NOTIFICATION: case CATEGORY_GENERAL:
+            case CATEGORY_NOTIFICATION: case CATEGORY_GENERAL:case CATEGORY_RSS:
                 s = t;
                 break;
             default:

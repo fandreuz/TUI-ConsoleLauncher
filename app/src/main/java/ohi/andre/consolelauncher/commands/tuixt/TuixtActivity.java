@@ -3,8 +3,8 @@ package ohi.andre.consolelauncher.commands.tuixt;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.InputType;
@@ -14,6 +14,8 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -29,8 +31,9 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
-import ohi.andre.consolelauncher.managers.FileManager;
-import ohi.andre.consolelauncher.managers.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -59,7 +62,6 @@ public class TuixtActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Typeface lucidaConsole = Typeface.createFromAsset(getAssets(), "lucida_console.ttf");
         final LinearLayout rootView = new LinearLayout(this);
 
         final Intent intent = getIntent();
@@ -81,13 +83,23 @@ public class TuixtActivity extends Activity {
             finish();
         }
 
-        if (!XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_wallpaper)) {
-            rootView.setBackgroundColor(XMLPrefsManager.getColor(XMLPrefsManager.Theme.bg_color));
-        } else {
-            setTheme(R.style.Custom_SystemWP);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color)) {
+            Window window = getWindow();
+
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.setStatusBarColor(XMLPrefsManager.getColor(Theme.statusbar_color));
+            window.setNavigationBarColor(XMLPrefsManager.getColor(Theme.navigationbar_color));
         }
 
-        final boolean inputBottom = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.input_bottom);
+        if (!XMLPrefsManager.getBoolean(Ui.system_wallpaper)) {
+            rootView.setBackgroundColor(XMLPrefsManager.getColor(Theme.bg_color));
+        } else {
+            setTheme(R.style.Custom_SystemWP);
+            rootView.setBackgroundColor(XMLPrefsManager.getColor(Theme.overlay_color));
+        }
+
+        final boolean inputBottom = XMLPrefsManager.getBoolean(Ui.input_bottom);
         int layoutId = inputBottom ? R.layout.tuixt_view_input_down : R.layout.tuixt_view_input_up;
 
         LayoutInflater inflater = getLayoutInflater();
@@ -101,26 +113,25 @@ public class TuixtActivity extends Activity {
         TextView prefixView = (TextView) inputOutputView.findViewById(R.id.prefix_view);
 
         ImageButton submitView = (ImageButton) inputOutputView.findViewById(R.id.submit_tv);
-        boolean showSubmit = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.show_enter_button);
+        boolean showSubmit = XMLPrefsManager.getBoolean(Ui.show_enter_button);
         if (!showSubmit) {
             submitView.setVisibility(View.GONE);
             submitView = null;
         }
 
-        String prefix = XMLPrefsManager.get(XMLPrefsManager.Ui.input_prefix);
+        String prefix = XMLPrefsManager.get(Ui.input_prefix);
 
-        Typeface t = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Ui.system_font) ? Typeface.DEFAULT : lucidaConsole;
-        int ioSize = XMLPrefsManager.get(int.class, XMLPrefsManager.Ui.input_output_size);
-        int outputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.output_color);
-        int inputColor = XMLPrefsManager.getColor(XMLPrefsManager.Theme.input_color);
+        int ioSize = XMLPrefsManager.getInt(Ui.input_output_size);
+        int outputColor = XMLPrefsManager.getColor(Theme.output_color);
+        int inputColor = XMLPrefsManager.getColor(Theme.input_color);
 
-        prefixView.setTypeface(t);
+        prefixView.setTypeface(Tuils.getTypeface(this));
         prefixView.setTextColor(inputColor);
         prefixView.setTextSize(ioSize);
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
 
         if (submitView != null) {
-            submitView.setColorFilter(XMLPrefsManager.getColor(XMLPrefsManager.Theme.enter_color));
+            submitView.setColorFilter(XMLPrefsManager.getColor(Theme.enter_color));
             submitView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -129,7 +140,7 @@ public class TuixtActivity extends Activity {
             });
         }
 
-        fileView.setTypeface(t);
+        fileView.setTypeface(Tuils.getTypeface(this));
         fileView.setTextSize(ioSize);
         fileView.setTextColor(outputColor);
         fileView.setOnTouchListener(new View.OnTouchListener() {
@@ -144,13 +155,13 @@ public class TuixtActivity extends Activity {
             }
         });
 
-        outputView.setTypeface(t);
+        outputView.setTypeface(Tuils.getTypeface(this));
         outputView.setTextSize(ioSize);
         outputView.setTextColor(outputColor);
         outputView.setMovementMethod(new ScrollingMovementMethod());
         outputView.setVisibility(View.GONE);
 
-        inputView.setTypeface(t);
+        inputView.setTypeface(Tuils.getTypeface(this));
         inputView.setTextSize(ioSize);
         inputView.setTextColor(inputColor);
         inputView.setHint(Tuils.getHint(path));
@@ -223,6 +234,16 @@ public class TuixtActivity extends Activity {
                     intent.putExtra(ERROR_KEY, e.toString());
                     setResult(1, intent);
                     finish();
+                } catch (Error er) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            System.gc();
+
+                            fileView.setText(Tuils.EMPTYSTRING);
+                            Toast.makeText(TuixtActivity.this, R.string.tuixt_error, Toast.LENGTH_LONG).show();
+                        }
+                    });
                 }
             }
         }.start();
@@ -248,8 +269,6 @@ public class TuixtActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
-
-        FileManager.writeOn(pack.editFile, fileView.getText().toString());
         this.finish();
     }
 

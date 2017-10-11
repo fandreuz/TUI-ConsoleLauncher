@@ -15,10 +15,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
@@ -36,9 +39,9 @@ public class AliasManager implements Reloadable {
 
         reload();
 
-        paramMarker = Pattern.quote(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_marker));
-        paramSeparator = Pattern.quote(XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_param_separator));
-        aliasLabelFormat = XMLPrefsManager.get(String.class, XMLPrefsManager.Behavior.alias_content_format);
+        paramMarker = Pattern.quote(XMLPrefsManager.get(Behavior.alias_param_marker));
+        paramSeparator = Pattern.quote(XMLPrefsManager.get(Behavior.alias_param_separator));
+        aliasLabelFormat = XMLPrefsManager.get(Behavior.alias_content_format);
     }
 
     public String printAliases() {
@@ -207,7 +210,12 @@ public class AliasManager implements Reloadable {
     }
 
     public List<String> getAliases() {
-        if(aliases == null) return new ArrayList<>(0);
-        return new ArrayList<>(aliases.keySet());
+        List<String> aliasKeys = new ArrayList<>(0);
+        if(aliases == null) return aliasKeys;
+
+        Set<String> keys = aliases.keySet();
+        for(String s : keys) aliasKeys.add(s);
+
+        return aliasKeys;
     }
 }
