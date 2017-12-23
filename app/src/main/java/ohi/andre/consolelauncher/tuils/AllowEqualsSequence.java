@@ -31,7 +31,7 @@ public class AllowEqualsSequence {
             if(i != last) counter++;
 
             entry.key = counter;
-            last = counter;
+            last = i;
         }
     }
 
@@ -82,7 +82,7 @@ public class AllowEqualsSequence {
 
         @Override
         public String toString() {
-            return value + ": " + obj.toString();
+            return "key: " + key + ": " + obj.toString();
         }
     }
 }

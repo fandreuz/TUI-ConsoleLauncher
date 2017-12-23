@@ -41,11 +41,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.MessagesManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
@@ -57,7 +57,6 @@ import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.AllowEqualsSequence;
 import ohi.andre.consolelauncher.tuils.NetworkUtils;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
-import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Hintable;
@@ -104,21 +103,14 @@ public class UIManager implements OnTouchListener {
 
     private String multipleCmdSeparator;
 
-//    private boolean selectFirstSuggestionEnter = false;
     private OnNewInputListener inputListener = new OnNewInputListener() {
         @Override
-        public void onNewInput(String input) {
+        public void onNewInput(String input, Object obj) {
             if(suggestionsView != null) {
-//                if(suggestionsView.getChildCount() > 0 && selectFirstSuggestionEnter) {
-//                    View v = suggestionsView.getChildAt(0);
-//                    v.performClick();
-//                    return;
-//                }
                 suggestionsView.removeAllViews();
-
             }
-            trigger.exec(input);
 
+            trigger.exec(input, obj);
         }
     };
 
@@ -435,6 +427,7 @@ public class UIManager implements OnTouchListener {
         final Pattern nl = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern ip4 = Pattern.compile("%ip4", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern ip6 = Pattern.compile("%ip6", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        final Pattern dt = Pattern.compile("%dt", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
         final Pattern optionalWifi = Pattern.compile("%\\(([^/]*)/([^)]*)\\)", Pattern.CASE_INSENSITIVE);
         final Pattern optionalData = Pattern.compile("%\\[([^/]*)/([^\\]]*)\\]", Pattern.CASE_INSENSITIVE);
@@ -459,7 +452,7 @@ public class UIManager implements OnTouchListener {
             if(format == null) {
                 format = XMLPrefsManager.get(Behavior.network_info_format);
                 color = XMLPrefsManager.getColor(Theme.network_info_color);
-                maxDepth = XMLPrefsManager.getInt(Behavior.max_optional_depth_network_info);
+                maxDepth = XMLPrefsManager.getInt(Behavior.max_optional_depth);
 
                 updateTime = XMLPrefsManager.getInt(Behavior.network_info_update_ms);
                 if(updateTime < 1000) updateTime = Integer.parseInt(Behavior.network_info_update_ms.defaultValue());
@@ -478,12 +471,6 @@ public class UIManager implements OnTouchListener {
                 }
             }
 
-//            mobile data
-            boolean mobileOn = false;
-            try {
-                mobileOn = method != null && connectivityManager != null && (Boolean) method.invoke(connectivityManager);
-            } catch (Exception e) {}
-
 //            wifi
             boolean wifiOn = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
             String wifiName = null;
@@ -492,6 +479,19 @@ public class UIManager implements OnTouchListener {
                 if (connectionInfo != null) {
                     wifiName = connectionInfo.getSSID();
                 }
+            }
+
+//            mobile data
+            boolean mobileOn = false;
+            try {
+                mobileOn = method != null && connectivityManager != null && (Boolean) method.invoke(connectivityManager);
+            } catch (Exception e) {}
+
+            String mobileType = null;
+            if(mobileOn) {
+                mobileType = Tuils.getNetworkType(mContext);
+            } else {
+                mobileType = "unknown";
             }
 
 //            bluetooth
@@ -523,6 +523,7 @@ public class UIManager implements OnTouchListener {
             copy = b4.matcher(copy).replaceAll(bluetoothOn ? TRUE : FALSE);
             copy = ip4.matcher(copy).replaceAll(NetworkUtils.getIPAddress(true));
             copy = ip6.matcher(copy).replaceAll(NetworkUtils.getIPAddress(false));
+            copy = dt.matcher(copy).replaceAll(mobileType);
             copy = nl.matcher(copy).replaceAll(Tuils.NEWLINE);
 
             int i = Label.network.ordinal();
@@ -648,10 +649,12 @@ public class UIManager implements OnTouchListener {
             if(suggestion.type == SuggestionsManager.Suggestion.TYPE_PERMANENT) {
                 mTerminalAdapter.setInput(input + text);
             } else {
+                boolean addSpace = suggestion.type != SuggestionsManager.Suggestion.TYPE_FILE && suggestion.type != SuggestionsManager.Suggestion.TYPE_COLOR;
+
                 if(multipleCmdSeparator.length() > 0) {
                     String[] split = input.split(multipleCmdSeparator);
                     if(split.length == 0) return;
-                    if(split.length == 1) mTerminalAdapter.setInput(text + (suggestion.type == SuggestionsManager.Suggestion.TYPE_FILE ? Tuils.EMPTYSTRING : Tuils.SPACE));
+                    if(split.length == 1) mTerminalAdapter.setInput(text + (addSpace ? Tuils.SPACE : Tuils.EMPTYSTRING), suggestion.object);
                     else {
                         split[split.length - 1] = Tuils.EMPTYSTRING;
 
@@ -660,10 +663,10 @@ public class UIManager implements OnTouchListener {
                             beforeInputs = beforeInputs + split[count] + multipleCmdSeparator;
                         }
 
-                        mTerminalAdapter.setInput(beforeInputs + text + (suggestion.type == SuggestionsManager.Suggestion.TYPE_FILE ? Tuils.EMPTYSTRING : Tuils.SPACE));
+                        mTerminalAdapter.setInput(beforeInputs + text + (addSpace ? Tuils.SPACE : Tuils.EMPTYSTRING), suggestion.object);
                     }
                 } else {
-                    mTerminalAdapter.setInput(text + (suggestion.type == SuggestionsManager.Suggestion.TYPE_FILE ? Tuils.EMPTYSTRING : Tuils.SPACE));
+                    mTerminalAdapter.setInput(text + (addSpace ? Tuils.SPACE : Tuils.EMPTYSTRING), suggestion.object);
                 }
             }
 
@@ -790,7 +793,7 @@ public class UIManager implements OnTouchListener {
         } catch (InternalError e) {}
     }
 
-    protected UIManager(ExecutePack info, final Context context, final ViewGroup rootView, final CommandExecuter tri, MainPack mainPack, boolean canApplyTheme) {
+    protected UIManager(final Context context, final ViewGroup rootView, final CommandExecuter tri, MainPack mainPack, boolean canApplyTheme) {
 
         policy = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
         component = new ComponentName(context, PolicyReceiver.class);
@@ -799,7 +802,7 @@ public class UIManager implements OnTouchListener {
 //        selectFirstSuggestionEnter = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.enter_first_suggestion);
 
         mContext = context;
-        this.info = (MainPack) info;
+        this.info = mainPack;
 
         trigger = tri;
 
@@ -863,12 +866,12 @@ public class UIManager implements OnTouchListener {
         float nIndex = showNetwork ? XMLPrefsManager.getFloat(Ui.network_index) : Integer.MAX_VALUE;
 
         int[] pos = {
-                XMLPrefsManager.getInt(Ui.status_line0_position),
-                XMLPrefsManager.getInt(Ui.status_line1_position),
-                XMLPrefsManager.getInt(Ui.status_line2_position),
-                XMLPrefsManager.getInt(Ui.status_line3_position),
-                XMLPrefsManager.getInt(Ui.status_line4_position),
-                XMLPrefsManager.getInt(Ui.status_line5_position)
+                XMLPrefsManager.getInt(Ui.status_line0_alignment),
+                XMLPrefsManager.getInt(Ui.status_line1_alignment),
+                XMLPrefsManager.getInt(Ui.status_line2_alignment),
+                XMLPrefsManager.getInt(Ui.status_line3_alignment),
+                XMLPrefsManager.getInt(Ui.status_line4_alignment),
+                XMLPrefsManager.getInt(Ui.status_line5_alignment)
         };
 
         AllowEqualsSequence sequence = new AllowEqualsSequence(new float[] {rIndex, dIndex, bIndex, tIndex, sIndex, nIndex},
@@ -890,6 +893,7 @@ public class UIManager implements OnTouchListener {
             if(count >= sequence.getMinKey() && count <= sequence.getMaxKey() && os.length > 0) {
                 labelViews[count].setTypeface(Tuils.getTypeface(context));
 
+//                -1 = left     0 = center     1 = right
                 int p = pos[count];
                 if(p >= 0) labelViews[count].setGravity(p == 0 ? Gravity.CENTER_HORIZONTAL : Gravity.RIGHT);
             } else {
@@ -1049,36 +1053,38 @@ public class UIManager implements OnTouchListener {
 
         if(XMLPrefsManager.getBoolean(Behavior.show_hints)) {
             MessagesManager messagesManager = new MessagesManager(context,
-                    new MessagesManager.Message(context.getString(R.string.hint_alias)),
-                    new MessagesManager.Message(context.getString(R.string.hint_appgroups)),
-                    new MessagesManager.Message(context.getString(R.string.hint_clear)),
-                    new MessagesManager.Message(context.getString(R.string.hint_config)),
-                    new MessagesManager.Message(context.getString(R.string.hint_disable)),
-                    new MessagesManager.Message(context.getString(R.string.hint_donate)),
-                    new MessagesManager.Message(context.getString(R.string.hint_googlep)),
-                    new MessagesManager.Message(context.getString(R.string.hint_help)),
-                    new MessagesManager.Message(context.getString(R.string.hint_music)),
-                    new MessagesManager.Message(context.getString(R.string.hint_notifications)),
-                    new MessagesManager.Message(context.getString(R.string.hint_telegram)),
-                    new MessagesManager.Message(context.getString(R.string.hint_theme)),
-                    new MessagesManager.Message(context.getString(R.string.hint_theme2)),
-                    new MessagesManager.Message(context.getString(R.string.hint_tutorial)),
-                    new MessagesManager.Message(context.getString(R.string.hint_twitter)),
-                    new MessagesManager.Message(context.getString(R.string.hint_wallpaper)),
-                    new MessagesManager.Message(context.getString(R.string.hint_musicdisable)));
+                    new MessagesManager.Message(R.string.hint_alias),
+                    new MessagesManager.Message(R.string.hint_appgroups),
+                    new MessagesManager.Message(R.string.hint_clear),
+                    new MessagesManager.Message(R.string.hint_config),
+                    new MessagesManager.Message(R.string.hint_disable),
+                    new MessagesManager.Message(R.string.hint_donate),
+                    new MessagesManager.Message(R.string.hint_googlep),
+                    new MessagesManager.Message(R.string.hint_help),
+                    new MessagesManager.Message(R.string.hint_music),
+                    new MessagesManager.Message(R.string.hint_notifications),
+                    new MessagesManager.Message(R.string.hint_telegram),
+                    new MessagesManager.Message(R.string.hint_theme),
+                    new MessagesManager.Message(R.string.hint_theme2),
+                    new MessagesManager.Message(R.string.hint_tutorial),
+                    new MessagesManager.Message(R.string.hint_twitter),
+                    new MessagesManager.Message(R.string.hint_wallpaper),
+                    new MessagesManager.Message(R.string.hint_musicdisable),
+                    new MessagesManager.Message(R.string.hint_excludenotification)
+            );
 
             mTerminalAdapter.setMessagesManager(messagesManager);
         }
     }
 
     public void dispose() {
-        handler.removeCallbacksAndMessages(null);
+        if(handler != null) handler.removeCallbacksAndMessages(null);
     }
 
     public void openKeyboard() {
         mTerminalAdapter.requestInputFocus();
         imm.showSoftInput(mTerminalAdapter.getInputView(), InputMethodManager.SHOW_IMPLICIT);
-        mTerminalAdapter.scrollToEnd();
+//        mTerminalAdapter.scrollToEnd();
     }
 
     public void closeKeyboard() {
@@ -1133,10 +1139,6 @@ public class UIManager implements OnTouchListener {
 
     public void focusTerminal() {
         mTerminalAdapter.requestInputFocus();
-    }
-
-    public void scrollToEnd() {
-        mTerminalAdapter.scrollToEnd();
     }
 
     public Hintable getHintable() {
@@ -1245,13 +1247,13 @@ public class UIManager implements OnTouchListener {
         };
     }
 
-    public interface SuggestionNavigator {
-        boolean isNavigating();
-        void onEnter();
-    }
+//    public interface SuggestionNavigator {
+//        boolean isNavigating();
+//        void onEnter();
+//    }
 
     public interface OnNewInputListener {
-        void onNewInput(String input);
+        void onNewInput(String input, Object obj);
     }
 
 //    public class PowerConnectionReceiver extends BroadcastReceiver {

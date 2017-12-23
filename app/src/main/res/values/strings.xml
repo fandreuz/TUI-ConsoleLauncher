@@ -6,18 +6,22 @@
     <string name="location_off">Turn on GPS or network location</string>
     <string name="share_label">Share</string>
     <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
-        \n\nLuke Winward (USA)\n\t-> Idea and design
-        \n\nAlexander King (Australia)\n\t-> t-ui theme website and db management</string>
+        \n\nLuke Winward (USA)\n\t-> Idea and design</string>
     <string name="output_refresh">Refresh: apps, alias, music, contacts, rss feeds</string>
     <string name="output_rate">Thank you!</string>
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
     <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt in the "t-ui" folder</string>
     <string name="admin_permission">Lock the screen on double tap</string>
+    <string name="translation_not_found">Translation not found</string>
+
+    <!-- notifications menu -->
+    <string name="exclude_notification">Exclude this notification</string>
+    <string name="exclude_app">Exclude app</string>
+    <string name="notification_service_not_running">The notification service is\'t running</string>
 
     <!-- regex -->
-    <string name="regex_not_found">Couldn\'t find a Regex with this ID</string>
-    <string name="regex_exists">An other Regex is already using this ID</string>
+    <string name="invalid_regex">Invalid regex:</string>
 
     <!-- theme -->
     <string name="theme_not_found">Theme not found</string>
@@ -57,6 +61,7 @@
     <string name="hint_config">Are you having doubts about any config option? Use the cmd \"$ config -tutorial\" and look for that option inside the table</string>
     <string name="hint_alias">Did you know that t-ui supports aliases? It also supports parameterized aliases.\nFor more info, use the cmd \"$ alias -tutorial\"</string>
     <string name="hint_musicdisable">Do you want to make t-ui lighter? Use the cmd \"$ config -set enable_music false\" to disable the music player and save resources</string>
+    <string name="hint_excludenotification">Did you know? You can exclude an unwanted notification long-clicking on it</string>
 
     <string name="hint_disable">You can disable this messages with the cmd \"$ config -set show_hints false\"</string>
 
@@ -91,7 +96,11 @@
     <string name="rss_not_found">Invalid ID: no RSS feed found</string>
     <string name="id_already">This ID has already been used</string>
     <string name="id_notfound">Invalid ID</string>
-
+    <string name="rss_never_checked">This RSS feed hasn\'t been checked yet</string>
+    <string name="rss_invalid_timeformat">The time format couldn\'t be parsed</string>
+    <string name="rss_invalid_date">Invalid publication date tag:</string>
+    <string name="rss_invalid_entry_tag">Invalid entry tag:</string>
+    <string name="rss_invalid_empty">Invalid RSS: the file is empty:</string>
 
     <!-- alias -->
     <string name="output_aliasnotfound">Alias not found:</string>
@@ -189,9 +198,10 @@
     </string>
     <string name="help_config">-set [option] [value] -> set the value of an option
         \n-append [option] [value] -> append the given string to the value of the selected option
-        \n-file [file] -> open a config file
+        \n-file [file] -> open a config file (behavior.xml, ui.xml, theme.xml, ...)
         \n-get [option] -> get the value of an option
         \n-reset [option] -> reset the value of an option
+        \n-info [option] -> request info about the given option
         \n-apply [file] -> move a file to the t-ui directory
         \n-tutorial -> open the tutorial page
     </string>
@@ -268,12 +278,15 @@
         \n$ beep</string>
     <string name="help_notifications">-inc [appName] -> include an application
         \n-exc [appName] -> exclude an application
-        \n-clr [color] [appName] -> set the color to be used for the application
+        \n-color [color] [appName] -> set the color to be used for the application
+        \n-format [ID] [appName] -> apply the format with the given ID to the corresponding application
+        \n-add_filter [ID] [filter] -> create a new filter with the given ID
+        \n-add_format [ID] [format] -> create a new format with the given ID
+        \n-rm_filter [ID] -> delete the filter having the given ID
+        \n-rm_format [ID] -> delete the format having the given ID
+        \n-access -> show the system settings page dedicated to the Notification Access
         \n-file -> open notifications.xml
-        \n-title_filter [ID] [regex] -> set a filter over notifications title with a given ID
-        \n-text_filter [ID] [regex] -> set a filter over notifications text with a given ID
-        \n-apply_filter [ID] [appName] -> apply a filter (or a group of filters) to a single application
-        \n-access -> show the system settings page dedicated to the Notification Access</string>
+        \n-tutorial -> show the tutorial page</string>
     <string name="help_location">Show your current location</string>
     <string name="help_cntcts">-ls -> list your contacts
         \n-l [contactName] -> show details about a contact
@@ -286,18 +299,22 @@
         \n-ls -> list your RSS feeds
         \n-l [ID] -> show the whole content of the corresponding RSS feed
         \n-show [ID] [boolean] -> toggle the [show] property of the given saved RSS feed
-        \n-time [ID] [update_time_in_seconds] -> set the update time of the corresponding RSS feed
+        \n-update_time [ID] [update_time_in_seconds] -> set the update time of the corresponding RSS feed
         \n-format [ID] [format] -> set the format of the corresponding RSS feed ([format] can be both a string or the ID of an existing format)
         \n-color [ID] [color] -> set the base color of the corresponding RSS feed
         \n-wifi_only [ID] [boolean] -> if [boolean] is true, the corresponding feed will be updated only if your device is connected to a WiFi network
         \n-last_check [ID] -> show the last time t-ui checked this RSS feed
-        \n-frc [ID] -> update the corresponding RSS feed and eventually show new updates
+        \n-entry_tag [ID] -> set the base tag for every single entry (default: \"item\")
+        \n-date_tag [ID] [tag] -> set the tag which holds info about the publication date (default: \"pubDate\")
+        \n-add_command [ID] [IDs (comma separated)] [regex] [cmd] -> create a new regex command that will be applied on the RSS feeds corresponding to IDs
+        \n-rm_command [ID] -> rm the corresponding regex command
+        \n-frc [ID] -> update the corresponding RSS feed
         \n-info [ID] -> show info about the corresponding RSS feed settings
         \n-include_if_matches [ID] [regex] -> if the given regex matches on an RSS feed item, it will be shown ([regex] can be both a string or the ID of a regex saved inside regex.xml)
         \n-exclude_if_matches [ID] [regex] -> if the given regex matches on an RSS feed item, it won\'t be shown ([regex] can be both a string or the ID of a regex saved inside regex.xml)
         \n-add_format [ID] [format] -> create a new format that you will be able to use for more than one RSS feed
         \n-rm_format [ID] [format] -> remove an existing format
-        \n-file -> open the file RSS.xml</string>
+        \n-file -> open the file rss.xml</string>
 
     <!-- linux -->
     <string name="help_ctrlc">Interrupt the current shell process and create a new one</string>

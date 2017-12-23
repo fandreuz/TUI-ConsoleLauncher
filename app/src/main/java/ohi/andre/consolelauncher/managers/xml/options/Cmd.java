@@ -13,6 +13,16 @@ public enum Cmd implements XMLPrefsManager.XMLPrefsSave {
         public String defaultValue() {
             return "-gg";
         }
+
+        @Override
+        public String info() {
+            return "The param that will be used if you type \"search apples\" instead of \"search -param apples\"";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsManager.XMLPrefsSave.TEXT;
+        }
     };
 
     @Override

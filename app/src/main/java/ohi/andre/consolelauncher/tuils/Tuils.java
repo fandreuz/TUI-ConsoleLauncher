@@ -13,14 +13,19 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.os.Process;
 import android.os.StatFs;
 import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -33,6 +38,8 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,10 +51,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -58,6 +69,7 @@ import java.util.regex.Pattern;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.BuildConfig;
+import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
@@ -138,12 +150,63 @@ public class Tuils {
     }
 
     public static boolean arrayContains(int[] array, int value) {
+        if(array == null) return false;
+
         for(int i : array) {
             if(i == value) {
                 return true;
             }
         }
         return false;
+    }
+
+    static final char CHAR_SPACE = ' ';
+    public static boolean equalsIgnoreSpaceAndCase(String s1, String s2) {
+        if (s1 == s2) {
+            return true;
+        }
+
+        int i1 = 0, i2 = 0;
+        while(true) {
+            if(i1 == s1.length() || i2 == s2.length()) break;
+
+            char c1 = Character.toLowerCase(s1.charAt(i1));
+            char c2 = Character.toLowerCase(s2.charAt(i2));
+
+            if(c1 != CHAR_SPACE) {
+                if(c2 != CHAR_SPACE) {
+                    if(c1 != c2) return false;
+                } else {
+//                    c1 is not space, c2 is space
+//                    i1 remains, i2 changes
+                    i2++;
+                    continue;
+                }
+            }
+
+//            c1 is space
+            if(c2 == CHAR_SPACE) {
+//                c1 is space, c2 is space
+                i1++;i2++;
+            } else {
+//                c1 is space, c2 is not space
+                i1++;
+                continue;
+            }
+        }
+
+        return true;
+    }
+
+    public static String readerToString(Reader initialReader) throws IOException {
+        char[] arr = new char[8 * 1024];
+        StringBuilder buffer = new StringBuilder();
+        int numCharsRead;
+        while ((numCharsRead = initialReader.read(arr, 0, arr.length)) != -1) {
+            buffer.append(arr, 0, numCharsRead);
+        }
+        initialReader.close();
+        return buffer.toString();
     }
 
     public static void registerBatteryReceiver(Context context, OnBatteryUpdate listener) {
@@ -218,19 +281,24 @@ public class Tuils {
         return songs;
     }
 
-    public static void download(InputStream in, File file) throws Exception {
+    public static long download(InputStream in, File file) throws Exception {
         OutputStream out = new FileOutputStream(file, false);
 
         byte data[] = new byte[1024];
 
+        long bytes = 0;
+
         int count;
         while ((count = in.read(data)) != -1) {
             out.write(data, 0, count);
+            bytes += count;
         }
 
         out.flush();
         out.close();
         in.close();
+
+        return bytes;
     }
 
     public static void write(File file, String separator, String... ss) throws Exception {
@@ -384,7 +452,9 @@ public class Tuils {
     public static SpannableString span(Context context, String text, int color, int size) {
         SpannableString spannableString = new SpannableString(text);
         if(size != Integer.MAX_VALUE && context != null) spannableString.setSpan(new AbsoluteSizeSpan(convertSpToPixels(size, context)), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        if(color != Integer.MAX_VALUE) spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if(color != Integer.MAX_VALUE) {
+            spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
         return spannableString;
     }
 
@@ -484,7 +554,7 @@ public class Tuils {
     }
 
     public static void sendOutput(int color, Context context, CharSequence s) {
-        sendOutput(color, context, s, TerminalManager.CATEGORY_GENERAL);
+        sendOutput(color, context, s, TerminalManager.CATEGORY_OUTPUT);
     }
 
     public static void sendOutput(Context context, CharSequence s, int type) {
@@ -496,6 +566,47 @@ public class Tuils {
         intent.putExtra(InputOutputReceiver.TEXT, s);
         intent.putExtra(InputOutputReceiver.COLOR, color);
         intent.putExtra(InputOutputReceiver.TYPE, type);
+        context.sendBroadcast(intent);
+    }
+
+    public static void sendOutput(Context context, CharSequence s, int type, Object action) {
+        sendOutput(Integer.MAX_VALUE, context, s, type, action);
+    }
+
+    public static void sendOutput(int color, Context context, CharSequence s, int type, Object action) {
+        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+        intent.putExtra(InputOutputReceiver.TEXT, s);
+        intent.putExtra(InputOutputReceiver.COLOR, color);
+        intent.putExtra(InputOutputReceiver.TYPE, type);
+
+        if(action instanceof String) intent.putExtra(InputOutputReceiver.ACTION, (String) action);
+        else if(action instanceof Parcelable) intent.putExtra(InputOutputReceiver.ACTION, (Parcelable) action);
+
+        context.sendBroadcast(intent);
+    }
+
+    public static void sendOutput(Context context, CharSequence s, int type, Object action, Object longAction) {
+        sendOutput(Integer.MAX_VALUE, context, s, type, action, longAction);
+    }
+
+    public static void sendOutput(int color, Context context, CharSequence s, int type, Object action, Object longAction) {
+        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
+        intent.putExtra(InputOutputReceiver.TEXT, s);
+        intent.putExtra(InputOutputReceiver.COLOR, color);
+        intent.putExtra(InputOutputReceiver.TYPE, type);
+
+        if(action instanceof String) intent.putExtra(InputOutputReceiver.ACTION, (String) action);
+        else if(action instanceof Parcelable) intent.putExtra(InputOutputReceiver.ACTION, (Parcelable) action);
+
+        if(longAction instanceof String) intent.putExtra(InputOutputReceiver.LONG_ACTION, (String) longAction);
+        else if(longAction instanceof Parcelable) intent.putExtra(InputOutputReceiver.LONG_ACTION, (Parcelable) longAction);
+
+        context.sendBroadcast(intent);
+    }
+
+    public static void sendInput(Context context, String text) {
+        Intent intent = new Intent(InputOutputReceiver.ACTION_INPUT);
+        intent.putExtra(InputOutputReceiver.TEXT, text);
         context.sendBroadcast(intent);
     }
 
@@ -563,6 +674,8 @@ public class Tuils {
     }
 
     private static String getNicePath(String filePath) {
+        if(filePath == null) return "null";
+
         String home = XMLPrefsManager.get(File.class, Behavior.home_path).getAbsolutePath();
 
         if(filePath.equals(home)) {
@@ -704,8 +817,27 @@ public class Tuils {
 
         if(o instanceof Throwable) {
             Log.e("andre", "", (Throwable) o);
+        } else if(o instanceof Object[]){
+            Log.e("andre", Arrays.toString((Object[]) o));
         } else {
             Log.e("andre", String.valueOf(o));
+        }
+    }
+
+    public static void log(Object o, Object o2) {
+        if(o instanceof Object[] && o2 instanceof Object[]){
+            Log.e("andre", Arrays.toString((Object[]) o) + " -- " + Arrays.toString((Object[]) o2));
+        } else {
+            Log.e("andre", String.valueOf(o) + " -- " + String.valueOf(o2));
+        }
+    }
+
+    public static boolean hasInternetAccess() {
+        try {
+            HttpURLConnection urlc = (HttpURLConnection) (new URL("http://clients3.google.com/generate_204").openConnection());
+            return (urlc.getResponseCode() == 204 && urlc.getContentLength() == 0);
+        } catch (IOException e) {
+            return false;
         }
     }
 
@@ -807,7 +939,7 @@ public class Tuils {
         return true;
     }
 
-//    return -1 if only digit
+//    return 0 if only digit
     public static char firstNonDigit(String s) {
         if(s == null) {
             return 0;
@@ -993,5 +1125,76 @@ public class Tuils {
     private static final String SPACE_REGEXP = "\\s";
     public static String removeSpaces(String string) {
         return string.replaceAll(SPACE_REGEXP, EMPTYSTRING);
+    }
+
+    public static String getNetworkType(Context context) {
+        TelephonyManager mTelephonyManager = (TelephonyManager)
+                context.getSystemService(Context.TELEPHONY_SERVICE);
+        int networkType = mTelephonyManager.getNetworkType();
+        switch (networkType) {
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+            case TelephonyManager.NETWORK_TYPE_CDMA:
+            case TelephonyManager.NETWORK_TYPE_1xRTT:
+            case TelephonyManager.NETWORK_TYPE_IDEN:
+                return "2g";
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+            case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_EHRPD:
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+                return "3g";
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                return "4g";
+            default:
+                return "unknown";
+        }
+    }
+
+    public static void setCursorDrawableColor(EditText editText, int color) {
+        try {
+            Field fCursorDrawableRes = TextView.class.getDeclaredField("mCursorDrawableRes");
+            fCursorDrawableRes.setAccessible(true);
+            int mCursorDrawableRes = fCursorDrawableRes.getInt(editText);
+            Field fEditor = TextView.class.getDeclaredField("mEditor");
+            fEditor.setAccessible(true);
+            Object editor = fEditor.get(editText);
+            Class<?> clazz = editor.getClass();
+            Field fCursorDrawable = clazz.getDeclaredField("mCursorDrawable");
+            fCursorDrawable.setAccessible(true);
+            Drawable[] drawables = new Drawable[2];
+            drawables[0] = editText.getContext().getResources().getDrawable(mCursorDrawableRes);
+            drawables[1] = editText.getContext().getResources().getDrawable(mCursorDrawableRes);
+            drawables[0].setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            drawables[1].setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            fCursorDrawable.set(editor, drawables);
+        } catch (Throwable ignored) {}
+    }
+
+    public static int nOfBytes(File file) {
+        int count = 0;
+        try {
+            FileInputStream in = new FileInputStream(file);
+
+            while(in.read() != -1) count++;
+
+            return count;
+        } catch (IOException e) {
+            Tuils.log(e);
+            return count;
+        }
+    }
+
+    public static void sendXMLParseError(Context context, String PATH, Exception e) {
+        Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) +
+                Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
+    }
+
+    public static void sendXMLParseError(Context context, String PATH) {
+        Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2));
     }
 }

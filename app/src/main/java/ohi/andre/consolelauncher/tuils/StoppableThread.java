@@ -1,7 +1,5 @@
 package ohi.andre.consolelauncher.tuils;
 
-import android.util.Log;
-
 /**
  * Created by francescoandreuzzi on 27/04/2017.
  */
@@ -9,6 +7,16 @@ import android.util.Log;
 public class StoppableThread extends Thread {
 
     private volatile boolean stopped = false;
+    public StoppableThread() {
+        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                Tuils.log(e);
+                Tuils.toFile(e);
+                System.exit(1);
+            }
+        });
+    }
 
     @Override
     public void interrupt() {

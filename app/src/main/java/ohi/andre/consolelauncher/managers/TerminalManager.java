@@ -2,14 +2,15 @@ package ohi.andre.consolelauncher.managers;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.IBinder;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Layout;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.view.KeyEvent;
 import android.view.View;
@@ -26,11 +27,14 @@ import java.util.List;
 import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.clear;
+import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
-import ohi.andre.consolelauncher.tuils.TimeManager;
+import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
+import ohi.andre.consolelauncher.tuils.LongClickMovementMethod;
+import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 
@@ -56,7 +60,6 @@ public class TerminalManager {
     public static final int CATEGORY_INPUT = 10;
     public static final int CATEGORY_OUTPUT = 11;
     public static final int CATEGORY_NOTIFICATION = 12;
-    public static final int CATEGORY_GENERAL = 13;
     public static final int CATEGORY_RSS = 14;
 
     private long lastEnter;
@@ -89,7 +92,7 @@ public class TerminalManager {
 
     private MainPack mainPack;
 
-    private boolean defaultHint = true, autoLowerFirstChar;
+    private boolean defaultHint = true;
 
     private int clearCmdsCount= 0;
 
@@ -103,8 +106,10 @@ public class TerminalManager {
         }
     };
 
-    private String inputFormat;
-    private String outputFormat;
+    private String inputFormat, outputFormat;
+    private int inputColor, outputColor;
+
+    private boolean keeperServiceRunning, clickCommands, longClickCommands;
 
     private Context mContext;
 
@@ -117,7 +122,8 @@ public class TerminalManager {
 
         this.mainPack = mainPack;
 
-        this.autoLowerFirstChar = XMLPrefsManager.getBoolean(Behavior.autolower_firstchar);
+        this.clickCommands = XMLPrefsManager.getBoolean(Behavior.click_commands);
+        this.longClickCommands = XMLPrefsManager.getBoolean(Behavior.long_click_commands);
 
         this.clearAfterMs = XMLPrefsManager.getInt(Behavior.clear_after_seconds) * 1000;
         this.clearAfterCmds = XMLPrefsManager.getInt(Behavior.clear_after_cmds);
@@ -126,10 +132,15 @@ public class TerminalManager {
         inputFormat = XMLPrefsManager.get(Behavior.input_format);
         outputFormat = XMLPrefsManager.get(Behavior.output_format);
 
+        inputColor = XMLPrefsManager.getColor(Theme.input_color);
+        outputColor = XMLPrefsManager.getColor(Theme.output_color);
+
         prefix = XMLPrefsManager.get(Ui.input_prefix);
         suPrefix = XMLPrefsManager.get(Ui.input_root_prefix);
 
         int ioSize = XMLPrefsManager.getInt(Ui.input_output_size);
+
+        keeperServiceRunning = XMLPrefsManager.getBoolean(Behavior.tui_notification);
 
         prefixView.setTypeface(Tuils.getTypeface(context));
         prefixView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
@@ -195,7 +206,7 @@ public class TerminalManager {
         this.mTerminalView.setTypeface(Tuils.getTypeface(context));
         this.mTerminalView.setTextSize(ioSize);
         this.mTerminalView.setFocusable(false);
-        setupScroller();
+        this.mTerminalView.setMovementMethod(LongClickMovementMethod.getInstance(XMLPrefsManager.getInt(Behavior.long_click_duration)));
 
         if(clearAfterMs > 0) this.mTerminalView.postDelayed(clearRunnable, clearAfterMs);
         if(maxLines > 0) {
@@ -240,6 +251,8 @@ public class TerminalManager {
         this.mInputView.setTypeface(Tuils.getTypeface(context));
         this.mInputView.setHint(Tuils.getHint(mainPack.currentDirectory.getAbsolutePath()));
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        Tuils.setCursorDrawableColor(this.mInputView, XMLPrefsManager.getColor(Theme.cursor_color));
+        this.mInputView.setHighlightColor(Color.TRANSPARENT);
         this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 
             @Override
@@ -263,26 +276,24 @@ public class TerminalManager {
                     onNewInput();
                 }
 
-//                if(event == null && actionId == EditorInfo.IME_NULL) onNewInput();
+//                if (event == null && actionId == EditorInfo.IME_NULL) onNewInput();
 //                if (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) onNewInput();
 
                 return true;
             }
         });
-        if(autoLowerFirstChar) {
-            this.mInputView.setFilters(new InputFilter[] {new InputFilter() {
-                @Override
-                public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
-                    if (dstart == 0 && dend == 0 && start == 0 && end == 1) {
-                        if(source.length() > 0) {
-                            return TextUtils.concat(source.toString().toLowerCase().charAt(0) + Tuils.EMPTYSTRING, source.subSequence(1,source.length()));
-                        }
-                    }
-
-                    return source;
-                }
-            }});
-        }
+//        if(autoLowerFirstChar) {
+//            this.mInputView.setFilters(new InputFilter[] {new InputFilter() {
+//                @Override
+//                public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+//                    if (dstart == 0 && dend == 0 && start == 0 && end == 1 && source.length() > 0) {
+//                        return TextUtils.concat(source.toString().toLowerCase().charAt(0) + Tuils.EMPTYSTRING, source.subSequence(1,source.length()));
+//                    }
+//
+//                    return source;
+//                }
+//            }});
+//        }
     }
 
     private void setupNewInput() {
@@ -300,7 +311,15 @@ public class TerminalManager {
             return false;
         }
 
-        String input = mInputView.getText().toString().trim();
+        CharSequence input = mInputView.getText();
+
+        String cmd = input.toString().trim();
+        Object obj = null;
+        try {
+            obj = ((Spannable) input).getSpans(0, input.length(), AppsManager.LaunchInfo.class)[0];
+        } catch (Exception e) {
+//            an error will probably be thrown everytime, but we don't need to track it
+        }
 
         if(input.length() > 0) {
             clearCmdsCount++;
@@ -314,13 +333,13 @@ public class TerminalManager {
             if(cmdList.size() == CMD_LIST_SIZE) {
                 cmdList.remove(0);
             }
-            cmdList.add(cmdList.size(), input);
+            cmdList.add(cmdList.size(), cmd);
             howBack = -1;
         }
 
-
+//        I tried to use intents and ioreceiver.class instead, but it wasn't better
         if (mInputListener != null) {
-            mInputListener.onNewInput(input);
+            mInputListener.onNewInput(cmd, obj);
         }
 
         setupNewInput();
@@ -387,12 +406,19 @@ public class TerminalManager {
         }
     }
 
-    final String FORMAT_INPUT = "%i";
-    final String FORMAT_OUTPUT = "%o";
-    final String FORMAT_PREFIX = "%p";
-    final String FORMAT_NEWLINE = "%n";
+    public static final String FORMAT_INPUT = "%i";
+    public static final String FORMAT_OUTPUT = "%o";
+    public static final String FORMAT_PREFIX = "%p";
+    public static final String FORMAT_NEWLINE = "%n";
 
     private void writeToView(CharSequence text, int type) {
+        if(type == CATEGORY_INPUT && keeperServiceRunning) {
+            Intent i = new Intent(mContext, KeeperService.class);
+            i.putExtra(KeeperService.CMD_KEY, text.toString());
+            i.putExtra(KeeperService.PATH_KEY, mainPack.currentDirectory.getAbsolutePath());
+            mContext.startService(i);
+        }
+
         text = getFinalText(text, type);
         text = TextUtils.concat(Tuils.NEWLINE, text);
         writeToView(text);
@@ -416,26 +442,28 @@ public class TerminalManager {
 
                 boolean su = t.toString().startsWith("su ") || suMode;
 
-                SpannableString si = Tuils.span(inputFormat, XMLPrefsManager.getColor(Theme.input_color));
+                SpannableString si = Tuils.span(inputFormat, inputColor);
+                if(clickCommands || longClickCommands) si.setSpan(new LongClickableSpan(clickCommands ? t.toString() : null, longClickCommands ? t.toString() : null, InputOutputReceiver.ACTION_INPUT), 0,
+                        si.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                 s = TimeManager.replace(si,XMLPrefsManager.getColor(Theme.time_color));
                 s = TextUtils.replace(s,
-                        new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE,
-                                FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
+                        new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE, FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
                         new CharSequence[] {t, su ? suPrefix : prefix, Tuils.NEWLINE, t, su ? suPrefix : prefix, Tuils.NEWLINE});
 
                 break;
             case CATEGORY_OUTPUT:
                 t = t.toString().trim();
 
-                SpannableString so = Tuils.span(outputFormat, XMLPrefsManager.getColor(Theme.output_color));
+                SpannableString so = Tuils.span(outputFormat, outputColor);
 
                 s = TextUtils.replace(so,
                         new String[] {FORMAT_OUTPUT, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
                         new CharSequence[] {t, Tuils.NEWLINE, t, Tuils.NEWLINE});
 
                 break;
-            case CATEGORY_NOTIFICATION: case CATEGORY_GENERAL:case CATEGORY_RSS:
+//            already colored here
+            case CATEGORY_NOTIFICATION:case CATEGORY_RSS:
                 s = t;
                 break;
             default:
@@ -449,17 +477,22 @@ public class TerminalManager {
         onNewInput();
     }
 
-    public void setupScroller() {
-        this.mTerminalView.setMovementMethod(new ScrollingMovementMethod());
-    }
-
     public String getInput() {
         return mInputView.getText().toString();
     }
 
-    public void setInput(String input) {
-        mInputView.setText(input);
+    public void setInput(String input, Object obj) {
+        SpannableString spannable = new SpannableString(input);
+        if(obj != null) {
+            spannable.setSpan(obj, 0, input.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        mInputView.setText(spannable);
         focusInputEnd();
+    }
+
+    public void setInput(String input) {
+        setInput(input, null);
     }
 
     public void setHint(String hint) {

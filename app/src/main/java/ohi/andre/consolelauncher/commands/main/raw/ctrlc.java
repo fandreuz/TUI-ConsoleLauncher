@@ -5,6 +5,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.tuils.StoppableThread;
 
 /**
  * Created by francescoandreuzzi on 26/07/2017.
@@ -14,7 +15,7 @@ public class ctrlc implements CommandAbstraction {
 
     @Override
     public String exec(final ExecutePack pack) throws Exception {
-        new Thread() {
+        new StoppableThread() {
             @Override
             public void run() {
                 super.run();
@@ -30,11 +31,6 @@ public class ctrlc implements CommandAbstraction {
         ((MainPack) pack).rooter.onStandard();
 
         return null;
-    }
-
-    @Override
-    public int minArgs() {
-        return 0;
     }
 
     @Override

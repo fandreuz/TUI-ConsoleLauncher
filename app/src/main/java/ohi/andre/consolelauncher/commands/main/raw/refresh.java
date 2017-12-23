@@ -25,11 +25,6 @@ public class refresh implements CommandAbstraction {
     }
 
     @Override
-    public int minArgs() {
-        return 0;
-    }
-
-    @Override
     public int[] argType() {
         return new int[0];
     }

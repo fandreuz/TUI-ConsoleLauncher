@@ -30,11 +30,6 @@ public class uninstall implements CommandAbstraction {
     }
 
     @Override
-    public int minArgs() {
-        return 1;
-    }
-
-    @Override
     public int[] argType() {
         return new int[]{CommandAbstraction.VISIBLE_PACKAGE};
     }

@@ -27,8 +27,6 @@ public interface CommandAbstraction {
 
     String exec(ExecutePack pack) throws Exception;
 
-    int minArgs();
-
     int[] argType();
 
     int priority();

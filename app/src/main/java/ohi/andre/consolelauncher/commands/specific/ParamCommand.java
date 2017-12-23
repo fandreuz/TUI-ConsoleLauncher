@@ -2,10 +2,10 @@ package ohi.andre.consolelauncher.commands.specific;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
-import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.Param;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -21,32 +21,28 @@ public abstract class ParamCommand implements CommandAbstraction {
     }
 
     @Override
-    public int minArgs() {
-        return -1;
-    }
-
-    @Override
     public final String exec(ExecutePack pack) throws Exception {
         String o = doThings(pack);
         if(o != null) return o;
 
         Param param = pack.get(Param.class);
         if(param == null) {
-            return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + pack.get(String.class, 0);
+            Object o1 = pack.get(Object.class, 0);
+            return pack.context.getString(R.string.output_invalid_param) + Tuils.SPACE + (o1 != null ? o1.toString() : "null");
         }
         return param.exec(pack);
     }
 
     public SimpleMutableEntry<Boolean, Param> getParam(MainPack pack, String param) {
         Param p = paramForString(pack, param);
-        if(p == null && supportDefaultParam()) {
+        if(p == null && defaultParamReference() != null) {
             return new SimpleMutableEntry<>(true, paramForString(pack, defaultParam(pack)));
         }
         return new SimpleMutableEntry<>(false, p);
     }
 
     public String defaultParam(MainPack pack) {
-        String def = pack.cmdPrefs.forCommand(getClass().getSimpleName()).get(CommandsPreferences.DEFAULT_PARAM);
+        String def = pack.cmdPrefs.get(defaultParamReference());
         if(!def.startsWith("-")) def = "-" + def;
         return def;
     }
@@ -71,7 +67,7 @@ public abstract class ParamCommand implements CommandAbstraction {
     public abstract String[] params();
     protected abstract Param paramForString(MainPack pack, String param);
     protected abstract String doThings(ExecutePack pack);
-    public boolean supportDefaultParam() {
-        return false;
+    public XMLPrefsManager.XMLPrefsSave defaultParamReference() {
+        return null;
     }
 }

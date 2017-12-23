@@ -18,6 +18,7 @@ import java.util.List;
 
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -146,7 +147,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
     }
 
     public void updateSongs() {
-        loader = new Thread() {
+        loader = new StoppableThread() {
             @Override
             public void run() {
                 try {

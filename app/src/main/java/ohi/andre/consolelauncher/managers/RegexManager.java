@@ -1,7 +1,6 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.text.SpannableString;
 
 import org.w3c.dom.Document;
@@ -15,9 +14,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -34,57 +33,74 @@ public class RegexManager {
     private RegexManager() {}
 
     private static boolean available = false;
-    public static void create(Context context) {
+    public static void create(final Context context) {
         if(available) return;
         available = true;
 
         if(regexes != null) regexes.clear();
         else regexes = new ArrayList<>();
 
-        try {
-            File file = new File(Tuils.getFolder(), PATH);
-            if(!file.exists()) {
-                file.createNewFile();
-                XMLPrefsManager.resetFile(file, ROOT);
-            }
+        new StoppableThread() {
 
-            Object[] o = XMLPrefsManager.buildDocument(file, ROOT);
+            @Override
+            public void run() {
+                super.run();
 
-            Element el = (Element) o[1];
-
-            List<Integer> busyIds = new ArrayList<>();
-
-            NodeList nodeList = el.getElementsByTagName(REGEX_LABEL);
-
-            Out:
-            for(int c = 0; c < nodeList.getLength(); c++) {
-                Element e = (Element) nodeList.item(c);
-
-                if(!e.hasAttribute(XMLPrefsManager.VALUE_ATTRIBUTE)) continue;
-                String value = e.getAttribute(XMLPrefsManager.VALUE_ATTRIBUTE);
-
-                int id;
                 try {
-                    id = Integer.parseInt(e.getAttribute(ID_ATTRIBUTE));
-                } catch (Exception exc) {
-                    continue;
-                }
+                    File file = new File(Tuils.getFolder(), PATH);
+                    if(!file.exists()) {
+                        file.createNewFile();
+                        XMLPrefsManager.resetFile(file, ROOT);
+                    }
 
-                for(int j = 0; j < busyIds.size(); j++) {
-                    if((int) busyIds.get(j) == id) continue Out;
-                }
+                    Object[] o;
+                    try {
+                        o = XMLPrefsManager.buildDocument(file, ROOT);
+                        if(o == null) {
+                            Tuils.sendXMLParseError(context, PATH);
+                            return;
+                        }
+                    } catch (Exception e) {
+                        Tuils.sendXMLParseError(context, PATH, e);
+                        return;
+                    }
 
-                busyIds.add(id);
+                    Element el = (Element) o[1];
 
-                if(value != null && value.length() > 0) {
-                    regexes.add(new Regex(value, id));
+                    List<Integer> busyIds = new ArrayList<>();
+
+                    NodeList nodeList = el.getElementsByTagName(REGEX_LABEL);
+
+                    Out:
+                    for(int c = 0; c < nodeList.getLength(); c++) {
+                        Element e = (Element) nodeList.item(c);
+
+                        if(!e.hasAttribute(XMLPrefsManager.VALUE_ATTRIBUTE)) continue;
+                        String value = e.getAttribute(XMLPrefsManager.VALUE_ATTRIBUTE);
+
+                        int id;
+                        try {
+                            id = Integer.parseInt(e.getAttribute(ID_ATTRIBUTE));
+                        } catch (Exception exc) {
+                            continue;
+                        }
+
+                        for(int j = 0; j < busyIds.size(); j++) {
+                            if((int) busyIds.get(j) == id) continue Out;
+                        }
+
+                        busyIds.add(id);
+
+                        if(value != null && value.length() > 0) {
+                            regexes.add(new Regex(value, id));
+                        }
+                    }
+                } catch (Exception e) {
+                    Tuils.sendXMLParseError(context, PATH, e);
+                    return;
                 }
             }
-        } catch (Exception e) {
-            Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) +
-                    Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
-            return;
-        }
+        }.start();
     }
 
     public static Regex get(int id) {
@@ -118,7 +134,7 @@ public class RegexManager {
 
         File file = new File(Tuils.getFolder(), PATH);
 
-        return XMLPrefsManager.add(file, ROOT, REGEX_LABEL, new String[] {ID_ATTRIBUTE, XMLPrefsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), value});
+        return XMLPrefsManager.add(file, REGEX_LABEL, new String[] {ID_ATTRIBUTE, XMLPrefsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), value});
     }
 
 //    null: all good
@@ -127,7 +143,10 @@ public class RegexManager {
         try {
             File file = new File(Tuils.getFolder(), PATH);
 
-            Object[] o = XMLPrefsManager.buildDocument(file, ROOT);
+            Object[] o = XMLPrefsManager.buildDocument(file, null);
+            if(o == null) {
+                return null;
+            }
 
             Document d = (Document) o[0];
             Element el = (Element) o[1];
@@ -166,10 +185,8 @@ public class RegexManager {
         Regex regex = get(id);
         if(regex == null) return Tuils.EMPTYSTRING;
 
-        String r = regex.value;
-
-        Pattern p = Pattern.compile(r);
-        Matcher m = p.matcher(test);
+        if(regex.regex == null) return "null";
+        Matcher m = regex.regex.matcher(test);
 
         int color = XMLPrefsManager.getColor(Theme.mark_color);
         int outputColor = XMLPrefsManager.getColor(Theme.output_color);
@@ -189,11 +206,14 @@ public class RegexManager {
     }
 
     public static class Regex {
-        public String value;
+        public Pattern regex;
+        public String literalPattern;
         public int id;
 
+        public Regex() {}
+
         public Regex(String value, int id) {
-            this.value = value;
+            this.regex = Pattern.compile(value);
             this.id = id;
         }
     }

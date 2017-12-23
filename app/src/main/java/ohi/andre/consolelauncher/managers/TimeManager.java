@@ -1,19 +1,20 @@
-package ohi.andre.consolelauncher.tuils;
+package ohi.andre.consolelauncher.managers;
 
 import android.content.Context;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.format.Time;
 import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 
-import java.util.Arrays;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by francescoandreuzzi on 26/07/2017.
@@ -21,28 +22,34 @@ import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 
 public class TimeManager {
 
-    static String[] formats;
-    static Time time;
+    static SimpleDateFormat[] dateFormatList;
 
     static Pattern extractor = Pattern.compile("%t([0-9]+)", Pattern.CASE_INSENSITIVE);
 
     public static void create() {
+        final Pattern NEWLINE_PATTERN = Pattern.compile("%n");
+
         String format = XMLPrefsManager.get(Behavior.time_format);
         String separator = XMLPrefsManager.get(Behavior.time_format_separator);
 
-        time = new Time();
+        String[] formats = format.split(separator);
+        dateFormatList = new SimpleDateFormat[formats.length];
 
-        formats = format.split(separator);
-        if(formats.length == 0) formats = new String[] {Tuils.EMPTYSTRING};
-
-        Arrays.asList(formats);
+        for(int c = 0; c < dateFormatList.length; c++) {
+            try {
+                formats[c] = NEWLINE_PATTERN.matcher(formats[c]).replaceAll(Tuils.NEWLINE);
+                dateFormatList[c] = new SimpleDateFormat(formats[c]);
+            } catch (Exception e) {
+                dateFormatList[c] = dateFormatList[0];
+            }
+        }
     }
 
-    public static String get(int index) {
-        if(formats == null) return null;
+    private static SimpleDateFormat get(int index) {
+        if(index < 0 || index >= dateFormatList.length) index = 0;
+        if(index == 0 && dateFormatList.length == 0) return null;
 
-        if(index < 0 || index >= formats.length) index = 0;
-        return formats[index];
+        return dateFormatList[index];
     }
 
     public static CharSequence replace(CharSequence cs) {
@@ -63,18 +70,18 @@ public class TimeManager {
 
     public static CharSequence replace(Context context, int size, CharSequence cs, long tm, int color) {
         if(tm == -1) {
-            time.setToNow();
-        } else {
-            time.set(tm);
+            tm = System.currentTimeMillis();
         }
+
+        Date date = new Date(tm);
 
         Matcher matcher = extractor.matcher(cs.toString());
         if(matcher.find()) {
             for(int count = 1; count <= matcher.groupCount(); count++) {
-                String t = get(Integer.parseInt(matcher.group(count)));
-                if(t == null) continue;
+                SimpleDateFormat formatter = get(Integer.parseInt(matcher.group(count)));
+                if(formatter == null) return cs;
 
-                String tf = time.format(t);
+                String tf = formatter.format(date);
 
                 SpannableString spannableString = new SpannableString(tf);
                 if(color != Integer.MAX_VALUE) {
@@ -89,10 +96,10 @@ public class TimeManager {
             }
         }
 
-        String t = get(0);
-        if(t == null) return cs;
+        SimpleDateFormat formatter = get(0);
+        if(formatter == null) return cs;
 
-        String tf = time.format(t);
+        String tf = formatter.format(date);
 
         SpannableString spannableString = new SpannableString(tf);
         if(color != Integer.MAX_VALUE) {

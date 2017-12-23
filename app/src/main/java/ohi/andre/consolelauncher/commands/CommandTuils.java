@@ -16,11 +16,13 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
+import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
+import ohi.andre.consolelauncher.managers.xml.options.Rss;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -366,9 +368,12 @@ public class CommandTuils {
         }
 
         String param = input.substring(0, indexOfFirstSpace).trim();
-        if(param.length() > 0 && !param.startsWith("-")) param = "-".concat(param);
+        if(!param.startsWith("-")) param = "-".concat(param);
+
+        Tuils.log(param);
 
         SimpleMutableEntry<Boolean, Param> sm = cmd.getParam(pack, param);
+        Tuils.log(sm.getKey(), sm.getValue());
         Param p = sm.getValue();
         boolean df = sm.getKey();
 
@@ -429,6 +434,7 @@ public class CommandTuils {
             }
             Collections.addAll(xmlPrefsEntrys, Apps.values());
             Collections.addAll(xmlPrefsEntrys, Notifications.values());
+            Collections.addAll(xmlPrefsEntrys, Rss.values());
         }
 
         String candidate = index == -1 ? input : input.substring(0,index);
@@ -447,6 +453,7 @@ public class CommandTuils {
                 xmlPrefsFiles.add(element.path);
             xmlPrefsFiles.add(AppsManager.PATH);
             xmlPrefsFiles.add(NotificationManager.PATH);
+            xmlPrefsFiles.add(RssManager.PATH);
         }
 
         for(String xs : xmlPrefsFiles) {

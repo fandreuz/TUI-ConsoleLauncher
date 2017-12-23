@@ -114,7 +114,7 @@
         </receiver>
 
         <service
-            android:name=".tuils.KeeperService"
+            android:name=".managers.notifications.KeeperService"
             android:enabled="true"
             android:exported="false" />
 

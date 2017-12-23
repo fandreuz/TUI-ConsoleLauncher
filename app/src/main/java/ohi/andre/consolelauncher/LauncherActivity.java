@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,7 +27,10 @@ import java.util.Queue;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
 import ohi.andre.consolelauncher.managers.ContactManager;
+import ohi.andre.consolelauncher.managers.RegexManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.managers.TimeManager;
+import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationMonitorService;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
@@ -40,9 +42,8 @@ import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Assist;
 import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
-import ohi.andre.consolelauncher.tuils.KeeperService;
+import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
-import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
@@ -53,6 +54,7 @@ import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private final String FIRSTACCESS_KEY = "x3";
+    private final String NEED_RESET_TIME = "t0";
 
     public static final int COMMAND_REQUEST_PERMISSION = 10;
     public static final int STARTING_PERMISSION = 11;
@@ -71,28 +73,34 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         @Override
         public void run() {
             finish();
+
+            Intent startMain = new Intent(Intent.ACTION_MAIN);
+            startMain.addCategory(Intent.CATEGORY_HOME);
+            startActivity(startMain);
         }
     };
 
     private CommandExecuter ex = new CommandExecuter() {
 
         @Override
-        public String exec(String cmd, String aliasName) {
+        public void exec(String cmd, String aliasName) {
             if(main != null) main.onCommand(cmd, aliasName);
-            return null;
         }
 
         @Override
-        public String exec(String input) {
+        public void exec(String input) {
             exec(input, false);
-            return null;
         }
 
         @Override
-        public String exec(String input, boolean needWriteInput) {
+        public void exec(String input, boolean needWriteInput) {
             if(ui != null && needWriteInput) ui.setOutput(input, TerminalManager.CATEGORY_INPUT);
             if(main != null) main.onCommand(input, null);
-            return null;
+        }
+
+        @Override
+        public void exec(String input, Object obj) {
+            if(main != null) main.onCommand(input, obj);
         }
 
     };
@@ -200,7 +208,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         @Override
         public void dispose() {
-            handler.removeCallbacksAndMessages(null);
+            if(handler != null) handler.removeCallbacksAndMessages(null);
         }
     };
 
@@ -234,23 +242,35 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     private void finishOnCreate() {
 
-//        Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-//            @Override
-//            public void uncaughtException(Thread t, Throwable e) {
-//                Tuils.toFile(e);
-//            }
-//        });
+        RegexManager.create(this);
+
+        Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                Tuils.toFile(e);
+                Tuils.log(e);
+                System.exit(1);
+            }
+        });
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(InputOutputReceiver.ACTION_CMD);
         filter.addAction(InputOutputReceiver.ACTION_OUTPUT);
+        filter.addAction(InputOutputReceiver.ACTION_INPUT);
 
-        ioReceiver = new InputOutputReceiver(ex, out);
+        ioReceiver = new InputOutputReceiver(ex, out, in);
         getApplicationContext().registerReceiver(ioReceiver, filter);
 
         try {
             XMLPrefsManager.create(this);
-            TimeManager.create();
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+
+                    TimeManager.create();
+                }
+            }.start();
         } catch (Exception e) {
             Tuils.log(Tuils.getStackTrace(e));
             Tuils.toFile(e);
@@ -269,6 +289,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         boolean showNotification = XMLPrefsManager.getBoolean(Behavior.tui_notification);
         Intent keeperIntent = new Intent(this, KeeperService.class);
         if (showNotification) {
+            keeperIntent.putExtra(KeeperService.PATH_KEY, XMLPrefsManager.get(Behavior.home_path));
             startService(keeperIntent);
         } else {
             try {
@@ -299,10 +320,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             Tuils.toFile(e);
         }
 
-
-        boolean notifications = XMLPrefsManager.getBoolean(Notifications.show_notifications) ||
-                XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
-
+        boolean notifications = XMLPrefsManager.getBoolean(Notifications.show_notifications) || XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
         if(notifications) {
             try {
                 ComponentName thisComponent = new ComponentName(this, NotificationService.class);
@@ -330,6 +348,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             }
         }
 
+        LongClickableSpan.longPressVibrateDuration = XMLPrefsManager.getInt(Behavior.long_click_vibration_duration);
+
         openKeyboardOnStart = XMLPrefsManager.getBoolean(Behavior.auto_show_keyboard);
         if (!openKeyboardOnStart) {
             this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
@@ -339,7 +359,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
         main = new MainManager(this, in, out, sugg, ex);
-        ui = new UIManager(main.getMainPack(), this, mainView, ex, main.getMainPack(), canApplyTheme);
+        ui = new UIManager(this, mainView, ex, main.getMainPack(), canApplyTheme);
         main.setRedirectionListener(ui.buildRedirectionListener());
         main.setHintable(ui.getHintable());
         main.setRooter(ui.getRooter());
@@ -350,15 +370,24 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         if(fullscreen) Assist.assistActivity(this);
 
         SharedPreferences preferences = getPreferences(0);
+        SharedPreferences.Editor editor = preferences.edit();
+
         boolean firstAccess = preferences.getBoolean(FIRSTACCESS_KEY, true);
         if (firstAccess) {
-            SharedPreferences.Editor editor = preferences.edit();
             editor.putBoolean(FIRSTACCESS_KEY, false);
-            editor.commit();
 
             ui.setOutput(getString(R.string.firsthelp_text), TerminalManager.CATEGORY_OUTPUT);
             ui.setInput("tutorial");
         }
+
+        boolean needResetTime = preferences.getBoolean(NEED_RESET_TIME, true);
+        if(needResetTime) {
+            editor.putBoolean(NEED_RESET_TIME, false);
+
+            Behavior.time_format.parent().write(Behavior.time_format, Behavior.time_format.defaultValue());
+        }
+
+        editor.apply();
 
         System.gc();
     }
@@ -392,9 +421,9 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         super.onDestroy();
 
         try {
-            stopService(new Intent(this, KeeperService.class));
-            stopService(new Intent(this, NotificationMonitorService.class));
             getApplicationContext().unregisterReceiver(ioReceiver);
+            stopService(new Intent(this, NotificationMonitorService.class));
+            stopService(new Intent(this, KeeperService.class));
         } catch (NoClassDefFoundError | Exception e) {}
 
         overridePendingTransition(0,0);
@@ -430,10 +459,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             @Override
             public void run() {
                 super.run();
-
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {}
 
                 runOnUiThread(stopActivity);
             }
@@ -546,9 +571,15 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
 
-        if(ui != null) ui.scrollToEnd();
+        String cmd = intent.getStringExtra(InputOutputReceiver.TEXT);
+        if(cmd != null) {
+            Intent i = new Intent(InputOutputReceiver.ACTION_CMD);
+            i.putExtra(InputOutputReceiver.TEXT, cmd);
+            i.putExtra(InputOutputReceiver.SHOW_CONTENT, true);
+            sendBroadcast(i);
+        }
     }
 }

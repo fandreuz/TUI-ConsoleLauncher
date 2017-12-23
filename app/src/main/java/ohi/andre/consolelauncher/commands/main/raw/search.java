@@ -11,6 +11,8 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.options.Cmd;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class search extends ParamCommand {
@@ -114,8 +116,8 @@ public class search extends ParamCommand {
     }
 
     @Override
-    public boolean supportDefaultParam() {
-        return true;
+    public XMLPrefsManager.XMLPrefsSave defaultParamReference() {
+        return Cmd.default_search;
     }
 
     @Override

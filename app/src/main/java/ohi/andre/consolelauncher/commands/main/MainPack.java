@@ -25,6 +25,7 @@ import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.libsuperuser.ShellHolder;
+import okhttp3.OkHttpClient;
 
 /**
  * Created by francescoandreuzzi on 24/01/2017.
@@ -81,8 +82,10 @@ public class MainPack extends ExecutePack {
 
     public RssManager rssManager;
 
+    public OkHttpClient client;
+
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager2 p,
-                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder, RssManager rssManager) {
+                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder, RssManager rssManager, OkHttpClient client) {
         super(commandGroup);
 
         this.currentDirectory = XMLPrefsManager.get(File.class, Behavior.home_path);
@@ -90,6 +93,8 @@ public class MainPack extends ExecutePack {
         this.shellHolder = shellHolder;
 
         this.rssManager = rssManager;
+
+        this.client = client;
 
         this.res = context.getResources();
 

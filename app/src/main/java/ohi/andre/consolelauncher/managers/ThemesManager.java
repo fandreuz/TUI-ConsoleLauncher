@@ -140,6 +140,8 @@ public class ThemesManager {
                 return;
             }
 
+            if(o == null) return;
+
             Document d = (Document) o[0];
             Element root = (Element) o[1];
 

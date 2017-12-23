@@ -13,6 +13,16 @@ public enum Toolbar implements XMLPrefsManager.XMLPrefsSave {
         public String defaultValue() {
             return "true";
         }
+
+        @Override
+        public String info() {
+            return "If false, the toolbar is hidden";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+        }
     };
 
     @Override

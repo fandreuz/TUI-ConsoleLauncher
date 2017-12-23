@@ -3,7 +3,7 @@ package ohi.andre.consolelauncher.commands.main.raw;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.tuils.TimeManager;
+import ohi.andre.consolelauncher.managers.TimeManager;
 
 /**
  * Created by andre on 03/12/15.
@@ -13,11 +13,6 @@ public class time implements CommandAbstraction {
     public String exec(ExecutePack pack) {
         int index = pack.getInt();
         return TimeManager.replace("%t" + index).toString();
-    }
-
-    @Override
-    public int minArgs() {
-        return 1;
     }
 
     @Override

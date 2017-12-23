@@ -22,13 +22,13 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
-import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Hintable;
@@ -40,6 +40,7 @@ import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 import ohi.andre.consolelauncher.tuils.libsuperuser.Shell;
 import ohi.andre.consolelauncher.tuils.libsuperuser.ShellHolder;
+import okhttp3.OkHttpClient;
 
 /*Copyright Francesco Andreuzzi
 
@@ -94,7 +95,7 @@ public class MainManager {
             new AliasTrigger(),
             new TuiCommandTrigger(),
             new AppTrigger(),
-            new SystemCommandTrigger()
+            new ShellCommandTrigger()
     };
     private MainPack mainPack;
 
@@ -140,9 +141,23 @@ public class MainManager {
         ShellHolder shellHolder = new ShellHolder(out);
         interactive = shellHolder.build();
 
-        RssManager rss = new RssManager(mContext);
+        OkHttpClient client = new OkHttpClient();
+        RssManager rss = new RssManager(mContext, client);
 
-        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, redirectator, shellHolder, rss);
+        mainPack = new MainPack(mContext, group, aliasManager, appsMgr, music, cont, c, executer, redirectator, shellHolder, rss, client);
+    }
+
+    public void onCommand(String input, Object obj) {
+        if(obj == null || !(obj instanceof AppsManager.LaunchInfo)) {
+            onCommand(input, null);
+            return;
+        }
+
+        if(obj instanceof AppsManager.LaunchInfo && ((AppsManager.LaunchInfo) obj).publicLabel.equals(input)) {
+            performLaunch((AppsManager.LaunchInfo) obj);
+        } else {
+            onCommand(input, null);
+        }
     }
 
 //    command manager
@@ -202,13 +217,18 @@ public class MainManager {
     public void destroy() {
         mainPack.destroy();
 
-        new Thread() {
+        new StoppableThread() {
             @Override
             public void run() {
                 super.run();
 
-                interactive.kill();
-                interactive.close();
+                try {
+                    interactive.kill();
+                    interactive.close();
+                } catch (Exception e) {
+                    Tuils.log(e);
+                    Tuils.toFile(e);
+                }
             }
         }.start();
     }
@@ -224,6 +244,47 @@ public class MainManager {
     public void setRooter(Rooter rooter) {
         this.mainPack.rooter = rooter;
     }
+
+//
+    String appFormat;
+    int timeColor;
+    int outputColor;
+
+    Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    Pattern pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+    Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+
+    public boolean performLaunch(AppsManager.LaunchInfo i) {
+        Intent intent = mainPack.appsManager.getIntent(i);
+        if (intent == null) {
+            return false;
+        }
+
+        if(showAppHistory) {
+            if(appFormat == null) {
+                appFormat = XMLPrefsManager.get(Behavior.app_launch_format);
+                timeColor = XMLPrefsManager.getColor(Theme.time_color);
+                outputColor = XMLPrefsManager.getColor(Theme.output_color);
+            }
+
+            String a = new String(appFormat);
+            a = pa.matcher(a).replaceAll(Matcher.quoteReplacement(intent.getComponent().getClassName()));
+            a = pp.matcher(a).replaceAll(Matcher.quoteReplacement(intent.getComponent().getPackageName()));
+            a = pl.matcher(a).replaceAll(Matcher.quoteReplacement(i.publicLabel));
+            a = pn.matcher(a).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
+
+            SpannableString text = new SpannableString(a);
+            text.setSpan(new ForegroundColorSpan(outputColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            CharSequence s = TimeManager.replace(text, timeColor);
+
+            out.onOutput(s, TerminalManager.CATEGORY_OUTPUT);
+        }
+
+        mContext.startActivity(intent);
+        return true;
+    }
+//
 
     interface CmdTrigger {
         boolean trigger(ExecutePack info, String input) throws Exception;
@@ -284,7 +345,7 @@ public class MainManager {
         }
     }
 
-    private class SystemCommandTrigger implements CmdTrigger {
+    private class ShellCommandTrigger implements CmdTrigger {
 
         final int CD_CODE = 10;
         final int PWD_CODE = 11;
@@ -314,7 +375,7 @@ public class MainManager {
         @Override
         public boolean trigger(final ExecutePack info, final String input) throws Exception {
 
-            new Thread() {
+            new StoppableThread() {
                 @Override
                 public void run() {
                     if(input.trim().equalsIgnoreCase("su")) {
@@ -336,49 +397,10 @@ public class MainManager {
 
     private class AppTrigger implements CmdTrigger {
 
-        String appFormat;
-        int timeColor;
-        int outputColor;
-
-        Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-        Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-        Pattern pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-        Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-
         @Override
         public boolean trigger(ExecutePack info, String input) {
             AppsManager.LaunchInfo i = mainPack.appsManager.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
-            if (i == null) {
-                return false;
-            }
-
-            Intent intent = mainPack.appsManager.getIntent(i);
-            if (intent == null) {
-                return false;
-            }
-
-            if(showAppHistory) {
-                if(appFormat == null) {
-                    appFormat = XMLPrefsManager.get(Behavior.app_launch_format);
-                    timeColor = XMLPrefsManager.getColor(Theme.time_color);
-                    outputColor = XMLPrefsManager.getColor(Theme.output_color);
-                }
-
-                String a = new String(appFormat);
-                a = pa.matcher(a).replaceAll(Matcher.quoteReplacement(intent.getComponent().getClassName()));
-                a = pp.matcher(a).replaceAll(Matcher.quoteReplacement(intent.getComponent().getPackageName()));
-                a = pl.matcher(a).replaceAll(Matcher.quoteReplacement(i.publicLabel));
-                a = pn.matcher(a).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
-
-                SpannableString text = new SpannableString(a);
-                text.setSpan(new ForegroundColorSpan(outputColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                CharSequence s = TimeManager.replace(text, timeColor);
-
-                out.onOutput(s, TerminalManager.CATEGORY_GENERAL);
-            }
-
-            mContext.startActivity(intent);
-            return true;
+            return i != null && performLaunch(i);
         }
     }
 

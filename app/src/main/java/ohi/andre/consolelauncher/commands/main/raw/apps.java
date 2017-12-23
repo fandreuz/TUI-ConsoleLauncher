@@ -25,22 +25,32 @@ public class apps extends ParamCommand {
         ls {
             @Override
             public int[] args() {
-                return new int[0];
+                return new int[] {CommandAbstraction.PLAIN_TEXT};
             }
 
             @Override
             public String exec(ExecutePack pack) {
+                return ((MainPack) pack).appsManager.printApps(AppsManager.SHOWN_APPS, pack.getString());
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
                 return ((MainPack) pack).appsManager.printApps(AppsManager.SHOWN_APPS);
             }
         },
         lsh {
             @Override
             public int[] args() {
-                return new int[0];
+                return new int[] {CommandAbstraction.PLAIN_TEXT};
             }
 
             @Override
             public String exec(ExecutePack pack) {
+                return ((MainPack) pack).appsManager.printApps(AppsManager.HIDDEN_APPS, pack.getString());
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
                 return ((MainPack) pack).appsManager.printApps(AppsManager.HIDDEN_APPS);
             }
         },

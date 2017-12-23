@@ -10,8 +10,9 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -45,6 +46,21 @@ public class config extends ParamCommand {
             public String onNotArgEnough(ExecutePack pack, int n) {
                 pack.args = new Object[] {pack.args[0], pack.args[1], Tuils.EMPTYSTRING};
                 return set.exec(pack);
+            }
+        },
+        info {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.CONFIG_ENTRY};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+
+                return "Type:" + Tuils.SPACE + save.type() + Tuils.NEWLINE
+                        + "Default:" + Tuils.SPACE + save.defaultValue() + Tuils.NEWLINE
+                        + save.info();
             }
         },
         file {
@@ -117,6 +133,27 @@ public class config extends ParamCommand {
                         strings.add(0, r.path);
                         return Tuils.toPlanString(strings, Tuils.NEWLINE);
                     }
+                }
+
+                if(name.equalsIgnoreCase(AppsManager.PATH)) {
+                    List<String> strings = AppsManager.instance.getValues().values();
+                    Tuils.addPrefix(strings, Tuils.DOUBLE_SPACE);
+                    strings.add(0, AppsManager.PATH);
+                    return Tuils.toPlanString(strings, Tuils.NEWLINE);
+                }
+
+                if(name.equalsIgnoreCase(NotificationManager.PATH)) {
+                    List<String> strings = NotificationManager.instance.getValues().values();
+                    Tuils.addPrefix(strings, Tuils.DOUBLE_SPACE);
+                    strings.add(0, NotificationManager.PATH);
+                    return Tuils.toPlanString(strings, Tuils.NEWLINE);
+                }
+
+                if(name.equalsIgnoreCase(RssManager.PATH)) {
+                    List<String> strings = NotificationManager.instance.getValues().values();
+                    Tuils.addPrefix(strings, Tuils.DOUBLE_SPACE);
+                    strings.add(0, RssManager.PATH);
+                    return Tuils.toPlanString(strings, Tuils.NEWLINE);
                 }
 
                 return "[]";

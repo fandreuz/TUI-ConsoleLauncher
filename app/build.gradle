@@ -11,8 +11,8 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
 
-        versionCode 137
-        versionName "6.3k"
+        versionCode 150
+        versionName "6.4"
     }
 
     buildTypes {
@@ -40,7 +40,9 @@ android {
 
     applicationVariants.all { variant ->
         def vn = variant.versionName
+
         def x = vn.substring(0, vn.length() - 1)
+        if (x.endsWith(".")) x = vn
 
         variant.outputs.each { output ->
             output.outputFile = new File(
@@ -56,4 +58,5 @@ android {
 }
 dependencies {
     compile 'com.google.firebase:firebase-database:9.0.0'
+    compile 'com.squareup.okhttp3:okhttp:3.9.0'
 }

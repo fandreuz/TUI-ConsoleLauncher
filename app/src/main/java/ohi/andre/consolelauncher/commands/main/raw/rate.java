@@ -13,26 +13,13 @@ public class rate implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
         final MainPack info = (MainPack) pack;
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-
-                try {
-                    sleep(300);
-                } catch (InterruptedException e) {
-                }
-
-                try {
-                    info.context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" +
-                            info.context.getPackageName())));
-                } catch (android.content.ActivityNotFoundException anfe) {
-                    info.context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" +
-                            info.context.getPackageName())));
-                }
-            }
-        }.start();
-
+        try {
+            info.context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" +
+                    info.context.getPackageName())));
+        } catch (android.content.ActivityNotFoundException anfe) {
+            info.context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" +
+                    info.context.getPackageName())));
+        }
 
         return info.res.getString(R.string.output_rate);
     }
@@ -40,11 +27,6 @@ public class rate implements CommandAbstraction {
     @Override
     public int helpRes() {
         return R.string.help_rate;
-    }
-
-    @Override
-    public int minArgs() {
-        return 0;
     }
 
     @Override

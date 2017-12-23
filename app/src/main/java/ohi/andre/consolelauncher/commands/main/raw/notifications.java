@@ -23,8 +23,9 @@ public class notifications extends ParamCommand {
         inc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.getLaunchInfo().componentName.getPackageName(), null, true));
-                return null;
+                String output = NotificationManager.setState(pack.getLaunchInfo().componentName.getPackageName(), true);
+                if(output == null || output.length() == 0) return null;
+                return output;
             }
 
             @Override
@@ -40,8 +41,9 @@ public class notifications extends ParamCommand {
         exc {
             @Override
             public String exec(ExecutePack pack) {
-                NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.getLaunchInfo().componentName.getPackageName(), null, false));
-                return null;
+                String output = NotificationManager.setState(pack.getLaunchInfo().componentName.getPackageName(), false);
+                if(output == null || output.length() == 0) return null;
+                return output;
             }
 
             @Override
@@ -54,15 +56,13 @@ public class notifications extends ParamCommand {
                 return pack.context.getString(R.string.output_appnotfound);
             }
         },
-        clr {
+        color {
             @Override
             public String exec(ExecutePack pack) {
-                try {
-                    String s = pack.getString();
-
-                    NotificationManager.notificationsChangeFor(new NotificationManager.NotificatedApp(pack.getLaunchInfo().componentName.getPackageName(), s, true));
-                } catch (Exception e) {}
-                return null;
+                String color = pack.getString();
+                String output = NotificationManager.setColor(pack.getLaunchInfo().componentName.getPackageName(), color);
+                if(output == null || output.length() == 0) return null;
+                return output;
             }
 
             @Override
@@ -79,12 +79,32 @@ public class notifications extends ParamCommand {
                 return pack.context.getString(res);
             }
         },
-        title_filter {
+        format {
+            @Override
+            public String exec(ExecutePack pack) {
+                String s = pack.getString();
+                String output = NotificationManager.setFormat(pack.getLaunchInfo().componentName.getPackageName(), s);
+                if(output == null || output.length() == 0) return null;
+                return output;
+            }
+
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.NO_SPACE_STRING, CommandAbstraction.VISIBLE_PACKAGE};
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.invalid_integer);
+            }
+        },
+        add_filter {
             @Override
             public String exec(ExecutePack pack) {
                 int id = pack.getInt();
-                NotificationManager.excludeRegex(pack.getString(), "title", id);
-                return null;
+                String output = NotificationManager.addFilter(pack.getString(), id);
+                if(output == null || output.length() == 0) return null;
+                return output;
             }
 
             @Override
@@ -97,12 +117,13 @@ public class notifications extends ParamCommand {
                 return pack.context.getString(R.string.invalid_integer);
             }
         },
-        text_filter {
+        add_format {
             @Override
             public String exec(ExecutePack pack) {
                 int id = pack.getInt();
-                NotificationManager.excludeRegex(pack.getString(), "text", id);
-                return null;
+                String output = NotificationManager.addFormat(pack.getString(), id);
+                if(output == null || output.length() == 0) return null;
+                return output;
             }
 
             @Override
@@ -115,26 +136,40 @@ public class notifications extends ParamCommand {
                 return pack.context.getString(R.string.invalid_integer);
             }
         },
-        apply_filter {
+        rm_filter {
             @Override
-            public int[] args() {
-                return new int[] {CommandAbstraction.INT, CommandAbstraction.VISIBLE_PACKAGE};
+            public String exec(ExecutePack pack) {
+                String output = NotificationManager.rmFilter(pack.getInt());
+                if(output == null || output.length() == 0) return null;
+                return output;
             }
 
             @Override
-            public String exec(ExecutePack pack) {
-                int id = pack.getInt();
-                NotificationManager.applyFilter(id, pack.getLaunchInfo().componentName.getPackageName());
-                return null;
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT};
             }
 
             @Override
             public String onArgNotFound(ExecutePack pack, int index) {
-                int res;
-                if(index == 1) res = R.string.invalid_integer;
-                else res = R.string.output_appnotfound;
+                return pack.context.getString(R.string.invalid_integer);
+            }
+        },
+        rm_format {
+            @Override
+            public String exec(ExecutePack pack) {
+                String output = NotificationManager.rmFormat(pack.getInt());
+                if(output == null || output.length() == 0) return null;
+                return output;
+            }
 
-                return pack.context.getString(res);
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT};
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.invalid_integer);
             }
         },
         file {

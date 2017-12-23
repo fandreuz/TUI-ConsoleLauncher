@@ -11,11 +11,10 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +28,7 @@ public class AliasManager implements Reloadable {
 
     public static final String PATH = "alias.txt";
 
-    private Map<String, String> aliases;
+    private List<Map.Entry<String, String>> aliases;
     private String paramMarker, paramSeparator, aliasLabelFormat;
 
     private Context context;
@@ -46,7 +45,7 @@ public class AliasManager implements Reloadable {
 
     public String printAliases() {
         String output = Tuils.EMPTYSTRING;
-        for (Map.Entry<String, String> entry : aliases.entrySet()) {
+        for (Map.Entry<String, String> entry : aliases) {
             output = output.concat(entry.getKey() + " --> " + entry.getValue() + Tuils.NEWLINE);
         }
 
@@ -82,7 +81,7 @@ public class AliasManager implements Reloadable {
 
             String aliasValue = null;
             while (true) {
-                aliasValue = aliases.get(alias);
+                aliasValue = getALiasFor(alias);
                 if(aliasValue != null) break;
                 else {
                     int index = alias.lastIndexOf(Tuils.SPACE);
@@ -96,7 +95,7 @@ public class AliasManager implements Reloadable {
 
             return new String[] {aliasValue, alias, args};
         } else {
-            return new String[] {aliases.get(alias), alias, Tuils.EMPTYSTRING};
+            return new String[] {getALiasFor(alias), alias, Tuils.EMPTYSTRING};
         }
     }
 
@@ -113,6 +112,24 @@ public class AliasManager implements Reloadable {
         return aliasValue;
     }
 
+    private String getALiasFor(String name) {
+        for(Map.Entry<String, String> entry : aliases) {
+            if(name.equals(entry.getKey())) return entry.getValue();
+        }
+
+        return null;
+    }
+
+    private void removeAliasFor(String name) {
+        for(int c = 0; c < aliases.size(); c++) {
+            Map.Entry e = aliases.get(c);
+            if(name.equals(e.getKey())) {
+                aliases.remove(c);
+                return;
+            }
+        }
+    }
+
     private final Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     private final Pattern pv = Pattern.compile("%v", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     private final Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
@@ -127,7 +144,7 @@ public class AliasManager implements Reloadable {
     @Override
     public void reload() {
         if(aliases != null) aliases.clear();
-        else aliases = new HashMap();
+        else aliases = new ArrayList<>();
 
         File file = new File(Tuils.getFolder(), PATH);
 
@@ -159,7 +176,7 @@ public class AliasManager implements Reloadable {
                     Tuils.sendOutput(Color.RED, context,
                             context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias3));
                 } else {
-                    aliases.put(name, value);
+                    aliases.add(new AbstractMap.SimpleImmutableEntry<>(name, value));
                 }
             }
         } catch (Exception e) {}
@@ -173,7 +190,8 @@ public class AliasManager implements Reloadable {
             fos.write((Tuils.NEWLINE + name + "=" + value).getBytes());
             fos.close();
 
-            aliases.put(name, value);
+            aliases.add(new AbstractMap.SimpleImmutableEntry<>(name, value));
+
             return true;
         } catch (Exception e) {
             return false;
@@ -201,7 +219,7 @@ public class AliasManager implements Reloadable {
             reader.close();
 
 
-            aliases.remove(name);
+            removeAliasFor(name);
 
             return tempFile.renameTo(inputFile);
         } catch (Exception e) {
@@ -213,8 +231,7 @@ public class AliasManager implements Reloadable {
         List<String> aliasKeys = new ArrayList<>(0);
         if(aliases == null) return aliasKeys;
 
-        Set<String> keys = aliases.keySet();
-        for(String s : keys) aliasKeys.add(s);
+        for(Map.Entry<String, String> entry : aliases) aliasKeys.add(entry.getKey());
 
         return aliasKeys;
     }

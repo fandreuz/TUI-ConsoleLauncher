@@ -1,8 +1,10 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
@@ -10,9 +12,9 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.RssManager;
+import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Rss;
-import ohi.andre.consolelauncher.tuils.TimeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -68,8 +70,7 @@ public class rss extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 int id = pack.getInt();
-                ((MainPack) pack).rssManager.l(id);
-                return null;
+                return ((MainPack) pack).rssManager.l(id);
             }
 
             @Override
@@ -91,7 +92,7 @@ public class rss extends ParamCommand {
                 return new int[] {CommandAbstraction.INT, CommandAbstraction.BOOLEAN};
             }
         },
-        time {
+        update_time {
             @Override
             public String exec(ExecutePack pack) {
                 int id = pack.getInt();
@@ -103,6 +104,17 @@ public class rss extends ParamCommand {
             @Override
             public int[] args() {
                 return new int[] {CommandAbstraction.INT, CommandAbstraction.LONG};
+            }
+        },
+        time_format {
+            @Override
+            public String exec(ExecutePack pack) {
+                return ((MainPack) pack).rssManager.setTimeFormat(pack.getInt(), pack.getString());
+            }
+
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
             }
         },
         format {
@@ -139,6 +151,28 @@ public class rss extends ParamCommand {
                 return super.onArgNotFound(pack, index);
             }
         },
+        entry_tag {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                return ((MainPack) pack).rssManager.setEntryTag(pack.getInt(), pack.getString());
+            }
+        },
+        date_tag {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.PLAIN_TEXT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                return ((MainPack) pack).rssManager.setDateTag(pack.getInt(), pack.getString());
+            }
+        },
         last_check {
             @Override
             public int[] args() {
@@ -147,16 +181,19 @@ public class rss extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String output = XMLPrefsManager.attrValue(new File(Tuils.getFolder(), RssManager.PATH), RssManager.NAME,
-                        RssManager.RSS_LABEL, new String[] {RssManager.ID_ATTRIBUTE}, new String[] {String.valueOf(pack.getInt())},
-                        RssManager.LASTCHECKED_ATTRIBUTE);
-                if(output == null || output.length() == 0) return pack.context.getString(R.string.id_notfound);
+                Node n = XMLPrefsManager.findNode(new File(Tuils.getFolder(), RssManager.PATH), RssManager.RSS_LABEL, new String[] {RssManager.ID_ATTRIBUTE}, new String[] {String.valueOf(pack.getInt())});
+                if(n == null) return pack.context.getString(R.string.id_notfound);
+
+                Element el = (Element) n;
+
+                String value = el.hasAttribute(RssManager.LASTCHECKED_ATTRIBUTE) ? el.getAttribute(RssManager.LASTCHECKED_ATTRIBUTE) : null;
+                if(value == null) return pack.context.getString(R.string.rss_never_checked);
 
                 try {
-                    DateFormat defaultRSSDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
-                    return TimeManager.replace(XMLPrefsManager.get(Rss.rss_time_format), defaultRSSDateFormat.parse(output).getTime(),
+                    return TimeManager.replace(XMLPrefsManager.get(Rss.rss_time_format), Long.parseLong(value),
                             Integer.MAX_VALUE).toString();
                 } catch (Exception e) {
+                    Tuils.log(e);
                     return pack.context.getString(R.string.output_error);
                 }
             }
@@ -169,6 +206,7 @@ public class rss extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
+                if(!((MainPack) pack).rssManager.updateRss(pack.getInt(), false, true)) return pack.context.getString(R.string.id_notfound);
                 return null;
             }
         },
@@ -180,7 +218,10 @@ public class rss extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                return null;
+                RssManager.Rss rss = ((MainPack) pack).rssManager.findId(pack.getInt());
+                if(rss == null) return pack.context.getString(R.string.id_notfound);
+
+                return rss.toString();
             }
         },
         include_if_matches {
@@ -209,6 +250,40 @@ public class rss extends ParamCommand {
                 String r = pack.getString();
 
                 return ((MainPack) pack).rssManager.setExcludeIfMatches(id, r);
+            }
+        },
+        add_command {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT, CommandAbstraction.NO_SPACE_STRING, CommandAbstraction.NO_SPACE_STRING, CommandAbstraction.PLAIN_TEXT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                int id = pack.getInt();
+
+                String on = pack.getString();
+                String regex = pack.getString();
+                String cmd = pack.getString();
+
+                try {
+                    Pattern.compile(regex);
+                } catch (Exception e) {
+                    return e.toString();
+                }
+
+                return ((MainPack) pack).rssManager.addRegexCommand(id, on, regex, cmd);
+            }
+        },
+        rm_command {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                return ((MainPack) pack).rssManager.rmRegexCommand(pack.getInt());
             }
         },
         wifi_only {

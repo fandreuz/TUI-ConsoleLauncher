@@ -17,6 +17,7 @@ import java.util.List;
 
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.tuils.Compare;
+import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class ContactManager {
@@ -38,7 +39,7 @@ public class ContactManager {
             return;
         }
 
-        new Thread() {
+        new StoppableThread() {
             @Override
             public void run() {
                 super.run();

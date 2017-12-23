@@ -41,7 +41,7 @@ public class Command {
                 param.onArgNotFound(info, indexNotFound);
             }
 
-            if(pCmd.supportDefaultParam()) {
+            if(pCmd.defaultParamReference() != null) {
                 if(args.length > nArgs) {
                     return param.onNotArgEnough(info, nArgs);
                 }
@@ -53,8 +53,11 @@ public class Command {
         } else if(indexNotFound != -1) {
             return cmd.onArgNotFound(info, indexNotFound);
         }
-        else if (nArgs < cmd.minArgs() || (mArgs == null && cmd.minArgs() > 0)) {
-            return cmd.onNotArgEnough(info, nArgs);
+        else {
+            int[] args = cmd.argType();
+            if (nArgs < args.length || (mArgs == null && args.length > 0)) {
+                return cmd.onNotArgEnough(info, nArgs);
+            }
         }
 
         String output = cmd.exec(info);
@@ -80,8 +83,7 @@ public class Command {
         try {
             return args[useParamArgs ? nArgs - 1 : nArgs];
         } catch (ArrayIndexOutOfBoundsException e) {
-            nArgs -= 1;
-            return nextArg();
+            return 0;
         }
     }
 }

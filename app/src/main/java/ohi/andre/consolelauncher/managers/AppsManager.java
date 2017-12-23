@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -38,7 +39,7 @@ import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Compare;
-import ohi.andre.consolelauncher.tuils.TimeManager;
+import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 
@@ -88,7 +89,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
     @Override
     public void write(XMLPrefsManager.XMLPrefsSave save, String value) {
-        set(new File(Tuils.getFolder(), PATH), NAME, save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
+        set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
     @Override
@@ -140,7 +141,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         initAppListener(context);
 
-        new Thread() {
+        new StoppableThread() {
             @Override
             public void run() {
                 super.run();
@@ -176,9 +177,12 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             Object[] o;
             try {
                 o = XMLPrefsManager.buildDocument(file, NAME);
+                if(o == null) {
+                    Tuils.sendXMLParseError(context, PATH);
+                    return;
+                }
             } catch (Exception e) {
-                Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) +
-                                Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
+                Tuils.sendXMLParseError(context, PATH, e);
                 return;
             }
 
@@ -215,7 +219,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                                 continue;
                             }
 
-                            new Thread() {
+                            new StoppableThread() {
                                 @Override
                                 public void run() {
                                     super.run();
@@ -434,12 +438,16 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public LaunchInfo findLaunchInfoWithLabel(String label, int type) {
+        if(appsHolder == null) return null;
+
         List<LaunchInfo> appList;
         if(type == SHOWN_APPS) {
             appList = appsHolder.getApps();
         } else {
             appList = hiddenApps;
         }
+
+        if(appList == null) return null;
 
         LaunchInfo i = AppUtils.findLaunchInfoWithLabel(appList, label);
         if(i != null) return i;
@@ -460,11 +468,17 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         if(appsHolder != null) appsHolder.update(true);
     }
 
-    public Intent getIntent(LaunchInfo info) {
+    public Intent getIntent(final LaunchInfo info) {
         info.launchedTimes++;
-        appsHolder.requestSuggestionUpdate(info);
+        new StoppableThread() {
+            @Override
+            public void run() {
+                super.run();
 
-        writeLaunchTimes(info);
+                appsHolder.requestSuggestionUpdate(info);
+                writeLaunchTimes(info);
+            }
+        }.start();
 
         Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.setComponent(info.componentName);
@@ -474,7 +488,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public String hideActivity(LaunchInfo info) {
-        set(file, NAME, info.write(), new String[] {SHOW_ATTRIBUTE}, new String[] {false + Tuils.EMPTYSTRING});
+        set(file, info.write(), new String[] {SHOW_ATTRIBUTE}, new String[] {false + Tuils.EMPTYSTRING});
 
         appsHolder.remove(info);
         appsHolder.update(true);
@@ -485,7 +499,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public String showActivity(LaunchInfo info) {
-        set(file, NAME, info.write(), new String[]{SHOW_ATTRIBUTE}, new String[]{true + Tuils.EMPTYSTRING});
+        set(file, info.write(), new String[]{SHOW_ATTRIBUTE}, new String[]{true + Tuils.EMPTYSTRING});
 
         hiddenApps.remove(info);
         appsHolder.add(info);
@@ -498,7 +512,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         int index = Tuils.find(name, groups);
         if(index == -1) {
             groups.add(new Group(name));
-            return XMLPrefsManager.set(file, NAME, name, new String[]{APPS_ATTRIBUTE}, new String[]{Tuils.EMPTYSTRING});
+            return XMLPrefsManager.set(file, name, new String[]{APPS_ATTRIBUTE}, new String[]{Tuils.EMPTYSTRING});
         }
 
         return context.getString(R.string.output_groupexists);
@@ -511,7 +525,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         }
 
         groups.get(index).setBgColor(Color.parseColor(color));
-        return XMLPrefsManager.set(file, NAME, name, new String[]{BGCOLOR_ATTRIBUTE}, new String[]{color});
+        return XMLPrefsManager.set(file, name, new String[]{BGCOLOR_ATTRIBUTE}, new String[]{color});
     }
 
     public String groupForeColor(String name, String color) {
@@ -521,11 +535,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         }
 
         groups.get(index).setForeColor(Color.parseColor(color));
-        return XMLPrefsManager.set(file, NAME, name, new String[]{FORECOLOR_ATTRIBUTE}, new String[]{color});
+        return XMLPrefsManager.set(file, name, new String[]{FORECOLOR_ATTRIBUTE}, new String[]{color});
     }
 
     public String removeGroup(String name) {
-        String output = XMLPrefsManager.removeNode(file, NAME, name);
+        String output = XMLPrefsManager.removeNode(file, name);
 
         if(output == null) return null;
         if(output.length() == 0) return context.getString(R.string.output_groupnotfound);
@@ -539,7 +553,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     public String addAppToGroup(String group, LaunchInfo app) {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, NAME);
+            o = XMLPrefsManager.buildDocument(file, null);
+            if(o == null) {
+                Tuils.sendXMLParseError(context, PATH);
+                return null;
+            }
         } catch (Exception e) {
             return e.toString();
         }
@@ -571,7 +589,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     public String removeAppFromGroup(String group, LaunchInfo app) {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, NAME);
+            o = XMLPrefsManager.buildDocument(file, null);
+            if(o == null) {
+                Tuils.sendXMLParseError(context, PATH);
+                return null;
+            }
         } catch (Exception e) {
             return e.toString();
         }
@@ -653,7 +675,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     public String listGroup(String group) {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, NAME);
+            o = XMLPrefsManager.buildDocument(file, null);
+            if(o == null) {
+                Tuils.sendXMLParseError(context, PATH);
+                return null;
+            }
         } catch (Exception e) {
             return e.toString();
         }
@@ -701,7 +727,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     public String listGroups() {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, NAME);
+            o = XMLPrefsManager.buildDocument(file, null);
+            if(o == null) {
+                Tuils.sendXMLParseError(context, PATH);
+                return null;
+            }
         } catch (Exception e) {
             return e.toString();
         }
@@ -740,8 +770,58 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public String printApps(int type) {
+        return printNApps(type, -1);
+    }
+
+    public String printApps(int type, String text) {
+        boolean ok;
+        int length = 0;
+        try {
+            length = Integer.parseInt(text);
+            ok = true;
+        } catch (NumberFormatException exc) {
+            ok = false;
+        }
+
+        if(ok) {
+            return printNApps(type, length);
+        } else {
+            return printAppsThatBegins(type, text);
+        }
+    }
+
+    private String printNApps(int type, int n) {
         try {
             List<String> labels = AppUtils.labelList(type == SHOWN_APPS ? appsHolder.getApps() : hiddenApps, true);
+
+            if(n >= 0) {
+                int toRemove = labels.size() - n;
+                if(toRemove <= 0) return "[]";
+
+                for(int c = 0; c < toRemove; c++) {
+                    labels.remove(labels.size() - 1);
+                }
+            }
+
+            return AppUtils.printApps(labels);
+        } catch (NullPointerException e) {
+            return "[]";
+        }
+    }
+
+    private String printAppsThatBegins(int type, String with) {
+        try {
+            List<String> labels = AppUtils.labelList(type == SHOWN_APPS ? appsHolder.getApps() : hiddenApps, true);
+
+            if(with != null && with.length() > 0) {
+                with = with.toLowerCase();
+
+                Iterator<String> it = labels.iterator();
+                while(it.hasNext()) {
+                    if(!it.next().toLowerCase().startsWith(with)) it.remove();
+                }
+            }
+
             return AppUtils.printApps(labels);
         } catch (NullPointerException e) {
             return "[]";
@@ -853,12 +933,13 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
 
         public ComponentName componentName;
 
-        public String publicLabel;
+        public String publicLabel, unspacedLowercaseLabel;
         public int launchedTimes = 0;
 
         public LaunchInfo(String packageName, String activityName, String label) {
             this.componentName = new ComponentName(packageName, activityName);
             this.publicLabel = label;
+            this.unspacedLowercaseLabel = Tuils.removeSpaces(this.publicLabel).toLowerCase();
         }
 
         public boolean isInside(String apps) {
@@ -1196,17 +1277,15 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             return null;
         }
 
-        private static Pattern removeSpacePattern = Pattern.compile("\\s+");
         public static LaunchInfo findLaunchInfoWithLabel(List<LaunchInfo> appList, String label) {
-            label = removeSpacePattern.matcher(label).replaceAll(Tuils.EMPTYSTRING);
-            for(LaunchInfo i : appList) if(removeSpacePattern.matcher(i.publicLabel).replaceAll(Tuils.EMPTYSTRING).equalsIgnoreCase(label)) return i;
+            label = Tuils.removeSpaces(label);
+            for(LaunchInfo i : appList) if(i.unspacedLowercaseLabel.equalsIgnoreCase(label)) return i;
             return null;
         }
 
         private static List<LaunchInfo> findLaunchInfosWithPackage(String packageName, List<LaunchInfo> infos) {
             List<LaunchInfo> result = new ArrayList<>();
             for(LaunchInfo info : infos) if (info.componentName.getPackageName().equals(packageName)) result.add(info);
-
             return result;
         }
 

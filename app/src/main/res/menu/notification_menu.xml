@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/exclude_app" android:title="@string/exclude_app"/>
+    <item android:id="@+id/exclude_notification" android:title="@string/exclude_notification"/>
+</menu>

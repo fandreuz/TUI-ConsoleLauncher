@@ -58,15 +58,15 @@ public class MessagesManager {
                 return;
             }
 
-            Tuils.sendOutput(color, context, MARKER + Tuils.NEWLINE + copy.remove(index).msg + Tuils.NEWLINE + MARKER);
+            Tuils.sendOutput(color, context, MARKER + Tuils.NEWLINE + context.getString(copy.remove(index).msg) + Tuils.NEWLINE + MARKER);
         }
     }
 
     public static class Message {
-        String msg;
+        int msg;
 //        more coming
 
-        public Message(String msg) {
+        public Message(int msg) {
             this.msg = msg;
         }
     }

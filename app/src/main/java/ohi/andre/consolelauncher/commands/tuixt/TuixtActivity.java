@@ -34,6 +34,7 @@ import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
+import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -199,7 +200,7 @@ public class TuixtActivity extends Activity {
         pack = new TuixtPack(group, file, this, fileView);
 
         fileView.setText(getString(R.string.tuixt_reading) + Tuils.SPACE + path);
-        new Thread() {
+        new StoppableThread() {
 
             @Override
             public void run() {
