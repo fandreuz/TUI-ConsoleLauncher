@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher.managers;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.SpannableString;
 
 import org.w3c.dom.Document;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -47,7 +49,13 @@ public class RegexManager {
                 super.run();
 
                 try {
-                    File file = new File(Tuils.getFolder(), PATH);
+                    File root = Tuils.getFolder();
+                    if(root == null) {
+                        Tuils.sendOutput(Color.RED, context, R.string.tuinotfound_rss);
+                        return;
+                    }
+
+                    File file = new File(root, PATH);
                     if(!file.exists()) {
                         file.createNewFile();
                         XMLPrefsManager.resetFile(file, ROOT);

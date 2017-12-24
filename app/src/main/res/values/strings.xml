@@ -43,6 +43,12 @@
     <string name="permissions_toast">You have to grant Storage permission</string>
     <string name="output_usedefapp">You can use "apps -default_app" instead</string>
 
+    <!-- tui folder not found -->
+    <string name="tuinotfound_app">Your apps preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
+    <string name="tuinotfound_rss">Your rss preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
+    <string name="tuinotfound_notifications">Your notifications preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
+    <string name="tuinotfound_xmlprefs">Your xml preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
+
     <!-- hints -->
     <string name="hint_donate">\nDo you like my work?\nIf yes, rate t-ui on Play Store (cmd: $ rate) or offer me a coffee (cmd: $ donate). Thank you!</string>
     <string name="hint_twitter">Did you know? t-ui is on Twitter. You can have a look with the cmd \"$ tui -twitter\"</string>

@@ -146,7 +146,10 @@ public class AliasManager implements Reloadable {
         if(aliases != null) aliases.clear();
         else aliases = new ArrayList<>();
 
-        File file = new File(Tuils.getFolder(), PATH);
+        File root = Tuils.getFolder();
+        if(root == null) return;
+
+        File file = new File(root, PATH);
 
         try {
             if(!file.exists()) file.createNewFile();

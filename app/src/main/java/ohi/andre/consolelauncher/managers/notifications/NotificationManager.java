@@ -2,6 +2,7 @@ package ohi.andre.consolelauncher.managers.notifications;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
 
 import org.w3c.dom.Document;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.RegexManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
@@ -78,7 +80,13 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         values = new XMLPrefsManager.XMLPrefsList();
 
         try {
-            File file = new File(Tuils.getFolder(), PATH);
+            File r = Tuils.getFolder();
+            if(r == null) {
+                Tuils.sendOutput(Color.RED, context, R.string.tuinotfound_notifications);
+                return;
+            }
+
+            File file = new File(r, PATH);
             if(!file.exists()) {
                 resetFile(file, NAME);
             }

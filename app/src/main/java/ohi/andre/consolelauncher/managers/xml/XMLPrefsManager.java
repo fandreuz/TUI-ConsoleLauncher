@@ -25,6 +25,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Cmd;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
@@ -201,6 +202,10 @@ public class XMLPrefsManager {
         called = true;
 
         File folder = Tuils.getFolder();
+        if(folder == null) {
+            Tuils.sendOutput(Color.RED, context, R.string.tuinotfound_xmlprefs);
+            return;
+        }
 
         for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
             File file = new File(folder, element.path);
@@ -544,7 +549,6 @@ public class XMLPrefsManager {
             Element root = (Element) o[1];
 
             if(d == null || root == null) {
-                Tuils.log("document is null or root is null");
                 return Tuils.EMPTYSTRING;
             }
 
@@ -760,14 +764,13 @@ public class XMLPrefsManager {
 
     public static <T> T get(Class<T> c, XMLPrefsManager.XMLPrefsSave prefsSave) {
         try {
-            Tuils.log("list", prefsSave.parent().getValues().values().toString());
             return (T) transform(prefsSave.parent().getValues().get(prefsSave).value, c);
         } catch (Exception e) {
-            Tuils.log(e);
+//            this will happen if the option is not found
             try {
                 return (T) transform(prefsSave.defaultValue(), c);
             } catch (Exception e1) {
-                Tuils.log(e1);
+//                attempts to get a default value for the given type, as we say in italian, "the last beach"
                 return Tuils.getDefaultValue(c);
             }
         }

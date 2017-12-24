@@ -234,8 +234,8 @@ public class NotificationService extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
 
-        NotificationManager.create(this);
         try {
+            NotificationManager.create(this);
             XMLPrefsManager.create(this);
         } catch (Exception e) {
             return;

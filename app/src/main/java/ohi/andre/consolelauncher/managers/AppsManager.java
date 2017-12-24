@@ -132,7 +132,9 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             pn = null;
         }
 
-        this.file = new File(Tuils.getFolder(), PATH);
+        File root = Tuils.getFolder();
+        if(root == null) this.file = null;
+        else this.file = new File(root, PATH);
 
         this.preferences = context.getSharedPreferences(PREFS, 0);
         this.editor = preferences.edit();
@@ -170,148 +172,152 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         try {
             defaultApps = new XMLPrefsManager.XMLPrefsList();
 
-            if(!file.exists()) {
-                resetFile(file, NAME);
-            }
+            if(file != null) {
+                if(!file.exists()) {
+                    resetFile(file, NAME);
+                }
 
-            Object[] o;
-            try {
-                o = XMLPrefsManager.buildDocument(file, NAME);
-                if(o == null) {
-                    Tuils.sendXMLParseError(context, PATH);
+                Object[] o;
+                try {
+                    o = XMLPrefsManager.buildDocument(file, NAME);
+                    if(o == null) {
+                        Tuils.sendXMLParseError(context, PATH);
+                        return;
+                    }
+                } catch (Exception e) {
+                    Tuils.sendXMLParseError(context, PATH, e);
                     return;
                 }
-            } catch (Exception e) {
-                Tuils.sendXMLParseError(context, PATH, e);
-                return;
-            }
 
-            Document d = (Document) o[0];
-            Element root = (Element) o[1];
+                Document d = (Document) o[0];
+                Element root = (Element) o[1];
 
-            List<Apps> enums = new ArrayList<>(Arrays.asList(Apps.values()));
-            NodeList nodes = root.getElementsByTagName("*");
+                List<Apps> enums = new ArrayList<>(Arrays.asList(Apps.values()));
+                NodeList nodes = root.getElementsByTagName("*");
 
-            for (int count = 0; count < nodes.getLength(); count++) {
-                final Node node = nodes.item(count);
+                for (int count = 0; count < nodes.getLength(); count++) {
+                    final Node node = nodes.item(count);
 
-                String nn = node.getNodeName();
-                int nodeIndex = Tuils.find(nn, (List) enums);
-                if (nodeIndex != -1) {
-                    defaultApps.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
+                    String nn = node.getNodeName();
+                    int nodeIndex = Tuils.find(nn, (List) enums);
+                    if (nodeIndex != -1) {
+                        defaultApps.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
 
-                    for (int en = 0; en < enums.size(); en++) {
-                        if (enums.get(en).label().equals(nn)) {
-                            enums.remove(en);
-                            break;
+                        for (int en = 0; en < enums.size(); en++) {
+                            if (enums.get(en).label().equals(nn)) {
+                                enums.remove(en);
+                                break;
+                            }
                         }
                     }
-                }
 //                todo support delete
-                else {
-                    if (node.getNodeType() == Node.ELEMENT_NODE) {
-                        final Element e = (Element) node;
+                    else {
+                        if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            final Element e = (Element) node;
 
-                        if(e.hasAttribute(APPS_ATTRIBUTE)) {
-                            final String name = e.getNodeName();
-                            if(name.contains(Tuils.SPACE)) {
-                                Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_groupspace) + ": " + name);
-                                continue;
-                            }
-
-                            new StoppableThread() {
-                                @Override
-                                public void run() {
-                                    super.run();
-
-                                    Group g = new Group(name);
-
-                                    String apps = e.getAttribute(APPS_ATTRIBUTE);
-                                    String[] split = apps.split(APPS_SEPARATOR);
-
-                                    List<LaunchInfo> as = new ArrayList<>(allApps);
-
-                                    External:
-                                    for(String s : split) {
-                                        for(int c = 0; c < as.size(); c++) {
-                                            if(as.get(c).equals(s)) {
-                                                g.add(as.remove(c));
-                                                continue External;
-                                            }
-                                        }
-                                    }
-
-                                    if(e.hasAttribute(BGCOLOR_ATTRIBUTE)) {
-                                        String c = e.getAttribute(BGCOLOR_ATTRIBUTE);
-                                        if(c.length() > 0) {
-                                            try {
-                                                g.setBgColor(Color.parseColor(c));
-                                            } catch (Exception e) {
-                                                Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
-                                            }
-                                        }
-                                    }
-
-                                    if(e.hasAttribute(FORECOLOR_ATTRIBUTE)) {
-                                        String c = e.getAttribute(FORECOLOR_ATTRIBUTE);
-                                        if(c.length() > 0) {
-                                            try {
-                                                g.setForeColor(Color.parseColor(c));
-                                            } catch (Exception e) {
-                                                Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
-                                            }
-                                        }
-                                    }
-
-                                    groups.add(g);
-                                }
-                            }.start();
-                        } else {
-                            boolean shown = !e.hasAttribute(SHOW_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(SHOW_ATTRIBUTE));
-                            if (!shown) {
-                                ComponentName name = null;
-
-                                String[] split = nn.split("-");
-                                if (split.length >= 2) {
-                                    name = new ComponentName(split[0], split[1]);
-                                } else if (split.length == 1) {
-                                    if (split[0].contains("Activity")) {
-                                        for (LaunchInfo i : allApps) {
-                                            if (i.componentName.getClassName().equals(split[0]))
-                                                name = i.componentName;
-                                        }
-                                    } else {
-                                        for (LaunchInfo i : allApps) {
-                                            if (i.componentName.getPackageName().equals(split[0]))
-                                                name = i.componentName;
-                                        }
-                                    }
+                            if(e.hasAttribute(APPS_ATTRIBUTE)) {
+                                final String name = e.getNodeName();
+                                if(name.contains(Tuils.SPACE)) {
+                                    Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_groupspace) + ": " + name);
+                                    continue;
                                 }
 
-                                if (name == null) continue;
+                                new StoppableThread() {
+                                    @Override
+                                    public void run() {
+                                        super.run();
 
-                                LaunchInfo removed = AppUtils.findLaunchInfoWithComponent(allApps, name);
-                                if (removed != null) {
-                                    allApps.remove(removed);
-                                    hiddenApps.add(removed);
+                                        Group g = new Group(name);
+
+                                        String apps = e.getAttribute(APPS_ATTRIBUTE);
+                                        String[] split = apps.split(APPS_SEPARATOR);
+
+                                        List<LaunchInfo> as = new ArrayList<>(allApps);
+
+                                        External:
+                                        for(String s : split) {
+                                            for(int c = 0; c < as.size(); c++) {
+                                                if(as.get(c).equals(s)) {
+                                                    g.add(as.remove(c));
+                                                    continue External;
+                                                }
+                                            }
+                                        }
+
+                                        if(e.hasAttribute(BGCOLOR_ATTRIBUTE)) {
+                                            String c = e.getAttribute(BGCOLOR_ATTRIBUTE);
+                                            if(c.length() > 0) {
+                                                try {
+                                                    g.setBgColor(Color.parseColor(c));
+                                                } catch (Exception e) {
+                                                    Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
+                                                }
+                                            }
+                                        }
+
+                                        if(e.hasAttribute(FORECOLOR_ATTRIBUTE)) {
+                                            String c = e.getAttribute(FORECOLOR_ATTRIBUTE);
+                                            if(c.length() > 0) {
+                                                try {
+                                                    g.setForeColor(Color.parseColor(c));
+                                                } catch (Exception e) {
+                                                    Tuils.sendOutput(Color.RED, context, PATH + ": " + context.getString(R.string.output_invalidcolor) + ": " + c);
+                                                }
+                                            }
+                                        }
+
+                                        groups.add(g);
+                                    }
+                                }.start();
+                            } else {
+                                boolean shown = !e.hasAttribute(SHOW_ATTRIBUTE) || Boolean.parseBoolean(e.getAttribute(SHOW_ATTRIBUTE));
+                                if (!shown) {
+                                    ComponentName name = null;
+
+                                    String[] split = nn.split("-");
+                                    if (split.length >= 2) {
+                                        name = new ComponentName(split[0], split[1]);
+                                    } else if (split.length == 1) {
+                                        if (split[0].contains("Activity")) {
+                                            for (LaunchInfo i : allApps) {
+                                                if (i.componentName.getClassName().equals(split[0]))
+                                                    name = i.componentName;
+                                            }
+                                        } else {
+                                            for (LaunchInfo i : allApps) {
+                                                if (i.componentName.getPackageName().equals(split[0]))
+                                                    name = i.componentName;
+                                            }
+                                        }
+                                    }
+
+                                    if (name == null) continue;
+
+                                    LaunchInfo removed = AppUtils.findLaunchInfoWithComponent(allApps, name);
+                                    if (removed != null) {
+                                        allApps.remove(removed);
+                                        hiddenApps.add(removed);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (enums.size() > 0) {
-                for (XMLPrefsManager.XMLPrefsSave s : enums) {
-                    String value = s.defaultValue();
+                if (enums.size() > 0) {
+                    for (XMLPrefsManager.XMLPrefsSave s : enums) {
+                        String value = s.defaultValue();
 
-                    Element em = d.createElement(s.label());
-                    em.setAttribute(VALUE_ATTRIBUTE, value);
-                    root.appendChild(em);
+                        Element em = d.createElement(s.label());
+                        em.setAttribute(VALUE_ATTRIBUTE, value);
+                        root.appendChild(em);
 
-                    defaultApps.add(s.label(), value);
+                        defaultApps.add(s.label(), value);
+                    }
+                    writeTo(d, file);
                 }
-                writeTo(d, file);
+            } else {
+                Tuils.sendOutput(Color.RED, context, R.string.tuinotfound_app);
             }
 
             for (Map.Entry<String, ?> entry : this.preferences.getAll().entrySet()) {

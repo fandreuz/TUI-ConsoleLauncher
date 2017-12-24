@@ -105,6 +105,9 @@ public class Tuils {
             if(systemFont) globalTypeface = Typeface.DEFAULT;
             else {
                 File tui = Tuils.getFolder();
+                if(tui == null) {
+                    return systemFont ? Typeface.DEFAULT : Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+                }
 
                 File font = null;
                 for(File f : tui.listFiles()) {
@@ -1081,12 +1084,13 @@ public class Tuils {
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
-    private static final int FILEUPDATE_DELAY = 75;
+    private static final int FILEUPDATE_DELAY = 100;
     private static File folder = null;
     public static File getFolder() {
         if(folder != null) return folder;
 
-        while (true) {
+        int elapsedTime = 0;
+        while (elapsedTime < 3500) {
             File tuiFolder = Tuils.getTuiFolder();
             if(tuiFolder != null && ((tuiFolder.exists() && tuiFolder.isDirectory()) || tuiFolder.mkdir())) {
                 folder = tuiFolder;
@@ -1096,7 +1100,11 @@ public class Tuils {
             try {
                 Thread.sleep(FILEUPDATE_DELAY);
             } catch (InterruptedException e) {}
+
+            elapsedTime += FILEUPDATE_DELAY;
         }
+
+        return null;
     }
 
     public static int alphabeticCompare(String s1, String s2) {
