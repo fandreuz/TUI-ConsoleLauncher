@@ -190,7 +190,7 @@ public class rss extends ParamCommand {
                 if(value == null) return pack.context.getString(R.string.rss_never_checked);
 
                 try {
-                    return TimeManager.replace(XMLPrefsManager.get(Rss.rss_time_format), Long.parseLong(value),
+                    return TimeManager.instance.replace(XMLPrefsManager.get(Rss.rss_time_format), Long.parseLong(value),
                             Integer.MAX_VALUE).toString();
                 } catch (Exception e) {
                     Tuils.log(e);

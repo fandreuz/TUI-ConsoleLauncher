@@ -79,7 +79,7 @@ public class TuixtActivity extends Activity {
         CommandGroup group = new CommandGroup(this, "ohi.andre.consolelauncher.commands.tuixt.raw");
 
         try {
-            XMLPrefsManager.create(this);
+            XMLPrefsManager.loadCommons(this);
         } catch (Exception e) {
             finish();
         }

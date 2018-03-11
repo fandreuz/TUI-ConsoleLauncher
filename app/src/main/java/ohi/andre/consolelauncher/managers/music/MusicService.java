@@ -17,12 +17,14 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.RemoteInput;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import ohi.andre.consolelauncher.LauncherActivity;
+import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
+import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
+import ohi.andre.consolelauncher.tuils.PublicIOReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class MusicService extends Service implements
@@ -35,16 +37,40 @@ public class MusicService extends Service implements
     private List<Song> songs;
     private int songPosn;
     private final IBinder musicBind = new MusicBinder();
-    private String songTitle="";
+    private String songTitle = Tuils.EMPTYSTRING;
     private boolean shuffle=false;
-    private Random rand;
+
+    private long lastNotificationChange;
+
+//    do not touch the song playback from here
 
     public void onCreate(){
         super.onCreate();
         songPosn=0;
-        rand=new Random();
         player = new MediaPlayer();
         initMusicPlayer();
+
+        lastNotificationChange = System.currentTimeMillis();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if(System.currentTimeMillis() - lastNotificationChange < 500 || songTitle == null || songTitle.length() == 0) return super.onStartCommand(intent, flags, startId);
+
+        lastNotificationChange = System.currentTimeMillis();
+        startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle));
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        if(songTitle == null || songTitle.length() == 0) return;
+
+        lastNotificationChange = System.currentTimeMillis();
+
+        mp.start();
+        startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle));
     }
 
     public void initMusicPlayer(){
@@ -55,8 +81,9 @@ public class MusicService extends Service implements
         player.setOnErrorListener(this);
     }
 
-    public void setList(List<Song> theSongs){
-        songs=theSongs;
+    public void setList(List<Song> theSongs) {
+        songs = theSongs;
+        if(shuffle) Collections.shuffle(songs);
     }
 
     public class MusicBinder extends Binder {
@@ -78,7 +105,10 @@ public class MusicService extends Service implements
     public String playSong(){
         try {
             player.reset();
-        } catch (Exception e) {}
+        } catch (Exception e) {
+//            no need to log this error, as this will occur everytime
+            Tuils.log(e);
+        }
 
         Song playSong = songs.get(songPosn);
 
@@ -111,7 +141,7 @@ public class MusicService extends Service implements
     }
 
     public void setSong(int songIndex){
-        songPosn=songIndex;
+        songPosn = songIndex;
     }
 
     @Override
@@ -128,12 +158,6 @@ public class MusicService extends Service implements
         return false;
     }
 
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        mp.start();
-        startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle));
-    }
-
     public static Notification buildNotification(Context context, String songTitle) {
         Intent notIntent = new Intent(context, LauncherActivity.class);
         PendingIntent pendInt = PendingIntent.getActivity(context, 0, notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -147,14 +171,14 @@ public class MusicService extends Service implements
                 .setContentTitle("Playing")
                 .setContentText(songTitle);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             String label = "cmd";
-            RemoteInput remoteInput = new RemoteInput.Builder(InputOutputReceiver.TEXT)
+            RemoteInput remoteInput = new RemoteInput.Builder(PrivateIOReceiver.TEXT)
                     .setLabel(label)
                     .build();
 
-            Intent i = new Intent(InputOutputReceiver.ACTION_CMD);
-            i.putExtra(InputOutputReceiver.WAS_KEY, InputOutputReceiver.WAS_MUSIC_SERVICE);
+            Intent i = new Intent(PublicIOReceiver.ACTION_CMD);
+            i.putExtra(MainManager.MUSIC_SERVICE, true);
 
             NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.mipmap.ic_launcher, label,
                     PendingIntent.getBroadcast(context.getApplicationContext(), 10, i, PendingIntent.FLAG_UPDATE_CURRENT))
@@ -211,25 +235,27 @@ public class MusicService extends Service implements
     }
 
     public String playPrev(){
-        songPosn--;
-        if(songPosn<0) songPosn=songs.size()-1;
+        if(songs.size() == 0) return getString(R.string.no_songs);
+        songPosn = previous();
         return playSong();
     }
 
-    public String playNext(){
-        if(shuffle){
-            int newSong = songPosn;
-            while(newSong==songPosn){
-                newSong=rand.nextInt(songs.size());
-            }
-            songPosn=newSong;
-        }
-        else{
-            songPosn++;
-            if(songPosn>=songs.size()) songPosn=0;
-        }
-
+    public String playNext() {
+        if(songs.size() == 0) return getString(R.string.no_songs);
+        songPosn = next();
         return playSong();
+    }
+
+    private int next() {
+        int pos = songPosn + 1;
+        if(pos == songs.size()) pos = 0;
+        return pos;
+    }
+
+    private int previous() {
+        int pos = songPosn - 1;
+        if(pos < 0) pos = songs.size() - 1;
+        return pos;
     }
 
     public int getSongIndex() {
@@ -239,6 +265,10 @@ public class MusicService extends Service implements
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        player.release();
+        songs.clear();
+
         stopForeground(true);
     }
 

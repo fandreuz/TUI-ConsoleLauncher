@@ -1,12 +1,14 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Cmd implements XMLPrefsManager.XMLPrefsSave {
+public enum Cmd implements XMLPrefsSave {
 
     default_search {
         @Override
@@ -21,12 +23,12 @@ public enum Cmd implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.TEXT;
+            return XMLPrefsSave.TEXT;
         }
     };
 
     @Override
-    public XMLPrefsManager.XmlPrefsElement parent() {
+    public XMLPrefsElement parent() {
         return XMLPrefsManager.XMLPrefsRoot.CMD;
     }
 

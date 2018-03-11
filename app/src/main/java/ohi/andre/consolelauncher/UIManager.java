@@ -4,20 +4,24 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.util.Xml;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.Gravity;
@@ -34,6 +38,8 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,9 +50,11 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.MessagesManager;
+import ohi.andre.consolelauncher.managers.NotesManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
+import ohi.andre.consolelauncher.managers.suggestions.SuggestionTextWatcher;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
@@ -59,15 +67,20 @@ import ohi.andre.consolelauncher.tuils.NetworkUtils;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
-import ohi.andre.consolelauncher.tuils.interfaces.Hintable;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
-import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.interfaces.SuggestionViewDecorer;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 import ohi.andre.consolelauncher.tuils.stuff.TrashInterfaces;
 
 public class UIManager implements OnTouchListener {
+
+    public static String ACTION_UPDATE_SUGGESTIONS = BuildConfig.APPLICATION_ID + ".ui_update_suggestions", ACTION_UPDATE_HINT = BuildConfig.APPLICATION_ID + ".ui_update_hint",
+        ACTION_ROOT = BuildConfig.APPLICATION_ID + ".ui_root", ACTION_NOROOT = BuildConfig.APPLICATION_ID + ".ui_noroot",
+        ACTION_LOGTOFILE = BuildConfig.APPLICATION_ID + ".ui_log", ACTION_CLEAR = BuildConfig.APPLICATION_ID + "ui_clear";
+
+    public static String
+            FILE_NAME = "fileName";
 
     private enum Label {
         ram,
@@ -75,11 +88,8 @@ public class UIManager implements OnTouchListener {
         time,
         battery,
         storage,
-        network;
-
-        static Label last() {
-            return network;
-        }
+        network,
+        notes;
     }
 
     private final int RAM_DELAY = 3000;
@@ -88,43 +98,57 @@ public class UIManager implements OnTouchListener {
 
     protected Context mContext;
 
+    private Handler handler;
+
     private DevicePolicyManager policy;
     private ComponentName component;
     private GestureDetector det;
-    private MainPack info;
 
     private InputMethodManager imm;
-    private CommandExecuter trigger;
     private TerminalManager mTerminalAdapter;
 
     int mediumPercentage, lowPercentage;
     String batteryFormat;
-//    boolean batteryCharging;
 
-    private String multipleCmdSeparator;
+//    never access this directly, use getLabelView
+    private TextView[] labelViews = new TextView[Label.values().length];
 
-    private OnNewInputListener inputListener = new OnNewInputListener() {
+    private float[] labelIndexes = new float[labelViews.length];
+    private int[] labelSizes = new int[labelViews.length];
+    private CharSequence[] labelTexts = new CharSequence[labelViews.length];
+
+    private TextView getLabelView(Label l) {
+        return labelViews[(int) labelIndexes[l.ordinal()]];
+    }
+
+    private NotesManager notesManager;
+    private NotesRunnable notesRunnable;
+    private class NotesRunnable implements Runnable {
+
+        int updateTime = 2000;
+
         @Override
-        public void onNewInput(String input, Object obj) {
-            if(suggestionsView != null) {
-                suggestionsView.removeAllViews();
-            }
+        public void run() {
+            if(notesManager != null) {
+                int i = Label.notes.ordinal();
 
-            trigger.exec(input, obj);
+                if(notesManager.hasChanged) {
+                    labelTexts[i] = Tuils.span(mContext, labelSizes[i], notesManager.getNotes());
+                    UIManager.this.update(labelIndexes[i]);
+                }
+
+                handler.postDelayed(this, updateTime);
+            }
         }
     };
 
-    private TextView[] labelViews = new TextView[Label.last().ordinal() + 1];
-    private int[] labelSizes = new int[Label.last().ordinal() + 1];
-    private CharSequence[] labelTexts = new CharSequence[Label.last().ordinal() + 1];
-    private float[] labelIndexes = new float[Label.last().ordinal() + 1];
-
-    private OnBatteryUpdate batteryUpdate = new OnBatteryUpdate() {
+    private BatteryUpdate batteryUpdate;
+    private class BatteryUpdate implements OnBatteryUpdate {
 
 //        %(charging:not charging)
 
-        final Pattern optionalCharging = Pattern.compile("%\\(([^\\/]*)\\/([^)]*)\\)", Pattern.CASE_INSENSITIVE);
-        final Pattern newline = Pattern.compile("%n", Pattern.LITERAL | Pattern.CASE_INSENSITIVE);
+//        final Pattern optionalCharging = Pattern.compile("%\\(([^\\/]*)\\/([^)]*)\\)", Pattern.CASE_INSENSITIVE);
+        Pattern optionalCharging;
         final Pattern value = Pattern.compile("%v", Pattern.LITERAL | Pattern.CASE_INSENSITIVE);
 
         boolean manyStatus, loaded;
@@ -144,6 +168,10 @@ public class UIManager implements OnTouchListener {
                     int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
                     charging = plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB;
                 }
+
+                String optionalSeparator = "\\" + XMLPrefsManager.get(Behavior.optional_values_separator);
+                String optional = "%\\(([^" + optionalSeparator + "]*)" + optionalSeparator + "([^)]*)\\)";
+                optionalCharging = Pattern.compile(optional, Pattern.CASE_INSENSITIVE);
             }
 
             if(p == -1) p = last;
@@ -178,7 +206,7 @@ public class UIManager implements OnTouchListener {
             }
 
             cp = value.matcher(cp).replaceAll(String.valueOf(percentage));
-            cp = newline.matcher(cp).replaceAll(Tuils.NEWLINE);
+            cp = Tuils.patternNewline.matcher(cp).replaceAll(Tuils.NEWLINE);
 
             int i = Label.battery.ordinal();
 
@@ -199,7 +227,8 @@ public class UIManager implements OnTouchListener {
         }
     };
 
-    private Runnable storageRunnable = new Runnable() {
+    private StorageRunnable storageRunnable;
+    private class StorageRunnable implements Runnable {
 
         private final String INT_AV = "%iav";
         private final String INT_TOT = "%itot";
@@ -247,7 +276,7 @@ public class UIManager implements OnTouchListener {
                 storagePatterns.add(Pattern.compile(EXT_TOT + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
                 storagePatterns.add(Pattern.compile(EXT_TOT + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                storagePatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                storagePatterns.add(Tuils.patternNewline);
 
                 storagePatterns.add(Pattern.compile(INT_AV, Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
                 storagePatterns.add(Pattern.compile(INT_TOT, Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
@@ -299,11 +328,12 @@ public class UIManager implements OnTouchListener {
 
             labelTexts[i] = Tuils.span(mContext, copy, color, labelSizes[i]);
             update(labelIndexes[i]);
-            labelViews[(int) labelIndexes[i]].postDelayed(this, STORAGE_DELAY);
+            handler.postDelayed(this, STORAGE_DELAY);
         }
     };
 
-    private Runnable timeRunnable = new Runnable() {
+    private TimeRunnable timeRunnable;
+    private class TimeRunnable implements Runnable {
 
         boolean active;
         int color;
@@ -317,17 +347,17 @@ public class UIManager implements OnTouchListener {
 
             int i = Label.time.ordinal();
 
-            labelTexts[i] = TimeManager.replace(mContext, labelSizes[i], "%t0", color);
+            labelTexts[i] = TimeManager.instance.replace(mContext, labelSizes[i], "%t0", color);
             update(labelIndexes[i]);
-            labelViews[(int) labelIndexes[i]].postDelayed(this, TIME_DELAY);
+            handler.postDelayed(this, TIME_DELAY);
         }
     };
 
     private ActivityManager.MemoryInfo memory;
     private ActivityManager activityManager;
 
-    private Runnable ramRunnable = new Runnable() {
-
+    private RamRunnable ramRunnable;
+    private class RamRunnable implements Runnable {
         private final String AV = "%av";
         private final String TOT = "%tot";
 
@@ -360,7 +390,7 @@ public class UIManager implements OnTouchListener {
                 ramPatterns.add(Pattern.compile(TOT + "kb", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
                 ramPatterns.add(Pattern.compile(TOT + "b", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
 
-                ramPatterns.add(Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL));
+                ramPatterns.add(Tuils.patternNewline);
             }
 
             String copy = ramFormat;
@@ -387,12 +417,12 @@ public class UIManager implements OnTouchListener {
 
             labelTexts[i] = Tuils.span(mContext, copy, color, labelSizes[i]);
             update(labelIndexes[i]);
-            labelViews[(int) labelIndexes[i]].postDelayed(this, RAM_DELAY);
+            handler.postDelayed(this, RAM_DELAY);
         }
     };
 
-    private Runnable networkRunnable = new Runnable() {
-
+    private Runnable networkRunnable;
+    private class NetworkRunnable implements Runnable {
 //        %() -> wifi
 //        %[] -> data
 //        %{} -> bluetooth
@@ -424,16 +454,17 @@ public class UIManager implements OnTouchListener {
         final Pattern b2 = Pattern.compile("%b2", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern b3 = Pattern.compile("%b3", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern b4 = Pattern.compile("%b4", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-        final Pattern nl = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern ip4 = Pattern.compile("%ip4", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern ip6 = Pattern.compile("%ip6", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern dt = Pattern.compile("%dt", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
-        final Pattern optionalWifi = Pattern.compile("%\\(([^/]*)/([^)]*)\\)", Pattern.CASE_INSENSITIVE);
-        final Pattern optionalData = Pattern.compile("%\\[([^/]*)/([^\\]]*)\\]", Pattern.CASE_INSENSITIVE);
-        final Pattern optionalBluetooth = Pattern.compile("%\\{([^/]*)/([^}]*)\\}", Pattern.CASE_INSENSITIVE);
+//        final Pattern optionalWifi = Pattern.compile("%\\(([^/]*)/([^)]*)\\)", Pattern.CASE_INSENSITIVE);
+//        final Pattern optionalData = Pattern.compile("%\\[([^/]*)/([^\\]]*)\\]", Pattern.CASE_INSENSITIVE);
+//        final Pattern optionalBluetooth = Pattern.compile("%\\{([^/]*)/([^}]*)\\}", Pattern.CASE_INSENSITIVE);
 
-        String format;
+        Pattern optionalWifi, optionalData, optionalBluetooth;
+
+        String format, optionalValueSeparator;
         int color;
 
         WifiManager wifiManager;
@@ -460,6 +491,16 @@ public class UIManager implements OnTouchListener {
                 connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
                 wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+                optionalValueSeparator = "\\" + XMLPrefsManager.get(Behavior.optional_values_separator);
+
+                String wifiRegex = "%\\(([^" + optionalValueSeparator + "]*)" + optionalValueSeparator + "([^)]*)\\)";
+                String dataRegex = "%\\[([^" + optionalValueSeparator + "]*)" + optionalValueSeparator + "([^\\]]*)\\]";
+                String bluetoothRegex = "%\\{([^" + optionalValueSeparator + "]*)" + optionalValueSeparator + "([^}]*)\\}";
+
+                optionalWifi = Pattern.compile(wifiRegex, Pattern.CASE_INSENSITIVE);
+                optionalBluetooth = Pattern.compile(bluetoothRegex, Pattern.CASE_INSENSITIVE);
+                optionalData = Pattern.compile(dataRegex, Pattern.CASE_INSENSITIVE);
 
                 try {
                     cmClass = Class.forName(connectivityManager.getClass().getName());
@@ -524,13 +565,13 @@ public class UIManager implements OnTouchListener {
             copy = ip4.matcher(copy).replaceAll(NetworkUtils.getIPAddress(true));
             copy = ip6.matcher(copy).replaceAll(NetworkUtils.getIPAddress(false));
             copy = dt.matcher(copy).replaceAll(mobileType);
-            copy = nl.matcher(copy).replaceAll(Tuils.NEWLINE);
+            copy = Tuils.patternNewline.matcher(copy).replaceAll(Tuils.NEWLINE);
 
             int i = Label.network.ordinal();
 
             labelTexts[i] = Tuils.span(mContext, copy, color, labelSizes[i]);
             update(labelIndexes[i]);
-            labelViews[i].postDelayed(this, updateTime);
+            handler.postDelayed(this, updateTime);
         }
 
         private String apply(int depth, String s, boolean[] on, Pattern... ps) {
@@ -576,7 +617,7 @@ public class UIManager implements OnTouchListener {
 
             return s;
         }
-    };
+    }
 
     private void update(float line) {
         int base = (int) line;
@@ -598,213 +639,82 @@ public class UIManager implements OnTouchListener {
             }
         }
 
-        labelViews[base].setText(sequence);
+        if(sequence.length() == 0) labelViews[base].setVisibility(View.GONE);
+        else {
+            labelViews[base].setVisibility(View.VISIBLE);
+            labelViews[base].setText(sequence);
+        }
     }
 
-    private boolean showSuggestions;
-    private LinearLayout suggestionsView;
-    private SuggestionViewDecorer suggestionViewDecorer;
-    private SuggestionRunnable suggestionRunnable;
-    private LinearLayout.LayoutParams suggestionViewParams;
     private SuggestionsManager suggestionsManager;
-//    private boolean navigatingWithSpace = false;
 
     private TextView terminalView;
-    private Thread lastSuggestionThread;
-    private Handler handler = new Handler();
-    private Runnable removeAllSuggestions = new Runnable() {
-        @Override
-        public void run() {
-            suggestionsView.removeAllViews();
-        }
-    };
 
     private String doubleTapCmd;
     private boolean lockOnDbTap;
 
-    protected TextWatcher textWatcher = new TextWatcher() {
+    private BroadcastReceiver receiver;
 
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
+    public MainPack pack;
 
-        @Override
-        public void onTextChanged(CharSequence s, int st, int b, int c) {
-            requestSuggestion(s.toString());
-        }
+    protected UIManager(final Context context, final ViewGroup rootView, MainPack mainPack, boolean canApplyTheme, CommandExecuter executer) {
 
-        @Override
-        public void afterTextChanged(Editable s) {}
-    };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_UPDATE_SUGGESTIONS);
+        filter.addAction(ACTION_UPDATE_HINT);
+        filter.addAction(ACTION_ROOT);
+        filter.addAction(ACTION_NOROOT);
+//        filter.addAction(ACTION_CLEAR_SUGGESTIONS);
+        filter.addAction(ACTION_LOGTOFILE);
+        filter.addAction(ACTION_CLEAR);
 
-    private View.OnClickListener clickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) v.getTag(R.id.suggestion_id);
-            boolean execOnClick = suggestion.exec;
-
-            String text = suggestion.getText();
-            String input = mTerminalAdapter.getInput();
-
-            if(suggestion.type == SuggestionsManager.Suggestion.TYPE_PERMANENT) {
-                mTerminalAdapter.setInput(input + text);
-            } else {
-                boolean addSpace = suggestion.type != SuggestionsManager.Suggestion.TYPE_FILE && suggestion.type != SuggestionsManager.Suggestion.TYPE_COLOR;
-
-                if(multipleCmdSeparator.length() > 0) {
-                    String[] split = input.split(multipleCmdSeparator);
-                    if(split.length == 0) return;
-                    if(split.length == 1) mTerminalAdapter.setInput(text + (addSpace ? Tuils.SPACE : Tuils.EMPTYSTRING), suggestion.object);
-                    else {
-                        split[split.length - 1] = Tuils.EMPTYSTRING;
-
-                        String beforeInputs = Tuils.EMPTYSTRING;
-                        for(int count = 0; count < split.length - 1; count++) {
-                            beforeInputs = beforeInputs + split[count] + multipleCmdSeparator;
-                        }
-
-                        mTerminalAdapter.setInput(beforeInputs + text + (addSpace ? Tuils.SPACE : Tuils.EMPTYSTRING), suggestion.object);
-                    }
-                } else {
-                    mTerminalAdapter.setInput(text + (addSpace ? Tuils.SPACE : Tuils.EMPTYSTRING), suggestion.object);
-                }
-            }
-
-            if (execOnClick) {
-                mTerminalAdapter.simulateEnter();
-            } else {
-                mTerminalAdapter.focusInputEnd();
-            }
-        }
-    };
-
-    public void requestSuggestion(final String input) {
-
-        if (suggestionsView == null || suggestionsManager == null || !showSuggestions) {
-            return;
-        }
-
-        if (suggestionViewParams == null) {
-            suggestionViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            suggestionViewParams.setMargins(15, 0, 15, 0);
-            suggestionViewParams.gravity = Gravity.CENTER_VERTICAL;
-        }
-
-        if(suggestionRunnable == null) {
-            suggestionRunnable = new SuggestionRunnable(suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent());
-        }
-
-        if (lastSuggestionThread != null) {
-            lastSuggestionThread.interrupt();
-            suggestionRunnable.interrupt();
-            if(handler != null) {
-                handler.removeCallbacks(suggestionRunnable);
-            }
-        }
-
-        lastSuggestionThread = new StoppableThread() {
+        receiver = new BroadcastReceiver() {
             @Override
-            public void run() {
-                super.run();
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
 
-                String before, lastWord;
-                String lastInput;
-                if(multipleCmdSeparator.length() > 0) {
-                    String[] split = input.split(multipleCmdSeparator);
-                    if(split.length == 0) lastInput = input;
-                    else lastInput = split[split.length - 1];
-                } else {
-                    lastInput = input;
-                }
+                if(action.equals(ACTION_UPDATE_SUGGESTIONS)) {
+                    if(suggestionsManager != null) suggestionsManager.requestSuggestion(Tuils.EMPTYSTRING);
+                } else if(action.equals(ACTION_UPDATE_HINT)) {
+                    mTerminalAdapter.setDefaultHint();
+                } else if(action.equals(ACTION_ROOT)) {
+                    mTerminalAdapter.onRoot();
+                } else if(action.equals(ACTION_NOROOT)) {
+                    mTerminalAdapter.onStandard();
+//                } else if(action.equals(ACTION_CLEAR_SUGGESTIONS)) {
+//                    if(suggestionsManager != null) suggestionsManager.clear();
+                } else if(action.equals(ACTION_LOGTOFILE)) {
+                    String fileName = intent.getStringExtra(FILE_NAME);
+                    if(fileName == null || fileName.contains(File.separator)) return;
 
-                int lastSpace = lastInput.lastIndexOf(Tuils.SPACE);
-                if(lastSpace == -1) {
-                    before = Tuils.EMPTYSTRING;
-                    lastWord = lastInput;
-                } else {
-                    before = lastInput.substring(0,lastSpace);
-                    lastWord = lastInput.substring(lastSpace + 1,lastInput.length());
-                }
+                    File file = new File(Tuils.getFolder(), fileName);
+                    if(file.exists()) file.delete();
 
+                    try {
+                        file.createNewFile();
 
-                final SuggestionsManager.Suggestion[] suggestions;
-                try {
-                    suggestions = suggestionsManager.getSuggestions(info, before, lastWord);
-                } catch (Exception e) {
-                    Tuils.log(e);
-                    Tuils.toFile(e);
-                    return;
-                }
+                        FileOutputStream fos = new FileOutputStream(file);
+                        fos.write(mTerminalAdapter.getTerminalText().getBytes());
 
-                if(suggestions.length == 0) {
-                    ((Activity) mContext).runOnUiThread(removeAllSuggestions);
-                    return;
-                }
-
-                if (Thread.interrupted()) {
-                    suggestionRunnable.interrupt();
-                    return;
-                }
-
-                final TextView[] existingViews = new TextView[suggestionsView.getChildCount()];
-                for (int count = 0; count < existingViews.length; count++) {
-                    existingViews[count] = (TextView) suggestionsView.getChildAt(count);
-                }
-
-                if (Thread.interrupted()) {
-                    suggestionRunnable.interrupt();
-                    return;
-                }
-
-                int n = suggestions.length - existingViews.length;
-                TextView[] toAdd = null;
-                TextView[] toRecycle = null;
-                if (n == 0) {
-                    toRecycle = existingViews;
-                    toAdd = null;
-                } else if (n > 0) {
-                    toRecycle = existingViews;
-                    toAdd = new TextView[n];
-                    for (int count = 0; count < toAdd.length; count++) {
-                        toAdd[count] = suggestionViewDecorer.getSuggestionView(mContext);
+                        Tuils.sendOutput(context, "Logged to " + file.getAbsolutePath());
+                    } catch (Exception e) {
+                        Tuils.sendOutput(Color.RED, context, e.toString());
                     }
-                } else if (n < 0) {
-                    toAdd = null;
-                    toRecycle = new TextView[suggestions.length];
-                    System.arraycopy(existingViews, 0, toRecycle, 0, toRecycle.length);
+                } else if(action.equals(ACTION_CLEAR)) {
+                    mTerminalAdapter.clear();
+                    if(suggestionsManager != null) suggestionsManager.requestSuggestion(Tuils.EMPTYSTRING);
                 }
-
-                if (Thread.interrupted()) {
-                    suggestionRunnable.interrupt();
-                    return;
-                }
-
-                suggestionRunnable.setN(n);
-                suggestionRunnable.setSuggestions(suggestions);
-                suggestionRunnable.setToAdd(toAdd);
-                suggestionRunnable.setToRecycle(toRecycle);
-                suggestionRunnable.reset();
-                ((Activity) mContext).runOnUiThread(suggestionRunnable);
             }
         };
 
-        try {
-            lastSuggestionThread.start();
-        } catch (InternalError e) {}
-    }
-
-    protected UIManager(final Context context, final ViewGroup rootView, final CommandExecuter tri, MainPack mainPack, boolean canApplyTheme) {
+        LocalBroadcastManager.getInstance(context.getApplicationContext()).registerReceiver(receiver, filter);
 
         policy = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
         component = new ComponentName(context, PolicyReceiver.class);
 
-        multipleCmdSeparator = XMLPrefsManager.get(Behavior.multiple_cmd_separator);
-//        selectFirstSuggestionEnter = XMLPrefsManager.get(boolean.class, XMLPrefsManager.Behavior.enter_first_suggestion);
-
         mContext = context;
-        this.info = mainPack;
 
-        trigger = tri;
+        handler = new Handler();
 
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
 
@@ -838,6 +748,7 @@ public class UIManager implements OnTouchListener {
         labelSizes[Label.battery.ordinal()] = XMLPrefsManager.getInt(Ui.battery_size);
         labelSizes[Label.storage.ordinal()] = XMLPrefsManager.getInt(Ui.storage_size);
         labelSizes[Label.network.ordinal()] = XMLPrefsManager.getInt(Ui.network_size);
+        labelSizes[Label.notes.ordinal()] = XMLPrefsManager.getInt(Ui.notes_size);
 
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
         rootView.setPadding(Tuils.mmToPx(metrics, leftMM), Tuils.mmToPx(metrics, topMM), Tuils.mmToPx(metrics, rightMM), Tuils.mmToPx(metrics, bottomMM));
@@ -848,35 +759,41 @@ public class UIManager implements OnTouchListener {
                 (TextView) rootView.findViewById(R.id.tv2),
                 (TextView) rootView.findViewById(R.id.tv3),
                 (TextView) rootView.findViewById(R.id.tv4),
-                (TextView) rootView.findViewById(R.id.tv5)
+                (TextView) rootView.findViewById(R.id.tv5),
+                (TextView) rootView.findViewById(R.id.tv6)
         };
 
-        boolean showRam = XMLPrefsManager.getBoolean(Ui.show_ram);
-        boolean showStorage = XMLPrefsManager.getBoolean(Ui.show_storage_info);
-        boolean showDevice = XMLPrefsManager.getBoolean(Ui.show_device_name);
-        boolean showTime = XMLPrefsManager.getBoolean(Ui.show_time);
-        boolean showBattery = XMLPrefsManager.getBoolean(Ui.show_battery);
-        boolean showNetwork = XMLPrefsManager.getBoolean(Ui.show_network_info);
+        boolean[] show = new boolean[Label.values().length];
+        show[Label.notes.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_notes);
+        show[Label.ram.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_ram);
+        show[Label.device.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_device_name);
+        show[Label.time.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_time);
+        show[Label.battery.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_battery);
+        show[Label.network.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_network_info);
+        show[Label.storage.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_storage_info);
 
-        float rIndex = showRam ? XMLPrefsManager.getFloat(Ui.ram_index) : Integer.MAX_VALUE;
-        float dIndex = showDevice ? XMLPrefsManager.getFloat(Ui.device_index) : Integer.MAX_VALUE;
-        float bIndex = showBattery ? XMLPrefsManager.getFloat(Ui.battery_index) : Integer.MAX_VALUE;
-        float tIndex = showTime ? XMLPrefsManager.getFloat(Ui.time_index) : Integer.MAX_VALUE;
-        float sIndex = showStorage ? XMLPrefsManager.getFloat(Ui.storage_index) : Integer.MAX_VALUE;
-        float nIndex = showNetwork ? XMLPrefsManager.getFloat(Ui.network_index) : Integer.MAX_VALUE;
+        float[] indexes = new float[Label.values().length];
+        indexes[Label.notes.ordinal()] = show[Label.notes.ordinal()] ? XMLPrefsManager.getFloat(Ui.notes_index) : Integer.MAX_VALUE;
+        indexes[Label.ram.ordinal()] = show[Label.ram.ordinal()] ? XMLPrefsManager.getFloat(Ui.ram_index) : Integer.MAX_VALUE;
+        indexes[Label.device.ordinal()] = show[Label.device.ordinal()] ? XMLPrefsManager.getFloat(Ui.device_index) : Integer.MAX_VALUE;
+        indexes[Label.time.ordinal()] = show[Label.time.ordinal()] ? XMLPrefsManager.getFloat(Ui.time_index) : Integer.MAX_VALUE;
+        indexes[Label.battery.ordinal()] = show[Label.battery.ordinal()] ? XMLPrefsManager.getFloat(Ui.battery_index) : Integer.MAX_VALUE;
+        indexes[Label.network.ordinal()] = show[Label.network.ordinal()] ? XMLPrefsManager.getFloat(Ui.network_index) : Integer.MAX_VALUE;
+        indexes[Label.storage.ordinal()] = show[Label.storage.ordinal()] ? XMLPrefsManager.getFloat(Ui.storage_index) : Integer.MAX_VALUE;
 
-        int[] pos = {
+        int[] alignment = {
                 XMLPrefsManager.getInt(Ui.status_line0_alignment),
                 XMLPrefsManager.getInt(Ui.status_line1_alignment),
                 XMLPrefsManager.getInt(Ui.status_line2_alignment),
                 XMLPrefsManager.getInt(Ui.status_line3_alignment),
                 XMLPrefsManager.getInt(Ui.status_line4_alignment),
-                XMLPrefsManager.getInt(Ui.status_line5_alignment)
+                XMLPrefsManager.getInt(Ui.status_line5_alignment),
+                XMLPrefsManager.getInt(Ui.status_line6_alignment)
         };
 
-        AllowEqualsSequence sequence = new AllowEqualsSequence(new float[] {rIndex, dIndex, bIndex, tIndex, sIndex, nIndex},
-                new Object[] {Label.ram, Label.device, Label.battery, Label.time, Label.storage, Label.network});
+        AllowEqualsSequence sequence = new AllowEqualsSequence(indexes, Label.values());
 
+        int effectiveCount = 0;
         for(int count = 0; count < labelViews.length; count++) {
             Object[] os = sequence.get(count);
 
@@ -893,28 +810,32 @@ public class UIManager implements OnTouchListener {
             if(count >= sequence.getMinKey() && count <= sequence.getMaxKey() && os.length > 0) {
                 labelViews[count].setTypeface(Tuils.getTypeface(context));
 
+                int ec = effectiveCount++;
+
 //                -1 = left     0 = center     1 = right
-                int p = pos[count];
+                int p = alignment[ec];
                 if(p >= 0) labelViews[count].setGravity(p == 0 ? Gravity.CENTER_HORIZONTAL : Gravity.RIGHT);
             } else {
                 labelViews[count].setVisibility(View.GONE);
             }
         }
 
-        if (showRam) {
+        if (show[Label.ram.ordinal()]) {
+            ramRunnable = new RamRunnable();
+
             memory = new ActivityManager.MemoryInfo();
             activityManager = (ActivityManager) context.getSystemService(Activity.ACTIVITY_SERVICE);
-            labelViews[Label.ram.ordinal()].post(ramRunnable);
+            handler.post(ramRunnable);
         }
 
-        if(showStorage) {
-            labelViews[Label.storage.ordinal()].post(storageRunnable);
+        if(show[Label.storage.ordinal()]) {
+            storageRunnable = new StorageRunnable();
+            handler.post(storageRunnable);
         }
 
-        if (showDevice) {
+        if (show[Label.device.ordinal()]) {
             Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
             Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-            Pattern NEWLINE = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
             String deviceFormat = XMLPrefsManager.get(Behavior.device_format);
 
@@ -926,17 +847,20 @@ public class UIManager implements OnTouchListener {
 
             deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(username != null ? username : "null"));
             deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(deviceName));
-            deviceFormat = NEWLINE.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
+            deviceFormat = Tuils.patternNewline.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
             labelTexts[Label.device.ordinal()] = Tuils.span(mContext, deviceFormat, XMLPrefsManager.getColor(Theme.device_color), XMLPrefsManager.getInt(Ui.device_size));
             update(labelIndexes[Label.device.ordinal()]);
         }
 
-        if(showTime) {
-            labelViews[Label.time.ordinal()].post(timeRunnable);
+        if(show[Label.time.ordinal()]) {
+            timeRunnable = new TimeRunnable();
+            handler.post(timeRunnable);
         }
 
-        if(showBattery) {
+        if(show[Label.battery.ordinal()]) {
+            batteryUpdate = new BatteryUpdate();
+
             mediumPercentage = XMLPrefsManager.getInt(Behavior.battery_medium);
             lowPercentage = XMLPrefsManager.getInt(Behavior.battery_low);
 
@@ -944,10 +868,16 @@ public class UIManager implements OnTouchListener {
         } else {
             batteryUpdate = null;
         }
-//        batt, ram, ...
 
-        if(showNetwork) {
-            labelViews[Label.network.ordinal()].post(networkRunnable);
+        if(show[Label.network.ordinal()]) {
+            networkRunnable = new NetworkRunnable();
+            handler.post(networkRunnable);
+        }
+
+        notesManager = new NotesManager(context, labelViews[(int) labelIndexes[Label.notes.ordinal()]]);
+        if(show[Label.notes.ordinal()]) {
+            notesRunnable = new NotesRunnable();
+            handler.post(notesRunnable);
         }
 
         final boolean inputBottom = XMLPrefsManager.getBoolean(Ui.input_bottom);
@@ -989,9 +919,9 @@ public class UIManager implements OnTouchListener {
             pasteView = (ImageButton) inputOutputView.findViewById(R.id.paste_view);
         }
 
-        if (XMLPrefsManager.getBoolean(Suggestions.show_suggestions)) {
-            showSuggestions = true;
+        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, context, mainPack, executer);
 
+        if (XMLPrefsManager.getBoolean(Suggestions.show_suggestions)) {
             HorizontalScrollView sv = (HorizontalScrollView) rootView.findViewById(R.id.suggestions_container);
             sv.setFocusable(false);
             sv.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -1003,41 +933,13 @@ public class UIManager implements OnTouchListener {
                 }
             });
 
-            suggestionsView = (LinearLayout) rootView.findViewById(R.id.suggestions_group);
+            LinearLayout suggestionsView = (LinearLayout) rootView.findViewById(R.id.suggestions_group);
 
-            inputView.addTextChangedListener(textWatcher);
+            suggestionsManager = new SuggestionsManager(suggestionsView, mainPack, mTerminalAdapter);
 
-            suggestionsManager = new SuggestionsManager();
-
-            this.suggestionViewDecorer = new SuggestionViewDecorer() {
-
-                final int PADDING = 15;
-
-                @Override
-                public TextView getSuggestionView(Context context) {
-                    TextView textView = new TextView(mContext);
-                    textView.setOnClickListener(clickListener);
-
-                    textView.setFocusable(false);
-                    textView.setLongClickable(false);
-                    textView.setClickable(true);
-
-                    textView.setTypeface(Tuils.getTypeface(context));
-                    textView.setTextSize(XMLPrefsManager.getInt(Suggestions.suggestions_size));
-
-                    textView.setPadding(PADDING, PADDING, PADDING, PADDING);
-
-                    textView.setLines(1);
-                    textView.setMaxLines(1);
-
-                    return textView;
-                }
-            };
+            inputView.addTextChangedListener(new SuggestionTextWatcher(suggestionsManager));
         } else {
-            showSuggestions = false;
             rootView.findViewById(R.id.suggestions_group).setVisibility(View.GONE);
-            this.textWatcher = null;
-            this.clickListener = null;
         }
 
         lockOnDbTap = XMLPrefsManager.getBoolean(Behavior.double_tap_lock);
@@ -1047,9 +949,6 @@ public class UIManager implements OnTouchListener {
             component = null;
             det = null;
         } else initDetector();
-
-        mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, context, mainPack);
-        mTerminalAdapter.setInputListener(inputListener);
 
         if(XMLPrefsManager.getBoolean(Behavior.show_hints)) {
             MessagesManager messagesManager = new MessagesManager(context,
@@ -1069,8 +968,7 @@ public class UIManager implements OnTouchListener {
                     new MessagesManager.Message(R.string.hint_tutorial),
                     new MessagesManager.Message(R.string.hint_twitter),
                     new MessagesManager.Message(R.string.hint_wallpaper),
-                    new MessagesManager.Message(R.string.hint_musicdisable),
-                    new MessagesManager.Message(R.string.hint_excludenotification)
+                    new MessagesManager.Message( R.string.hint_excludenotification)
             );
 
             mTerminalAdapter.setMessagesManager(messagesManager);
@@ -1078,7 +976,17 @@ public class UIManager implements OnTouchListener {
     }
 
     public void dispose() {
-        if(handler != null) handler.removeCallbacksAndMessages(null);
+        if(handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
+
+        if(suggestionsManager != null) suggestionsManager.dispose();
+        if(notesManager != null) notesManager.dispose(mContext);
+        LocalBroadcastManager.getInstance(mContext.getApplicationContext()).unregisterReceiver(receiver);
+        Tuils.unregisterBatteryReceiver(mContext);
+
+        Tuils.cancelFont();
     }
 
     public void openKeyboard() {
@@ -1120,17 +1028,11 @@ public class UIManager implements OnTouchListener {
     }
 
     public void disableSuggestions() {
-        if(suggestionsView != null) {
-            showSuggestions = false;
-            suggestionsView.setVisibility(View.GONE);
-        }
+        if(suggestionsManager != null) suggestionsManager.hide();
     }
 
     public void enableSuggestions() {
-        if(suggestionsView != null) {
-            showSuggestions = true;
-            suggestionsView.setVisibility(View.VISIBLE);
-        }
+        if(suggestionsManager != null) suggestionsManager.show();
     }
 
     public void onBackPressed() {
@@ -1139,19 +1041,6 @@ public class UIManager implements OnTouchListener {
 
     public void focusTerminal() {
         mTerminalAdapter.requestInputFocus();
-    }
-
-    public Hintable getHintable() {
-        return new Hintable() {
-            @Override
-            public void updateHint() {
-                mTerminalAdapter.setDefaultHint();
-            }
-        };
-    }
-
-    public Rooter getRooter() {
-        return mTerminalAdapter.getRooter();
     }
 
     //	 init detector for double tap
@@ -1246,29 +1135,6 @@ public class UIManager implements OnTouchListener {
             }
         };
     }
-
-//    public interface SuggestionNavigator {
-//        boolean isNavigating();
-//        void onEnter();
-//    }
-
-    public interface OnNewInputListener {
-        void onNewInput(String input, Object obj);
-    }
-
-//    public class PowerConnectionReceiver extends BroadcastReceiver {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-//            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
-//
-//            if(isCharging) {
-//                battery.postDelayed(batteryChargingRunnable, BATTERY_CHARGING_DELAY);
-//            } else {
-//                battery.removeCallbacks(batteryChargingRunnable);
-//            }
-//        }
-//    }
 
 }
 

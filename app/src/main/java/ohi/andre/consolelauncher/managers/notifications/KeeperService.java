@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -19,7 +20,8 @@ import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
+import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
+import ohi.andre.consolelauncher.tuils.PublicIOReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static ohi.andre.consolelauncher.managers.TerminalManager.FORMAT_INPUT;
@@ -48,6 +50,7 @@ public class KeeperService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(startId == 1 || startId == 0) {
+
             title = XMLPrefsManager.get(Behavior.tui_notification_title);
             subtitle = XMLPrefsManager.get(Behavior.tui_notification_subtitle);
             clickCmd = XMLPrefsManager.get(Behavior.tui_notification_click_cmd);
@@ -63,7 +66,7 @@ public class KeeperService extends Service {
             if(priority > 2) priority = 2;
             if(priority < -2) priority = -2;
 
-            String path = intent.getStringExtra(PATH_KEY);
+            String path = intent != null ? intent.getStringExtra(PATH_KEY) : Environment.getExternalStorageDirectory().getAbsolutePath();
 
             startForeground(ONGOING_NOTIFICATION_ID, buildNotification(getApplicationContext(), title, subtitle, Tuils.getHint(path),
                     clickCmd, showHome, lastCommands, upDown, priority));
@@ -80,7 +83,7 @@ public class KeeperService extends Service {
 
             if(lastCommands != null) updateCmds(intent.getStringExtra(CMD_KEY));
 
-            String path = intent.getStringExtra(PATH_KEY);
+            String path = intent != null ? intent.getStringExtra(PATH_KEY) : Environment.getExternalStorageDirectory().getAbsolutePath();
 
             NotificationManagerCompat.from(getApplicationContext()).notify(KeeperService.ONGOING_NOTIFICATION_ID,
                     KeeperService.buildNotification(getApplicationContext(), title, subtitle, Tuils.getHint(path),
@@ -115,7 +118,7 @@ public class KeeperService extends Service {
 
         SpannableString si = Tuils.span(inputFormat, inputColor);
 
-        CharSequence s = TimeManager.replace(si, timeColor);
+        CharSequence s = TimeManager.instance.replace(si, timeColor);
         s = TextUtils.replace(s,
                 new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE, FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
                 new CharSequence[] {cmd, su ? suPrefix : prefix, Tuils.NEWLINE, cmd, su ? suPrefix : prefix, Tuils.NEWLINE});
@@ -130,11 +133,12 @@ public class KeeperService extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
+        lastCommands = null;
+
         return true;
     }
 
-    private static Notification buildNotification(Context c, String title, String subtitle, String cmdLabel, String clickCmd, boolean showHome, CharSequence[] lastCommands, boolean upDown, int priority) {
-
+    public static Notification buildNotification(Context c, String title, String subtitle, String cmdLabel, String clickCmd, boolean showHome, CharSequence[] lastCommands, boolean upDown, int priority) {
         PendingIntent pendingIntent;
         if(showHome) {
             Intent startMain = new Intent(Intent.ACTION_MAIN);
@@ -142,7 +146,7 @@ public class KeeperService extends Service {
             startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             if(clickCmd != null && clickCmd.length() > 0) {
-                startMain.putExtra(InputOutputReceiver.TEXT, clickCmd);
+                startMain.putExtra(PrivateIOReceiver.TEXT, clickCmd);
             }
 
             pendingIntent = PendingIntent.getActivity(
@@ -152,9 +156,8 @@ public class KeeperService extends Service {
                     PendingIntent.FLAG_CANCEL_CURRENT
             );
         } else if(clickCmd != null && clickCmd.length() > 0) {
-            Intent cmdIntent = new Intent(InputOutputReceiver.ACTION_CMD);
-            cmdIntent.putExtra(InputOutputReceiver.TEXT, clickCmd);
-            cmdIntent.putExtra(InputOutputReceiver.SHOW_CONTENT, true);
+            Intent cmdIntent = new Intent(PublicIOReceiver.ACTION_CMD);
+            cmdIntent.putExtra(PrivateIOReceiver.TEXT, clickCmd);
 
             pendingIntent = PendingIntent.getBroadcast(
                     c,
@@ -166,55 +169,89 @@ public class KeeperService extends Service {
             pendingIntent = null;
         }
 
-        NotificationCompat.Style style = null;
-        if(lastCommands != null && lastCommands[0] != null) {
-            NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setTicker(c.getString(R.string.start_notification))
+                    .setWhen(System.currentTimeMillis())
+                    .setPriority(priority)
+                    .setContentTitle(title)
+                    .setContentIntent(pendingIntent);
 
-            if(upDown) {
-                for (CharSequence lastCommand : lastCommands) {
-                    if (lastCommand == null) break;
-                    inboxStyle.addLine(lastCommand);
+            NotificationCompat.Style style = null;
+            if(lastCommands != null && lastCommands[0] != null) {
+                NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+
+                if(upDown) {
+                    for (CharSequence lastCommand : lastCommands) {
+                        if (lastCommand == null) break;
+                        inboxStyle.addLine(lastCommand);
+                    }
+                } else {
+                    for(int j = lastCommands.length - 1; j >= 0; j--) {
+                        if(lastCommands[j] == null) continue;
+                        inboxStyle.addLine(lastCommands[j]);
+                    }
                 }
-            } else {
-                for(int j = lastCommands.length - 1; j >= 0; j--) {
-                    if(lastCommands[j] == null) continue;
-                    inboxStyle.addLine(lastCommands[j]);
-                }
+
+                style = inboxStyle;
             }
 
-            style = inboxStyle;
-        }
+            if(style != null) builder.setStyle(style);
+            else {
+                builder.setContentTitle(title);
+                builder.setContentText(subtitle);
+            }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setTicker(c.getString(R.string.start_notification))
-                .setWhen(System.currentTimeMillis())
-                .setPriority(priority)
-                .setContentTitle(title)
-                .setContentIntent(pendingIntent);
-
-        if(style != null) builder.setStyle(style);
-        else {
-            builder.setContentTitle(title);
-            builder.setContentText(subtitle);
-        }
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            RemoteInput remoteInput = new RemoteInput.Builder(InputOutputReceiver.TEXT)
+            RemoteInput remoteInput = new RemoteInput.Builder(PrivateIOReceiver.TEXT)
                     .setLabel(cmdLabel)
                     .build();
 
-            Intent i = new Intent(InputOutputReceiver.ACTION_CMD);
-            i.putExtra(InputOutputReceiver.WAS_KEY, InputOutputReceiver.WAS_KEEPER_SERVICE);
+            Intent i = new Intent(PublicIOReceiver.ACTION_CMD);
 
-            NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.mipmap.ic_launcher, cmdLabel,
+            NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(
+                    R.mipmap.ic_launcher,
+                    cmdLabel,
                     PendingIntent.getBroadcast(c.getApplicationContext(), 40, i, PendingIntent.FLAG_UPDATE_CURRENT))
-                    .addRemoteInput(remoteInput)
-                    .build();
+                        .addRemoteInput(remoteInput);
 
-            builder.addAction(action);
+            builder.addAction(actionBuilder.build());
+
+            return builder.build();
+        } else {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setTicker(c.getString(R.string.start_notification))
+                    .setWhen(System.currentTimeMillis())
+                    .setPriority(priority)
+                    .setContentTitle(title)
+                    .setContentIntent(pendingIntent);
+
+            NotificationCompat.Style style = null;
+            if (lastCommands != null && lastCommands[0] != null) {
+                NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+
+                if (upDown) {
+                    for (CharSequence lastCommand : lastCommands) {
+                        if (lastCommand == null) break;
+                        inboxStyle.addLine(lastCommand);
+                    }
+                } else {
+                    for (int j = lastCommands.length - 1; j >= 0; j--) {
+                        if (lastCommands[j] == null) continue;
+                        inboxStyle.addLine(lastCommands[j]);
+                    }
+                }
+
+                style = inboxStyle;
+            }
+
+            if (style != null) builder.setStyle(style);
+            else {
+                builder.setContentTitle(title);
+                builder.setContentText(subtitle);
+            }
+            return builder.build();
         }
-
-        return builder.build();
     }
 }

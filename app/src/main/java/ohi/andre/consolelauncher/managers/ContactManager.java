@@ -2,7 +2,10 @@ package ohi.andre.consolelauncher.managers;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -10,11 +13,14 @@ import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
+import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -22,8 +28,12 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class ContactManager {
 
+    public static String ACTION_REFRESH = BuildConfig.APPLICATION_ID + ".refresh_contacts";
+
     private Context context;
     private List<Contact> contacts;
+
+    private BroadcastReceiver receiver;
 
     public ContactManager(Context context) {
         this.context = context;
@@ -31,6 +41,24 @@ public class ContactManager {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             refreshContacts(context);
         }
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_REFRESH);
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction().equals(ACTION_REFRESH)) {
+                    refreshContacts(context);
+                }
+            }
+        };
+
+        LocalBroadcastManager.getInstance(context.getApplicationContext()).registerReceiver(receiver, filter);
+    }
+
+    public void destroy(Context context) {
+        LocalBroadcastManager.getInstance(context.getApplicationContext()).unregisterReceiver(receiver);
     }
 
     public void refreshContacts(final Context context) {
@@ -104,9 +132,10 @@ public class ContactManager {
                     phones.close();
                 }
 
-                List<Contact> cp = new ArrayList<>(contacts);
-                for(int count = 0; count < cp.size(); count++) {
-                    if(cp.get(count).numbers.size() == 0) contacts.remove(count--);
+                Iterator<Contact> iterator = contacts.iterator();
+                while(iterator.hasNext()) {
+                    Contact c = iterator.next();
+                    if(c.numbers.size() == 0) iterator.remove();
                 }
 
                 Collections.sort(contacts);

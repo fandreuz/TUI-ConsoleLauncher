@@ -5,12 +5,14 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -26,10 +28,13 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.html_escape.HtmlEscape;
@@ -46,7 +51,7 @@ import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
  * Created by francescoandreuzzi on 01/10/2017.
  */
 
-public class RssManager implements XMLPrefsManager.XmlPrefsElement {
+public class RssManager implements XMLPrefsElement {
 
 //    header:
 //    last-modified
@@ -64,18 +69,18 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
 
     public static final String RSS_LABEL = "rss", FORMAT_LABEL = "format", REGEX_CMD_LABEL = "regex";
 
-    private final String LAST_MODIFIED_FIELD = "Last-Modified", ETAG_FIELD = "ETag", IF_MODIFIED_SINCE_FIELD = "If-Modified-Since", IF_NONE_MATCH_FIELD = "If-None-Match", GET_LABEL = "GET";
+//    private final String LAST_MODIFIED_FIELD = "Last-Modified", ETAG_FIELD = "ETag", IF_MODIFIED_SINCE_FIELD = "If-Modified-Since", IF_NONE_MATCH_FIELD = "If-None-Match", GET_LABEL = "GET";
 
     private final String PUBDATE_CHILD = "pubDate", ENTRY_CHILD = "item", LINK_CHILD = "link", HREF_ATTRIBUTE = "href";
 
     private SimpleDateFormat defaultRSSDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 
-    private static XMLPrefsManager.XMLPrefsList values;
+    private static XMLPrefsList values;
 
     public static final String PATH = "rss.xml";
     public static final String NAME = "RSS";
 
-    public static XMLPrefsManager.XmlPrefsElement instance = null;
+    public static XMLPrefsElement instance = null;
 
     @Override
     public String[] deleted() {
@@ -83,12 +88,12 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     @Override
-    public XMLPrefsManager.XMLPrefsList getValues() {
+    public XMLPrefsList getValues() {
         return values;
     }
 
     @Override
-    public void write(XMLPrefsManager.XMLPrefsSave save, String value) {
+    public void write(XMLPrefsSave save, String value) {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
@@ -128,7 +133,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
 
         prepare();
 
-        values = new XMLPrefsManager.XMLPrefsList();
+        values = new XMLPrefsList();
 
         handler = new Handler();
         refresh();
@@ -160,8 +165,11 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                         Tuils.sendXMLParseError(context, PATH);
                         return;
                     }
-                } catch (Exception e) {
+                } catch (SAXParseException e) {
                     Tuils.sendXMLParseError(context, PATH, e);
+                    return;
+                } catch (Exception e) {
+                    Tuils.log(e);
                     return;
                 }
 
@@ -249,7 +257,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                     }
 
                     if (enums.size() > 0) {
-                        for (XMLPrefsManager.XMLPrefsSave s : enums) {
+                        for (XMLPrefsSave s : enums) {
                             String value = s.defaultValue();
 
                             Element em = document.createElement(s.label());
@@ -319,7 +327,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                 for(CmdableRegex rg : cmdRegexes) {
                     try {
                         int id = Integer.parseInt(rg.literalPattern);
-                        rg.regex = RegexManager.get(id).regex;
+                        rg.regex = RegexManager.instance.get(id).regex;
                     } catch (Exception exc) {
                         try {
                             rg.regex = Pattern.compile(rg.literalPattern);
@@ -594,8 +602,6 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
         }
     };
 
-    final String quotes = "\"";
-
     private void updateRss(final Rss feed, final boolean firstTime) {
         updateRss(feed, firstTime, false);
     }
@@ -608,9 +614,8 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
         return true;
     }
 
-    private void updateRss(final Rss feed, final boolean firstTime, boolean force) {
+    private void updateRss(final Rss feed, final boolean firstTime, final boolean force) {
         if(!force && feed.wifiOnly && !connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected()) {
-
             feed.lastCheckedClient = System.currentTimeMillis();
             feed.updateFile(rssIndexFile);
 
@@ -623,6 +628,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                 super.run();
 
                 if(!Tuils.hasInternetAccess()) {
+                    if(force) Tuils.sendOutput(Color.RED, context, "No internet access");
                     return;
                 }
 
@@ -631,14 +637,14 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                             .url(feed.url)
                             .get();
 
-                    if(!firstTime && feed.lMod != null && feed.etag != null) {
-                        builder.addHeader(IF_MODIFIED_SINCE_FIELD, feed.lMod);
-                        builder.addHeader(IF_NONE_MATCH_FIELD, quotes + feed.etag + quotes);
-                    }
+//                    if(!firstTime && feed.lMod != null && feed.etag != null) {
+//                        builder.addHeader(IF_MODIFIED_SINCE_FIELD, feed.lMod);
+//                        builder.addHeader(IF_NONE_MATCH_FIELD, quotes + feed.etag + quotes);
+//                    }
 
                     Response response = client.newCall(builder.build()).execute();
 
-                    if(firstTime || response.code() != 304) {
+                    if(response.isSuccessful() && (firstTime || response.code() != 304)) {
                         ResponseBody body = response.body();
 
                         long bytes = 0;
@@ -662,7 +668,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                             c = kbPattern.matcher(c).replaceAll(String.valueOf(kb));
                             c = bPattern.matcher(c).replaceAll(String.valueOf(bytes));
 
-                            c = TimeManager.replace(c, timeColor);
+                            c = TimeManager.instance.replace(c, timeColor);
 
                             Tuils.sendOutput(downloadMessageColor, context, c);
                         }
@@ -672,9 +678,9 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                             return;
                         }
 
-                        feed.lMod = response.header(LAST_MODIFIED_FIELD);
-                        feed.etag = response.header(ETAG_FIELD);
-                        if(feed.etag != null) feed.etag = feed.etag.replaceAll("\"", Tuils.EMPTYSTRING);
+//                        feed.lMod = response.header(LAST_MODIFIED_FIELD);
+//                        feed.etag = response.header(ETAG_FIELD);
+//                        if(feed.etag != null) feed.etag = feed.etag.replaceAll("\"", Tuils.EMPTYSTRING);
 
                         response.close();
 
@@ -706,7 +712,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
         Document doc;
         try {
             doc = dBuilder.parse(rssFile);
-        } catch (Exception e) {
+        } catch (SAXParseException e) {
             Tuils.sendXMLParseError(context, PATH, e);
             return false;
         }
@@ -766,7 +772,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
             Tuils.sendOutput(Color.RED, context, context.getString(R.string.rss_invalid_date) + Tuils.SPACE + (dateTag));
         } else if(greatestTime != -1) {
             feed.lastShownItem = greatestTime;
-            feed.updateTime(rssIndexFile);
+            feed.updateLastShownItem(rssIndexFile);
         }
 
         return updated;
@@ -779,14 +785,12 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
     private final String OPEN_URL = "search -u ";
     private final String PERCENTAGE = "%";
 
-    private Pattern nl = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-
 //    called when a new element is detected, it could be triggered many times again in some milliseconds
     private void showItem(Rss feed, Element item, boolean userRequested) {
         if(item == null) return;
 
         String cp = feed.format != null ? feed.format : defaultFormat;
-        cp = nl.matcher(cp).replaceAll(Tuils.NEWLINE);
+        cp = Tuils.patternNewline.matcher(cp).replaceAll(Tuils.NEWLINE);
 
         CharSequence s = Tuils.span(cp, feed.color);
 
@@ -817,7 +821,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                         }
 
                         long timeLong = d.getTime();
-                        value = TimeManager.replace(timeFormat, timeLong, Integer.MAX_VALUE).toString();
+                        value = TimeManager.instance.replace(timeFormat, timeLong, Integer.MAX_VALUE).toString();
                     } else {
                         value = HtmlEscape.unescapeHtml(value);
 
@@ -871,10 +875,11 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
                         cmd = cmd.replaceAll(PERCENTAGE + c, rssMatcher.group(c));
                     }
 
-                    Intent intent = new Intent(InputOutputReceiver.ACTION_CMD);
-                    intent.putExtra(InputOutputReceiver.SHOW_CONTENT, false);
-                    intent.putExtra(InputOutputReceiver.TEXT, cmd);
-                    context.sendBroadcast(intent);
+                    Intent intent = new Intent(MainManager.ACTION_EXEC);
+                    intent.putExtra(MainManager.NEED_WRITE_INPUT, false);
+                    intent.putExtra(MainManager.CMD, cmd);
+                    intent.putExtra(MainManager.CMD_COUNT, MainManager.commandCount);
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                 }
             }
         }
@@ -904,7 +909,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
         public long updateTimeSeconds, lastCheckedClient, lastShownItem;
         public int id;
         public boolean show;
-        public String lMod, etag;
+//        public String lMod, etag;
 
         public String entryTag, dateTag;
 
@@ -914,8 +919,6 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
         public String tempInclude, tempExclude;
 
         public int color;
-
-        public long millisecondsLeft, lastUpdated;
 
         public boolean wifiOnly;
 
@@ -928,8 +931,6 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
         public Rss(String url, long updateTimeSeconds, long lastCheckedClient, long lastShownItem, int id, boolean show, String lMod, String etag, String format,
                    String includeIfMatches, String excludeIfMatches, int color, boolean wifiOnly, String timeFormat, String rootNode, String timeNode) {
             setAll(url, updateTimeSeconds, lastCheckedClient, lastShownItem, id, show, lMod, etag, format, includeIfMatches, excludeIfMatches, color, wifiOnly, timeFormat, rootNode, timeNode);
-
-            millisecondsLeft = updateTimeSeconds * 1000 - (System.currentTimeMillis() - lastCheckedClient);
         }
 
         public static Rss fromElement(Element t) {
@@ -993,8 +994,8 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
             this.lastCheckedClient = lastCheckedClient;
             this.id = id;
             this.show = show;
-            this.lMod = lMod;
-            this.etag = etag;
+//            this.lMod = lMod;
+//            this.etag = etag;
 
             this.format = format;
 
@@ -1017,20 +1018,13 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
         }
 
         public boolean needUpdate() {
-            millisecondsLeft -= System.currentTimeMillis() - lastUpdated;
-
-            lastUpdated = System.currentTimeMillis();
-
-            if(millisecondsLeft <= 0) {
-                millisecondsLeft = updateTimeSeconds * 1000;
-
-                return true;
-            }
-
-            return false;
+//            Tuils.log("lc", lastCheckedClient);
+//            Tuils.log(System.currentTimeMillis() - lastCheckedClient);
+//            Tuils.log("up", updateTimeSeconds * 1000);
+            return System.currentTimeMillis() - lastCheckedClient >= (updateTimeSeconds * 1000);
         }
 
-        public void updateTime(File rssFile) {
+        public void updateLastShownItem(File rssFile) {
             XMLPrefsManager.set(rssFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {LAST_SHOWN_ITEM_ATTRIBUTE},
                     new String[] {String.valueOf(lastShownItem)}, false);
         }
@@ -1039,7 +1033,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
             if(includeIfMatches != null) {
                 try {
                     int id = Integer.parseInt(tempInclude);
-                    includeIfMatches = RegexManager.get(id).regex;
+                    includeIfMatches = RegexManager.instance.get(id).regex;
                 } catch (Exception exc) {
                     includeIfMatches = Pattern.compile(tempInclude);
                 }
@@ -1050,7 +1044,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
             if(excludeIfMatches != null) {
                 try {
                     int id = Integer.parseInt(tempExclude);
-                    excludeIfMatches = RegexManager.get(id).regex;
+                    excludeIfMatches = RegexManager.instance.get(id).regex;
                 } catch (Exception exc) {
                     includeIfMatches = Pattern.compile(tempExclude);
                 }
@@ -1059,7 +1053,7 @@ public class RssManager implements XMLPrefsManager.XmlPrefsElement {
 
         private void updateFile(File rssFile) {
             XMLPrefsManager.set(rssFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)},
-                    new String[] {LASTCHECKED_ATTRIBUTE, LASTMODIFIED_ATTRIBUTE, ETAG_ATTRIBUTE}, new String[] {String.valueOf(lastCheckedClient), lMod, etag},
+                    new String[] {LASTCHECKED_ATTRIBUTE/*, LASTMODIFIED_ATTRIBUTE, ETAG_ATTRIBUTE*/}, new String[] {String.valueOf(lastCheckedClient)/*, lMod, etag*/},
                     false);
         }
 

@@ -1,6 +1,10 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
+
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 
@@ -9,11 +13,10 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
  */
 public class clear implements CommandAbstraction {
 
-    public static final String CLEAR = "#clear#";
-
     @Override
     public String exec(ExecutePack info) throws Exception {
-        return CLEAR;
+        LocalBroadcastManager.getInstance(info.context.getApplicationContext()).sendBroadcast(new Intent(UIManager.ACTION_CLEAR));
+        return null;
     }
 
     @Override

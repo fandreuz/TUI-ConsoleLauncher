@@ -9,6 +9,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,6 +21,9 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.RegexManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -33,51 +37,49 @@ import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
  */
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
+public class NotificationManager implements XMLPrefsElement {
 
     private static final String COLOR_ATTRIBUTE = "color", ENABLED_ATTRIBUTE = "enabled", ID_ATTRIBUTE = "id", FORMAT_ATTRIBUTE = "format", FILTER_ATTRIBUTE = "filter";
 
     public static final String PATH = "notifications.xml";
     private static final String NAME = "NOTIFICATIONS";
 
-    public static XMLPrefsManager.XmlPrefsElement instance = null;
-
-    public static boolean default_app_state;
-    public static String default_color;
+    public boolean default_app_state;
+    public String default_color;
 
     @Override
     public String[] deleted() {
-        return new String[] {"enabled", "default_color", "default_app_state"};
+        return new String[] {};
     }
 
     @Override
-    public XMLPrefsManager.XMLPrefsList getValues() {
+    public XMLPrefsList getValues() {
         return values;
     }
 
     @Override
-    public void write(XMLPrefsManager.XMLPrefsSave save, String value) {
+    public void write(XMLPrefsSave save, String value) {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
-    private static XMLPrefsManager.XMLPrefsList values;
-    private static List<NotificatedApp> apps;
-    private static List<Pattern> filters;
-    private static List<XMLPrefsManager.IdValue> formats;
+    private XMLPrefsList values;
+    private List<NotificatedApp> apps;
+    private List<Pattern> filters;
+    private List<XMLPrefsManager.IdValue> formats;
 
-    private NotificationManager() {}
+    public static NotificationManager instance = null;
+    public static NotificationManager create(Context context) {
+        if(instance == null) return new NotificationManager(context);
+        else return instance;
+    }
 
-    public static void create(Context context) {
-
-        if(instance != null) {
-            return;
-        }
-        instance = new NotificationManager();
+    private NotificationManager(Context context) {
+        instance = this;
 
         apps = new ArrayList<>();
         filters = new ArrayList<>();
         formats = new ArrayList<>();
-        values = new XMLPrefsManager.XMLPrefsList();
+        values = new XMLPrefsList();
 
         try {
             File r = Tuils.getFolder();
@@ -98,8 +100,11 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                     Tuils.sendXMLParseError(context, PATH);
                     return;
                 }
-            } catch (Exception e) {
+            } catch (SAXParseException e) {
                 Tuils.sendXMLParseError(context, PATH, e);
+                return;
+            } catch (Exception e) {
+                Tuils.log(e);
                 return;
             }
 
@@ -135,7 +140,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
                         if (regex == null) continue;
                         try {
                             int id = Integer.parseInt(regex);
-                            pattern = RegexManager.get(id).regex;
+                            pattern = RegexManager.instance.get(id).regex;
                         } catch (Exception exc) {
                             try {
                                 pattern = Pattern.compile(regex);
@@ -188,7 +193,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
             }
 
             if (enums.size() > 0) {
-                for (XMLPrefsManager.XMLPrefsSave s : enums) {
+                for (XMLPrefsSave s : enums) {
                     String value = s.defaultValue();
 
                     Element em = d.createElement(s.label());
@@ -224,6 +229,31 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         default_color = XMLPrefsManager.get(Notifications.default_notification_color);
     }
 
+    public void dispose() {
+
+        if(values != null) {
+            values.list.clear();
+            values = null;
+        }
+
+        if(apps != null) {
+            apps.clear();
+            apps = null;
+        }
+
+        if(filters != null) {
+            filters.clear();
+            filters = null;
+        }
+
+        if(formats != null) {
+            formats.clear();
+            formats = null;
+        }
+
+        instance = null;
+    }
+
     public static String setState(String pkg, boolean state) {
         return XMLPrefsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {ENABLED_ATTRIBUTE}, new String[] {String.valueOf(state)});
     }
@@ -252,7 +282,7 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         return XMLPrefsManager.removeNode(new File(Tuils.getFolder(), PATH), FORMAT_ATTRIBUTE, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
     }
 
-    public static boolean match(String pkg, String text) {
+    public boolean match(String pkg, String text) {
 //        if(pkg.equals(BuildConfig.APPLICATION_ID)) return true;
 
         for(Pattern f : filters) {
@@ -263,11 +293,11 @@ public class NotificationManager implements XMLPrefsManager.XmlPrefsElement {
         return false;
     }
 
-    public static int apps() {
+    public int apps() {
         return apps.size();
     }
 
-    public static NotificatedApp getAppState(String pkg) {
+    public NotificatedApp getAppState(String pkg) {
         int index = Tuils.find(pkg, apps);
         if(index == -1) return null;
         return apps.get(index);

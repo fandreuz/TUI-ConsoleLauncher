@@ -6,20 +6,23 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class bluetooth implements CommandAbstraction {
 
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
+
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(adapter == null) return info.context.getString(R.string.output_bluetooth_unavailable);
+
         if(adapter.isEnabled()) {
             adapter.disable();
-            return info.context.getString(R.string.output_bluetooth) + Tuils.SPACE + "false";
+            return info.context.getString(R.string.output_bluetooth) + " false";
         } else {
             adapter.enable();
-            return info.context.getString(R.string.output_bluetooth) + Tuils.SPACE + "true";
+            return info.context.getString(R.string.output_bluetooth) + " true";
         }
     }
 

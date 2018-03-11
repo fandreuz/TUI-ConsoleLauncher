@@ -13,12 +13,16 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,8 +36,12 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
@@ -41,14 +49,13 @@ import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
-import ohi.andre.consolelauncher.tuils.interfaces.Suggester;
 
 import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
 import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
 import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.set;
 import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
 
-public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
+public class AppsManager implements XMLPrefsElement {
 
     public static final int SHOWN_APPS = 10;
     public static final int HIDDEN_APPS = 11;
@@ -57,10 +64,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private final String NAME = "APPS";
     private File file;
 
-    private final String SHOW_ATTRIBUTE = "show";
-    private final String APPS_ATTRIBUTE = "apps";
-    private final String BGCOLOR_ATTRIBUTE = "bgColor";
-    private final String FORECOLOR_ATTRIBUTE = "foreColor";
+    private final String SHOW_ATTRIBUTE = "show", APPS_ATTRIBUTE = "apps", BGCOLOR_ATTRIBUTE = "bgColor", FORECOLOR_ATTRIBUTE = "foreColor";
     private static final String APPS_SEPARATOR = ";";
 
     private Context context;
@@ -72,13 +76,13 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
 
-    public static XMLPrefsManager.XmlPrefsElement instance = null;
+    public static XMLPrefsElement instance = null;
 
-    private XMLPrefsManager.XMLPrefsList defaultApps;
+    private XMLPrefsList prefsList;
 
-    public static List<Group> groups;
+    public List<Group> groups;
 
-    private Pattern pp, pl, pn;
+    private Pattern pp, pl;
     private String appInstalledFormat, appUninstalledFormat;
     int appInstalledColor, appUninstalledColor;
 
@@ -88,13 +92,13 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     @Override
-    public void write(XMLPrefsManager.XMLPrefsSave save, String value) {
+    public void write(XMLPrefsSave save, String value) {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
     @Override
-    public XMLPrefsManager.XMLPrefsList getValues() {
-        return defaultApps;
+    public XMLPrefsList getValues() {
+        return prefsList;
     }
 
     private BroadcastReceiver appsBroadcast = new BroadcastReceiver() {
@@ -111,7 +115,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         }
     };
 
-    public AppsManager(Context context, final Suggester s) {
+    public AppsManager(final Context context) {
         instance = this;
 
         this.context = context;
@@ -122,14 +126,12 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         if(appInstalledFormat != null || appUninstalledFormat != null) {
             pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
             pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE);
-            pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE);
 
             appInstalledColor = XMLPrefsManager.getColor(Theme.app_installed_color);
             appUninstalledColor = XMLPrefsManager.getColor(Theme.app_uninstalled_color);
         } else {
             pp = null;
             pl = null;
-            pn = null;
         }
 
         File root = Tuils.getFolder();
@@ -149,7 +151,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 super.run();
 
                 fill();
-                s.requestUpdate();
+                LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(new Intent(UIManager.ACTION_UPDATE_SUGGESTIONS));
             }
         }.start();
     }
@@ -170,7 +172,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         groups.clear();
 
         try {
-            defaultApps = new XMLPrefsManager.XMLPrefsList();
+            prefsList = new XMLPrefsList();
 
             if(file != null) {
                 if(!file.exists()) {
@@ -184,8 +186,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                         Tuils.sendXMLParseError(context, PATH);
                         return;
                     }
-                } catch (Exception e) {
+                } catch (SAXParseException e) {
                     Tuils.sendXMLParseError(context, PATH, e);
+                    return;
+                } catch (Exception e) {
+                    Tuils.log(e);
                     return;
                 }
 
@@ -201,7 +206,12 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                     String nn = node.getNodeName();
                     int nodeIndex = Tuils.find(nn, (List) enums);
                     if (nodeIndex != -1) {
-                        defaultApps.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
+//                        default_app...
+                        if(nn.startsWith("d")) {
+                            prefsList.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
+                        } else {
+                            prefsList.add(nn, XMLPrefsManager.getStringAttribute((Element) node, VALUE_ATTRIBUTE));
+                        }
 
                         for (int en = 0; en < enums.size(); en++) {
                             if (enums.get(en).label().equals(nn)) {
@@ -238,11 +248,13 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                                         for(String s : split) {
                                             for(int c = 0; c < as.size(); c++) {
                                                 if(as.get(c).equals(s)) {
-                                                    g.add(as.remove(c));
+                                                    g.add(as.remove(c), false);
                                                     continue External;
                                                 }
                                             }
                                         }
+
+                                        g.sort();
 
                                         if(e.hasAttribute(BGCOLOR_ATTRIBUTE)) {
                                             String c = e.getAttribute(BGCOLOR_ATTRIBUTE);
@@ -305,14 +317,14 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                 }
 
                 if (enums.size() > 0) {
-                    for (XMLPrefsManager.XMLPrefsSave s : enums) {
+                    for (XMLPrefsSave s : enums) {
                         String value = s.defaultValue();
 
                         Element em = d.createElement(s.label());
                         em.setAttribute(VALUE_ATTRIBUTE, value);
                         root.appendChild(em);
 
-                        defaultApps.add(s.label(), value);
+                        prefsList.add(s.label(), value);
                     }
                     writeTo(d, file);
                 }
@@ -353,8 +365,17 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             Tuils.toFile(e1);
         }
 
-        appsHolder = new AppsHolder(allApps, defaultApps);
+        appsHolder = new AppsHolder(allApps, prefsList);
         AppUtils.checkEquality(hiddenApps);
+
+        Group.sorting = XMLPrefsManager.getInt(Apps.app_groups_sorting);
+        for(Group g : groups) g.sort();
+        Collections.sort(groups, new Comparator<Group>() {
+            @Override
+            public int compare(Group o1, Group o2) {
+                return Tuils.alphabeticCompare(o1.getName(), o2.getName());
+            }
+        });
     }
 
     private List<LaunchInfo> createAppMap(PackageManager mgr) {
@@ -396,7 +417,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                     }
                 }
 
-                cp = pn.matcher(cp).replaceAll(Tuils.NEWLINE);
+                cp = Tuils.patternNewline.matcher(cp).replaceAll(Tuils.NEWLINE);
 
                 Tuils.sendOutput(appInstalledColor, context, cp);
             }
@@ -431,7 +452,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                     cp = pl.matcher(cp).replaceAll(packageName.substring(index + 1));
                 }
             }
-            cp = pn.matcher(cp).replaceAll(Tuils.NEWLINE);
+            cp = Tuils.patternNewline.matcher(cp).replaceAll(Tuils.NEWLINE);
 
             Tuils.sendOutput(appUninstalledColor, context, cp);
         }
@@ -456,7 +477,9 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         if(appList == null) return null;
 
         LaunchInfo i = AppUtils.findLaunchInfoWithLabel(appList, label);
-        if(i != null) return i;
+        if(i != null) {
+            return i;
+        }
 
         List<LaunchInfo> is = AppUtils.findLaunchInfosWithPackage(label, appList);
         if(is == null || is.size() == 0) return null;
@@ -486,11 +509,10 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             }
         }.start();
 
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.setComponent(info.componentName);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        return intent;
+       return new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LAUNCHER)
+                .setComponent(info.componentName)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
     }
 
     public String hideActivity(LaunchInfo info) {
@@ -587,7 +609,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         XMLPrefsManager.writeTo(d, file);
 
         int index = Tuils.find(group, groups);
-        if(index != -1) groups.get(index).add(app);
+        if(index != -1) groups.get(index).add(app, true);
 
         return null;
     }
@@ -843,7 +865,39 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
     }
 
     public static class Group implements MainManager.Group {
-        List<LaunchInfo> apps;
+
+        public static final int ALPHABETIC_UP_DOWN = 0;
+        public static final int ALPHABETIC_DOWN_UP = 1;
+        public static final int TIME_UP_DOWN = 2;
+        public static final int TIME_DOWN_UP = 3;
+        public static final int MOSTUSED_UP_DOWN = 4;
+        public static final int MOSTUSED_DOWN_UP = 5;
+
+        public static int sorting;
+
+        public static Comparator<GroupLaunchInfo> comparator = new Comparator<GroupLaunchInfo>() {
+            @Override
+            public int compare(GroupLaunchInfo o1, GroupLaunchInfo o2) {
+                switch (sorting) {
+                    case ALPHABETIC_UP_DOWN:
+                        return Tuils.alphabeticCompare(o1.publicLabel, o2.publicLabel);
+                    case ALPHABETIC_DOWN_UP:
+                        return Tuils.alphabeticCompare(o2.publicLabel, o1.publicLabel);
+                    case TIME_UP_DOWN:
+                        return o1.initialIndex - o2.initialIndex;
+                    case TIME_DOWN_UP:
+                        return o2.initialIndex - o1.initialIndex;
+                    case MOSTUSED_UP_DOWN:
+                        return o2.launchedTimes - o1.launchedTimes;
+                    case MOSTUSED_DOWN_UP:
+                        return o1.launchedTimes - o2.launchedTimes;
+                }
+
+                return 0;
+            }
+        };
+
+        List<GroupLaunchInfo> apps;
 
         int bgColor = Integer.MAX_VALUE;
         int foreColor = Integer.MAX_VALUE;
@@ -855,19 +909,34 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             apps = new ArrayList<>();
         }
 
-        public void add(LaunchInfo info) {
-            apps.add(info);
+        public void add(LaunchInfo info, boolean sort) {
+            apps.add(new GroupLaunchInfo(info, apps.size()));
+
+            if(sort) sort();
         }
 
         public void remove(LaunchInfo info) {
-            apps.remove(info);
+            Iterator<GroupLaunchInfo> iterator = apps.iterator();
+            while (iterator.hasNext()) {
+                if(iterator.next().componentName.equals(info.componentName)) {
+                    iterator.remove();
+                    return;
+                }
+            }
         }
 
         public void remove(String app) {
-            List<LaunchInfo> cp = new ArrayList<>(apps);
-            for(LaunchInfo i : cp) {
-                if(i.componentName.getPackageName().equals(app)) apps.remove(i);
+            Iterator<GroupLaunchInfo> iterator = apps.iterator();
+            while (iterator.hasNext()) {
+                if(iterator.next().componentName.getPackageName().equals(app)) {
+                    iterator.remove();
+                    return;
+                }
             }
+        }
+
+        public void sort() {
+            Collections.sort(apps, comparator);
         }
 
         public boolean contains(LaunchInfo info) {
@@ -931,9 +1000,22 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             return false;
         }
 
+        private class GroupLaunchInfo extends LaunchInfo {
+
+            int initialIndex;
+
+            public GroupLaunchInfo(LaunchInfo info, int index) {
+                super(info.componentName.getPackageName(), info.componentName.getClassName(), info.publicLabel);
+                launchedTimes = info.launchedTimes;
+                unspacedLowercaseLabel = info.unspacedLowercaseLabel;
+
+                this.initialIndex = index;
+            }
+        }
+
     }
 
-    public static class LaunchInfo implements Compare.Stringable {
+    public static class LaunchInfo implements Compare.Stringable, Parcelable {
 
         private static final String COMPONENT_SEPARATOR = "-";
 
@@ -947,6 +1029,25 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             this.publicLabel = label;
             this.unspacedLowercaseLabel = Tuils.removeSpaces(this.publicLabel).toLowerCase();
         }
+
+        protected LaunchInfo(Parcel in) {
+            componentName = in.readParcelable(ComponentName.class.getClassLoader());
+            publicLabel = in.readString();
+            unspacedLowercaseLabel = in.readString();
+            launchedTimes = in.readInt();
+        }
+
+        public static final Creator<LaunchInfo> CREATOR = new Creator<LaunchInfo>() {
+            @Override
+            public LaunchInfo createFromParcel(Parcel in) {
+                return new LaunchInfo(in);
+            }
+
+            @Override
+            public LaunchInfo[] newArray(int size) {
+                return new LaunchInfo[size];
+            }
+        };
 
         public boolean isInside(String apps) {
             String[] split = apps.split(AppsManager.APPS_SEPARATOR);
@@ -1016,6 +1117,19 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         public String getString() {
             return publicLabel;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeParcelable(componentName, flags);
+            dest.writeString(publicLabel);
+            dest.writeString(unspacedLowercaseLabel);
+            dest.writeInt(launchedTimes);
+        }
     }
 
     private class AppsHolder {
@@ -1023,7 +1137,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
         final int MOST_USED = 10, NULL = 11, USER_DEFINIED = 12;
 
         private List<LaunchInfo> infos;
-        private XMLPrefsManager.XMLPrefsList values;
+        private XMLPrefsList values;
 
         private SuggestedAppMgr suggestedAppMgr;
 
@@ -1031,11 +1145,11 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             private List<SuggestedApp> suggested;
             private int lastWriteable = -1;
 
-            public SuggestedAppMgr(XMLPrefsManager.XMLPrefsList values, List<LaunchInfo> apps) {
+            public SuggestedAppMgr(XMLPrefsList values, List<LaunchInfo> apps) {
                 suggested = new ArrayList<>();
 
                 final String PREFIX = "default_app_n";
-                for(int count = 0; count < Apps.values().length; count++) {
+                for(int count = 0; count < 5; count++) {
                     String vl = values.get(Apps.valueOf(PREFIX + (count + 1))).value;
 
                     if(vl.equals(Apps.NULL)) continue;
@@ -1218,7 +1332,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             }
         };
 
-        public AppsHolder(List<LaunchInfo> infos, XMLPrefsManager.XMLPrefsList values) {
+        public AppsHolder(List<LaunchInfo> infos, XMLPrefsList values) {
             this.infos = infos;
             this.values = values;
             update(true);
@@ -1283,7 +1397,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             return null;
         }
 
-        public static LaunchInfo findLaunchInfoWithLabel(List<LaunchInfo> appList, String label) {
+        public static LaunchInfo findLaunchInfoWithLabel(List<? extends LaunchInfo> appList, String label) {
             label = Tuils.removeSpaces(label);
             for(LaunchInfo i : appList) if(i.unspacedLowercaseLabel.equalsIgnoreCase(label)) return i;
             return null;
@@ -1314,7 +1428,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
                         continue;
                     }
 
-                    if (info.publicLabel.toLowerCase().replace(Tuils.SPACE, Tuils.EMPTYSTRING).equals(info2.publicLabel.toLowerCase().replace(Tuils.SPACE, Tuils.EMPTYSTRING))) {
+                    if (Tuils.equalsIgnoreSpaceAndCase(info.publicLabel, info2.publicLabel)) {
 //                        there are two activities in the same app loadlabel gives the same result
                         if(info.componentName.getPackageName().equals(info2.componentName.getPackageName())) {
                             info.publicLabel = insertActivityName(info.publicLabel, info.componentName.getClassName());
@@ -1384,7 +1498,7 @@ public class AppsManager implements XMLPrefsManager.XmlPrefsElement {
             builder.append("launched_times: ").append(app.launchedTimes).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-                builder.append("Install: ").append(TimeManager.replace("%t0", info.firstInstallTime, Integer.MAX_VALUE)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
+                builder.append("Install: ").append(TimeManager.instance.replace("%t0", info.firstInstallTime, Integer.MAX_VALUE)).append(Tuils.NEWLINE).append(Tuils.NEWLINE);
             }
 
             ActivityInfo[] a = info.activities;

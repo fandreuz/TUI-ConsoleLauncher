@@ -22,11 +22,13 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class TimeManager {
 
-    static SimpleDateFormat[] dateFormatList;
+    SimpleDateFormat[] dateFormatList;
 
-    static Pattern extractor = Pattern.compile("%t([0-9]+)", Pattern.CASE_INSENSITIVE);
+    public static Pattern extractor = Pattern.compile("%t([0-9]+)", Pattern.CASE_INSENSITIVE);
 
-    public static void create() {
+    public static TimeManager instance;
+
+    public TimeManager() {
         final Pattern NEWLINE_PATTERN = Pattern.compile("%n");
 
         String format = XMLPrefsManager.get(Behavior.time_format);
@@ -43,32 +45,35 @@ public class TimeManager {
                 dateFormatList[c] = dateFormatList[0];
             }
         }
+
+        instance = this;
     }
 
-    private static SimpleDateFormat get(int index) {
+    private SimpleDateFormat get(int index) {
+        if(dateFormatList == null) return null;
         if(index < 0 || index >= dateFormatList.length) index = 0;
         if(index == 0 && dateFormatList.length == 0) return null;
 
         return dateFormatList[index];
     }
 
-    public static CharSequence replace(CharSequence cs) {
+    public CharSequence replace(CharSequence cs) {
         return replace(cs, -1, Integer.MAX_VALUE);
     }
 
-    public static CharSequence replace(CharSequence cs, int color) {
+    public CharSequence replace(CharSequence cs, int color) {
         return replace(cs, -1, color);
     }
 
-    public static CharSequence replace(CharSequence cs, long tm, int color) {
+    public CharSequence replace(CharSequence cs, long tm, int color) {
         return replace(null, Integer.MAX_VALUE, cs, tm, color);
     }
 
-    public static CharSequence replace(Context context, int size, CharSequence cs, int color) {
+    public CharSequence replace(Context context, int size, CharSequence cs, int color) {
         return replace(context, size, cs, -1, color);
     }
 
-    public static CharSequence replace(Context context, int size, CharSequence cs, long tm, int color) {
+    public CharSequence replace(Context context, int size, CharSequence cs, long tm, int color) {
         if(tm == -1) {
             tm = System.currentTimeMillis();
         }
@@ -112,5 +117,11 @@ public class TimeManager {
         cs = TextUtils.replace(cs, new String[] {"%t"}, new CharSequence[] {spannableString});
 
         return cs;
+    }
+
+    public void dispose() {
+        dateFormatList = null;
+
+        instance = null;
     }
 }

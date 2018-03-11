@@ -2,7 +2,6 @@ package ohi.andre.consolelauncher.managers;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.IBinder;
 import android.text.InputType;
@@ -24,19 +23,16 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.main.raw.clear;
-import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
 import ohi.andre.consolelauncher.tuils.LongClickMovementMethod;
 import ohi.andre.consolelauncher.tuils.LongClickableSpan;
+import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
-import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
+import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 
 /*Copyright Francesco Andreuzzi
 
@@ -87,9 +83,6 @@ public class TerminalManager {
         }
     };
 
-    private UIManager.OnNewInputListener mInputListener;
-//    private UIManager.SuggestionNavigator mSuggestionNavigator;
-
     private MainPack mainPack;
 
     private boolean defaultHint = true;
@@ -109,16 +102,19 @@ public class TerminalManager {
     private String inputFormat, outputFormat;
     private int inputColor, outputColor;
 
-    private boolean keeperServiceRunning, clickCommands, longClickCommands;
+    private boolean clickCommands, longClickCommands;
 
     private Context mContext;
 
+    private CommandExecuter executer;
+
     public TerminalManager(final TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
-                           ImageButton pasteView, final Context context, MainPack mainPack) {
+                           ImageButton pasteView, final Context context, MainPack mainPack, CommandExecuter executer) {
         if (terminalView == null || inputView == null || prefixView == null)
             throw new UnsupportedOperationException();
 
         this.mContext = context;
+        this.executer = executer;
 
         this.mainPack = mainPack;
 
@@ -139,8 +135,6 @@ public class TerminalManager {
         suPrefix = XMLPrefsManager.get(Ui.input_root_prefix);
 
         int ioSize = XMLPrefsManager.getInt(Ui.input_output_size);
-
-        keeperServiceRunning = XMLPrefsManager.getBoolean(Behavior.tui_notification);
 
         prefixView.setTypeface(Tuils.getTypeface(context));
         prefixView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
@@ -314,6 +308,7 @@ public class TerminalManager {
         CharSequence input = mInputView.getText();
 
         String cmd = input.toString().trim();
+
         Object obj = null;
         try {
             obj = ((Spannable) input).getSpans(0, input.length(), AppsManager.LaunchInfo.class)[0];
@@ -337,10 +332,23 @@ public class TerminalManager {
             howBack = -1;
         }
 
-//        I tried to use intents and ioreceiver.class instead, but it wasn't better
-        if (mInputListener != null) {
-            mInputListener.onNewInput(cmd, obj);
-        }
+//        DO NOT USE THE INTENT APPROACH
+//        apps are not launching properly, when one has been launched, an other attempt will show always the same
+//
+//        Intent intent = new Intent(MainManager.ACTION_EXEC);
+//        intent.putExtra(MainManager.CMD, cmd);
+//        intent.putExtra(MainManager.CMD_COUNT, MainManager.commandCount);
+//
+//        Parcelable p = null;
+//        if(obj instanceof Parcelable) p = (Parcelable) obj;
+//        intent.putExtra(MainManager.PARCELABLE, p);
+//
+//        LocalBroadcastManager.getInstance(mContext.getApplicationContext()).sendBroadcast(intent);
+
+        executer.execute(cmd, obj);
+
+//        because it will clear suggestions without refilling them, because "aftertextchanged" wont be called
+//        if(cmd.length() > 0) LocalBroadcastManager.getInstance(mContext.getApplicationContext()).sendBroadcast(new Intent(UIManager.ACTION_CLEAR_SUGGESTIONS));
 
         setupNewInput();
 
@@ -350,21 +358,11 @@ public class TerminalManager {
     public void setOutput(CharSequence output, int type) {
         if (output == null || output.length() == 0) return;
 
-        if(output.equals(clear.CLEAR)) {
-            clear();
-            return;
-        }
-
         writeToView(output, type);
     }
 
     public void setOutput(int color, CharSequence output) {
         if(output == null || output.length() == 0) return;
-
-        if(output.equals(clear.CLEAR)) {
-            clear();
-            return;
-        }
 
         if(color == Integer.MAX_VALUE) {
             color = XMLPrefsManager.getColor(Theme.output_color);
@@ -375,6 +373,10 @@ public class TerminalManager {
 
         CharSequence s = TextUtils.concat(Tuils.NEWLINE, si);
         writeToView(s);
+    }
+
+    public String getTerminalText() {
+        return mTerminalView.getText().toString();
     }
 
     public void onBackPressed() {
@@ -412,13 +414,6 @@ public class TerminalManager {
     public static final String FORMAT_NEWLINE = "%n";
 
     private void writeToView(CharSequence text, int type) {
-        if(type == CATEGORY_INPUT && keeperServiceRunning) {
-            Intent i = new Intent(mContext, KeeperService.class);
-            i.putExtra(KeeperService.CMD_KEY, text.toString());
-            i.putExtra(KeeperService.PATH_KEY, mainPack.currentDirectory.getAbsolutePath());
-            mContext.startService(i);
-        }
-
         text = getFinalText(text, type);
         text = TextUtils.concat(Tuils.NEWLINE, text);
         writeToView(text);
@@ -443,10 +438,10 @@ public class TerminalManager {
                 boolean su = t.toString().startsWith("su ") || suMode;
 
                 SpannableString si = Tuils.span(inputFormat, inputColor);
-                if(clickCommands || longClickCommands) si.setSpan(new LongClickableSpan(clickCommands ? t.toString() : null, longClickCommands ? t.toString() : null, InputOutputReceiver.ACTION_INPUT), 0,
+                if(clickCommands || longClickCommands) si.setSpan(new LongClickableSpan(clickCommands ? t.toString() : null, longClickCommands ? t.toString() : null, PrivateIOReceiver.ACTION_INPUT), 0,
                         si.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                s = TimeManager.replace(si,XMLPrefsManager.getColor(Theme.time_color));
+                s = TimeManager.instance.replace(si,XMLPrefsManager.getColor(Theme.time_color));
                 s = TextUtils.replace(s,
                         new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE, FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
                         new CharSequence[] {t, su ? suPrefix : prefix, Tuils.NEWLINE, t, su ? suPrefix : prefix, Tuils.NEWLINE});
@@ -515,14 +510,6 @@ public class TerminalManager {
         this.messagesManager = msg;
     }
 
-    public void setInputListener(UIManager.OnNewInputListener listener) {
-        this.mInputListener = listener;
-    }
-
-//    public void setSuggestionNavigator(UIManager.SuggestionNavigator navigator) {
-//        this.mSuggestionNavigator = navigator;
-//    }
-
     public void focusInputEnd() {
         mInputView.setSelection(getInput().length());
     }
@@ -554,30 +541,23 @@ public class TerminalManager {
         clearCmdsCount = 0;
     }
 
-    public Rooter getRooter() {
-        return new Rooter() {
+    public void onRoot() {
+        ((Activity) mContext).runOnUiThread(new Runnable() {
             @Override
-            public void onRoot() {
-                ((Activity) mContext).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        suMode = true;
-                        mPrefix.setText(suPrefix.endsWith(Tuils.SPACE) ? suPrefix : suPrefix + Tuils.SPACE);
-                    }
-                });
+            public void run() {
+                suMode = true;
+                mPrefix.setText(suPrefix.endsWith(Tuils.SPACE) ? suPrefix : suPrefix + Tuils.SPACE);
             }
-
-            @Override
-            public void onStandard() {
-                ((Activity) mContext).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        suMode = false;
-                        mPrefix.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
-                    }
-                });
-            }
-        };
+        });
     }
 
+    public void onStandard() {
+        ((Activity) mContext).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                suMode = false;
+                mPrefix.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
+            }
+        });
+    }
 }

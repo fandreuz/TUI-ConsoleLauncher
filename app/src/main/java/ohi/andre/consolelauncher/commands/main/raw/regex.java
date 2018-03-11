@@ -19,7 +19,7 @@ public class regex extends ParamCommand {
         add {
             @Override
             public String exec(ExecutePack pack) {
-                String output = RegexManager.add(pack.getInt(), pack.getString());
+                String output = RegexManager.instance.add(pack.getInt(), pack.getString());
                 if(output == null) return null;
                 if(output.length() == 0) return pack.context.getString(R.string.id_already);
                 else return output;
@@ -33,7 +33,7 @@ public class regex extends ParamCommand {
         rm {
             @Override
             public String exec(ExecutePack pack) {
-                String output = RegexManager.rm(pack.getInt());
+                String output = RegexManager.instance.rm(pack.getInt());
                 if(output == null) return null;
                 if(output.length() == 0) return pack.context.getString(R.string.id_notfound);
                 return output;
@@ -47,7 +47,7 @@ public class regex extends ParamCommand {
         get {
             @Override
             public String exec(ExecutePack pack) {
-                RegexManager.Regex r = RegexManager.get(pack.getInt());
+                RegexManager.Regex r = RegexManager.instance.get(pack.getInt());
                 if(r == null) return pack.context.getString(R.string.id_notfound);
 
                 return r.regex != null ? r.regex.pattern() : r.literalPattern;
@@ -61,7 +61,7 @@ public class regex extends ParamCommand {
         test {
             @Override
             public String exec(ExecutePack pack) {
-                CharSequence s = RegexManager.test(pack.getInt(), pack.getString());
+                CharSequence s = RegexManager.instance.test(pack.getInt(), pack.getString());
                 if(s.length() == 0) return pack.context.getString(R.string.id_notfound);
 
                 Tuils.sendOutput(pack.context, s);

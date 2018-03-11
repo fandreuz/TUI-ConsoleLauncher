@@ -14,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 
 import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.APICommand;
@@ -23,7 +24,7 @@ import ohi.andre.consolelauncher.tuils.Tuils;
  * Created by francescoandreuzzi on 10/05/2017.
  */
 
-public class location extends APICommand {
+public class location implements APICommand, CommandAbstraction {
 
     @Override
     public String exec(final ExecutePack pack) throws Exception {

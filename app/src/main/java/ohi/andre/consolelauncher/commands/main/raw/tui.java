@@ -5,12 +5,19 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v4.content.LocalBroadcastManager;
+
+import java.io.File;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.UIManager;
+import ohi.andre.consolelauncher.commands.CommandAbstraction;
+import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 
@@ -42,7 +49,51 @@ public class tui extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 MainPack info = (MainPack) pack;
-                return info.res.getString(R.string.version_label) + Tuils.SPACE + BuildConfig.VERSION_NAME + Tuils.NEWLINE + Tuils.NEWLINE + info.res.getString(R.string.output_about);
+                return "Version:" + Tuils.SPACE + BuildConfig.VERSION_NAME + " (code: " + BuildConfig.VERSION_CODE + ")" +
+                        (BuildConfig.DEBUG ? Tuils.NEWLINE + BuildConfig.BUILD_TYPE : Tuils.EMPTYSTRING) +
+                        Tuils.NEWLINE + Tuils.NEWLINE + info.res.getString(R.string.output_about);
+            }
+        },
+        log {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.PLAIN_TEXT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                Intent i = new Intent(UIManager.ACTION_LOGTOFILE);
+                i.putExtra(UIManager.FILE_NAME, pack.getString());
+                LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(i);
+
+                return null;
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
+                return pack.context.getString(R.string.help_tui);
+            }
+        },
+        priority {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.COMMAND, CommandAbstraction.INT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                File file = new File(Tuils.getFolder(), "cmd.xml");
+                return XMLPrefsManager.set(file, pack.get().getClass().getSimpleName() + CommandsPreferences.PRIORITY_SUFFIX, new String[] {XMLPrefsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(pack.getInt())});
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
+                return pack.context.getString(R.string.help_tui);
+            }
+
+            @Override
+            public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_invalidarg);
             }
         },
         telegram {

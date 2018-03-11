@@ -17,9 +17,10 @@ import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
 import ohi.andre.consolelauncher.managers.RssManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.managers.xml.options.Rss;
@@ -32,7 +33,7 @@ public class CommandTuils {
     private static FileManager.SpecificExtensionFileFilter extensionFileFilter = new FileManager.SpecificExtensionFileFilter();
     private static FileManager.SpecificNameFileFilter nameFileFilter = new FileManager.SpecificNameFileFilter();
 
-    public static List<XMLPrefsManager.XMLPrefsSave> xmlPrefsEntrys;
+    public static List<XMLPrefsSave> xmlPrefsEntrys;
     public static List<String> xmlPrefsFiles;
 
     //	parse a command
@@ -146,13 +147,6 @@ public class CommandTuils {
             if(pack.player == null) return null;
 
             return song(input, pack.player);
-        } else if (type == CommandAbstraction.FILE_LIST && info instanceof MainPack) {
-            MainPack pack = (MainPack) info;
-
-            if (suggestion)
-                return file(input, pack.currentDirectory);
-            else
-                return fileList(input, pack.currentDirectory);
         } else if (type == CommandAbstraction.COMMAND) {
             return command(input, info.commandGroup);
         } else if(type == CommandAbstraction.BOOLEAN) {
@@ -169,9 +163,7 @@ public class CommandTuils {
             return defaultApp(input, ((MainPack) info).appsManager);
         } else if(type == CommandAbstraction.ALL_PACKAGES) {
             return allPackages(input, ((MainPack) info).appsManager);
-        } else if(type == CommandAbstraction.NO_SPACE_STRING) {
-            return noSpaceString(input);
-        } else if(type == CommandAbstraction.APP_GROUP) {
+        } else if(type == CommandAbstraction.NO_SPACE_STRING || type == CommandAbstraction.APP_GROUP || type == CommandAbstraction.BOUND_REPLY_APP) {
             return noSpaceString(input);
         } else if(type == CommandAbstraction.APP_INSIDE_GROUP) {
             return activityName(input, ((MainPack) info).appsManager);
@@ -181,7 +173,6 @@ public class CommandTuils {
 
         return null;
     }
-
 
 //	args extractors {
 
@@ -227,7 +218,7 @@ public class CommandTuils {
             notUsed = null;
         }
 
-        Object result = used.toLowerCase().equals("true");
+        Object result = Boolean.parseBoolean(used);
         return new ArgInfo(result, notUsed, used.length() > 0, used.length() > 0 ? 1 : 0);
     }
 
@@ -256,19 +247,44 @@ public class CommandTuils {
     }
 
     private static ArgInfo command(String string, CommandGroup active) {
+        ArgInfo i = noSpaceString(string);
+        string = (String) i.arg;
+
         CommandAbstraction abstraction = null;
         try {
             abstraction = active.getCommandByName(string);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            Tuils.log(e);
+            Tuils.toFile(e);
+        }
 
-        return new ArgInfo(abstraction, null, abstraction != null, 1);
+        return new ArgInfo(abstraction, i.residualString, abstraction != null, 1);
     }
 
     @SuppressWarnings("unchecked")
     private static ArgInfo file(String input, File cd) {
+        input = input.trim();
+        if(input.startsWith("\"") || input.startsWith("'") && input.substring(1, input.length()).contains("\"")) {
+            String afterFirst = input.substring(1, input.length());
+
+            int endIndex = afterFirst.indexOf("\"");
+            if(endIndex == -1) endIndex = afterFirst.indexOf("'");
+
+            if(endIndex != -1) {
+                String file = afterFirst.substring(0, endIndex);
+                String residual = afterFirst.substring(endIndex + 1, afterFirst.length());
+
+                File f;
+                if(afterFirst.startsWith("/")) /*absolute*/ f = new File(file);
+                else f = new File(cd, file);
+
+                return new ArgInfo(f, residual, true, 1);
+            }
+        }
+
         List<String> strings = (List<String>) CommandTuils.textList(input).arg;
 
-        String toVerify = "";
+        String toVerify = Tuils.EMPTYSTRING;
         for (int count = 0; count < strings.size(); count++) {
             toVerify = toVerify.concat(strings.get(count));
 
@@ -281,47 +297,45 @@ public class CommandTuils {
                 return new ArgInfo(info.file, residual, true, 1);
             }
 
-            toVerify = toVerify.concat(" ");
+            toVerify = toVerify.concat(Tuils.SPACE);
         }
 
         return new ArgInfo(null, input, false, 0);
     }
 
-    @SuppressWarnings("unchecked")
-    private static ArgInfo fileList(String input, File cd) {
-        List<File> files = new ArrayList<>();
-        List<String> strings = (List<String>) CommandTuils.textList(input).arg;
-
-        String toVerify = "";
-        for (int count = 0; count < strings.size(); count++) {
-            String s = strings.get(count);
-
-            toVerify = toVerify.concat(s);
-
-            DirInfo dir = CommandTuils.getFile(toVerify, cd);
-            if (dir.notFound == null) {
-                files.add(dir.file);
-
-                toVerify = "";
-                continue;
-            }
-
-            List<File> tempFiles = CommandTuils.attemptWildcard(dir);
-            if (tempFiles != null) {
-                files.addAll(tempFiles);
-
-                toVerify = Tuils.EMPTYSTRING;
-                continue;
-            }
-
-            toVerify = toVerify.concat(Tuils.SPACE);
-        }
-
-        if (toVerify.length() > 0)
-            return new ArgInfo(null, null, false, 0);
-
-        return new ArgInfo(files, null, files.size() > 0, files.size());
-    }
+//    @SuppressWarnings("unchecked")
+//    private static ArgInfo fileList(String input, File cd) {
+//        List<File> files = new ArrayList<>();
+//        List<String> strings = (List<String>) CommandTuils.textList(input).arg;
+//
+//        String toVerify = Tuils.EMPTYSTRING;
+//        for (int count = 0; count < strings.size(); count++) {
+//            String s = strings.get(count);
+//
+//            toVerify = toVerify.concat(s);
+//
+//            DirInfo dir = CommandTuils.getFile(toVerify, cd);
+//            if (dir.notFound == null) {
+//                files.add(dir.file);
+//
+//                toVerify = Tuils.EMPTYSTRING;
+//                continue;
+//            }
+//
+//            List<File> tempFiles = CommandTuils.attemptWildcard(dir);
+//            if (tempFiles != null) {
+//                files.addAll(tempFiles);
+//
+//                toVerify = Tuils.EMPTYSTRING;
+//                continue;
+//            }
+//
+//            toVerify = toVerify.concat(Tuils.SPACE);
+//        }
+//
+//        if (toVerify.length() > 0) return new ArgInfo(null, null, false, 0);
+//        return new ArgInfo(files, null, files.size() > 0, files.size());
+//    }
 
     private static DirInfo getFile(String path, File cd) {
         return FileManager.cd(cd, path);
@@ -370,10 +384,7 @@ public class CommandTuils {
         String param = input.substring(0, indexOfFirstSpace).trim();
         if(!param.startsWith("-")) param = "-".concat(param);
 
-        Tuils.log(param);
-
         SimpleMutableEntry<Boolean, Param> sm = cmd.getParam(pack, param);
-        Tuils.log(sm.getKey(), sm.getValue());
         Param p = sm.getValue();
         boolean df = sm.getKey();
 
@@ -438,7 +449,7 @@ public class CommandTuils {
         }
 
         String candidate = index == -1 ? input : input.substring(0,index);
-        for(XMLPrefsManager.XMLPrefsSave xs : xmlPrefsEntrys) {
+        for(XMLPrefsSave xs : xmlPrefsEntrys) {
             if(xs.is(candidate)) {
                 return new ArgInfo(xs, index == -1 ? null : input.substring(index + 1,input.length()), true, 1);
             }

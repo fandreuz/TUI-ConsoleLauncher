@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
+import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
@@ -42,6 +43,8 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class NotificationService extends NotificationListenerService {
 
+    public static final String DESTROY = "destroy";
+
     private final int UPDATE_TIME = 2000;
     private final String LINES_LABEL = "Lines", ANDROID_LABEL_PREFIX = "android.", NULL_LABEL = "null";
 
@@ -50,7 +53,7 @@ public class NotificationService extends NotificationListenerService {
 
     String format;
     int timeColor, color, maxOptionalDepth;
-    boolean enabled, click, longClick;
+    boolean enabled, click, longClick, active;
 
     Queue<StatusBarNotification> queue;
 
@@ -58,188 +61,211 @@ public class NotificationService extends NotificationListenerService {
     final Pattern timePattern = Pattern.compile("^%t[0-9]*$");
 
     PackageManager manager;
+    ReplyManager replyManager;
+    NotificationManager notificationManager;
 
     private final Pattern formatPattern = Pattern.compile("%(?:\\[(\\d+)\\])?(?:\\[([^]]+)\\])?(?:(?:\\{)([a-zA-Z\\.\\:\\s]+)(?:\\})|([a-zA-Z\\.\\:]+))");
 
-    StoppableThread bgThread = new StoppableThread() {
-        @Override
-        public void run() {
-            super.run();
-
-            if(!enabled) return;
-
-            while(true) {
-                if(queue != null) {
-
-                    StatusBarNotification sbn;
-                    while ((sbn = queue.poll()) != null) {
-
-                        android.app.Notification notification = sbn.getNotification();
-                        if (notification == null) {
-                            continue;
-                        }
-
-                        String pack = sbn.getPackageName();
-
-                        String appName;
-                        try {
-                            appName = manager.getApplicationInfo(pack, 0).loadLabel(manager).toString();
-                        } catch (PackageManager.NameNotFoundException e) {
-                            appName = "null";
-                        }
-
-                        NotificationManager.NotificatedApp nApp = NotificationManager.getAppState(pack);
-                        if ((nApp != null && !nApp.enabled)) {
-                            continue;
-                        }
-
-                        if (nApp == null && !NotificationManager.default_app_state) {
-                            continue;
-                        }
-
-                        String f;
-                        if(nApp != null && nApp.format != null) f = nApp.format;
-                        else f = format;
-
-                        int textColor;
-                        if(nApp != null && nApp.color != null) textColor = Color.parseColor(nApp.color);
-                        else textColor = color;
-
-                        CharSequence s = Tuils.span(f, textColor);
-
-                        Bundle bundle = NotificationCompat.getExtras(notification);
-
-                        if(bundle != null) {
-                            Matcher m = formatPattern.matcher(s);
-                            String match;
-                            while(m.find()) {
-                                match = m.group(0);
-                                if (!match.startsWith(PKG) && !match.startsWith(APP) && !match.startsWith(NEWLINE) && !timePattern.matcher(match).matches()) {
-                                    String length = m.group(1);
-                                    String color = m.group(2);
-                                    String value = m.group(3);
-
-                                    if(value == null || value.length() == 0) value = m.group(4);
-
-                                    if(value != null) value = value.trim();
-                                    else continue;
-
-                                    if(value.length() == 0) continue;
-
-                                    if(value.equals("ttl")) value = "title";
-                                    else if(value.equals("txt")) value = "text";
-
-                                    String[] temp = value.split(":"), split;
-                                    if(value.endsWith(":")) {
-                                        split = new String[temp.length + 1];
-                                        System.arraycopy(temp, 0, split, 0, temp.length);
-                                        split[split.length - 1] = Tuils.EMPTYSTRING;
-                                    } else split = temp;
-
-//                                    because the last one is the default text, but only if there is more than one label
-                                    int stopAt = split.length;
-                                    if(stopAt > 1) stopAt--;
-
-                                    CharSequence text = null;
-                                    for(int j = 0; j < stopAt; j++) {
-                                        if(split[j].contains(LINES_LABEL)) {
-                                            CharSequence[] array = bundle.getCharSequenceArray(ANDROID_LABEL_PREFIX + split[j]);
-                                            if(array != null) {
-                                                for(CharSequence c : array) {
-                                                    if(text == null) text = c;
-                                                    else text = TextUtils.concat(text, Tuils.NEWLINE, c);
-                                                }
-                                            }
-                                        } else {
-                                            text = bundle.getCharSequence(ANDROID_LABEL_PREFIX + split[j]);
-                                        }
-
-                                        if(text != null && text.length() > 0) break;
-                                    }
-
-                                    if(text == null || text.length() == 0) {
-                                        text = split.length == 1 ? NULL_LABEL : split[split.length - 1];
-                                    }
-
-                                    String stringed = text.toString().trim();
-
-                                    try {
-                                        int l = Integer.parseInt(length);
-                                        stringed = stringed.substring(0,l);
-                                    } catch (Exception e) {}
-
-                                    try {
-                                        text = Tuils.span(stringed, Color.parseColor(color));
-                                    } catch (Exception e) {
-                                        text = stringed;
-                                    }
-
-                                    s = TextUtils.replace(s, new String[] {m.group(0)}, new CharSequence[] {text});
-                                }
-                            }
-                        }
-
-                        String text = s.toString();
-
-                        if(NotificationManager.match(pack, text)) continue;
-
-                        int found = isInPastNotifications(pack, text);
-//                        if(found == 0) {
-//                            Tuils.log("app " + pack, pastNotifications.get(pack).toString());
-//                        }
-
-                        if(found == 2) continue;
-
-//                        else
-                        Notification n = new Notification(System.currentTimeMillis(), text, pack, notification.contentIntent);
-
-                        if(found == 1) {
-                            List<Notification> ns = new ArrayList<>();
-                            ns.add(n);
-                            pastNotifications.put(pack, ns);
-                        } else if(found == 0) {
-                            pastNotifications.get(pack).add(n);
-                        }
-
-                        s = TextUtils.replace(s, new String[]{PKG, APP, NEWLINE}, new CharSequence[]{pack, appName, Tuils.NEWLINE});
-                        String st = s.toString();
-                        while (st.contains(NEWLINE)) {
-                            s = TextUtils.replace(s,
-                                    new String[]{NEWLINE},
-                                    new CharSequence[]{Tuils.NEWLINE});
-                            st = s.toString();
-                        }
-
-                        try {
-                            s = TimeManager.replace(s, timeColor);
-                        } catch (Exception e) {
-                            Tuils.log(e);
-                        }
-
-                        Tuils.sendOutput(NotificationService.this.getApplicationContext(), s, TerminalManager.CATEGORY_NOTIFICATION, click ? notification.contentIntent : null, longClick ? n : null);
-                    }
-                }
-
-                try {
-                    sleep(UPDATE_TIME);
-                } catch (InterruptedException e) {
-                    Tuils.log(e);
-                    return;
-                }
-            }
-        }
-    };
+    StoppableThread bgThread;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
+        init();
+    }
+
+    private void init() {
         try {
-            NotificationManager.create(this);
-            XMLPrefsManager.create(this);
+            notificationManager = NotificationManager.create(this);
+            XMLPrefsManager.loadCommons(this);
         } catch (Exception e) {
+            Tuils.log(e);
             return;
         }
+
+        try {
+            replyManager = new ReplyManager(this);
+        } catch (VerifyError error) {
+            replyManager = null;
+        }
+
+        bgThread = new StoppableThread() {
+            @Override
+            public void run() {
+                super.run();
+
+                if(!enabled) return;
+
+                while(true) {
+                    if(isInterrupted()) return;
+
+                    if(queue != null) {
+
+                        StatusBarNotification sbn;
+                        while ((sbn = queue.poll()) != null) {
+
+                            android.app.Notification notification = sbn.getNotification();
+                            if (notification == null) {
+                                continue;
+                            }
+
+                            String pack = sbn.getPackageName();
+
+                            String appName;
+                            try {
+                                appName = manager.getApplicationInfo(pack, 0).loadLabel(manager).toString();
+                            } catch (PackageManager.NameNotFoundException e) {
+                                appName = "null";
+                            }
+
+                            NotificationManager.NotificatedApp nApp = notificationManager.getAppState(pack);
+                            if ((nApp != null && !nApp.enabled)) {
+                                continue;
+                            }
+
+                            if (nApp == null && !notificationManager.default_app_state) {
+                                continue;
+                            }
+
+                            String f;
+                            if(nApp != null && nApp.format != null) f = nApp.format;
+                            else f = format;
+
+                            int textColor;
+                            if(nApp != null && nApp.color != null) textColor = Color.parseColor(nApp.color);
+                            else textColor = color;
+
+                            CharSequence s = Tuils.span(f, textColor);
+
+                            Bundle bundle = NotificationCompat.getExtras(notification);
+
+                            if(bundle != null) {
+                                Matcher m = formatPattern.matcher(s);
+                                String match;
+                                while(m.find()) {
+                                    match = m.group(0);
+                                    if (!match.startsWith(PKG) && !match.startsWith(APP) && !match.startsWith(NEWLINE) && !timePattern.matcher(match).matches()) {
+                                        String length = m.group(1);
+                                        String color = m.group(2);
+                                        String value = m.group(3);
+
+                                        if(value == null || value.length() == 0) value = m.group(4);
+
+                                        if(value != null) value = value.trim();
+                                        else continue;
+
+                                        if(value.length() == 0) continue;
+
+                                        if(value.equals("ttl")) value = "title";
+                                        else if(value.equals("txt")) value = "text";
+
+                                        String[] temp = value.split(":"), split;
+//                                    this is an other way to do what I did in NotesManager for footer/header
+                                        if(value.endsWith(":")) {
+                                            split = new String[temp.length + 1];
+                                            System.arraycopy(temp, 0, split, 0, temp.length);
+                                            split[split.length - 1] = Tuils.EMPTYSTRING;
+                                        } else split = temp;
+
+//                                    because the last one is the default text, but only if there is more than one label
+                                        int stopAt = split.length;
+                                        if(stopAt > 1) stopAt--;
+
+                                        CharSequence text = null;
+                                        for(int j = 0; j < stopAt; j++) {
+                                            if(split[j].contains(LINES_LABEL)) {
+                                                CharSequence[] array = bundle.getCharSequenceArray(ANDROID_LABEL_PREFIX + split[j]);
+                                                if(array != null) {
+                                                    for(CharSequence c : array) {
+                                                        if(text == null) text = c;
+                                                        else text = TextUtils.concat(text, Tuils.NEWLINE, c);
+                                                    }
+                                                }
+                                            } else {
+                                                text = bundle.getCharSequence(ANDROID_LABEL_PREFIX + split[j]);
+                                            }
+
+                                            if(text != null && text.length() > 0) break;
+                                        }
+
+                                        if(text == null || text.length() == 0) {
+                                            text = split.length == 1 ? NULL_LABEL : split[split.length - 1];
+                                        }
+
+                                        String stringed = text.toString().trim();
+
+                                        try {
+                                            int l = Integer.parseInt(length);
+                                            stringed = stringed.substring(0,l);
+                                        } catch (Exception e) {}
+
+                                        try {
+                                            text = Tuils.span(stringed, Color.parseColor(color));
+                                        } catch (Exception e) {
+                                            text = stringed;
+                                        }
+
+                                        s = TextUtils.replace(s, new String[] {m.group(0)}, new CharSequence[] {text});
+                                    }
+                                }
+                            }
+
+                            String text = s.toString();
+
+                            if(notificationManager.match(pack, text)) continue;
+
+                            int found = isInPastNotifications(pack, text);
+//                        if(found == 0) {
+//                            Tuils.log("app " + pack, pastNotifications.get(pack).toString());
+//                        }
+
+                            if(found == 2) continue;
+
+//                        else
+                            Notification n = new Notification(System.currentTimeMillis(), text, pack, notification.contentIntent);
+
+                            if(found == 1) {
+                                List<Notification> ns = new ArrayList<>();
+                                ns.add(n);
+                                pastNotifications.put(pack, ns);
+                            } else if(found == 0) {
+                                pastNotifications.get(pack).add(n);
+                            }
+
+                            s = TextUtils.replace(s, new String[]{PKG, APP, NEWLINE}, new CharSequence[]{pack, appName, Tuils.NEWLINE});
+                            String st = s.toString();
+                            while (st.contains(NEWLINE)) {
+                                s = TextUtils.replace(s,
+                                        new String[]{NEWLINE},
+                                        new CharSequence[]{Tuils.NEWLINE});
+                                st = s.toString();
+                            }
+
+                            try {
+                                s = TimeManager.instance.replace(s, timeColor);
+                            } catch (Exception e) {
+                                Tuils.log(e);
+                            }
+
+//                        Tuils.log("text", text);
+//                        Tuils.log("--------");
+
+                            Tuils.sendOutput(NotificationService.this.getApplicationContext(), s, TerminalManager.CATEGORY_NOTIFICATION, click ? notification.contentIntent : null, longClick ? n : null);
+
+                            if(replyManager != null) replyManager.onNotification(sbn, s);
+                        }
+                    }
+
+                    try {
+                        sleep(UPDATE_TIME);
+                    } catch (InterruptedException e) {
+                        Tuils.log(e);
+                        return;
+                    }
+                }
+            }
+        };
 
         manager = getPackageManager();
         enabled = XMLPrefsManager.getBoolean(Notifications.show_notifications) || XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
@@ -274,28 +300,63 @@ public class NotificationService extends NotificationListenerService {
 
         queue = new ArrayBlockingQueue<>(5);
         bgThread.start();
+
+        active = true;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent != null) {
-            timeColor = intent.getIntExtra(Theme.time_color.label(), Color.parseColor(Theme.time_color.defaultValue()));
+            boolean destroy = intent.getBooleanExtra(DESTROY, false);
+            if(destroy) dispose();
+            else timeColor = intent.getIntExtra(Theme.time_color.label(), Color.parseColor(Theme.time_color.defaultValue()));
         } else {
             timeColor = Color.parseColor(Theme.time_color.defaultValue());
         }
 
+        if(!active) init();
+
         return START_STICKY;
+    }
+
+    private void dispose() {
+        if(replyManager != null) {
+            replyManager.dispose(this);
+            replyManager = null;
+        }
+
+        if(notificationManager != null) {
+            notificationManager.dispose();
+            notificationManager = null;
+        }
+
+        bgThread.interrupt();
+        bgThread = null;
+
+        if(pastNotifications != null) {
+            pastNotifications.clear();
+            pastNotifications = null;
+        }
+
+        if(queue != null) {
+            queue.clear();
+            queue = null;
+        }
+
+        active = false;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(handler != null) handler.removeCallbacksAndMessages(null);
+
+//        ondestroy won't ever be called
     }
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         if(!enabled) return;
+
         queue.offer(sbn);
     }
 

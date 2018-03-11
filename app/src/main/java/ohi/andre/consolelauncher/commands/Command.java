@@ -33,12 +33,12 @@ public class Command {
 
             int[] args = param.args();
             if(args == null || mArgs[0] instanceof String) {
-                if(((String) mArgs[0]).length() == 0) cmd.onNotArgEnough(info, 0);
+                if(((String) mArgs[0]).length() == 0) return cmd.onNotArgEnough(info, 0);
                 else return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
             }
 
             if(indexNotFound != -1) {
-                param.onArgNotFound(info, indexNotFound);
+                return param.onArgNotFound(info, indexNotFound);
             }
 
             if(pCmd.defaultParamReference() != null) {

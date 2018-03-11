@@ -1,13 +1,14 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Apps implements XMLPrefsManager.XMLPrefsSave {
+public enum Apps implements XMLPrefsSave {
 
     default_app_n1 {
         @Override
@@ -63,6 +64,22 @@ public enum Apps implements XMLPrefsManager.XMLPrefsSave {
         public String info() {
             return "The fifth default-suggested app";
         }
+    },
+    app_groups_sorting {
+        @Override
+        public String defaultValue() {
+            return "2";
+        }
+
+        @Override
+        public String info() {
+            return "0 = time up->down; 1 = time down->up; 2 = alphabetical up->down; 3 = alphabetical down->up; 4 = most used up->down; 5 = most used down->up";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
     };
 
     public static final String MOST_USED = "most_used";
@@ -74,7 +91,7 @@ public enum Apps implements XMLPrefsManager.XMLPrefsSave {
     }
 
     @Override
-    public XMLPrefsManager.XmlPrefsElement parent() {
+    public XMLPrefsElement parent() {
         return AppsManager.instance;
     }
 
@@ -85,6 +102,6 @@ public enum Apps implements XMLPrefsManager.XMLPrefsSave {
 
     @Override
     public String type() {
-        return XMLPrefsManager.XMLPrefsSave.APP;
+        return XMLPrefsSave.APP;
     }
 }

@@ -1,10 +1,12 @@
 package ohi.andre.consolelauncher.tuils.libsuperuser;
 
+import android.content.Context;
+
 import java.io.File;
 
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
+import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by francescoandreuzzi on 18/08/2017.
@@ -12,10 +14,10 @@ import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 
 public class ShellHolder {
 
-    private Outputable outputable;
+    private Context context;
 
-    public ShellHolder(Outputable outputable) {
-        this.outputable = outputable;
+    public ShellHolder(Context context) {
+        this.context = context;
     }
 
     public Shell.Interactive build() {
@@ -23,13 +25,13 @@ public class ShellHolder {
                 .setOnSTDOUTLineListener(new StreamGobbler.OnLineListener() {
                     @Override
                     public void onLine(String line) {
-                        outputable.onOutput(line);
+                        Tuils.sendOutput(context, line);
                     }
                 })
                 .setOnSTDERRLineListener(new StreamGobbler.OnLineListener() {
                     @Override
                     public void onLine(String line) {
-                        outputable.onOutput(line);
+                        Tuils.sendOutput(context, line);
                     }
                 })
                 .open();

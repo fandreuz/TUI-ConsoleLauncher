@@ -29,7 +29,28 @@ public class Compare {
         return s;
     }
 
+//    private static String lastComparator = null;
+//    private static double averageTime;
+//    private static int n;
+
     public static int matches(String compared, String comparator, boolean allowSkip) {
+//        Tuils.log("-----------------");
+
+//        if(lastComparator != null && lastComparator.equals(comparator)) {}
+//        else {
+//            Tuils.log("#######################");
+//            Tuils.log("average for cmp: " + lastComparator);
+//            Tuils.log("average: " + averageTime + ", n: " + n);
+//            Tuils.log("#######################");
+//
+//            averageTime = 0;
+//            n = 0;
+//
+//            lastComparator = comparator;
+//        }
+
+//        long time = System.currentTimeMillis();
+
 //        Tuils.log("compared: " + compared + ", comparator: " + comparator);
 
         compared = removeAccents(compared).toLowerCase().trim();
@@ -50,30 +71,38 @@ public class Compare {
             }
         }
 
-        String unconsidered = unconsideredSymbols.matcher(compared).replaceAll(Tuils.EMPTYSTRING);
-        if(unconsidered.length() != compared.length()) {
-            s.add(new ComparePack(unconsidered, 0, 1));
-        }
+//        String unconsidered = unconsideredSymbols.matcher(compared).replaceAll(Tuils.EMPTYSTRING);
+//        if(unconsidered.length() != compared.length()) {
+//            s.add(new ComparePack(unconsidered, 0, 1));
+//        }
 
         s.add(new ComparePack(compared, 0, 1));
 
         float maxRate = -1;
+        int maxRateIndex = -1;
+
         Main:
         for(ComparePack cmp : s) {
 //            Tuils.log("s: " + cmp.s);
 
             int stop = Math.min(cmp.s.length(), comparator.length());
+//            Tuils.log("stop", stop);
             float minus = (float) (0.5 * (comparator.length() / 5));
 
-            float rate = cmp.coefficient() * -1;
-//            Tuils.log("initialRate: " + rate);
+            float rate = 0;
             for(int i = 0; i < stop; i++) {
                 char c1 = cmp.s.charAt(i);
                 char c2 = comparator.charAt(i);
 
+//                Tuils.log("index: " + i);
+
                 if(c1 == c2) {
+//                    Tuils.log("equals");
                     rate++;
-                } else {
+                }
+                else if(unconsideredSymbols.matcher(String.valueOf(c1)).find()) {}
+                else {
+//                    Tuils.log(c1 + " is not " + c2);
                     rate -= minus;
 
                     if(rate + (stop - 1 - i) < minRate) {
@@ -86,11 +115,22 @@ public class Compare {
 
             if(rate >= minRate) {
                 maxRate = Math.max(maxRate, rate);
+                maxRateIndex = cmp.index;
 //                Tuils.log("maxRate changed");
             }
         }
 
-        return Math.round(maxRate);
+//        int delay = (int) (System.currentTimeMillis() - time);
+//        Tuils.log("return", Math.round(maxRate));
+//        Tuils.log("time: " + delay);
+//        if(delay > 4) Tuils.log("!!!!!!!!!!!!!");
+//
+//        averageTime = (averageTime * n + delay) / (n + 1);
+//        n++;
+
+        int r = Math.round(maxRate);
+        if(r == comparator.length() && maxRateIndex == 0) return Integer.MAX_VALUE;
+        return r;
     }
 
     public static List<String> matches(List<String> compared, String comparator, boolean allowSkip) {
@@ -158,6 +198,7 @@ public class Compare {
 
     private static class ComparePack {
         String s;
+
         int index;
         int total;
 
@@ -165,10 +206,6 @@ public class Compare {
             this.s = s;
             this.index = index;
             this.total = total;
-        }
-
-        public int coefficient() {
-            return index;
         }
     }
 

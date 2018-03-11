@@ -12,7 +12,7 @@ public class time implements CommandAbstraction {
     @Override
     public String exec(ExecutePack pack) {
         int index = pack.getInt();
-        return TimeManager.replace("%t" + index).toString();
+        return TimeManager.instance.replace("%t" + index).toString();
     }
 
     @Override
@@ -37,6 +37,6 @@ public class time implements CommandAbstraction {
 
     @Override
     public String onNotArgEnough(ExecutePack info, int nArgs) {
-        return TimeManager.replace("%t0").toString();
+        return TimeManager.instance.replace("%t0").toString();
     }
 }

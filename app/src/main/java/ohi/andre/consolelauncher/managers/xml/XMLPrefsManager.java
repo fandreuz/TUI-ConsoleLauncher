@@ -7,6 +7,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -14,7 +15,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -26,6 +26,9 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Cmd;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
@@ -49,56 +52,42 @@ public class XMLPrefsManager {
         } catch (ParserConfigurationException e) {}
     }
 
-    public interface XMLPrefsSave {
-
-        String APP = "app", INTEGER = "int", BOOLEAN = "boolean", TEXT = "text", COLOR = "color";
-
-        String defaultValue();
-        String label();
-        String type();
-        String info();
-        XmlPrefsElement parent();
-        boolean is(String s);
-    }
-
-    public enum XMLPrefsRoot implements XmlPrefsElement {
+    public enum XMLPrefsRoot implements XMLPrefsElement {
 
         THEME("theme.xml", Theme.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"rss_color"};
+                return new String[] {"notes_unlocked_color"};
             }
         },
         CMD("cmd.xml", Cmd.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"time_format", "default_translatefrom", "default_translateto"};
+                return new String[] {};
             }
         },
         TOOLBAR("toolbar.xml", Toolbar.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"enabled"};
+                return new String[] {};
             }
         },
         UI("ui.xml", Ui.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"status_line0_alignment", "status_line1_alignment", "status_line2_alignment", "status_line3_alignment", "status_line4_alignment", "status_line5_alignment",
-                        "font_size", "show_timestamp_before_cmd", "linux_like", "show_username_ssninfo", "show_ssninfo", "show_path_ssninfo", "show_devicename_ssninfo", "show_alias_suggestions",
-                        "transparent_bars"};
+                return new String[] {};
             }
         },
         BEHAVIOR("behavior.xml", Behavior.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"double_tap_closes", "donation_message", "tui_notification_cmd_label", "autolower_firstchar", "long_click_vibrate", "long_click_vibrate_duration"};
+                return new String[] {};
             }
         },
         SUGGESTIONS("suggestions.xml", Suggestions.values()) {
             @Override
             public String[] deleted() {
-                return new String[] {"transparent", "enabled"};
+                return new String[] {};
             }
         };
 
@@ -130,76 +119,20 @@ public class XMLPrefsManager {
         }
     }
 
-    public interface XmlPrefsElement {
-        XMLPrefsList getValues();
-        void write(XMLPrefsSave save, String value);
-        String[] deleted();
-    }
-
-    public static class XMLPrefsEntry {
-
-        public String key, value;
-
-        public XMLPrefsEntry(String key, String value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if(obj instanceof XMLPrefsEntry) return this == obj;
-            else if(obj instanceof XMLPrefsSave) return this.key.equals(((XMLPrefsSave) obj).label());
-            return obj.equals(key);
-        }
-
-        @Override
-        public String toString() {
-            return key + " --> " + value;
-        }
-    }
-
-    public static class XMLPrefsList {
-
-        public List<XMLPrefsEntry> list = new ArrayList<>();
-
-        public void add(XMLPrefsEntry entry) {
-            list.add(entry);
-        }
-
-        public void add(String key, String value) {
-            list.add(new XMLPrefsEntry(key, value));
-        }
-
-        public XMLPrefsEntry get(Object o) {
-            if(o instanceof Integer) return at((Integer) o);
-
-            for(XMLPrefsEntry e : list) if(e.equals(o)) return e;
-            return null;
-        }
-
-        public XMLPrefsEntry at(int index) {
-            return list.get(index);
-        }
-
-        public int size() {
-            return list.size();
-        }
-
-        public List<String> values() {
-            List<String> vs = new ArrayList<>();
-            for(XMLPrefsEntry entry : list) vs.add(entry.key + "=" + entry.value);
-            return vs;
-        }
-    }
-
     private XMLPrefsManager() {}
 
-    static boolean called = false;
-    public static void create(Context context) throws Exception {
-        boolean timeFound = false;
+    public static void dispose() {
+        commonsLoaded = false;
 
-        if(called) return;
-        called = true;
+        for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
+            element.values.list.clear();
+        }
+    }
+
+    static boolean commonsLoaded = false;
+    public static void loadCommons(Context context) {
+        if(commonsLoaded) return;
+        commonsLoaded = true;
 
         File folder = Tuils.getFolder();
         if(folder == null) {
@@ -220,9 +153,12 @@ public class XMLPrefsManager {
                     Tuils.sendXMLParseError(context, element.path);
                     return;
                 }
-            } catch (Exception e) {
+            } catch (SAXParseException e) {
                 Tuils.sendXMLParseError(context, element.path, e);
                 continue;
+            } catch (Exception e) {
+                Tuils.log(e);
+                return;
             }
 
             Document d = (Document) o[0];
@@ -236,7 +172,9 @@ public class XMLPrefsManager {
 
             if(root == null) {
                 resetFile(file, element.name());
-                d = builder.parse(file);
+                try {
+                    d = builder.parse(file);
+                } catch (Exception e) {}
                 root = (Element) d.getElementsByTagName(element.name()).item(0);
             }
             NodeList nodes = root.getElementsByTagName("*");
@@ -244,150 +182,33 @@ public class XMLPrefsManager {
             for(int count = 0; count < nodes.getLength(); count++) {
                 Node node = nodes.item(count);
                 String nn = node.getNodeName();
-                String value = node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue();
 
-//                remove this in a month?
-                if(!timeFound && nn.equals(Behavior.time_format.label()) && value.contains("%")) {
-                    timeFound = true;
-
-                    Pattern p = Pattern.compile("%(.{1})");
-                    Matcher m = p.matcher(value);
-                    while(m.find()) {
-                        char charc = m.group(1).charAt(0);
-
-                        String replaceWith = null;
-                        switch (charc) {
-                            case 'a':
-                                replaceWith = "EE";
-                                break;
-                            case 'A':
-                                replaceWith = "E";
-                                break;
-                            case 'b':
-                                replaceWith = "MM";
-                                break;
-                            case 'B':
-                                replaceWith = "M";
-                                break;
-                            case 'c':
-                                replaceWith = "EE MM dd HH:mm:ss yyyy";
-                                break;
-                            case 'C':
-                                break;
-                            case 'd':
-                                replaceWith = "dd";
-                                break;
-                            case 'D':
-                                replaceWith = "MM dd yyyy";
-                                break;
-                            case 'e':
-                                replaceWith = "dd";
-                                break;
-                            case 'F':
-                                replaceWith = "yyyy-MMM-dd";
-                                break;
-                            case 'g':
-                                break;
-                            case 'G':
-                                break;
-                            case 'h':
-                                replaceWith = "MMM";
-                                break;
-                            case 'H':
-                                replaceWith = "HH";
-                                break;
-                            case 'I':
-                                replaceWith = "hh";
-                                break;
-                            case 'j':
-                                replaceWith = "DDD";
-                                break;
-                            case 'k':
-                                replaceWith = "HH";
-                                break;
-                            case 'l':
-                                replaceWith = "hh";
-                                break;
-                            case 'm':
-                                replaceWith = "MM";
-                                break;
-                            case 'M':
-                                replaceWith = "mm";
-                                break;
-                            case 'n':
-                                break;
-                            case 'N':
-                                break;
-                            case 'p':
-                                replaceWith = "a";
-                                break;
-                            case 'P':
-                                break;
-                            case 'r':
-                                replaceWith = "KK:mm:ss a";
-                                break;
-                            case 'R':
-                                replaceWith = "HH:mm";
-                                break;
-                            case 's':
-                                break;
-                            case 'S':
-                                replaceWith = "s";
-                                break;
-                            case 't':
-                                break;
-                            case 'T':
-                                replaceWith = "HH:mm:ss";
-                                break;
-                            case 'u':
-                                replaceWith = "u";
-                                break;
-                            case 'U':
-                                replaceWith = "w";
-                                break;
-                            case 'V':
-                                break;
-                            case 'w':
-                                replaceWith = "u";
-                                break;
-                            case 'W':
-                                replaceWith = "w";
-                                break;
-                            case 'x':
-                                replaceWith = "MMM/dd/yyyy";
-                                break;
-                            case 'X':
-                                replaceWith = "HH:mm:ss";
-                                break;
-                            case 'y':
-                                replaceWith = "yy";
-                                break;
-                            case 'Y':
-                                replaceWith = "yyyy";
-                                break;
-                        }
-
-                        if(replaceWith != null) value = value.replaceAll(m.group(0), replaceWith);
-                    }
-
-                    ((Element) node).setAttribute(VALUE_ATTRIBUTE, value);
+                String value;
+                try {
+                    value = node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue();
+                } catch (Exception e) {
+                    continue;
                 }
 
                 element.values.add(nn, value);
 
+                boolean check = false;
                 for(int en = 0; en < enums.size(); en++) {
                     if(enums.get(en).label().equals(nn)) {
                         enums.remove(en);
+                        check = true;
                         break;
-                    } else if(deleted != null) {
-                        int index = Tuils.find(nn, deleted);
-                        if(index != -1) {
-                            deleted[index] = null;
-                            Element e = (Element) node;
-                            root.removeChild(e);
+                    }
+                }
 
-                            needToWrite = true;
-                        }
+                if(!check && deleted != null) {
+                    int index = Tuils.find(nn, deleted);
+                    if(index != -1) {
+                        deleted[index] = null;
+                        Element e = (Element) node;
+                        root.removeChild(e);
+
+                        needToWrite = true;
                     }
                 }
             }
@@ -432,6 +253,81 @@ public class XMLPrefsManager {
         return Tuils.getDefaultValue(c);
     }
 
+    public static float getFloat(XMLPrefsSave prefsSave) {
+        return get(float.class, prefsSave);
+    }
+
+    public static double getDouble(XMLPrefsSave prefsSave) {
+        return get(double.class, prefsSave);
+    }
+
+    public static int getInt(XMLPrefsSave prefsSave) {
+        return get(int.class, prefsSave);
+    }
+
+    public static boolean getBoolean(XMLPrefsSave prefsSave) {
+        return get(boolean.class, prefsSave);
+    }
+
+    public static int getColor(XMLPrefsSave prefsSave) {
+        if(prefsSave.parent() == null) return Integer.MAX_VALUE;
+
+        try {
+            return (int) transform(prefsSave.parent().getValues().get(prefsSave).value, Color.class);
+        } catch (Exception e) {
+            String def = prefsSave.defaultValue();
+            if(def == null || def.length() == 0) {
+                return Integer.MAX_VALUE;
+            }
+
+            try {
+                return (int) transform(def, Color.class);
+            } catch (Exception e1) {
+                return Integer.MAX_VALUE;
+            }
+        }
+    }
+
+    public static String getString(XMLPrefsSave prefsSave) {
+        return get(prefsSave);
+    }
+
+    public static <T> T get(Class<T> c, XMLPrefsRoot root, String s) {
+        try {
+            return (T) transform(root.getValues().get(s).value, c);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static <T> T get(Class<T> c, XMLPrefsSave prefsSave) {
+        try {
+//            if(prefsSave.is(Notifications.show_notifications.label())) {
+//                Tuils.log("----------------");
+//                Tuils.log("label", prefsSave.label());
+//                Tuils.log("parent", prefsSave.parent().toString());
+//                Tuils.log("values tostring", prefsSave.parent().getValues().toString());
+//            }
+            return (T) transform(prefsSave.parent().getValues().get(prefsSave).value, c);
+        } catch (Exception e) {
+//            this will happen if the option is not found
+            try {
+                return (T) transform(prefsSave.defaultValue(), c);
+            } catch (Exception e1) {
+//                attempts to get a default value for the given type, as we say in italian, "the last beach"
+                return Tuils.getDefaultValue(c);
+            }
+        }
+    }
+
+    public static String get(XMLPrefsSave prefsSave) {
+        return get(String.class, prefsSave);
+    }
+
+    public static String get(XMLPrefsRoot root, String s) {
+        return get(String.class, root, s);
+    }
+
     static final Pattern p1 = Pattern.compile(">");
 //    static final Pattern p2 = Pattern.compile("</");
     static final Pattern p3 = Pattern.compile("\n\n");
@@ -450,6 +346,10 @@ public class XMLPrefsManager {
 //    [0] = document
 //    [1] = root
     public static Object[] buildDocument(File file, String rootName) throws Exception {
+        if(!file.exists()) {
+            resetFile(file, rootName);
+        }
+
         Document d;
         try {
             d = builder.parse(file);
@@ -457,12 +357,12 @@ public class XMLPrefsManager {
             Tuils.log(e);
 
             int nOfBytes = Tuils.nOfBytes(file);
-            Tuils.log("nof", nOfBytes);
             if(nOfBytes == 0 && rootName != null) {
                 XMLPrefsManager.resetFile(file, rootName);
                 d = builder.parse(file);
             } else return null;
         }
+
         Element r = d.getDocumentElement();
         return new Object[] {d, r};
     }
@@ -564,7 +464,7 @@ public class XMLPrefsManager {
                     if(n.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) n;
 
-                        if(!checkAttributes(e, thatHasThose, forValues)) {
+                        if(!checkAttributes(e, thatHasThose, forValues, false)) {
                             continue Nodes;
                         }
 
@@ -637,6 +537,48 @@ public class XMLPrefsManager {
         }
     }
 
+    public static String removeNode(File file, String[] thatHasThose, String[] forValues) {
+        return removeNode(file, thatHasThose, forValues, false,false);
+    }
+
+    public static String removeNode(File file, String[] thatHasThose, String[] forValues, boolean alsoNotFound, boolean all) {
+        try {
+            Object[] o;
+            try {
+                o = buildDocument(file, null);
+                if(o == null) return Tuils.EMPTYSTRING;
+            } catch (Exception e) {
+                return e.toString();
+            }
+
+            Document d = (Document) o[0];
+            Element root = (Element) o[1];
+
+            NodeList list = root.getElementsByTagName("*");
+
+            boolean check = false;
+
+            for(int c = 0; c < list.getLength(); c++) {
+                Node n = list.item(c);
+
+                if(!(n instanceof Element)) continue;
+                Element e = (Element) n;
+
+                if(checkAttributes(e, thatHasThose, forValues, alsoNotFound)) {
+                    check = true;
+                    root.removeChild(n);
+                    if(!all) break;
+                }
+            }
+
+            writeTo(d, file);
+
+            return check ? null : Tuils.EMPTYSTRING;
+        } catch (Exception e) {
+            return e.toString();
+        }
+    }
+
     public static Node findNode(File file, String nodeName) {
         return findNode(file, nodeName, null, null);
     }
@@ -659,15 +601,38 @@ public class XMLPrefsManager {
         }
     }
 
+//    useful only if you're looking for a single node
+    public static Node findNode(Element root, String nodeName, String[] thatHasThose, String[] forValues) {
+        NodeList nodes = root.getElementsByTagName(nodeName);
+        for(int j = 0; j < nodes.getLength(); j++) if(checkAttributes((Element) nodes.item(j), thatHasThose, forValues, false)) return nodes.item(j);
+        return null;
+    }
+
     public static Node findNode(Element root, String nodeName) {
         return findNode(root, nodeName, null, null);
     }
 
-//    useful only if you're looking for a single node
-    public static Node findNode(Element root, String nodeName, String[] thatHasThose, String[] forValues) {
-        NodeList nodes = root.getElementsByTagName(nodeName);
-        for(int j = 0; j < nodes.getLength(); j++) if(checkAttributes((Element) nodes.item(j), thatHasThose, forValues)) return nodes.item(j);
-        return null;
+    public static List<Node> findNodes(Element root, String nodeName, String[] thatHasThose, String[] forValue) {
+        NodeList nodes = root.getElementsByTagName(nodeName != null ? nodeName : "*");
+
+        List<Node> nodeList = new ArrayList<>();
+
+        for(int c = 0; c < nodes.getLength(); c++) {
+            Node n = nodeList.get(c);
+
+            if(!(n instanceof Element)) continue;
+            Element e = (Element) n;
+
+            if(checkAttributes(e, thatHasThose, forValue, false)) {
+                nodeList.add(n);
+            }
+        }
+
+        return nodeList;
+    }
+
+    public static List<Node> findNodes(Element root, String[] thatHasThose, String[] forValue) {
+        return findNodes(root, null, thatHasThose, forValue);
     }
 
     public static String attrValue(File file, String nodeName, String attrName) {
@@ -701,7 +666,7 @@ public class XMLPrefsManager {
                 Node node = nodes.item(count);
                 Element e = (Element) node;
 
-                if(!checkAttributes(e, thatHasThose, forValues)) continue;
+                if(!checkAttributes(e, thatHasThose, forValues, false)) continue;
 
                 String[] values = new String[attrNames.length];
                 for(int c = 0; c < attrNames.length; c++) values[count] = e.getAttribute(attrNames[c]);
@@ -713,75 +678,20 @@ public class XMLPrefsManager {
         return null;
     }
 
-    private static boolean checkAttributes(Element e, String[] thatHasThose, String[] forValues) {
+    private static boolean checkAttributes(Element e, String[] thatHasThose, String[] forValues, boolean alsoNotFound) {
         if(thatHasThose != null && forValues != null && thatHasThose.length == forValues.length) {
             for(int a = 0; a < thatHasThose.length; a++) {
-                if(!e.hasAttribute(thatHasThose[a])) return false;
+                if(!e.hasAttribute(thatHasThose[a])) return alsoNotFound;
                 if(!forValues[a].equals(e.getAttribute(thatHasThose[a]))) return false;
             }
         }
         return true;
     }
 
-    public static float getFloat(XMLPrefsManager.XMLPrefsSave prefsSave) {
-        return get(float.class, prefsSave);
-    }
-
-    public static double getDouble(XMLPrefsManager.XMLPrefsSave prefsSave) {
-        return get(double.class, prefsSave);
-    }
-
-    public static int getInt(XMLPrefsManager.XMLPrefsSave prefsSave) {
-        return get(int.class, prefsSave);
-    }
-
-    public static boolean getBoolean(XMLPrefsManager.XMLPrefsSave prefsSave) {
-        return get(boolean.class, prefsSave);
-    }
-
-    public static int getColor(XMLPrefsManager.XMLPrefsSave prefsSave) {
-        if(prefsSave.parent() == null) return Integer.MAX_VALUE;
-
-        try {
-            return (int) transform(prefsSave.parent().getValues().get(prefsSave).value, Color.class);
-        } catch (Exception e) {
-            String def = prefsSave.defaultValue();
-            if(def == null || def.length() == 0) {
-                return Integer.MAX_VALUE;
-            }
-
-            try {
-                return (int) transform(def, Color.class);
-            } catch (Exception e1) {
-                return Integer.MAX_VALUE;
-            }
-        }
-    }
-
-    public static String getString(XMLPrefsSave prefsSave) {
-        return get(prefsSave);
-    }
-
-    public static <T> T get(Class<T> c, XMLPrefsManager.XMLPrefsSave prefsSave) {
-        try {
-            return (T) transform(prefsSave.parent().getValues().get(prefsSave).value, c);
-        } catch (Exception e) {
-//            this will happen if the option is not found
-            try {
-                return (T) transform(prefsSave.defaultValue(), c);
-            } catch (Exception e1) {
-//                attempts to get a default value for the given type, as we say in italian, "the last beach"
-                return Tuils.getDefaultValue(c);
-            }
-        }
-    }
-
-    public static String get(XMLPrefsManager.XMLPrefsSave prefsSave) {
-        return get(String.class, prefsSave);
-    }
-
     public static boolean resetFile(File f, String name) {
         try {
+            if(f.exists()) f.delete();
+
             FileOutputStream stream = new FileOutputStream(f);
             stream.write(XML_DEFAULT.getBytes());
             stream.write(("<" + name + ">\n").getBytes());
@@ -800,12 +710,33 @@ public class XMLPrefsManager {
 
     public static long getLongAttribute(Element e, String attribute) {
         String value = getStringAttribute(e, attribute);
-        if(value == null) return -1;
-        return Long.parseLong(value);
+        try {
+            return Long.parseLong(value);
+        } catch (Exception ex) {
+            return -1;
+        }
     }
 
     public static boolean getBooleanAttribute(Element e, String attribute) {
-        return Boolean.parseBoolean(getStringAttribute(e, attribute));
+        String s = getStringAttribute(e, attribute);
+        return s != null && Boolean.parseBoolean(s);
+
+    }
+
+    public static int getIntAttribute(Element e, String attribute) {
+        try {
+            return Integer.parseInt(getStringAttribute(e, attribute));
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
+    public static float getFloatAttribute(Element e, String attribute) {
+        try {
+            return Float.parseFloat(getStringAttribute(e, attribute));
+        } catch (Exception ex) {
+            return -1;
+        }
     }
 
     public static class IdValue {

@@ -1,13 +1,14 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Notifications implements XMLPrefsManager.XMLPrefsSave {
+public enum Notifications implements XMLPrefsSave {
 
     show_notifications {
         @Override
@@ -39,7 +40,7 @@ public enum Notifications implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.COLOR;
+            return XMLPrefsSave.COLOR;
         }
 
         @Override
@@ -55,7 +56,7 @@ public enum Notifications implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.TEXT;
+            return XMLPrefsSave.TEXT;
         }
 
         @Override
@@ -84,10 +85,58 @@ public enum Notifications implements XMLPrefsManager.XMLPrefsSave {
         public String info() {
             return "If true, you will be able to perform some quick operations long-clicking a notification";
         }
+    },
+    notification_popup_exclude_app {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String info() {
+            return "If false, the \"Exclude app\" option won\'t be shown in the long click popup menu";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    notification_popup_exclude_notification {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String info() {
+            return "If false, the \"Exclude notification\" option won\'t be shown in the long click popup menu";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    notification_popup_reply {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String info() {
+            return "If false, the \"Reply to the last notification\" option won\'t be shown in the long click popup menu";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
     };
 
     @Override
-    public XMLPrefsManager.XmlPrefsElement parent() {
+    public XMLPrefsElement parent() {
         return NotificationManager.instance;
     }
 
@@ -103,6 +152,6 @@ public enum Notifications implements XMLPrefsManager.XMLPrefsSave {
 
     @Override
     public String type() {
-        return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+        return XMLPrefsSave.BOOLEAN;
     }
 }

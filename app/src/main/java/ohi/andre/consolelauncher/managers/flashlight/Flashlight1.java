@@ -5,10 +5,11 @@ import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.List;
 
-import ohi.andre.consolelauncher.tuils.InputOutputReceiver;
+import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 
 /**
  * Created by francescoandreuzzi on 20/08/2017.
@@ -46,9 +47,9 @@ public class Flashlight1 extends Flashlight {
                     } catch (Exception ex) {}
                 }
 
-                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                intent.putExtra(InputOutputReceiver.TEXT, e.toString());
-                mContext.sendBroadcast(intent);
+                Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+                intent.putExtra(PrivateIOReceiver.TEXT, e.toString());
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             }
         }
     }
@@ -74,9 +75,9 @@ public class Flashlight1 extends Flashlight {
             try {
                 this.mCamera = Camera.open();
             } catch (Exception e) {
-                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                intent.putExtra(InputOutputReceiver.TEXT, e.toString());
-                mContext.sendBroadcast(intent);
+                Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+                intent.putExtra(PrivateIOReceiver.TEXT, e.toString());
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return false;
             }
         }
@@ -95,9 +96,9 @@ public class Flashlight1 extends Flashlight {
             try {
                 mCamera.setParameters(mCameraParameters);
             } catch (RuntimeException e) {
-                Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-                intent.putExtra(InputOutputReceiver.TEXT, e.toString());
-                mContext.sendBroadcast(intent);
+                Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+                intent.putExtra(PrivateIOReceiver.TEXT, e.toString());
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return false;
             }
         }

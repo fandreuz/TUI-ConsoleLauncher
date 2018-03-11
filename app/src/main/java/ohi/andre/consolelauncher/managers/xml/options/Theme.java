@@ -1,12 +1,14 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Theme implements XMLPrefsManager.XMLPrefsSave {
+public enum Theme implements XMLPrefsSave {
 
     input_color {
         @Override
@@ -260,10 +262,43 @@ public enum Theme implements XMLPrefsManager.XMLPrefsSave {
         public String info() {
             return "The background color that will be used as marker";
         }
+    },
+    notes_color {
+        @Override
+        public String defaultValue() {
+            return "#8BC34A";
+        }
+
+        @Override
+        public String info() {
+            return "The default color of your notes";
+        }
+    },
+    notes_locked_color {
+        @Override
+        public String defaultValue() {
+            return "#3D5AFE";
+        }
+
+        @Override
+        public String info() {
+            return "The color of your locked notes";
+        }
+    },
+    link_color {
+        @Override
+        public String defaultValue() {
+            return "#0000EE";
+        }
+
+        @Override
+        public String info() {
+            return "The color of the links";
+        }
     };
 
     @Override
-    public XMLPrefsManager.XmlPrefsElement parent() {
+    public XMLPrefsElement parent() {
         return XMLPrefsManager.XMLPrefsRoot.THEME;
     }
 
@@ -279,6 +314,6 @@ public enum Theme implements XMLPrefsManager.XMLPrefsSave {
 
     @Override
     public String type() {
-        return XMLPrefsManager.XMLPrefsSave.COLOR;
+        return XMLPrefsSave.COLOR;
     }
 }

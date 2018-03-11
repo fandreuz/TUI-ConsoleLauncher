@@ -26,11 +26,11 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <permission
@@ -41,68 +41,77 @@
         android:protectionLevel="normal" />
 
     <!-- features -->
-    <uses-feature android:name="android.hardware.camera"
+    <uses-feature
+        android:name="android.hardware.camera"
         android:required="false" />
-    <uses-feature android:name="android.hardware.camera.flash"
+    <uses-feature
+        android:name="android.hardware.camera.flash"
         android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus"
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
         android:required="false" />
-    <uses-feature android:name="android.hardware.telephony"
+    <uses-feature
+        android:name="android.hardware.telephony"
         android:required="false" />
-    <uses-feature android:name="android.hardware.wifi"
+    <uses-feature
+        android:name="android.hardware.wifi"
         android:required="false" />
-    <uses-feature android:name="android.hardware.touchscreen"
+    <uses-feature
+        android:name="android.hardware.touchscreen"
         android:required="false" />
-    <uses-feature android:name="android.hardware.bluetooth"
+    <uses-feature
+        android:name="android.hardware.bluetooth"
         android:required="false" />
-    <uses-feature android:name="android.hardware.location.gps"
-        android:required="false"/>
-    <uses-feature android:name="android.hardware.location"
-        android:required="false"/>
-    <uses-feature android:name="android.hardware.location.network"
-        android:required="false"/>
-    <uses-feature android:name="android.hardware.audio.output"
-        android:required="false"/>
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.network"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.audio.output"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Custom.Solid">
-
         <meta-data
             android:name="firebase_analytics_collection_deactivated"
             android:value="true" />
-        <meta-data android:name="firebase_crash_collection_enabled"
+        <meta-data
+            android:name="firebase_crash_collection_enabled"
             android:value="false" />
 
         <activity
             android:name=".LauncherActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
-
-            android:launchMode="singleTask"
             android:clearTaskOnLaunch="true"
-            android:stateNotNeeded="true"
-            android:resumeWhilePausing="true"
-            android:taskAffinity=""
+            android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
             android:enabled="true"
             android:excludeFromRecents="true"
-
+            android:launchMode="singleTask"
+            android:resumeWhilePausing="true"
+            android:stateNotNeeded="true"
+            android:taskAffinity=""
             android:windowSoftInputMode="stateAlwaysVisible|adjustResize">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER_APP" />
             </intent-filter>
         </activity>
 
         <receiver
             android:name=".tuils.stuff.PolicyReceiver"
-            android:permission="android.permission.BIND_DEVICE_ADMIN"
-            android:description="@string/admin_permission">
+            android:description="@string/admin_permission"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/policy" />
@@ -117,26 +126,28 @@
             android:name=".managers.notifications.KeeperService"
             android:enabled="true"
             android:exported="false" />
-
-        <service android:name=".managers.music.MusicService"
+        <service
+            android:name=".managers.music.MusicService"
             android:enabled="true"
-            android:exported="true"/>
+            android:exported="true" />
 
         <activity
             android:name=".commands.tuixt.TuixtActivity"
-            android:theme="@style/Custom.Solid"
-            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
-            android:label="@string/tuixt_label"
-
             android:excludeFromRecents="true"
-            android:noHistory="true">
+            android:label="@string/tuixt_label"
+            android:noHistory="true"
+            android:theme="@style/Custom.Solid"
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LauncherActivity" />
+
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <action android:name="android.intent.action.EDIT"/>
-                <data android:mimeType="text/*"/>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+
+                <data android:mimeType="text/*" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
@@ -198,31 +209,29 @@
                     android:pathPattern=".*\\.xml"
                     android:scheme="file" />
             </intent-filter>
-
         </activity>
 
-        <service android:name=".managers.notifications.NotificationService"
+        <service
+            android:name=".managers.notifications.NotificationService"
             android:label="@string/notification_reader"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
-
         </service>
-
-        <service android:name=".managers.notifications.NotificationMonitorService"/>
+        <service android:name=".managers.notifications.NotificationMonitorService" />
 
         <activity
             android:name=".tuils.stuff.FakeLauncherActivity"
             android:enabled="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
+        <activity android:name=".tuils.ErrorActivity"></activity>
     </application>
 
 </manifest>

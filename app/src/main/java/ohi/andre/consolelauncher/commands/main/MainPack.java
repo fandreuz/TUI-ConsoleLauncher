@@ -20,10 +20,7 @@ import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
-import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
-import ohi.andre.consolelauncher.tuils.interfaces.Rooter;
 import ohi.andre.consolelauncher.tuils.libsuperuser.ShellHolder;
 import okhttp3.OkHttpClient;
 
@@ -38,11 +35,6 @@ public class MainPack extends ExecutePack {
 
     //	resources references
     public Resources res;
-
-    //	flashlight
-//    public boolean isFlashOn = false, canUseFlash = false;
-//    public Camera camera;
-//    public Camera.Parameters parameters;
 
     //	internet
     public WifiManager wifi;
@@ -62,15 +54,7 @@ public class MainPack extends ExecutePack {
     public AliasManager aliasManager;
     public AppsManager appsManager;
 
-    //	reload field
-    public Reloadable reloadable;
-
-    public Rooter rooter;
-
     public CommandsPreferences cmdPrefs;
-
-    //	execute a command
-    public CommandExecuter executer;
 
     public LocationManager locationManager;
 
@@ -85,7 +69,7 @@ public class MainPack extends ExecutePack {
     public OkHttpClient client;
 
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager2 p,
-                    ContactManager c, Reloadable r, CommandExecuter executeCommand, Redirectator redirectator, ShellHolder shellHolder, RssManager rssManager, OkHttpClient client) {
+                    ContactManager c, Redirectator redirectator, ShellHolder shellHolder, RssManager rssManager, OkHttpClient client) {
         super(commandGroup);
 
         this.currentDirectory = XMLPrefsManager.get(File.class, Behavior.home_path);
@@ -98,52 +82,20 @@ public class MainPack extends ExecutePack {
 
         this.res = context.getResources();
 
-        this.executer = executeCommand;
-
         this.context = context;
 
         this.aliasManager = alMgr;
         this.appsManager = appmgr;
-
-//        this.canUseFlash = context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
 
         this.cmdPrefs = new CommandsPreferences();
 
         this.player = p;
         this.contacts = c;
 
-        this.reloadable = r;
-
         this.redirectator = redirectator;
     }
 
-//    public void initCamera() {
-//        try {
-//            this.camera = Camera.open();
-//            this.parameters = this.camera.getParameters();
-//            List<Camera.Size> sizes = this.parameters.getSupportedPreviewSizes();
-//            if(sizes != null && sizes.size() > 0) {
-//                this.parameters.setPreviewSize(sizes.get(0).width, sizes.get(0).height);
-//            }
-//        } catch (Exception e) {
-//            this.camera = null;
-//            this.parameters = null;
-//        }
-//    }
-
     public void dispose() {
-//        if (this.camera == null || this.isFlashOn)
-//            return;
-//
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            flash.detachSurfaceTexture(null);
-//        }
-
-//        this.camera.stopPreview();
-//        this.camera.release();
-//        this.camera = null;
-//        this.parameters = null;
-
         TorchManager mgr = TorchManager.getInstance();
         if(mgr.isOn()) mgr.turnOff();
     }
@@ -152,5 +104,6 @@ public class MainPack extends ExecutePack {
         if(player != null) player.destroy();
         appsManager.onDestroy();
         if(rssManager != null) rssManager.dispose();
+        contacts.destroy(context);
     }
 }

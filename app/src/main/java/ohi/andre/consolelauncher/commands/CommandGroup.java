@@ -50,7 +50,7 @@ public class CommandGroup {
 
     public CommandAbstraction getCommandByName(String name) {
         for(CommandAbstraction c : commands) {
-            if(c.getClass().getName().endsWith(Tuils.DOT.concat(name))) {
+            if(c.getClass().getSimpleName().equals(name)) {
                 return c;
             }
         }

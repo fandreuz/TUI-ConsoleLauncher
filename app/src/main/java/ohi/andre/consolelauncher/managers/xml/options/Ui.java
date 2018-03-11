@@ -3,12 +3,14 @@ package ohi.andre.consolelauncher.managers.xml.options;
 import android.os.Build;
 
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Ui implements XMLPrefsManager.XMLPrefsSave {
+public enum Ui implements XMLPrefsSave {
 
     show_enter_button {
         @Override
@@ -18,7 +20,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -34,7 +36,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -50,7 +52,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -66,7 +68,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -82,7 +84,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -98,7 +100,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -114,7 +116,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -130,12 +132,28 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
             return "The network label font size";
+        }
+    },
+    notes_size {
+        @Override
+        public String defaultValue() {
+            return "13";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "Notes size";
         }
     },
     input_output_size {
@@ -146,7 +164,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -162,7 +180,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -178,7 +196,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -194,7 +212,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -210,7 +228,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -226,7 +244,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -242,12 +260,28 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
         public String info() {
             return "If false, the time label will be hidden";
+        }
+    },
+    show_notes {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+
+        @Override
+        public String info() {
+            return "If false, the notes label will be hidden";
         }
     },
     enable_battery_status {
@@ -258,7 +292,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -274,7 +308,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -290,7 +324,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.TEXT;
+            return XMLPrefsSave.TEXT;
         }
 
         @Override
@@ -306,7 +340,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.TEXT;
+            return XMLPrefsSave.TEXT;
         }
 
         @Override
@@ -322,7 +356,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -338,7 +372,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -354,7 +388,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -370,7 +404,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -386,7 +420,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -402,7 +436,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -418,7 +452,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -434,7 +468,23 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "This is used to order the labels on top of the screen";
+        }
+    },
+    notes_index {
+        @Override
+        public String defaultValue() {
+            return "6";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -450,12 +500,12 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
-            return "The alignment of the first status line (<0 = left, =0 = center, >0 = right)";
+            return "The alignment of the 1st status line (<0 = left, =0 = center, >0 = right)";
         }
     },
     status_line1_alignment {
@@ -466,12 +516,12 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
-            return "The alignment of the second status line (<0 = left, =0 = center, >0 = right)";
+            return "The alignment of the 2nd status line (<0 = left, =0 = center, >0 = right)";
         }
     },
     status_line2_alignment {
@@ -482,12 +532,12 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
-            return "The alignment of the third status line (<0 = left, =0 = center, >0 = right)";
+            return "The alignment of the 3rd status line (<0 = left, =0 = center, >0 = right)";
         }
     },
     status_line3_alignment {
@@ -498,12 +548,12 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
-            return "The alignment of the fourth status line (<0 = left, =0 = center, >0 = right)";
+            return "The alignment of the 4th status line (<0 = left, =0 = center, >0 = right)";
         }
     },
     status_line4_alignment {
@@ -514,12 +564,12 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
-            return "The alignment of the fifth status line (<0 = left, =0 = center, >0 = right)";
+            return "The alignment of the 5th status line (<0 = left, =0 = center, >0 = right)";
         }
     },
     status_line5_alignment {
@@ -530,12 +580,28 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
-            return "The alignment of the sixth status line (<0 = left, =0 = center, >0 = right)";
+            return "The alignment of the 6th status line (<0 = left, =0 = center, >0 = right)";
+        }
+    },
+    status_line6_alignment {
+        @Override
+        public String defaultValue() {
+            return "0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "The alignment of the 7th status line (<0 = left, =0 = center, >0 = right)";
         }
     },
     input_prefix {
@@ -546,7 +612,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.TEXT;
+            return XMLPrefsSave.TEXT;
         }
 
         @Override
@@ -562,7 +628,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.TEXT;
+            return XMLPrefsSave.TEXT;
         }
 
         @Override
@@ -578,7 +644,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -594,7 +660,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -610,7 +676,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -626,7 +692,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
@@ -642,7 +708,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -658,7 +724,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -674,7 +740,7 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -690,17 +756,65 @@ public enum Ui implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
         public String info() {
             return "If true, when your input field is empty there will be a short line containing some information about the current session";
         }
+    },
+    notes_header {
+        @Override
+        public String defaultValue() {
+            return "%( --- Notes : %c ---%n/No notes)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "The header above your notes";
+        }
+    },
+    notes_footer {
+        @Override
+        public String defaultValue() {
+            return "%(%n --- ----- ---/)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "The footer below your notes";
+        }
+    },
+    notes_divider {
+        @Override
+        public String defaultValue() {
+            return "%n";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "The divider between two notes";
+        }
     };
 
     @Override
-    public XMLPrefsManager.XmlPrefsElement parent() {
+    public XMLPrefsElement parent() {
         return XMLPrefsManager.XMLPrefsRoot.UI;
     }
 

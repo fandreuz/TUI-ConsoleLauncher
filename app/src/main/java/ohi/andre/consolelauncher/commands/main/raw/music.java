@@ -107,6 +107,7 @@ public class music extends ParamCommand {
 
                 MusicManager2 m = ((MainPack) pack).player;
                 Song song = m.get(m.getSongIndex());
+                if(song == null) return pack.context.getString(R.string.output_songnotfound);
 
                 builder.append("Name: " + song.getTitle()).append(Tuils.NEWLINE);
                 if(song.getID() == -1) builder.append("Path: " + song.getPath()).append(Tuils.NEWLINE);

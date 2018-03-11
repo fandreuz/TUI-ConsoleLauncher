@@ -9,7 +9,6 @@ public interface CommandAbstraction {
     int CONTACTNUMBER = 13;
     int TEXTLIST = 14;
     int SONG = 15;
-    int FILE_LIST = 16;
     int COMMAND = 17;
     int PARAM = 18;
     int BOOLEAN = 19;
@@ -24,6 +23,7 @@ public interface CommandAbstraction {
     int APP_GROUP = 28;
     int APP_INSIDE_GROUP = 29;
     int LONG = 30;
+    int BOUND_REPLY_APP = 31;
 
     String exec(ExecutePack pack) throws Exception;
 

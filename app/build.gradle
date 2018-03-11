@@ -11,8 +11,8 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
 
-        versionCode 151
-        versionName "6.4"
+        versionCode 169
+        versionName "6.5"
     }
 
     buildTypes {
@@ -38,9 +38,15 @@ android {
         compile 'com.android.support:appcompat-v7:23.4.0'
     }
 
+    lintOptions {
+        checkReleaseBuilds false
+    }
+
     android.applicationVariants.all { variant ->
+        def formattedDate = new Date().format('hh.mm')
+
         variant.outputs.all {
-            outputFileName = "./${variant.versionName}/${variant.versionCode}.apk"
+            outputFileName = "./${variant.versionName}/${variant.applicationId}_${variant.versionCode}_${formattedDate}.apk"
         }
     }
 
@@ -50,6 +56,5 @@ android {
     }
 }
 dependencies {
-    compile 'com.google.firebase:firebase-database:9.0.0'
-    compile 'com.squareup.okhttp3:okhttp:3.9.0'
+    compile 'com.squareup.okhttp3:okhttp:3.9.1'
 }

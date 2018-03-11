@@ -7,6 +7,7 @@ import android.text.SpannableString;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,18 +28,14 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class RegexManager {
 
-    private static final String PATH = "regex.xml", ROOT = "REGEX";
-    private static final String REGEX_LABEL = "regex", ID_ATTRIBUTE = "id";
+    private final String PATH = "regex.xml", ROOT = "REGEX";
+    private final String REGEX_LABEL = "regex", ID_ATTRIBUTE = "id";
 
-    private static List<Regex> regexes;
+    private List<Regex> regexes;
 
-    private RegexManager() {}
+    public static RegexManager instance;
 
-    private static boolean available = false;
-    public static void create(final Context context) {
-        if(available) return;
-        available = true;
-
+    public RegexManager(final Context context) {
         if(regexes != null) regexes.clear();
         else regexes = new ArrayList<>();
 
@@ -68,8 +65,11 @@ public class RegexManager {
                             Tuils.sendXMLParseError(context, PATH);
                             return;
                         }
-                    } catch (Exception e) {
+                    } catch (SAXParseException e) {
                         Tuils.sendXMLParseError(context, PATH, e);
+                        return;
+                    } catch (Exception e) {
+                        Tuils.log(e);
                         return;
                     }
 
@@ -104,16 +104,17 @@ public class RegexManager {
                         }
                     }
                 } catch (Exception e) {
-                    Tuils.sendXMLParseError(context, PATH, e);
+                    Tuils.log(e);
+                    Tuils.toFile(e);
                     return;
                 }
             }
         }.start();
+
+        instance = this;
     }
 
-    public static Regex get(int id) {
-        if(!available) return null;
-
+    public Regex get(int id) {
         for(Regex r : regexes) {
             if(r.id == id) return r;
         }
@@ -121,7 +122,7 @@ public class RegexManager {
         return null;
     }
 
-    private static void rmFromList(int id) {
+    private void rmFromList(int id) {
         Iterator<Regex> iterator = regexes.iterator();
         while (iterator.hasNext()) {
             Regex r = iterator.next();
@@ -133,7 +134,7 @@ public class RegexManager {
 
 //    null: all good
 //    "": used id
-    public static String add(int id, String value) {
+    public String add(int id, String value) {
         for(int c = 0; c < regexes.size(); c++) {
             if(regexes.get(c).id == id) return Tuils.EMPTYSTRING;
         }
@@ -147,7 +148,7 @@ public class RegexManager {
 
 //    null: all good
 //    "": not found
-    public static String rm(int id) {
+    public String rm(int id) {
         try {
             File file = new File(Tuils.getFolder(), PATH);
 
@@ -189,7 +190,7 @@ public class RegexManager {
         }
     }
 
-    public static CharSequence test(int id, String test) {
+    public CharSequence test(int id, String test) {
         Regex regex = get(id);
         if(regex == null) return Tuils.EMPTYSTRING;
 
@@ -211,6 +212,15 @@ public class RegexManager {
         }
 
         return s;
+    }
+
+    public void dispose() {
+        if(regexes != null) {
+            regexes.clear();
+            regexes = null;
+        }
+
+        instance = null;
     }
 
     public static class Regex {

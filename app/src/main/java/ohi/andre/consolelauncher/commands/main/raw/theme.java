@@ -1,13 +1,10 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
-import java.io.File;
-
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.ThemesManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -26,50 +23,47 @@ public class theme extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                String theme = pack.getString();
-                ThemesManager.apply(pack.context, theme);
-                return null;
+                return "themes are not working at the moment, the new website will be ready soon";
             }
         },
         view {
             @Override
             public String exec(ExecutePack pack) {
-                pack.context.startActivity(Tuils.webPage("http://tui-launcher.surge.sh/"));
-                return null;
+                return "themes are not working at the moment, the new website will be ready soon";
             }
         },
         create {
             @Override
             public String exec(ExecutePack pack) {
-                pack.context.startActivity(Tuils.webPage("http://tui-launcher.surge.sh/create"));
-                return null;
+                return "themes are not working at the moment, the new website will be ready soon";
             }
         },
         ls {
             @Override
             public String exec(ExecutePack pack) {
-                ThemesManager.ls(pack.context);
-                return null;
+                return "themes are not working at the moment, the new website will be ready soon";
             }
         },
         old {
             @Override
             public String exec(ExecutePack pack) {
-                File theme = Tuils.getOld("theme.xml");
-                File suggestions = Tuils.getOld("suggestions.xml");
+//                File theme = Tuils.getOld("theme.xml");
+//                File suggestions = Tuils.getOld("suggestions.xml");
+//
+//                if(theme == null || suggestions == null) return pack.context.getString(R.string.theme_old_not_found);
+//
+//                File themeDest = new File(Tuils.getFolder(), "theme.xml");
+//                File suggestionsDest = new File(Tuils.getFolder(), "suggestions.xml");
+//
+//                if(themeDest.exists()) themeDest.delete();
+//                if(suggestionsDest.exists()) suggestionsDest.delete();
+//
+//                theme.renameTo(themeDest);
+//                suggestions.renameTo(suggestionsDest);
+//
+//                return pack.context.getString(R.string.theme_reverted);
 
-                if(theme == null || suggestions == null) return pack.context.getString(R.string.theme_old_not_found);
-
-                File themeDest = new File(Tuils.getFolder(), "theme.xml");
-                File suggestionsDest = new File(Tuils.getFolder(), "suggestions.xml");
-
-                if(themeDest.exists()) themeDest.delete();
-                if(suggestionsDest.exists()) suggestionsDest.delete();
-
-                theme.renameTo(themeDest);
-                suggestions.renameTo(suggestionsDest);
-
-                return pack.context.getString(R.string.theme_reverted);
+                return "themes are not working at the moment, the new website will be ready soon";
             }
         },
         tutorial {

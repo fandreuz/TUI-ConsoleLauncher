@@ -13,6 +13,7 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -33,7 +34,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+                XMLPrefsSave save = pack.getPrefsSave();
                 save.parent().write(save, pack.getString());
 
                 if(save.label().startsWith("default_app_n")) {
@@ -56,7 +57,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+                XMLPrefsSave save = pack.getPrefsSave();
 
                 return "Type:" + Tuils.SPACE + save.type() + Tuils.NEWLINE
                         + "Default:" + Tuils.SPACE + save.defaultValue() + Tuils.NEWLINE
@@ -89,7 +90,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+                XMLPrefsSave save = pack.getPrefsSave();
                 save.parent().write(save, XMLPrefsManager.get(save) + pack.getString());
 
                 return null;
@@ -109,7 +110,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+                XMLPrefsSave save = pack.getPrefsSave();
                 String s = XMLPrefsManager.get(String.class, save);
                 if(s.length() == 0) return "\"\"";
                 return s;
@@ -165,16 +166,16 @@ public class config extends ParamCommand {
 
                 for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
                     ss.add(element.path);
-                    for(XMLPrefsManager.XMLPrefsSave save : element.copy) {
+                    for(XMLPrefsSave save : element.copy) {
                         ss.add(Tuils.DOUBLE_SPACE + save.label());
                     }
                 }
                 ss.add(AppsManager.PATH);
-                for(XMLPrefsManager.XMLPrefsSave save : Apps.values()) {
+                for(XMLPrefsSave save : Apps.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
                 ss.add(NotificationManager.PATH);
-                for(XMLPrefsManager.XMLPrefsSave save : Notifications.values()) {
+                for(XMLPrefsSave save : Notifications.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
 
@@ -194,7 +195,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsManager.XMLPrefsSave save = pack.getPrefsSave();
+                XMLPrefsSave save = pack.getPrefsSave();
                 save.parent().write(save, save.defaultValue());
                 return null;
             }
@@ -211,28 +212,25 @@ public class config extends ParamCommand {
 
                 if(!file.getName().endsWith(".xml")) {
 //                    is font
-                    File font = new File(Tuils.getFolder(), Tuils.FONT_PATH);
-                    if(font.exists()) {
-                        File[] files = font.listFiles();
-                        if(files.length > 0) Tuils.insertOld(files[0]);
-                        Tuils.deleteContent(font);
-                    } else {
-                        font.mkdir();
+                    if(Tuils.fontPath != null) {
+                        File font = new File(Tuils.fontPath);
+                        if (font.exists()) {
+                            File[] files = font.listFiles();
+                            if (files.length > 0) Tuils.insertOld(files[0]);
+                            Tuils.deleteContent(font);
+                        } else {
+                            font.mkdir();
+                        }
                     }
-
-                    File dest = new File(font, file.getName());
-                    file.renameTo(dest);
-
-                    return "Path: " + dest.getAbsolutePath();
                 } else {
                     File old = new File(Tuils.getFolder(), file.getName());
                     Tuils.insertOld(old);
-
-                    File dest = new File(Tuils.getFolder(), file.getName());
-                    file.renameTo(dest);
-
-                    return "Path: " + dest.getAbsolutePath();
                 }
+
+                File dest = new File(Tuils.getFolder(), file.getName());
+                file.renameTo(dest);
+
+                return "Path: " + dest.getAbsolutePath();
             }
         },
         tutorial {

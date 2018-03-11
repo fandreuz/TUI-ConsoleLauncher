@@ -4,13 +4,15 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
 public class restart implements CommandAbstraction {
 
     @Override
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
-        info.reloadable.reload();
+        ((Reloadable) info.context).reload();
+
         return pack.context.getString(R.string.restarting);
     }
 

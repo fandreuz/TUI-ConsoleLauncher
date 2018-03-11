@@ -1,12 +1,16 @@
 package ohi.andre.consolelauncher.managers.music;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.widget.MediaController;
@@ -46,9 +50,27 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
     int waitingMethod = 0;
     String savedParam;
 
+    BroadcastReceiver headsetBroadcast;
+
     public MusicManager2(Context c) {
         mContext = c;
         updateSongs();
+
+        headsetBroadcast = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getIntExtra("state", 0) == 0) pause();
+            }
+        };
+
+        String action;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            action = AudioManager.ACTION_HEADSET_PLUG;
+        } else {
+            action = Intent.ACTION_HEADSET_PLUG;
+        }
+
+        mContext.getApplicationContext().registerReceiver(headsetBroadcast, new IntentFilter(action));
 
         init();
     }
@@ -70,6 +92,12 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
             mContext.unbindService(musicConnection);
             mContext.stopService(playIntent);
             musicSrv = null;
+        }
+
+        try {
+            mContext.getApplicationContext().unregisterReceiver(headsetBroadcast);
+        } catch (Exception e) {
+            Tuils.log(e);
         }
 
         musicBound = false;
@@ -107,7 +135,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
 
     @Override
     public void pause() {
-        if(musicSrv == null) return;
+        if(musicSrv == null || playbackPaused) return;
 
         playbackPaused=true;
         musicSrv.pausePlayer();
@@ -134,6 +162,8 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
     }
 
     public String lsSongs() {
+        if(songs.size() == 0) return "[]";
+
         List<String> ss = new ArrayList<>();
         for(Song s : songs) {
             ss.add(s.getTitle());
@@ -171,10 +201,16 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                         musicCursor.close();
                     } else {
                         String path = XMLPrefsManager.get(Behavior.songs_folder);
-                        if(path.length() > 0) {
-                            File dir = new File(path);
-                            if(dir.isDirectory()) songs.addAll(Tuils.getSongsInFolder(dir));
+                        if(path.length() == 0) return;
+
+                        File file;
+                        if(path.startsWith(File.separator)) {
+                            file = new File(path);
+                        } else {
+                            file = new File(XMLPrefsManager.get(Behavior.home_path), path);
                         }
+
+                        if(file.exists() && file.isDirectory()) songs.addAll(Tuils.getSongsInFolder(file));
                     }
                 } catch (Exception e) {
                     Tuils.toFile(e);
@@ -196,13 +232,14 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
             musicSrv = binder.getService();
             musicSrv.setShuffle(XMLPrefsManager.getBoolean(Behavior.random_play));
 
-            if(songs == null || loader.isAlive()) {
+            if(loader.isAlive()) {
                 synchronized (songs) {
                     try {
                         songs.wait();
                     } catch (InterruptedException e) {}
                 }
             }
+
             musicSrv.setList(songs);
             musicBound = true;
 
@@ -287,6 +324,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
     }
 
     public Song get(int index) {
+        if(index < 0 || index >= songs.size()) return null;
         return songs.get(index);
     }
 

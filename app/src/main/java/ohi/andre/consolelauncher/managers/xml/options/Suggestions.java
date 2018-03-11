@@ -1,12 +1,14 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
+public enum Suggestions implements XMLPrefsSave {
 
     show_suggestions {
         @Override
@@ -16,7 +18,7 @@ public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -32,7 +34,7 @@ public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -202,7 +204,7 @@ public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -218,7 +220,7 @@ public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -234,7 +236,7 @@ public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.BOOLEAN;
+            return XMLPrefsSave.BOOLEAN;
         }
 
         @Override
@@ -250,17 +252,81 @@ public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsManager.XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.INTEGER;
         }
 
         @Override
         public String info() {
             return "The text size of the suggestions";
         }
+    },
+    double_space_click_first_suggestion {
+        @Override
+        public String defaultValue() {
+            return "false";
+        }
+
+        @Override
+        public String type() {
+            return BOOLEAN;
+        }
+
+        @Override
+        public String info() {
+            return "If true, t-ui will simulate a click on the current first suggestion if you double-click the space bar";
+        }
+    },
+    noinput_suggestions_order {
+        @Override
+        public String defaultValue() {
+            return "0(5)1(5)2(5)3(3)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "The order and the number of suggestions that appears on-screen when the input field is empty. 0=apps, 1=alias, 2=cmds, 3=app groups. Put between round brackets the maximum number of suggestions of the leading type";
+        }
+    },
+    suggestions_order {
+        @Override
+        public String defaultValue() {
+            return "0(5)1(5)2(5)3(3)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "The order and the number of suggestions that appears on-screen. 0=apps, 1=alias, 2=cmds, 3=app groups. Put between round brackets the maximum number of suggestions of the leading type";
+        }
+    },
+    noinput_min_command_priority {
+        @Override
+        public String defaultValue() {
+            return "5";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "The minimum priority of a command shown when the input field is empty";
+        }
     };
 
     @Override
-    public XMLPrefsManager.XmlPrefsElement parent() {
+    public XMLPrefsElement parent() {
         return XMLPrefsManager.XMLPrefsRoot.SUGGESTIONS;
     }
 
@@ -276,6 +342,6 @@ public enum Suggestions implements XMLPrefsManager.XMLPrefsSave {
 
     @Override
     public String type() {
-        return XMLPrefsManager.XMLPrefsSave.COLOR;
+        return XMLPrefsSave.COLOR;
     }
 }

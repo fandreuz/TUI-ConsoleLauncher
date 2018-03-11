@@ -18,7 +18,6 @@ import java.io.Serializable;
 import java.util.Map;
 
 public class SimpleMutableEntry<K, V> implements Map.Entry<K, V>, Serializable {
-    private static final long serialVersionUID = -8499721149061103585L;
 
     private final K key;
     private V value;

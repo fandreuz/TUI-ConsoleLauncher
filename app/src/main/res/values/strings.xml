@@ -2,22 +2,27 @@
 
     <!-- various text -->
     <string name="app_name">T-UI</string>
-    <string name="version_label">Version:</string>
     <string name="location_off">Turn on GPS or network location</string>
     <string name="share_label">Share</string>
     <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
-        \n\nLuke Winward (USA)\n\t-> Idea and design</string>
+        \n\nThanks to Luke Winward for his original idea</string>
     <string name="output_refresh">Refresh: apps, alias, music, contacts, rss feeds</string>
     <string name="output_rate">Thank you!</string>
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
     <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt in the "t-ui" folder</string>
     <string name="admin_permission">Lock the screen on double tap</string>
-    <string name="translation_not_found">Translation not found</string>
+    <string name="reply_app_not_found">Couldn\'t find bound app:</string>
+    <string name="error">A fatal error occurred, check the file crash.txt inside your t-ui folder</string>
+
+    <!-- reply -->
+    <string name="reply_id_not_found">No bound app found with ID:</string>
+    <string name="reply_notification_not_found">No notification from this app</string>
 
     <!-- notifications menu -->
-    <string name="exclude_notification">Exclude this notification</string>
+    <string name="exclude_notification">Exclude notification</string>
     <string name="exclude_app">Exclude app</string>
+    <string name="reply_notification">Reply to the last notification</string>
     <string name="notification_service_not_running">The notification service is\'t running</string>
 
     <!-- regex -->
@@ -30,7 +35,7 @@
     <string name="theme_reverted">Reverted to the previous theme</string>
 
     <!-- files -->
-    <string name="output_error">An unknown error has occurred</string>
+    <string name="output_error">An unknown error occurred</string>
     <string name="output_isdirectory">This is a directory</string>
     <string name="output_filenotfound">File not found</string>
 
@@ -50,23 +55,22 @@
     <string name="tuinotfound_xmlprefs">Your xml preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
 
     <!-- hints -->
-    <string name="hint_donate">\nDo you like my work?\nIf yes, rate t-ui on Play Store (cmd: $ rate) or offer me a coffee (cmd: $ donate). Thank you!</string>
+    <string name="hint_donate">Do you like my work?\nIf yes, rate t-ui on Play Store (cmd: $ rate) or offer me a coffee (cmd: $ donate). Thank you!</string>
     <string name="hint_twitter">Did you know? t-ui is on Twitter. You can have a look with the cmd \"$ tui -twitter\"</string>
     <string name="hint_telegram">Did you know? There\'s a Telegram group with many enthusiastic users, where you can discuss, share and chat with the developer.\nJust use the cmd \"$ tui -telegram\"</string>
     <string name="hint_googlep">Did you know? Our official Google+ community is full of tips, experimental apks and discussions.\nYou can have a look with the cmd \"$ tui -googlep\"</string>
     <string name="hint_tutorial">Did you read the tutorial? If you don\'t remember how to view it, the cmd is \"$ tutorial\"</string>
     <string name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</string>
     <string name="hint_theme2">Did you know? You can create your custom theme and share it to other users. Have a look at the cmd \"$ theme -create\"</string>
-    <string name="hint_help">Are you having any doubts about a command? Just use the cmd \"$ help cmdName\"</string>
+    <string name="hint_help">Doubts about a command? Just use \"$ help cmdName\"</string>
     <string name="hint_music">Did you know? You can listen your music without launching other apps but t-ui. Have a look at the cmd \"$ music\"</string>
     <string name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups, a feature that let\'s you customize your app suggestions, creating different categories.\nYou can get more details with the cmd
         \"$ apps -tutorial\"</string>
     <string name="hint_notifications">Did you know? You can see your notifications directly from t-ui.\nIf you\'re interested, have a look at the tutorial: \"$ notifications -tutorial\"</string>
     <string name="hint_clear">Are you sick of clearing your screen? Have a look at the options \"clear_after_cmds\", \"clear_after_seconds\" and \"maxlines\"</string>
     <string name="hint_wallpaper">Do you want to use your wallpaper as t-ui background? Use the cmd: \"$ config -set system_wallpaper true\"</string>
-    <string name="hint_config">Are you having doubts about any config option? Use the cmd \"$ config -tutorial\" and look for that option inside the table</string>
-    <string name="hint_alias">Did you know that t-ui supports aliases? It also supports parameterized aliases.\nFor more info, use the cmd \"$ alias -tutorial\"</string>
-    <string name="hint_musicdisable">Do you want to make t-ui lighter? Use the cmd \"$ config -set enable_music false\" to disable the music player and save resources</string>
+    <string name="hint_config">Doubts about any config option? Use the cmd \"$ config -info\" and look for that option inside the table</string>
+    <string name="hint_alias">Did you know that t-ui supports aliases? It also supports parametrized aliases.\nFor more info, use the cmd \"$ alias -tutorial\"</string>
     <string name="hint_excludenotification">Did you know? You can exclude an unwanted notification long-clicking on it</string>
 
     <string name="hint_disable">You can disable this messages with the cmd \"$ config -set show_hints false\"</string>
@@ -98,10 +102,16 @@
     <string name="output_groupspace">Spaces are not allowed inside group names</string>
     <string name="output_notification_error">The notification service couldn\'t be started:</string>
 
-    <!-- rss -->
-    <string name="rss_not_found">Invalid ID: no RSS feed found</string>
+    <!-- note -->
+    <string name="note_not_found">Note not found</string>
+    <string name="row_used">This row is busy</string>
+
+    <!-- id -->
     <string name="id_already">This ID has already been used</string>
     <string name="id_notfound">Invalid ID</string>
+
+    <!-- rss -->
+    <string name="rss_not_found">Invalid ID: no RSS feed found</string>
     <string name="rss_never_checked">This RSS feed hasn\'t been checked yet</string>
     <string name="rss_invalid_timeformat">The time format couldn\'t be parsed</string>
     <string name="rss_invalid_date">Invalid publication date tag:</string>
@@ -134,13 +144,15 @@
     <string name="output_wifi">WiFi active:</string>
     <string name="output_data">Mobile Data active:</string>
     <string name="output_bluetooth">Bluetooth active:</string>
+    <string name="output_bluetooth_unavailable">Bluetooth is not available on this device</string>
     <string name="output_airplane">Airplane mode active:</string>
 
     <!-- music -->
     <string name="output_playing">Playing:</string>
     <string name="output_stopped">Player stopped</string>
     <string name="output_songnotfound">Song not found</string>
-    <string name="output_musicdisabled">enable_music is false!</string>
+    <string name="output_musicdisabled">enable_music is false</string>
+    <string name="no_songs">0 songs found</string>
 
     <!-- command/args -->
     <string name="output_commandnotfound">Command not found.\nTry to use \"$ help\" or \"$ tutorial\"</string>
@@ -227,15 +239,26 @@
         \n-select [song] -> play the selected song
         \n-info -> get info about the current song
         \n-seekto [seconds] -> seek to the selected part of the current song</string>
+    <string name="help_notes">-add [optional: lock {true/false}] [text] -> add a new note
+        \n-rm [row] OR [text] -> remove an existing note
+        \n-ls -> list all your notes
+        \n-clear -> remove all notes (except the locked ones)
+        \n-lock [id] OR [text] -> lock an existing note
+        \n-unlock [id] OR [text] -> unlock an existing note</string>
     <string name="help_rate">Leave a feedback on the Play Store page</string>
     <string name="help_refresh">Refresh apps, alias, music, contacts</string>
     <string name="help_regex">-add [ID] [regex] -> add a new regex with the given ID
         \n-rm [ID] -> remove the regex with the given ID
         \n-test [ID] [string] -> test the corresponding regex over the given string</string>
+    <string name="help_reply">-to [ID or packageName] [what] -> reply to the last notification from the application bound with the given ID
+        \n-bind [appName] -> bind the application
+        \n-unbind [appName] -> unbind the application
+        \n-ls -> show your bound applications
+        \n-check [ID or packageName] -> check the last notification from the application bound with the given ID</string>
     <string name="help_restart">Restart t-ui and load modified values</string>
     <string name="help_search">-gg [search this...] -> Google Search
         \n-ps [search this...] -> Google Play Store
-        \n-file [search this...] -> Files
+        \n-u [URL] -> open the URL
         \n-yt [search this...] -> YouTube
         \n-dd [search this...] -> DuckDuck Go
     </string>
@@ -255,12 +278,17 @@
         \n$ tuixt [textFile]
     </string>
     <string name="help_tui">-rm -> uninstall t-ui
-        \n-about -> show info about the developer and the current version</string>
+        \n-about -> show info about the developer and the current version
         \n-reset -> removes the t-ui folder and resets default settings (restart required)
+        \n-log [fileName] -> log the text on screen to the file
+        \n-priority [command] [int] -> set the priority of the selected command
         \n-twitter -> show t-ui Twitter page
         \n-googlep -> show the community on Google+
         \n-telegram -> open the official Telegram group
-        \n-folder -> print the path of the t-ui folder
+        \n-folder -> print the path of the t-ui folder</string>
+    <string name="help_tuinotes">-add [line] [text] -> add a new note at the specified line (the note will be appended if line is omitted)
+        \n-rm [line] -> remove the note at the specified line
+        \n-clear -> remove all the notes</string>
     <string name="help_tutorial">Open the tutorial page on GitHub</string>
     <string name="help_uninstall">Uninstall an application
         \n\nUsage:
@@ -269,7 +297,7 @@
     <string name="help_wifi">Toggle wifi</string>
     <string name="help_sms">Send an SMS.
         \n\nUsage:
-        \n$ sms [contactName] OR [number]
+        \n$ sms [contactName/number]
         \n$ [text]
     </string>
     <string name="help_vibrate">Make your device vibrate.

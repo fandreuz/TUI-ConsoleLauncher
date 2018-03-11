@@ -11,10 +11,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,31 +20,34 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
-import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
-public class AliasManager implements Reloadable {
+public class AliasManager {
 
     public static final String PATH = "alias.txt";
 
-    private List<Map.Entry<String, String>> aliases;
-    private String paramMarker, paramSeparator, aliasLabelFormat;
+    private List<Alias> aliases;
+    private String paramSeparator, aliasLabelFormat;
+    private boolean replaceAllMarkers;
 
     private Context context;
+
+    private Pattern parameterPattern;
 
     public AliasManager(Context c) {
         this.context = c;
 
-        reload();
-
-        paramMarker = Pattern.quote(XMLPrefsManager.get(Behavior.alias_param_marker));
+        parameterPattern = Pattern.compile(Pattern.quote(XMLPrefsManager.get(Behavior.alias_param_marker)));
         paramSeparator = Pattern.quote(XMLPrefsManager.get(Behavior.alias_param_separator));
         aliasLabelFormat = XMLPrefsManager.get(Behavior.alias_content_format);
+        replaceAllMarkers = XMLPrefsManager.getBoolean(Behavior.alias_replace_all_markers);
+
+        reload();
     }
 
     public String printAliases() {
         String output = Tuils.EMPTYSTRING;
-        for (Map.Entry<String, String> entry : aliases) {
-            output = output.concat(entry.getKey() + " --> " + entry.getValue() + Tuils.NEWLINE);
+        for (Alias a : aliases) {
+            output = output.concat(a.name + " --> " + a.value + Tuils.NEWLINE);
         }
 
         return output.trim();
@@ -57,31 +58,11 @@ public class AliasManager implements Reloadable {
 //    [2] = residualString
     public String[] getAlias(String alias, boolean supportSpaces) {
         if(supportSpaces) {
-
-//            String[] split = alias.split(Tuils.SPACE);
-//            String name = Tuils.EMPTYSTRING;
-//
-//            for(int count = 0; count < split.length; count++) {
-//                name += Tuils.SPACE + split[count];
-//                name = name.trim();
-//
-//                String a = aliases.get(name);
-//
-//                if(a != null) {
-//                    String residual = Tuils.EMPTYSTRING;
-//                    for(int c = count + 1; c < split.length; c++) {
-//                        residual += split[c] + Tuils.SPACE;
-//                    }
-//
-//                    return new String[] {a, name, residual.trim()};
-//                }
-//            }
-
             String args = Tuils.EMPTYSTRING;
 
             String aliasValue = null;
             while (true) {
-                aliasValue = getALiasFor(alias);
+                aliasValue = getALias(alias);
                 if(aliasValue != null) break;
                 else {
                     int index = alias.lastIndexOf(Tuils.SPACE);
@@ -95,7 +76,7 @@ public class AliasManager implements Reloadable {
 
             return new String[] {aliasValue, alias, args};
         } else {
-            return new String[] {getALiasFor(alias), alias, Tuils.EMPTYSTRING};
+            return new String[] {getALias(alias), alias, Tuils.EMPTYSTRING};
         }
     }
 
@@ -106,42 +87,42 @@ public class AliasManager implements Reloadable {
         String[] split = params.split(paramSeparator);
 
         for(String s : split) {
-            aliasValue = aliasValue.replaceFirst(paramMarker, s);
+            aliasValue = parameterPattern.matcher(aliasValue).replaceFirst(s);
         }
+
+        if(replaceAllMarkers) aliasValue = parameterPattern.matcher(aliasValue).replaceAll(split[0]);
 
         return aliasValue;
     }
 
-    private String getALiasFor(String name) {
-        for(Map.Entry<String, String> entry : aliases) {
-            if(name.equals(entry.getKey())) return entry.getValue();
+    private String getALias(String name) {
+        for(Alias a : aliases) {
+            if(name.equals(a.name)) return a.value;
         }
 
         return null;
     }
 
-    private void removeAliasFor(String name) {
+    private void removeAlias(String name) {
         for(int c = 0; c < aliases.size(); c++) {
-            Map.Entry e = aliases.get(c);
-            if(name.equals(e.getKey())) {
+            Alias a = aliases.get(c);
+            if(name.equals(a.name)) {
                 aliases.remove(c);
                 return;
             }
         }
     }
 
-    private final Pattern pn = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     private final Pattern pv = Pattern.compile("%v", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     private final Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     public String formatLabel(String aliasName, String aliasValue) {
         String a = aliasLabelFormat;
-        a = pn.matcher(a).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
+        a = Tuils.patternNewline.matcher(a).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
         a = pv.matcher(a).replaceAll(Matcher.quoteReplacement(aliasValue));
         a = pa.matcher(a).replaceAll(Matcher.quoteReplacement(aliasName));
         return a;
     }
 
-    @Override
     public void reload() {
         if(aliases != null) aliases.clear();
         else aliases = new ArrayList<>();
@@ -179,10 +160,12 @@ public class AliasManager implements Reloadable {
                     Tuils.sendOutput(Color.RED, context,
                             context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias3));
                 } else {
-                    aliases.add(new AbstractMap.SimpleImmutableEntry<>(name, value));
+                    aliases.add(new Alias(name, value, parameterPattern));
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            Tuils.log(e);
+        }
     }
 
     public boolean add(String name, String value) {
@@ -193,7 +176,7 @@ public class AliasManager implements Reloadable {
             fos.write((Tuils.NEWLINE + name + "=" + value).getBytes());
             fos.close();
 
-            aliases.add(new AbstractMap.SimpleImmutableEntry<>(name, value));
+            aliases.add(new Alias(name, value, parameterPattern));
 
             return true;
         } catch (Exception e) {
@@ -222,7 +205,7 @@ public class AliasManager implements Reloadable {
             reader.close();
 
 
-            removeAliasFor(name);
+            removeAlias(name);
 
             return tempFile.renameTo(inputFile);
         } catch (Exception e) {
@@ -230,12 +213,34 @@ public class AliasManager implements Reloadable {
         }
     }
 
-    public List<String> getAliases() {
-        List<String> aliasKeys = new ArrayList<>(0);
-        if(aliases == null) return aliasKeys;
+    public List<Alias> getAliases(boolean excludeEmtpy) {
+        List<Alias> l = new ArrayList<>(aliases);
+        if(excludeEmtpy) {
+            for(int c = 0; c < l.size(); c++) {
+                if(l.get(c).name.length() == 0) {
+                    l.remove(c);
+                    break;
+                }
+            }
+        }
 
-        for(Map.Entry<String, String> entry : aliases) aliasKeys.add(entry.getKey());
+        return l;
+    }
 
-        return aliasKeys;
+    public static class Alias {
+        public String name, value;
+        public boolean isParametrized;
+
+        public Alias(String name, String value, Pattern parameterPattern) {
+            this.name = name;
+            this.value = value;
+
+            isParametrized = parameterPattern.matcher(value).find();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (obj instanceof Alias && ((Alias) obj).name.equals(name)) || obj.equals(name);
+        }
     }
 }

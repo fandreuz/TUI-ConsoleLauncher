@@ -25,6 +25,7 @@ import android.os.Parcelable;
 import android.os.Process;
 import android.os.StatFs;
 import android.provider.Settings;
+import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.TelephonyManager;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -41,6 +42,8 @@ import android.webkit.MimeTypeMap;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.xml.sax.SAXParseException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,6 +54,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
@@ -59,6 +63,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.channels.Channels;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -75,6 +80,7 @@ import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
@@ -91,12 +97,15 @@ public class Tuils {
     private static final String TUI_FOLDER = "t-ui";
     public static final String MINUS = "-";
 
-    public static final String FONT_PATH = "font";
+    public static Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+
     private static Typeface globalTypeface = null;
+    public static String fontPath = null;
+
     public static Typeface getTypeface(Context context) {
         if(globalTypeface == null) {
             try {
-                XMLPrefsManager.create(context);
+                XMLPrefsManager.loadCommons(context);
             } catch (Exception e) {
                 return null;
             }
@@ -106,13 +115,17 @@ public class Tuils {
             else {
                 File tui = Tuils.getFolder();
                 if(tui == null) {
-                    return systemFont ? Typeface.DEFAULT : Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+                    return Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
                 }
+
+                Pattern p = Pattern.compile(".[ot]tf$");
 
                 File font = null;
                 for(File f : tui.listFiles()) {
-                    if(f.getName().startsWith(FONT_PATH)) {
+                    String name = f.getName();
+                    if(p.matcher(name).find()) {
                         font = f;
+                        fontPath = f.getAbsolutePath();
                         break;
                     }
                 }
@@ -130,6 +143,11 @@ public class Tuils {
             if(globalTypeface == null) globalTypeface = systemFont ? Typeface.DEFAULT : Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
         }
         return globalTypeface;
+    }
+
+    public static void cancelFont() {
+        globalTypeface = null;
+        fontPath = null;
     }
 
     public static boolean notificationServiceIsRunning(Context context) {
@@ -224,6 +242,10 @@ public class Tuils {
         } catch (Exception e) {
             Tuils.toFile(e);
         }
+    }
+
+    public static void unregisterBatteryReceiver(Context context) {
+        context.unregisterReceiver(batteryReceiver);
     }
 
     private static OnBatteryUpdate batteryUpdate;
@@ -444,15 +466,15 @@ public class Tuils {
         return round(result, 2);
     }
 
-    public static SpannableString span(String text, int color) {
+    public static SpannableString span(CharSequence text, int color) {
         return span(null, text, color, Integer.MAX_VALUE);
     }
 
-    public static SpannableString span(Context context, int size, String text) {
+    public static SpannableString span(Context context, int size, CharSequence text) {
         return span(context, text, Integer.MAX_VALUE, size);
     }
 
-    public static SpannableString span(Context context, String text, int color, int size) {
+    public static SpannableString span(Context context, CharSequence text, int color, int size) {
         SpannableString spannableString = new SpannableString(text);
         if(size != Integer.MAX_VALUE && context != null) spannableString.setSpan(new AbsoluteSizeSpan(convertSpToPixels(size, context)), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         if(color != Integer.MAX_VALUE) {
@@ -461,7 +483,7 @@ public class Tuils {
         return spannableString;
     }
 
-    public static SpannableString span(int bgColor, int foreColor, String text) {
+    public static SpannableString span(int bgColor, int foreColor, CharSequence text) {
         SpannableString spannableString = new SpannableString(text);
         spannableString.setSpan(new BackgroundColorSpan(bgColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         spannableString.setSpan(new ForegroundColorSpan(foreColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -565,11 +587,11 @@ public class Tuils {
     }
 
     public static void sendOutput(int color, Context context, CharSequence s, int type) {
-        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-        intent.putExtra(InputOutputReceiver.TEXT, s);
-        intent.putExtra(InputOutputReceiver.COLOR, color);
-        intent.putExtra(InputOutputReceiver.TYPE, type);
-        context.sendBroadcast(intent);
+        Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+        intent.putExtra(PrivateIOReceiver.TEXT, s);
+        intent.putExtra(PrivateIOReceiver.COLOR, color);
+        intent.putExtra(PrivateIOReceiver.TYPE, type);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     public static void sendOutput(Context context, CharSequence s, int type, Object action) {
@@ -577,15 +599,15 @@ public class Tuils {
     }
 
     public static void sendOutput(int color, Context context, CharSequence s, int type, Object action) {
-        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-        intent.putExtra(InputOutputReceiver.TEXT, s);
-        intent.putExtra(InputOutputReceiver.COLOR, color);
-        intent.putExtra(InputOutputReceiver.TYPE, type);
+        Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+        intent.putExtra(PrivateIOReceiver.TEXT, s);
+        intent.putExtra(PrivateIOReceiver.COLOR, color);
+        intent.putExtra(PrivateIOReceiver.TYPE, type);
 
-        if(action instanceof String) intent.putExtra(InputOutputReceiver.ACTION, (String) action);
-        else if(action instanceof Parcelable) intent.putExtra(InputOutputReceiver.ACTION, (Parcelable) action);
+        if(action instanceof String) intent.putExtra(PrivateIOReceiver.ACTION, (String) action);
+        else if(action instanceof Parcelable) intent.putExtra(PrivateIOReceiver.ACTION, (Parcelable) action);
 
-        context.sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     public static void sendOutput(Context context, CharSequence s, int type, Object action, Object longAction) {
@@ -593,24 +615,24 @@ public class Tuils {
     }
 
     public static void sendOutput(int color, Context context, CharSequence s, int type, Object action, Object longAction) {
-        Intent intent = new Intent(InputOutputReceiver.ACTION_OUTPUT);
-        intent.putExtra(InputOutputReceiver.TEXT, s);
-        intent.putExtra(InputOutputReceiver.COLOR, color);
-        intent.putExtra(InputOutputReceiver.TYPE, type);
+        Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+        intent.putExtra(PrivateIOReceiver.TEXT, s);
+        intent.putExtra(PrivateIOReceiver.COLOR, color);
+        intent.putExtra(PrivateIOReceiver.TYPE, type);
 
-        if(action instanceof String) intent.putExtra(InputOutputReceiver.ACTION, (String) action);
-        else if(action instanceof Parcelable) intent.putExtra(InputOutputReceiver.ACTION, (Parcelable) action);
+        if(action instanceof String) intent.putExtra(PrivateIOReceiver.ACTION, (String) action);
+        else if(action instanceof Parcelable) intent.putExtra(PrivateIOReceiver.ACTION, (Parcelable) action);
 
-        if(longAction instanceof String) intent.putExtra(InputOutputReceiver.LONG_ACTION, (String) longAction);
-        else if(longAction instanceof Parcelable) intent.putExtra(InputOutputReceiver.LONG_ACTION, (Parcelable) longAction);
+        if(longAction instanceof String) intent.putExtra(PrivateIOReceiver.LONG_ACTION, (String) longAction);
+        else if(longAction instanceof Parcelable) intent.putExtra(PrivateIOReceiver.LONG_ACTION, (Parcelable) longAction);
 
-        context.sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     public static void sendInput(Context context, String text) {
-        Intent intent = new Intent(InputOutputReceiver.ACTION_INPUT);
-        intent.putExtra(InputOutputReceiver.TEXT, text);
-        context.sendBroadcast(intent);
+        Intent intent = new Intent(PrivateIOReceiver.ACTION_INPUT);
+        intent.putExtra(PrivateIOReceiver.TEXT, text);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     public static final int TERA = 0;
@@ -701,15 +723,15 @@ public class Tuils {
 
             if(o == x) return count;
 
-            if (o instanceof XMLPrefsManager.XMLPrefsSave) {
+            if (o instanceof XMLPrefsSave) {
                 try {
-                    if (((XMLPrefsManager.XMLPrefsSave) o).is((String) x)) return count;
+                    if (((XMLPrefsSave) o).is((String) x)) return count;
                 } catch (Exception e) {}
             }
 
-            if (o instanceof String && x instanceof XMLPrefsManager.XMLPrefsSave) {
+            if (o instanceof String && x instanceof XMLPrefsSave) {
                 try {
-                    if (((XMLPrefsManager.XMLPrefsSave) x).is((String) o)) return count;
+                    if (((XMLPrefsSave) x).is((String) o)) return count;
                 } catch (Exception e) {}
             }
 
@@ -820,10 +842,11 @@ public class Tuils {
 
         if(o instanceof Throwable) {
             Log.e("andre", "", (Throwable) o);
-        } else if(o instanceof Object[]){
-            Log.e("andre", Arrays.toString((Object[]) o));
         } else {
-            Log.e("andre", String.valueOf(o));
+            String text;
+            if(o instanceof Object[]) text = Arrays.toString((Object[]) o);
+            else text = o.toString();
+            Log.e("andre", text);
         }
     }
 
@@ -832,6 +855,36 @@ public class Tuils {
             Log.e("andre", Arrays.toString((Object[]) o) + " -- " + Arrays.toString((Object[]) o2));
         } else {
             Log.e("andre", String.valueOf(o) + " -- " + String.valueOf(o2));
+        }
+    }
+
+    public static void log(Object o, PrintStream to) {
+//        Log.e("andre", Arrays.toString(Thread.currentThread().getStackTrace()));
+
+        if(o instanceof Throwable) {
+            ((Throwable) o).printStackTrace(to);
+        } else {
+            String text;
+            if(o instanceof Object[]) text = Arrays.toString((Object[]) o);
+            else text = o.toString();
+
+            try {
+                to.write(text.getBytes());
+            } catch (IOException e) {
+                Tuils.log(e);
+            }
+        }
+    }
+
+    public static void log(Object o, Object o2, OutputStream to) {
+        try {
+            if(o instanceof Object[] && o2 instanceof Object[]){
+                to.write((Arrays.toString((Object[]) o) + " -- " + Arrays.toString((Object[]) o2)).getBytes());
+            } else {
+                to.write((String.valueOf(o) + " -- " + String.valueOf(o2)).getBytes());
+            }
+        } catch (Exception e) {
+            Tuils.log(e);
         }
     }
 
@@ -850,10 +903,15 @@ public class Tuils {
 
     public static void toFile(Throwable e) {
         try {
-            FileOutputStream out = new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"), true);
-            out.write((Tuils.NEWLINE + Tuils.NEWLINE + new Date().toString() + Tuils.NEWLINE).getBytes());
-            e.printStackTrace(new PrintStream(out));
-            out.close();
+            RandomAccessFile f = new RandomAccessFile(new File(Tuils.getFolder(), "crash.txt"), "rw");
+            f.seek(0);
+            f.write((new Date().toString() + Tuils.NEWLINE + Tuils.NEWLINE).getBytes());
+            OutputStream is = Channels.newOutputStream(f.getChannel());
+            e.printStackTrace(new PrintStream(is));
+            f.write((Tuils.NEWLINE + Tuils.NEWLINE).getBytes());
+
+            is.close();
+            f.close();
         } catch (Exception e1) {}
     }
 
@@ -1084,13 +1142,13 @@ public class Tuils {
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
-    private static final int FILEUPDATE_DELAY = 100;
+    private static final int FILEUPDATE_DELAY = 50;
     private static File folder = null;
     public static File getFolder() {
         if(folder != null) return folder;
 
         int elapsedTime = 0;
-        while (elapsedTime < 3500) {
+        while (elapsedTime < 3000) {
             File tuiFolder = Tuils.getTuiFolder();
             if(tuiFolder != null && ((tuiFolder.exists() && tuiFolder.isDirectory()) || tuiFolder.mkdir())) {
                 folder = tuiFolder;
@@ -1197,9 +1255,14 @@ public class Tuils {
         }
     }
 
-    public static void sendXMLParseError(Context context, String PATH, Exception e) {
-        Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) +
-                Tuils.NEWLINE + context.getString(R.string.output_errorlabel) + e.toString());
+    public static void sendXMLParseError(Context context, String PATH, SAXParseException e) {
+        Tuils.sendOutput(
+                Color.RED,
+                context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) + Tuils.NEWLINE + context.getString(R.string.output_errorlabel) +
+                "File: " + e.getSystemId() + Tuils.NEWLINE +
+                "Message" + e.getMessage() + Tuils.NEWLINE +
+                "Line" + e.getLineNumber() + Tuils.NEWLINE +
+                "Column" + e.getColumnNumber());
     }
 
     public static void sendXMLParseError(Context context, String PATH) {

@@ -2,4 +2,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/exclude_app" android:title="@string/exclude_app"/>
     <item android:id="@+id/exclude_notification" android:title="@string/exclude_notification"/>
+    <item android:id="@+id/reply_notification" android:title="@string/reply_notification"/>
 </menu>
