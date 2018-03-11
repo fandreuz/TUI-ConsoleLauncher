@@ -1,0 +1,44 @@
+TASK null id=51
+  ACTIVITY ohi.andre.consolelauncher/.LauncherActivity 2d5004aa pid=3845
+    Local FragmentActivity 12e0e9bd State:
+      mCreated=truemResumed=true mStopped=false mReallyStopped=false
+      mLoadersStarted=true
+    FragmentManager misc state:
+      mHost=android.support.v4.app.FragmentActivity$HostCallbacks@3196a3a4
+      mContainer=android.support.v4.app.FragmentActivity$HostCallbacks@3196a3a4
+      mCurState=5 mStateSaved=false mDestroyed=false
+    View Hierarchy:
+      com.android.internal.policy.impl.PhoneWindow$DecorView{37d7d50d V.E..... ... 0,0-768,1280}
+        android.widget.LinearLayout{1edddcc2 V.E..... ... 0,0-768,1184}
+          android.view.ViewStub{3dc64ad3 G.E..... ... 0,0-0,0 #102036e}
+          android.widget.FrameLayout{2a6c5610 V.E..... ... 0,50-768,708}
+            android.support.v7.widget.FitWindowsLinearLayout{32b9b509 V.E..... ... 0,0-768,658 #7f0d0045 app:id/action_bar_root}
+              android.support.v7.widget.ViewStubCompat{3c31030e G.E..... ... 0,0-0,0 #7f0d0046 app:id/action_mode_bar_stub}
+              android.support.v7.widget.ContentFrameLayout{3aa0c12f V.E..... ... 0,0-768,658 #1020002 android:id/content}
+                android.widget.LinearLayout{aa8c33c V.E..... ... 0,0-768,658 #7f0d005f app:id/mainview}
+                  android.widget.LinearLayout{31bf98c5 V.E..... ... 0,0-768,170}
+                    android.support.v7.widget.AppCompatTextView{3c7e421a V.ED.... ... 0,0-768,27 #7f0d0059 app:id/tv0}
+                    android.support.v7.widget.AppCompatTextView{3402414b V.ED.... ... 0,27-768,56 #7f0d005a app:id/tv1}
+                    android.support.v7.widget.AppCompatTextView{1fdcd728 V.ED.... ... 0,56-768,83 #7f0d005b app:id/tv2}
+                    android.support.v7.widget.AppCompatTextView{2b85fc41 V.ED.... ... 0,83-768,112 #7f0d005c app:id/tv3}
+                    android.support.v7.widget.AppCompatTextView{362e65e6 V.ED.... ... 0,112-768,141 #7f0d005d app:id/tv4}
+                    android.support.v7.widget.AppCompatTextView{2ab1a727 V.ED.... ... 0,141-768,170 #7f0d005e app:id/tv5}
+                  android.widget.RelativeLayout{3dbc3dd4 V.E..... ... 0,170-768,658}
+                    android.widget.HorizontalScrollView{9f51b7d V.EDH... ... 0,388-768,488 #7f0d0060 app:id/suggestions_container}
+                      android.widget.LinearLayout{2b6afa72 V.E..... ... 0,0-228,100 #7f0d0061 app:id/suggestions_group}
+                        android.widget.TextView{3b078ec3 V.ED..CL ... 15,22-213,77}
+                    android.widget.LinearLayout{1d896340 V.E..... ... 0,344-768,388 #7f0d0062 app:id/tools_view}
+                      android.support.v7.widget.AppCompatImageButton{333cf279 VFED..C. ... 0,0-192,44 #7f0d0063 app:id/delete_view}
+                      android.support.v7.widget.AppCompatImageButton{256a4bbe VFED..C. ... 192,0-384,44 #7f0d0064 app:id/back_view}
+                      android.support.v7.widget.AppCompatImageButton{244a541f VFED..C. ... 384,0-576,44 #7f0d0065 app:id/next_view}
+                      android.support.v7.widget.AppCompatImageButton{841736c VFED..C. ... 576,0-768,44 #7f0d0066 app:id/paste_view}
+                    android.widget.LinearLayout{26913d35 V.E..... ... 0,230-768,344 #7f0d0067 app:id/input_group}
+                      android.support.v7.widget.AppCompatTextView{387b65ca V.ED.... ... 0,18-32,95 #7f0d0068 app:id/prefix_view}
+                      android.support.v7.widget.AppCompatEditText{29ca133b VFED..CL F.. 32,18-676,95 #7f0d0069 app:id/input_view}
+                      android.support.v7.widget.AppCompatImageButton{37885a58 VFED..C. ... 676,0-768,114 #7f0d006a app:id/submit_tv}
+                    android.widget.ScrollView{28a577b1 VFED.V.. ... 0,0-768,230}
+                      android.widget.LinearLayout{3cd21496 V.E..... ... 0,0-768,230}
+                        android.view.View{29bca817 V.ED.... ... 0,0-0,73}
+                        android.support.v7.widget.AppCompatTextView{1954c404 VFED.VCL ... 0,73-768,230 #7f0d006b app:id/terminal_view}
+        android.view.View{3be8dded V.ED.... ... 0,0-768,50 #102002f android:id/statusBarBackground}
+        android.view.View{812e422 V.ED.... ... 0,1184-768,1280 #1020030 android:id/navigationBarBackground}
