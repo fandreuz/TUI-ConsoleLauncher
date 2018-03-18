@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
 android {
 
     compileSdkVersion 25
@@ -48,11 +47,6 @@ android {
         variant.outputs.all {
             outputFileName = "./${variant.versionName}/${variant.applicationId}_${variant.versionCode}_${formattedDate}.apk"
         }
-    }
-
-    configurations {
-        all*.exclude group: 'com.google.firebase', module: 'firebase-core'
-        all*.exclude group: 'com.google.firebase', module: 'firebase-iid'
     }
 }
 dependencies {
