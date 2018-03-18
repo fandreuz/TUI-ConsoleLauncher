@@ -166,7 +166,7 @@ public class config extends ParamCommand {
 
                 for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
                     ss.add(element.path);
-                    for(XMLPrefsSave save : element.copy) {
+                    for(XMLPrefsSave save : element.enums) {
                         ss.add(Tuils.DOUBLE_SPACE + save.label());
                     }
                 }
@@ -223,8 +223,8 @@ public class config extends ParamCommand {
                         }
                     }
                 } else {
-                    File old = new File(Tuils.getFolder(), file.getName());
-                    Tuils.insertOld(old);
+                    File toPutInsideOld = new File(Tuils.getFolder(), file.getName());
+                    Tuils.insertOld(toPutInsideOld);
                 }
 
                 File dest = new File(Tuils.getFolder(), file.getName());

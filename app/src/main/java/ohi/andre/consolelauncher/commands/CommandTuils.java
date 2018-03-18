@@ -441,7 +441,7 @@ public class CommandTuils {
             xmlPrefsEntrys = new ArrayList<>();
 
             for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
-                xmlPrefsEntrys.addAll(element.copy);
+                xmlPrefsEntrys.addAll(element.enums);
             }
             Collections.addAll(xmlPrefsEntrys, Apps.values());
             Collections.addAll(xmlPrefsEntrys, Notifications.values());

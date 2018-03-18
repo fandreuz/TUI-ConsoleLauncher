@@ -230,8 +230,31 @@ public class Tuils {
         return buffer.toString();
     }
 
+    private static OnBatteryUpdate batteryUpdate;
+    private static BroadcastReceiver batteryReceiver = null;
+
     public static void registerBatteryReceiver(Context context, OnBatteryUpdate listener) {
         try {
+            batteryReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if(batteryUpdate == null) return;
+
+                    switch (intent.getAction()) {
+                        case Intent.ACTION_BATTERY_CHANGED:
+                            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+                            batteryUpdate.update(level);
+                            break;
+                        case Intent.ACTION_POWER_CONNECTED:
+                            batteryUpdate.onCharging();
+                            break;
+                        case Intent.ACTION_POWER_DISCONNECTED:
+                            batteryUpdate.onNotCharging();
+                            break;
+                    }
+                }
+            };
+
             IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             iFilter.addAction(Intent.ACTION_POWER_CONNECTED);
             iFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
@@ -245,29 +268,8 @@ public class Tuils {
     }
 
     public static void unregisterBatteryReceiver(Context context) {
-        context.unregisterReceiver(batteryReceiver);
+        if(batteryReceiver != null) context.unregisterReceiver(batteryReceiver);
     }
-
-    private static OnBatteryUpdate batteryUpdate;
-    private static BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(batteryUpdate == null) return;
-
-            switch (intent.getAction()) {
-                case Intent.ACTION_BATTERY_CHANGED:
-                    int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-                    batteryUpdate.update(level);
-                    break;
-                case Intent.ACTION_POWER_CONNECTED:
-                    batteryUpdate.onCharging();
-                    break;
-                case Intent.ACTION_POWER_DISCONNECTED:
-                    batteryUpdate.onNotCharging();
-                    break;
-            }
-        }
-    };
 
     public static boolean containsExtension(String[] array, String value) {
         try {
@@ -304,6 +306,13 @@ public class Tuils {
         }
 
         return songs;
+    }
+
+    public static String convertStreamToString(java.io.InputStream is) {
+        if (is == null) return Tuils.EMPTYSTRING;
+
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : Tuils.EMPTYSTRING;
     }
 
     public static long download(InputStream in, File file) throws Exception {

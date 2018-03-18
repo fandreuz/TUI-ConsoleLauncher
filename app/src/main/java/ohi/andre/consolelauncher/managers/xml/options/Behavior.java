@@ -909,7 +909,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "0 = landscape, 1 = portrait, 2 = sensor";
+            return "0 = landscape, 1 = portrait, 2 = auto-rotate";
         }
 
         @Override

@@ -26,6 +26,7 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.managers.ThemeManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.MusicService;
@@ -120,6 +121,7 @@ public class MainManager {
     private AppsManager appsManager;
     private ContactManager contactManager;
     private MusicManager2 musicManager2;
+    private ThemeManager themeManager;
 
     private BroadcastReceiver receiver;
 
@@ -157,6 +159,8 @@ public class MainManager {
                 .build();
 
         rssManager = new RssManager(mContext, client);
+
+        themeManager = new ThemeManager(client, mContext, c);
 
         musicManager2 = XMLPrefsManager.getBoolean(Behavior.enable_music) ? new MusicManager2(mContext) : null;
 
@@ -290,6 +294,7 @@ public class MainManager {
     public void destroy() {
         mainPack.destroy();
 
+        themeManager.dispose();
         LocalBroadcastManager.getInstance(mContext.getApplicationContext()).unregisterReceiver(receiver);
 
         new StoppableThread() {

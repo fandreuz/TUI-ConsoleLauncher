@@ -628,7 +628,7 @@ public class RssManager implements XMLPrefsElement {
                 super.run();
 
                 if(!Tuils.hasInternetAccess()) {
-                    if(force) Tuils.sendOutput(Color.RED, context, "No internet access");
+                    if(force) Tuils.sendOutput(Color.RED, context, R.string.no_internet);
                     return;
                 }
 
@@ -794,6 +794,8 @@ public class RssManager implements XMLPrefsElement {
 
         CharSequence s = Tuils.span(cp, feed.color);
 
+        String dateTag = feed.dateTag == null ? PUBDATE_CHILD : feed.dateTag;
+
         Matcher m = formatPattern.matcher(cp);
         while(m.find()) {
             if(m.groupCount() == 3) {
@@ -811,7 +813,7 @@ public class RssManager implements XMLPrefsElement {
                     if(value != null) value = value.trim();
                     else value = Tuils.EMPTYSTRING;
 
-                    if(feed.dateTag == null ? tag.equals(PUBDATE_CHILD) : (tag.equals(PUBDATE_CHILD) || tag.equals(feed.dateTag))) {
+                    if(tag.equals(dateTag)) {
                         Date d;
                         try {
                             d = feed.timeFormat != null ? feed.timeFormat.parse(value) : defaultRSSDateFormat.parse(value);

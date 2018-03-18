@@ -97,16 +97,13 @@ public class XMLPrefsManager {
 
         public String path;
         XMLPrefsList values;
-        List<XMLPrefsSave> enums;
-        public List<XMLPrefsSave> copy;
+        public List<XMLPrefsSave> enums;
 
         XMLPrefsRoot(String path, XMLPrefsSave[] en) {
             this.path = path;
             this.values = new XMLPrefsList();
 
-            if(en == null) return;
             this.enums = new ArrayList<>(Arrays.asList(en));
-            this.copy = new ArrayList<>(enums);
         }
 
         @Override
@@ -164,8 +161,7 @@ public class XMLPrefsManager {
             Document d = (Document) o[0];
             Element root = (Element) o[1];
 
-            List<XMLPrefsSave> enums = element.enums;
-            if(enums == null) continue;
+            List<XMLPrefsSave> enums = new ArrayList<>(element.enums);
 
             String[] deleted = element.deleted();
             boolean needToWrite = false;
@@ -678,10 +674,10 @@ public class XMLPrefsManager {
         return null;
     }
 
-    private static boolean checkAttributes(Element e, String[] thatHasThose, String[] forValues, boolean alsoNotFound) {
+    private static boolean checkAttributes(Element e, String[] thatHasThose, String[] forValues, boolean alsoIfAttributeNotFound) {
         if(thatHasThose != null && forValues != null && thatHasThose.length == forValues.length) {
             for(int a = 0; a < thatHasThose.length; a++) {
-                if(!e.hasAttribute(thatHasThose[a])) return alsoNotFound;
+                if(!e.hasAttribute(thatHasThose[a])) return alsoIfAttributeNotFound;
                 if(!forValues[a].equals(e.getAttribute(thatHasThose[a]))) return false;
             }
         }

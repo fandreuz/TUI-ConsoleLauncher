@@ -11,7 +11,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
 
-        versionCode 170
+        versionCode 172
         versionName "6.5"
     }
 
@@ -35,7 +35,7 @@ android {
     }
 
     dependencies {
-        compile 'com.android.support:appcompat-v7:23.4.0'
+        compile 'com.android.support:appcompat-v7:25.4.0'
     }
 
     lintOptions {
@@ -56,5 +56,5 @@ android {
     }
 }
 dependencies {
-    compile 'com.squareup.okhttp3:okhttp:3.9.1'
+    compile 'com.squareup.okhttp3:okhttp:3.10.0'
 }

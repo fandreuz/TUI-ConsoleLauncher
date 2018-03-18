@@ -1,10 +1,14 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
+
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.managers.ThemeManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -23,47 +27,43 @@ public class theme extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                return "themes are not working at the moment, the new website will be ready soon";
+                Intent intent = new Intent(ThemeManager.ACTION_APPLY);
+                intent.putExtra(ThemeManager.NAME, pack.getString());
+                LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(intent);
+                return null;
+            }
+        },
+        standard {
+            @Override
+            public int[] args() {
+                return new int[] {};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(new Intent(ThemeManager.ACTION_STANDARD));
+                return null;
             }
         },
         view {
             @Override
             public String exec(ExecutePack pack) {
-                return "themes are not working at the moment, the new website will be ready soon";
+                pack.context.startActivity(Tuils.webPage("https://tui.tarunshankerpandey.com"));
+                return null;
             }
         },
         create {
             @Override
             public String exec(ExecutePack pack) {
-                return "themes are not working at the moment, the new website will be ready soon";
-            }
-        },
-        ls {
-            @Override
-            public String exec(ExecutePack pack) {
-                return "themes are not working at the moment, the new website will be ready soon";
+                pack.context.startActivity(Tuils.webPage("https://tui.tarunshankerpandey.com/create.php"));
+                return null;
             }
         },
         old {
             @Override
             public String exec(ExecutePack pack) {
-//                File theme = Tuils.getOld("theme.xml");
-//                File suggestions = Tuils.getOld("suggestions.xml");
-//
-//                if(theme == null || suggestions == null) return pack.context.getString(R.string.theme_old_not_found);
-//
-//                File themeDest = new File(Tuils.getFolder(), "theme.xml");
-//                File suggestionsDest = new File(Tuils.getFolder(), "suggestions.xml");
-//
-//                if(themeDest.exists()) themeDest.delete();
-//                if(suggestionsDest.exists()) suggestionsDest.delete();
-//
-//                theme.renameTo(themeDest);
-//                suggestions.renameTo(suggestionsDest);
-//
-//                return pack.context.getString(R.string.theme_reverted);
-
-                return "themes are not working at the moment, the new website will be ready soon";
+                LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(new Intent(ThemeManager.ACTION_REVERT));
+                return null;
             }
         },
         tutorial {

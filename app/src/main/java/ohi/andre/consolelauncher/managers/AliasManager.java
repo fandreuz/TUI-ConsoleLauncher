@@ -80,17 +80,23 @@ public class AliasManager {
         }
     }
 
+//    this prevents some erros related to the % sign
+    private final String SECURITY_REPLACEMENT = "{#@";
+    private Pattern securityPattern = Pattern.compile(Pattern.quote(SECURITY_REPLACEMENT));
+
     public String format(String aliasValue, String params) {
         params = params.trim();
+
+        aliasValue = parameterPattern.matcher(aliasValue).replaceAll(SECURITY_REPLACEMENT);
 
         if(params.length() == 0) return aliasValue;
         String[] split = params.split(paramSeparator);
 
         for(String s : split) {
-            aliasValue = parameterPattern.matcher(aliasValue).replaceFirst(s);
+            aliasValue = securityPattern.matcher(aliasValue).replaceFirst(s);
         }
 
-        if(replaceAllMarkers) aliasValue = parameterPattern.matcher(aliasValue).replaceAll(split[0]);
+        if(replaceAllMarkers) aliasValue = securityPattern.matcher(aliasValue).replaceAll(split[0]);
 
         return aliasValue;
     }

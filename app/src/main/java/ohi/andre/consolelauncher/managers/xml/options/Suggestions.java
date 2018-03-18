@@ -263,7 +263,7 @@ public enum Suggestions implements XMLPrefsSave {
     double_space_click_first_suggestion {
         @Override
         public String defaultValue() {
-            return "false";
+            return "true";
         }
 
         @Override
@@ -322,6 +322,70 @@ public enum Suggestions implements XMLPrefsSave {
         @Override
         public String info() {
             return "The minimum priority of a command shown when the input field is empty";
+        }
+    },
+    file_suggestions_minrate {
+        @Override
+        public String defaultValue() {
+            return "-1";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "The minimum rate of a file suggestion";
+        }
+    },
+    app_suggestions_minrate {
+        @Override
+        public String defaultValue() {
+            return "-1";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "The minimum rate of an app suggestion";
+        }
+    },
+    contact_suggestions_minrate {
+        @Override
+        public String defaultValue() {
+            return "-1";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "The minimum rate of a contact suggestion";
+        }
+    },
+    song_suggestions_minrate {
+        @Override
+        public String defaultValue() {
+            return "-1";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "The minimum rate of a song suggestion";
         }
     };
 

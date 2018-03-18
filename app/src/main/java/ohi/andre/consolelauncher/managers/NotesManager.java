@@ -133,11 +133,16 @@ public class NotesManager {
         filter.addAction(ACTION_LOCK);
 
         receiver = new BroadcastReceiver() {
+
+            long last = -1;
+
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent.getAction().equals(ACTION_ADD)) {
-                    Tuils.log("add note");
+                long t = System.currentTimeMillis();
+                if(t - last < 100) return;
+                last = t;
 
+                if(intent.getAction().equals(ACTION_ADD)) {
                     String text = intent.getStringExtra(TEXT);
                     if(text == null) return;
 
@@ -249,7 +254,7 @@ public class NotesManager {
     Pattern countPattern = Pattern.compile("%c", Pattern.CASE_INSENSITIVE);
     Pattern lockPattern = Pattern.compile("%l", Pattern.CASE_INSENSITIVE);
     Pattern rowPattern = Pattern.compile("%r", Pattern.CASE_INSENSITIVE);
-    Pattern uriPattern = Pattern.compile("([^#\\s]+:[^\\s]+|www\\.[^\\s]*)");
+    Pattern uriPattern = Pattern.compile("(http[s]?:[^\\s]+|www\\.[^\\s]*)\\.[a-z]+");
 
     private void invalidateNotes() {
         String header = this.header;
@@ -356,8 +361,6 @@ public class NotesManager {
     }
 
     private void addNote(Context context, String s, boolean lock) {
-        Tuils.log("called");
-
         long t = System.currentTimeMillis();
 
         notes.add(new Note(t, s, lock));
@@ -371,7 +374,7 @@ public class NotesManager {
         String output = XMLPrefsManager.add(file, NOTE_NODE, new String[] {CREATION_TIME, VALUE_ATTRIBUTE, LOCK}, new String[] {String.valueOf(t), s, String.valueOf(lock)});
         if(output != null) {
             if(output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
-            else Tuils.sendOutput(Color.RED, context, R.string.note_not_found);
+            else Tuils.sendOutput(Color.RED, context, R.string.output_error);
         }
 
         invalidateNotes();
