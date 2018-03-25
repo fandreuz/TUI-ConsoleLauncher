@@ -48,6 +48,14 @@
 - **[DeviceCustomizer](https://youtu.be/sahFlOQA8fQ?t=1m25s)**
 - **[Diolinux](https://www.youtube.com/watch?v=5Q1gveqY4hg&t=197s)**
 
-## Important
+## Pull requets & Issues
 I **do not accept** pull requests, and it's really better to **send me an email** rather than opening an issue on GitHub, since I check my emails very often everyday.<br>
 **[Email me](mailto:andreuzzi.francesco@gmail.com)**
+
+## How to format a bug report
+1. Set "**Bug report**" as subject
+2. Describe the issue, when it happens, how to reproduce it
+3. **English**! (or Italian, at least)
+4. Include any **screenshot** that you think could help (outputs, UI, etc..)
+5. Include any **file** that you think could help (behavior.xml, ui.xml, etc..)
+6. Send it to **andreuzzi.francesco@gmail.com**
