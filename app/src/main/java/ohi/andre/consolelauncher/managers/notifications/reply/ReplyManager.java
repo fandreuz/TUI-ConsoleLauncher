@@ -47,7 +47,14 @@ import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
 
 public class ReplyManager implements XMLPrefsElement {
 
-    public static final String PATH = "reply.xml", NAME = "REPLY", ACTION = BuildConfig.APPLICATION_ID + ".reply", ID = "id", WHAT = "what", ACTION_UPDATE = BuildConfig.APPLICATION_ID + ".update", ACTION_LS = BuildConfig.APPLICATION_ID + ".lsreplies";
+    public static String PATH = "reply.xml";
+    public static String NAME = "REPLY";
+    public static String ACTION = BuildConfig.APPLICATION_ID + ".reply";
+    public static String ID = "id";
+    public static String WHAT = "what";
+    public static String ACTION_UPDATE = BuildConfig.APPLICATION_ID + ".update";
+    public static String ACTION_LS = BuildConfig.APPLICATION_ID + ".lsreplies";
+
     private static final String ID_ATTRIBUTE = "id";
 
     private Set<NotificationWear> notificationWears;
@@ -63,6 +70,11 @@ public class ReplyManager implements XMLPrefsElement {
     private Context context;
 
     public static int nextUsableId;
+
+    @Override
+    public String path() {
+        return PATH;
+    }
 
     public ReplyManager(Context context) {
         enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH;

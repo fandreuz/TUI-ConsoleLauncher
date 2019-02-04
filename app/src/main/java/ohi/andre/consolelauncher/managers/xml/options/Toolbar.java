@@ -25,6 +25,22 @@ public enum Toolbar implements XMLPrefsSave {
         public String type() {
             return XMLPrefsSave.BOOLEAN;
         }
+    },
+    hide_toolbar_no_input {
+        @Override
+        public String defaultValue() {
+            return "false";
+        }
+
+        @Override
+        public String info() {
+            return "If true, the toolbar will be hidden when the input field is empty";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
     };
 
     @Override
@@ -35,10 +51,5 @@ public enum Toolbar implements XMLPrefsSave {
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public boolean is(String s) {
-        return name().equals(s);
     }
 }

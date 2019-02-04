@@ -133,27 +133,19 @@ public class TuixtActivity extends Activity {
 
         if (submitView != null) {
             submitView.setColorFilter(XMLPrefsManager.getColor(Theme.enter_color));
-            submitView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onNewInput();
-                }
-            });
+            submitView.setOnClickListener(v -> onNewInput());
         }
 
         fileView.setTypeface(Tuils.getTypeface(this));
         fileView.setTextSize(ioSize);
         fileView.setTextColor(outputColor);
-        fileView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_DOWN) {
-                    outputView.setVisibility(View.GONE);
-                    outputView.setText(Tuils.EMPTYSTRING);
-                }
-
-                return false;
+        fileView.setOnTouchListener((v, event) -> {
+            if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                outputView.setVisibility(View.GONE);
+                outputView.setText(Tuils.EMPTYSTRING);
             }
+
+            return false;
         });
 
         outputView.setTypeface(Tuils.getTypeface(this));
@@ -168,27 +160,24 @@ public class TuixtActivity extends Activity {
         inputView.setHint(Tuils.getHint(path));
 
         inputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-        inputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        inputView.setOnEditorActionListener((v, actionId, event) -> {
 //                physical enter
-                if(actionId == KeyEvent.ACTION_DOWN) {
-                    if(lastEnter == 0) {
-                        lastEnter = System.currentTimeMillis();
-                    } else {
-                        long difference = System.currentTimeMillis() - lastEnter;
-                        lastEnter = System.currentTimeMillis();
-                        if(difference < 350) {
-                            return true;
-                        }
+            if(actionId == KeyEvent.ACTION_DOWN) {
+                if(lastEnter == 0) {
+                    lastEnter = System.currentTimeMillis();
+                } else {
+                    long difference = System.currentTimeMillis() - lastEnter;
+                    lastEnter = System.currentTimeMillis();
+                    if(difference < 350) {
+                        return true;
                     }
                 }
-
-                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
-                    onNewInput();
-                }
-                return true;
             }
+
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
+                onNewInput();
+            }
+            return true;
         });
 
         setContentView(rootView);
@@ -219,15 +208,12 @@ public class TuixtActivity extends Activity {
                         lastLine = line;
                     }
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                fileView.setText(builder.toString());
-                            } catch (OutOfMemoryError e) {
-                                fileView.setText(Tuils.EMPTYSTRING);
-                                Toast.makeText(TuixtActivity.this, R.string.tuixt_error, Toast.LENGTH_LONG).show();
-                            }
+                    runOnUiThread(() -> {
+                        try {
+                            fileView.setText(builder.toString());
+                        } catch (OutOfMemoryError e) {
+                            fileView.setText(Tuils.EMPTYSTRING);
+                            Toast.makeText(TuixtActivity.this, R.string.tuixt_error, Toast.LENGTH_LONG).show();
                         }
                     });
                 } catch (Exception e) {
@@ -236,14 +222,11 @@ public class TuixtActivity extends Activity {
                     setResult(1, intent);
                     finish();
                 } catch (Error er) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            System.gc();
+                    runOnUiThread(() -> {
+                        System.gc();
 
-                            fileView.setText(Tuils.EMPTYSTRING);
-                            Toast.makeText(TuixtActivity.this, R.string.tuixt_error, Toast.LENGTH_LONG).show();
-                        }
+                        fileView.setText(Tuils.EMPTYSTRING);
+                        Toast.makeText(TuixtActivity.this, R.string.tuixt_error, Toast.LENGTH_LONG).show();
                     });
                 }
             }
@@ -285,13 +268,13 @@ public class TuixtActivity extends Activity {
 
             outputView.setVisibility(View.VISIBLE);
 
-            Command command = CommandTuils.parse(input, pack, false);
+            Command command = CommandTuils.parse(input, pack);
             if(command == null) {
                 outputView.setText(R.string.output_commandnotfound);
                 return;
             }
 
-            String output = command.exec(getResources(), pack);
+            String output = command.exec(pack);
             if(output != null) {
                 outputView.setText(output);
             }

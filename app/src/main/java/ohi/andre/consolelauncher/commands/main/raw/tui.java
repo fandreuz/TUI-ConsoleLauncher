@@ -10,15 +10,17 @@ import android.support.v4.content.LocalBroadcastManager;
 import java.io.File;
 
 import ohi.andre.consolelauncher.BuildConfig;
+import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 
 /**
@@ -117,10 +119,20 @@ public class tui extends ParamCommand {
                 return null;
             }
         },
+        sourcecode {
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher"));
+                return null;
+            }
+        },
         reset {
             @Override
             public String exec(ExecutePack pack) {
-                Tuils.delete(Tuils.getFolder());
+                Tuils.deleteContentOnly(Tuils.getFolder());
+
+                ((LauncherActivity) pack.context).addMessage(pack.context.getString(R.string.tui_reset), null);
+                ((Reloadable) pack.context).reload();
                 return null;
             }
         },

@@ -2,6 +2,7 @@ package ohi.andre.consolelauncher;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.KeyguardManager;
 import android.app.admin.DevicePolicyManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -9,19 +10,24 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.Editable;
+import android.support.v4.view.GestureDetectorCompat;
+import android.text.SpannableString;
 import android.text.TextUtils;
-import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.util.DisplayMetrics;
-import android.util.Xml;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnDoubleTapListener;
 import android.view.Gravity;
@@ -35,25 +41,29 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
-import ohi.andre.consolelauncher.managers.MessagesManager;
+import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
+import ohi.andre.consolelauncher.managers.HTMLExtractManager;
 import ohi.andre.consolelauncher.managers.NotesManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
-import ohi.andre.consolelauncher.managers.suggestions.SuggestionRunnable;
+import ohi.andre.consolelauncher.managers.TuiLocationManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionTextWatcher;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
@@ -64,23 +74,30 @@ import ohi.andre.consolelauncher.managers.xml.options.Toolbar;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.AllowEqualsSequence;
 import ohi.andre.consolelauncher.tuils.NetworkUtils;
-import ohi.andre.consolelauncher.tuils.StoppableThread;
+import ohi.andre.consolelauncher.tuils.OutlineEditText;
+import ohi.andre.consolelauncher.tuils.OutlineTextView;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
-import ohi.andre.consolelauncher.tuils.interfaces.SuggestionViewDecorer;
+import ohi.andre.consolelauncher.tuils.interfaces.OnTextChanged;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
-import ohi.andre.consolelauncher.tuils.stuff.TrashInterfaces;
 
 public class UIManager implements OnTouchListener {
 
-    public static String ACTION_UPDATE_SUGGESTIONS = BuildConfig.APPLICATION_ID + ".ui_update_suggestions", ACTION_UPDATE_HINT = BuildConfig.APPLICATION_ID + ".ui_update_hint",
-        ACTION_ROOT = BuildConfig.APPLICATION_ID + ".ui_root", ACTION_NOROOT = BuildConfig.APPLICATION_ID + ".ui_noroot",
-        ACTION_LOGTOFILE = BuildConfig.APPLICATION_ID + ".ui_log", ACTION_CLEAR = BuildConfig.APPLICATION_ID + "ui_clear";
+    public static String ACTION_UPDATE_SUGGESTIONS = BuildConfig.APPLICATION_ID + ".ui_update_suggestions";
+    public static String ACTION_UPDATE_HINT = BuildConfig.APPLICATION_ID + ".ui_update_hint";
+    public static String ACTION_ROOT = BuildConfig.APPLICATION_ID + ".ui_root";
+    public static String ACTION_NOROOT = BuildConfig.APPLICATION_ID + ".ui_noroot";
+    public static String ACTION_LOGTOFILE = BuildConfig.APPLICATION_ID + ".ui_log";
+    public static String ACTION_CLEAR = BuildConfig.APPLICATION_ID + "ui_clear";
+    public static String ACTION_WEATHER = BuildConfig.APPLICATION_ID + "ui_weather";
+    public static String ACTION_WEATHER_GOT_LOCATION = BuildConfig.APPLICATION_ID + "ui_weather_location";
+    public static String ACTION_WEATHER_DELAY = BuildConfig.APPLICATION_ID + "ui_weather_delay";
+    public static String ACTION_WEATHER_MANUAL_UPDATE = BuildConfig.APPLICATION_ID + "ui_weather_update";
 
-    public static String
-            FILE_NAME = "fileName";
+    public static String FILE_NAME = "fileName";
+    public static String PREFS_NAME = "ui";
 
     private enum Label {
         ram,
@@ -89,7 +106,9 @@ public class UIManager implements OnTouchListener {
         battery,
         storage,
         network,
-        notes;
+        notes,
+        weather,
+        unlock
     }
 
     private final int RAM_DELAY = 3000;
@@ -102,7 +121,9 @@ public class UIManager implements OnTouchListener {
 
     private DevicePolicyManager policy;
     private ComponentName component;
-    private GestureDetector det;
+    private GestureDetectorCompat gestureDetector;
+
+    SharedPreferences preferences;
 
     private InputMethodManager imm;
     private TerminalManager mTerminalAdapter;
@@ -110,7 +131,10 @@ public class UIManager implements OnTouchListener {
     int mediumPercentage, lowPercentage;
     String batteryFormat;
 
-//    never access this directly, use getLabelView
+    boolean hideToolbarNoInput;
+    View toolbarView;
+
+    //    never access this directly, use getLabelView
     private TextView[] labelViews = new TextView[Label.values().length];
 
     private float[] labelIndexes = new float[labelViews.length];
@@ -121,6 +145,7 @@ public class UIManager implements OnTouchListener {
         return labelViews[(int) labelIndexes[l.ordinal()]];
     }
 
+    private int notesMaxLines;
     private NotesManager notesManager;
     private NotesRunnable notesRunnable;
     private class NotesRunnable implements Runnable {
@@ -130,11 +155,8 @@ public class UIManager implements OnTouchListener {
         @Override
         public void run() {
             if(notesManager != null) {
-                int i = Label.notes.ordinal();
-
                 if(notesManager.hasChanged) {
-                    labelTexts[i] = Tuils.span(mContext, labelSizes[i], notesManager.getNotes());
-                    UIManager.this.update(labelIndexes[i]);
+                    UIManager.this.updateText(Label.notes, Tuils.span(mContext, labelSizes[Label.notes.ordinal()], notesManager.getNotes()));
                 }
 
                 handler.postDelayed(this, updateTime);
@@ -147,7 +169,7 @@ public class UIManager implements OnTouchListener {
 
 //        %(charging:not charging)
 
-//        final Pattern optionalCharging = Pattern.compile("%\\(([^\\/]*)\\/([^)]*)\\)", Pattern.CASE_INSENSITIVE);
+        //        final Pattern optionalCharging = Pattern.compile("%\\(([^\\/]*)\\/([^)]*)\\)", Pattern.CASE_INSENSITIVE);
         Pattern optionalCharging;
         final Pattern value = Pattern.compile("%v", Pattern.LITERAL | Pattern.CASE_INSENSITIVE);
 
@@ -208,10 +230,7 @@ public class UIManager implements OnTouchListener {
             cp = value.matcher(cp).replaceAll(String.valueOf(percentage));
             cp = Tuils.patternNewline.matcher(cp).replaceAll(Tuils.NEWLINE);
 
-            int i = Label.battery.ordinal();
-
-            labelTexts[i] = Tuils.span(mContext, cp, color, labelSizes[i]);
-            UIManager.this.update(labelIndexes[i]);
+            UIManager.this.updateText(Label.battery, Tuils.span(mContext, cp, color, labelSizes[Label.battery.ordinal()]));
         }
 
         @Override
@@ -324,10 +343,8 @@ public class UIManager implements OnTouchListener {
             copy = storagePatterns.get(25).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) eav, Tuils.GIGA))));
             copy = storagePatterns.get(26).matcher(copy).replaceAll(Matcher.quoteReplacement(String.valueOf(Tuils.formatSize((long) etot, Tuils.GIGA))));
 
-            int i = Label.storage.ordinal();
+            updateText(Label.storage, Tuils.span(mContext, copy, color, labelSizes[Label.storage.ordinal()]));
 
-            labelTexts[i] = Tuils.span(mContext, copy, color, labelSizes[i]);
-            update(labelIndexes[i]);
             handler.postDelayed(this, STORAGE_DELAY);
         }
     };
@@ -336,19 +353,14 @@ public class UIManager implements OnTouchListener {
     private class TimeRunnable implements Runnable {
 
         boolean active;
-        int color;
 
         @Override
         public void run() {
             if(!active) {
                 active = true;
-                color = XMLPrefsManager.getColor(Theme.time_color);
             }
 
-            int i = Label.time.ordinal();
-
-            labelTexts[i] = TimeManager.instance.replace(mContext, labelSizes[i], "%t0", color);
-            update(labelIndexes[i]);
+            updateText(Label.time, TimeManager.instance.getCharSequence(mContext, labelSizes[Label.time.ordinal()], "%t0"));
             handler.postDelayed(this, TIME_DELAY);
         }
     };
@@ -413,15 +425,13 @@ public class UIManager implements OnTouchListener {
 
             copy = ramPatterns.get(11).matcher(copy).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            int i = Label.ram.ordinal();
+            updateText(Label.ram, Tuils.span(mContext, copy, color, labelSizes[Label.ram.ordinal()]));
 
-            labelTexts[i] = Tuils.span(mContext, copy, color, labelSizes[i]);
-            update(labelIndexes[i]);
             handler.postDelayed(this, RAM_DELAY);
         }
     };
 
-    private Runnable networkRunnable;
+    private NetworkRunnable networkRunnable;
     private class NetworkRunnable implements Runnable {
 //        %() -> wifi
 //        %[] -> data
@@ -480,13 +490,14 @@ public class UIManager implements OnTouchListener {
 
         @Override
         public void run() {
-            if(format == null) {
+            if (format == null) {
                 format = XMLPrefsManager.get(Behavior.network_info_format);
                 color = XMLPrefsManager.getColor(Theme.network_info_color);
                 maxDepth = XMLPrefsManager.getInt(Behavior.max_optional_depth);
 
                 updateTime = XMLPrefsManager.getInt(Behavior.network_info_update_ms);
-                if(updateTime < 1000) updateTime = Integer.parseInt(Behavior.network_info_update_ms.defaultValue());
+                if (updateTime < 1000)
+                    updateTime = Integer.parseInt(Behavior.network_info_update_ms.defaultValue());
 
                 connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
                 wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -515,7 +526,7 @@ public class UIManager implements OnTouchListener {
 //            wifi
             boolean wifiOn = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
             String wifiName = null;
-            if(wifiOn) {
+            if (wifiOn) {
                 WifiInfo connectionInfo = wifiManager.getConnectionInfo();
                 if (connectionInfo != null) {
                     wifiName = connectionInfo.getSSID();
@@ -526,10 +537,11 @@ public class UIManager implements OnTouchListener {
             boolean mobileOn = false;
             try {
                 mobileOn = method != null && connectivityManager != null && (Boolean) method.invoke(connectivityManager);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
 
             String mobileType = null;
-            if(mobileOn) {
+            if (mobileOn) {
                 mobileType = Tuils.getNetworkType(mContext);
             } else {
                 mobileType = "unknown";
@@ -540,10 +552,10 @@ public class UIManager implements OnTouchListener {
 
             String copy = format;
 
-            if(maxDepth > 0) {
-                copy = apply(1, copy, new boolean[] {wifiOn, mobileOn, bluetoothOn}, optionalWifi, optionalData, optionalBluetooth);
-                copy = apply(1, copy, new boolean[] {mobileOn, wifiOn, bluetoothOn}, optionalData, optionalWifi, optionalBluetooth);
-                copy = apply(1, copy, new boolean[] {bluetoothOn, wifiOn, mobileOn}, optionalBluetooth, optionalWifi, optionalData);
+            if (maxDepth > 0) {
+                copy = apply(1, copy, new boolean[]{wifiOn, mobileOn, bluetoothOn}, optionalWifi, optionalData, optionalBluetooth);
+                copy = apply(1, copy, new boolean[]{mobileOn, wifiOn, bluetoothOn}, optionalData, optionalWifi, optionalBluetooth);
+                copy = apply(1, copy, new boolean[]{bluetoothOn, wifiOn, mobileOn}, optionalBluetooth, optionalWifi, optionalData);
             }
 
             copy = w0.matcher(copy).replaceAll(wifiOn ? one : zero);
@@ -567,10 +579,7 @@ public class UIManager implements OnTouchListener {
             copy = dt.matcher(copy).replaceAll(mobileType);
             copy = Tuils.patternNewline.matcher(copy).replaceAll(Tuils.NEWLINE);
 
-            int i = Label.network.ordinal();
-
-            labelTexts[i] = Tuils.span(mContext, copy, color, labelSizes[i]);
-            update(labelIndexes[i]);
+            updateText(Label.network, Tuils.span(mContext, copy, color, labelSizes[Label.network.ordinal()]));
             handler.postDelayed(this, updateTime);
         }
 
@@ -619,8 +628,112 @@ public class UIManager implements OnTouchListener {
         }
     }
 
-    private void update(float line) {
-        int base = (int) line;
+    private int weatherDelay;
+
+    private double lastLatitude, lastLongitude;
+    private String location;
+    private boolean fixedLocation = false;
+
+    private boolean weatherPerformedStartupRun = false;
+    private WeatherRunnable weatherRunnable;
+    private int weatherColor;
+    boolean showWeatherUpdate;
+
+    private class WeatherRunnable implements Runnable {
+
+        String key;
+        String url;
+
+        public WeatherRunnable() {
+
+            if(XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
+                weatherDelay = XMLPrefsManager.getInt(Behavior.weather_update_time);
+                key = XMLPrefsManager.get(Behavior.weather_key);
+            } else {
+                key = Behavior.weather_key.defaultValue();
+                weatherDelay = 60 * 60;
+            }
+            weatherDelay *= 1000;
+
+            String where = XMLPrefsManager.get(Behavior.weather_location);
+            if(where == null || where.length() == 0 || (!Tuils.isNumber(where) && !where.contains(","))) {
+//                Tuils.location(mContext, new Tuils.ArgsRunnable() {
+//                    @Override
+//                    public void run() {
+//                        setUrl(
+//                                "lat=" + get(int.class, 0) + "&lon=" + get(int.class, 1),
+//                                finalKey,
+//                                XMLPrefsManager.get(Behavior.weather_temperature_measure));
+//                        WeatherRunnable.this.run();
+//                    }
+//                }, new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        updateText(Label.weather, Tuils.span(mContext, mContext.getString(R.string.location_error), XMLPrefsManager.getColor(Theme.weather_color), labelSizes[Label.weather.ordinal()]));
+//                    }
+//                }, handler);
+
+//                Location l = Tuils.getLocation(mContext);
+//                if(l != null) {
+//                    setUrl(
+//                            "lat=" + l.getLatitude() + "&lon=" + l.getLongitude(),
+//                            finalKey,
+//                            XMLPrefsManager.get(Behavior.weather_temperature_measure));
+//                    WeatherRunnable.this.run();
+//                } else {
+//                    updateText(Label.weather, Tuils.span(mContext, mContext.getString(R.string.location_error), XMLPrefsManager.getColor(Theme.weather_color), labelSizes[Label.weather.ordinal()]));
+//                }
+
+                TuiLocationManager l = TuiLocationManager.instance(mContext);
+                l.add(ACTION_WEATHER_GOT_LOCATION);
+
+            } else {
+                fixedLocation = true;
+
+                if(where.contains(",")) {
+                    String[] split = where.split(",");
+                    where = "lat=" + split[0] + "&lon=" + split[1];
+                } else {
+                    where = "id=" + where;
+                }
+
+                setUrl(where);
+            }
+        }
+
+        @Override
+        public void run() {
+            weatherPerformedStartupRun = true;
+            if(!fixedLocation) setUrl(lastLatitude, lastLongitude);
+
+            send();
+
+            if(handler != null) handler.postDelayed(this, weatherDelay);
+        }
+
+        private void send() {
+            if(url == null) return;
+
+            Intent i = new Intent(HTMLExtractManager.ACTION_WEATHER);
+            i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, url);
+            i.putExtra(HTMLExtractManager.BROADCAST_COUNT, HTMLExtractManager.broadcastCount);
+            LocalBroadcastManager.getInstance(mContext.getApplicationContext()).sendBroadcast(i);
+        }
+
+        private void setUrl(String where) {
+            url = "http://api.openweathermap.org/data/2.5/weather?" + where + "&appid=" + key + "&units=" + XMLPrefsManager.get(Behavior.weather_temperature_measure);
+        }
+
+        private void setUrl(double latitude, double longitude) {
+            url = "http://api.openweathermap.org/data/2.5/weather?" + "lat=" + latitude + "&lon=" + longitude + "&appid=" + key + "&units=" + XMLPrefsManager.get(Behavior.weather_temperature_measure);
+        }
+    }
+
+//    you need to use labelIndexes[i]
+    private void updateText(Label l, CharSequence s) {
+        labelTexts[l.ordinal()] = s;
+
+        int base = (int) labelIndexes[l.ordinal()];
 
         List<Float> indexs = new ArrayList<>();
         for(int count = 0; count < Label.values().length; count++) {
@@ -657,6 +770,8 @@ public class UIManager implements OnTouchListener {
 
     public MainPack pack;
 
+    private boolean clearOnLock;
+
     protected UIManager(final Context context, final ViewGroup rootView, MainPack mainPack, boolean canApplyTheme, CommandExecuter executer) {
 
         IntentFilter filter = new IntentFilter();
@@ -667,6 +782,10 @@ public class UIManager implements OnTouchListener {
 //        filter.addAction(ACTION_CLEAR_SUGGESTIONS);
         filter.addAction(ACTION_LOGTOFILE);
         filter.addAction(ACTION_CLEAR);
+        filter.addAction(ACTION_WEATHER);
+        filter.addAction(ACTION_WEATHER_GOT_LOCATION);
+        filter.addAction(ACTION_WEATHER_DELAY);
+        filter.addAction(ACTION_WEATHER_MANUAL_UPDATE);
 
         receiver = new BroadcastReceiver() {
             @Override
@@ -702,7 +821,61 @@ public class UIManager implements OnTouchListener {
                     }
                 } else if(action.equals(ACTION_CLEAR)) {
                     mTerminalAdapter.clear();
-                    if(suggestionsManager != null) suggestionsManager.requestSuggestion(Tuils.EMPTYSTRING);
+                    if (suggestionsManager != null)
+                        suggestionsManager.requestSuggestion(Tuils.EMPTYSTRING);
+                } else if(action.equals(ACTION_WEATHER)) {
+                    Calendar c = Calendar.getInstance();
+
+                    CharSequence s = intent.getCharSequenceExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
+                    if(s == null) s = intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
+                    if(s == null) return;
+
+                    s = Tuils.span(context, s, weatherColor, labelSizes[Label.weather.ordinal()]);
+
+                    updateText(Label.weather, s);
+
+                    if(showWeatherUpdate) {
+                        String message = context.getString(R.string.weather_updated) + Tuils.SPACE + c.get(Calendar.HOUR_OF_DAY) + "." + c.get(Calendar.MINUTE) + Tuils.SPACE + "(" + lastLatitude + ", " + lastLongitude + ")";
+                        Tuils.sendOutput(context, message, TerminalManager.CATEGORY_OUTPUT);
+                    }
+                } else if(action.equals(ACTION_WEATHER_GOT_LOCATION)) {
+//                    int result = intent.getIntExtra(XMLPrefsManager.VALUE_ATTRIBUTE, 0);
+//                    if(result == PackageManager.PERMISSION_DENIED) {
+//                        updateText(Label.weather, Tuils.span(context, context.getString(R.string.location_error), weatherColor, labelSizes[Label.weather.ordinal()]));
+//                    } else handler.post(weatherRunnable);
+
+                    if(intent.getBooleanExtra(TuiLocationManager.FAIL, false)) {
+                        handler.removeCallbacks(weatherRunnable);
+                        weatherRunnable = null;
+
+                        CharSequence s = Tuils.span(context, context.getString(R.string.location_error), weatherColor, labelSizes[Label.weather.ordinal()]);
+
+                        updateText(Label.weather, s);
+                    } else {
+                        lastLatitude = intent.getDoubleExtra(TuiLocationManager.LATITUDE, 0);
+                        lastLongitude = intent.getDoubleExtra(TuiLocationManager.LONGITUDE, 0);
+
+                        location = Tuils.locationName(context, lastLatitude, lastLongitude);
+
+                        if(!weatherPerformedStartupRun || XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
+                            handler.removeCallbacks(weatherRunnable);
+                            handler.post(weatherRunnable);
+                        }
+                    }
+                } else if(action.equals(ACTION_WEATHER_DELAY)) {
+                    Calendar c = Calendar.getInstance();
+                    c.setTimeInMillis(System.currentTimeMillis() + 1000 * 10);
+
+                    if(showWeatherUpdate) {
+                        String message = context.getString(R.string.weather_error) + Tuils.SPACE + c.get(Calendar.HOUR_OF_DAY) + "." + c.get(Calendar.MINUTE);
+                        Tuils.sendOutput(context, message, TerminalManager.CATEGORY_OUTPUT);
+                    }
+
+                    handler.removeCallbacks(weatherRunnable);
+                    handler.postDelayed(weatherRunnable, 1000 * 60);
+                } else if(action.equals(ACTION_WEATHER_MANUAL_UPDATE)) {
+                    handler.removeCallbacks(weatherRunnable);
+                    handler.post(weatherRunnable);
                 }
             }
         };
@@ -713,6 +886,8 @@ public class UIManager implements OnTouchListener {
         component = new ComponentName(context, PolicyReceiver.class);
 
         mContext = context;
+
+        preferences = mContext.getSharedPreferences(PREFS_NAME, 0);
 
         handler = new Handler();
 
@@ -726,22 +901,92 @@ public class UIManager implements OnTouchListener {
 
 //        scrolllllll
         if(XMLPrefsManager.getBoolean(Behavior.auto_scroll)) {
-            rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    int heightDiff = rootView.getRootView().getHeight() - rootView.getHeight();
-                    if (heightDiff > Tuils.dpToPx(context, 200)) { // if more than 200 dp, it's probably a keyboard...
-                        if(mTerminalAdapter != null) mTerminalAdapter.scrollToEnd();
-                    }
+            rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+                int heightDiff = rootView.getRootView().getHeight() - rootView.getHeight();
+                if (heightDiff > Tuils.dpToPx(context, 200)) { // if more than 200 dp, it's probably a keyboard...
+                    if(mTerminalAdapter != null) mTerminalAdapter.scrollToEnd();
                 }
             });
         }
 
-        int rightMM, leftMM, topMM, bottomMM;
-        rightMM = XMLPrefsManager.getInt(Ui.right_margin_mm);
-        leftMM = XMLPrefsManager.getInt(Ui.left_margin_mm);
-        topMM = XMLPrefsManager.getInt(Ui.top_margin_mm);
-        bottomMM = XMLPrefsManager.getInt(Ui.bottom_margin_mm);
+        clearOnLock = XMLPrefsManager.getBoolean(Behavior.clear_on_lock);
+
+        lockOnDbTap = XMLPrefsManager.getBoolean(Behavior.double_tap_lock);
+        doubleTapCmd = XMLPrefsManager.get(Behavior.double_tap_cmd);
+        if(!lockOnDbTap && doubleTapCmd == null) {
+            policy = null;
+            component = null;
+            gestureDetector = null;
+        } else {
+            gestureDetector = new GestureDetectorCompat(mContext, new GestureDetector.OnGestureListener() {
+                @Override
+                public boolean onDown(MotionEvent e) {
+                    return false;
+                }
+
+                @Override
+                public void onShowPress(MotionEvent e) {}
+
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
+                    return false;
+                }
+
+                @Override
+                public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                    return false;
+                }
+
+                @Override
+                public void onLongPress(MotionEvent e) {}
+
+                @Override
+                public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                    return false;
+                }
+            });
+
+            gestureDetector.setOnDoubleTapListener(new OnDoubleTapListener() {
+
+                @Override
+                public boolean onSingleTapConfirmed(MotionEvent e) {
+                    return false;
+                }
+
+                @Override
+                public boolean onDoubleTapEvent(MotionEvent e) {
+                    return true;
+                }
+
+                @Override
+                public boolean onDoubleTap(MotionEvent e) {
+
+                    if(doubleTapCmd != null && doubleTapCmd.length() > 0) {
+                        String input = mTerminalAdapter.getInput();
+                        mTerminalAdapter.setInput(doubleTapCmd);
+                        mTerminalAdapter.simulateEnter();
+                        mTerminalAdapter.setInput(input);
+                    }
+
+                    if(lockOnDbTap) {
+                        boolean admin = policy.isAdminActive(component);
+
+                        if (!admin) {
+                            Intent i = Tuils.requestAdmin(component, mContext.getString(R.string.admin_permission));
+                            mContext.startActivity(i);
+                        } else {
+                            policy.lockNow();
+                        }
+                    }
+
+                    return true;
+                }
+            });
+        }
+
+        int[] displayMargins = getListOfIntValues(XMLPrefsManager.get(Ui.display_margin_mm), 4, 0);
+        DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
+        rootView.setPadding(Tuils.mmToPx(metrics, displayMargins[0]), Tuils.mmToPx(metrics, displayMargins[1]), Tuils.mmToPx(metrics, displayMargins[2]), Tuils.mmToPx(metrics, displayMargins[3]));
 
         labelSizes[Label.time.ordinal()] = XMLPrefsManager.getInt(Ui.time_size);
         labelSizes[Label.ram.ordinal()] = XMLPrefsManager.getInt(Ui.ram_size);
@@ -749,9 +994,9 @@ public class UIManager implements OnTouchListener {
         labelSizes[Label.storage.ordinal()] = XMLPrefsManager.getInt(Ui.storage_size);
         labelSizes[Label.network.ordinal()] = XMLPrefsManager.getInt(Ui.network_size);
         labelSizes[Label.notes.ordinal()] = XMLPrefsManager.getInt(Ui.notes_size);
-
-        DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
-        rootView.setPadding(Tuils.mmToPx(metrics, leftMM), Tuils.mmToPx(metrics, topMM), Tuils.mmToPx(metrics, rightMM), Tuils.mmToPx(metrics, bottomMM));
+        labelSizes[Label.device.ordinal()] = XMLPrefsManager.getInt(Ui.device_size);
+        labelSizes[Label.weather.ordinal()] = XMLPrefsManager.getInt(Ui.weather_size);
+        labelSizes[Label.unlock.ordinal()] = XMLPrefsManager.getInt(Ui.unlock_size);
 
         labelViews = new TextView[] {
                 (TextView) rootView.findViewById(R.id.tv0),
@@ -760,7 +1005,9 @@ public class UIManager implements OnTouchListener {
                 (TextView) rootView.findViewById(R.id.tv3),
                 (TextView) rootView.findViewById(R.id.tv4),
                 (TextView) rootView.findViewById(R.id.tv5),
-                (TextView) rootView.findViewById(R.id.tv6)
+                (TextView) rootView.findViewById(R.id.tv6),
+                (TextView) rootView.findViewById(R.id.tv7),
+                (TextView) rootView.findViewById(R.id.tv8),
         };
 
         boolean[] show = new boolean[Label.values().length];
@@ -771,6 +1018,8 @@ public class UIManager implements OnTouchListener {
         show[Label.battery.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_battery);
         show[Label.network.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_network_info);
         show[Label.storage.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_storage_info);
+        show[Label.weather.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_weather);
+        show[Label.unlock.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_unlock_counter);
 
         float[] indexes = new float[Label.values().length];
         indexes[Label.notes.ordinal()] = show[Label.notes.ordinal()] ? XMLPrefsManager.getFloat(Ui.notes_index) : Integer.MAX_VALUE;
@@ -780,21 +1029,81 @@ public class UIManager implements OnTouchListener {
         indexes[Label.battery.ordinal()] = show[Label.battery.ordinal()] ? XMLPrefsManager.getFloat(Ui.battery_index) : Integer.MAX_VALUE;
         indexes[Label.network.ordinal()] = show[Label.network.ordinal()] ? XMLPrefsManager.getFloat(Ui.network_index) : Integer.MAX_VALUE;
         indexes[Label.storage.ordinal()] = show[Label.storage.ordinal()] ? XMLPrefsManager.getFloat(Ui.storage_index) : Integer.MAX_VALUE;
+        indexes[Label.weather.ordinal()] = show[Label.weather.ordinal()] ? XMLPrefsManager.getFloat(Ui.weather_index) : Integer.MAX_VALUE;
+        indexes[Label.unlock.ordinal()] = show[Label.unlock.ordinal()] ? XMLPrefsManager.getFloat(Ui.unlock_index) : Integer.MAX_VALUE;
 
-        int[] alignment = {
-                XMLPrefsManager.getInt(Ui.status_line0_alignment),
-                XMLPrefsManager.getInt(Ui.status_line1_alignment),
-                XMLPrefsManager.getInt(Ui.status_line2_alignment),
-                XMLPrefsManager.getInt(Ui.status_line3_alignment),
-                XMLPrefsManager.getInt(Ui.status_line4_alignment),
-                XMLPrefsManager.getInt(Ui.status_line5_alignment),
-                XMLPrefsManager.getInt(Ui.status_line6_alignment)
+        int[] statusLineAlignments = getListOfIntValues(XMLPrefsManager.get(Ui.status_lines_alignment), 9, -1);
+
+        String[] statusLinesBgRectColors = getListOfStringValues(XMLPrefsManager.get(Theme.status_lines_bgrectcolor), 9, "#ff000000");
+        String[] otherBgRectColors = {
+                XMLPrefsManager.get(Theme.input_bgrectcolor),
+                XMLPrefsManager.get(Theme.output_bgrectcolor),
+                XMLPrefsManager.get(Theme.suggestions_bgrectcolor),
+                XMLPrefsManager.get(Theme.toolbar_bgrectcolor)
         };
+        String[] bgRectColors = new String[statusLinesBgRectColors.length + otherBgRectColors.length];
+        System.arraycopy(statusLinesBgRectColors, 0, bgRectColors, 0, statusLinesBgRectColors.length);
+        System.arraycopy(otherBgRectColors, 0, bgRectColors, statusLinesBgRectColors.length, otherBgRectColors.length);
+
+        String[] statusLineBgColors = getListOfStringValues(XMLPrefsManager.get(Theme.status_lines_bg), 9, "#ff000000");
+        String[] otherBgColors = {
+                XMLPrefsManager.get(Theme.input_bg),
+                XMLPrefsManager.get(Theme.output_bg),
+                XMLPrefsManager.get(Theme.suggestions_bg),
+                XMLPrefsManager.get(Theme.toolbar_bg)
+        };
+        String[] bgColors = new String[statusLineBgColors.length + otherBgColors.length];
+        System.arraycopy(statusLineBgColors, 0, bgColors, 0, statusLineBgColors.length);
+        System.arraycopy(otherBgColors, 0, bgColors, statusLineBgColors.length, otherBgColors.length);
+
+        String[] statusLineOutlineColors = getListOfStringValues(XMLPrefsManager.get(Theme.status_lines_shadow_color), 9, "#ff000000");
+        String[] otherOutlineColors = {
+                XMLPrefsManager.get(Theme.input_shadow_color),
+                XMLPrefsManager.get(Theme.output_shadow_color),
+        };
+        String[] outlineColors = new String[statusLineOutlineColors.length + otherOutlineColors.length];
+        System.arraycopy(statusLineOutlineColors, 0, outlineColors, 0, statusLineOutlineColors.length);
+        System.arraycopy(otherOutlineColors, 0, outlineColors, 9, otherOutlineColors.length);
+
+        int shadowXOffset, shadowYOffset;
+        float shadowRadius;
+        String[] shadowParams = getListOfStringValues(XMLPrefsManager.get(Ui.shadow_params), 3, "0");
+        shadowXOffset = Integer.parseInt(shadowParams[0]);
+        shadowYOffset = Integer.parseInt(shadowParams[1]);
+        shadowRadius = Float.parseFloat(shadowParams[2]);
+
+        final int INPUT_BGCOLOR_INDEX = 9;
+        final int OUTPUT_BGCOLOR_INDEX = 10;
+        final int SUGGESTIONS_BGCOLOR_INDEX = 11;
+        final int TOOLBAR_BGCOLOR_INDEX = 12;
+
+        int strokeWidth, cornerRadius;
+        String[] rectParams = getListOfStringValues(XMLPrefsManager.get(Ui.bgrect_params), 2, "0");
+        strokeWidth = Integer.parseInt(rectParams[0]);
+        cornerRadius = Integer.parseInt(rectParams[1]);
+
+        final int OUTPUT_MARGINS_INDEX = 1;
+        final int INPUTAREA_MARGINS_INDEX = 2;
+        final int INPUTFIELD_MARGINS_INDEX = 3;
+        final int TOOLBAR_MARGINS_INDEX = 4;
+        final int SUGGESTIONS_MARGINS_INDEX = 5;
+
+        final int[][] margins = new int[6][4];
+        margins[0] = getListOfIntValues(XMLPrefsManager.get(Ui.status_lines_margins), 4, 0);
+        margins[1] = getListOfIntValues(XMLPrefsManager.get(Ui.output_field_margins), 4, 0);
+        margins[2] = getListOfIntValues(XMLPrefsManager.get(Ui.input_area_margins), 4, 0);
+        margins[3] = getListOfIntValues(XMLPrefsManager.get(Ui.input_field_margins), 4, 0);
+        margins[4] = getListOfIntValues(XMLPrefsManager.get(Ui.toolbar_margins), 4, 0);
+        margins[5] = getListOfIntValues(XMLPrefsManager.get(Ui.suggestions_area_margin), 4, 0);
 
         AllowEqualsSequence sequence = new AllowEqualsSequence(indexes, Label.values());
 
+        LinearLayout lViewsParent = (LinearLayout) labelViews[0].getParent();
+
         int effectiveCount = 0;
         for(int count = 0; count < labelViews.length; count++) {
+            labelViews[count].setOnTouchListener(this);
+
             Object[] os = sequence.get(count);
 
 //            views on the same line
@@ -813,10 +1122,18 @@ public class UIManager implements OnTouchListener {
                 int ec = effectiveCount++;
 
 //                -1 = left     0 = center     1 = right
-                int p = alignment[ec];
+                int p = statusLineAlignments[ec];
                 if(p >= 0) labelViews[count].setGravity(p == 0 ? Gravity.CENTER_HORIZONTAL : Gravity.RIGHT);
+
+                if(count != labelIndexes[Label.notes.ordinal()]) {
+                    labelViews[count].setVerticalScrollBarEnabled(false);
+                }
+
+                applyBgRect(labelViews[count], bgRectColors[count], bgColors[count], margins[0], strokeWidth, cornerRadius);
+                applyShadow(labelViews[count], outlineColors[count], shadowXOffset, shadowYOffset, shadowRadius);
             } else {
-                labelViews[count].setVisibility(View.GONE);
+                lViewsParent.removeView(labelViews[count]);
+                labelViews[count] = null;
             }
         }
 
@@ -849,8 +1166,7 @@ public class UIManager implements OnTouchListener {
             deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(deviceName));
             deviceFormat = Tuils.patternNewline.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            labelTexts[Label.device.ordinal()] = Tuils.span(mContext, deviceFormat, XMLPrefsManager.getColor(Theme.device_color), XMLPrefsManager.getInt(Ui.device_size));
-            update(labelIndexes[Label.device.ordinal()]);
+            updateText(Label.device, Tuils.span(mContext, deviceFormat, XMLPrefsManager.getColor(Theme.device_color), labelSizes[Label.device.ordinal()]));
         }
 
         if(show[Label.time.ordinal()]) {
@@ -874,10 +1190,90 @@ public class UIManager implements OnTouchListener {
             handler.post(networkRunnable);
         }
 
-        notesManager = new NotesManager(context, labelViews[(int) labelIndexes[Label.notes.ordinal()]]);
+        final TextView notesView = getLabelView(Label.notes);
+        notesManager = new NotesManager(context, notesView);
         if(show[Label.notes.ordinal()]) {
             notesRunnable = new NotesRunnable();
             handler.post(notesRunnable);
+
+            notesView.setMovementMethod(new LinkMovementMethod());
+
+            notesMaxLines = XMLPrefsManager.getInt(Ui.notes_max_lines);
+            if(notesMaxLines > 0) {
+                notesView.setMaxLines(notesMaxLines);
+                notesView.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+//                notesView.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
+//                notesView.setVerticalScrollBarEnabled(true);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && XMLPrefsManager.getBoolean(Ui.show_scroll_notes_message)) {
+                    notesView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+                        int linesBefore = Integer.MIN_VALUE;
+
+                        @Override
+                        public void onGlobalLayout() {
+                            if(notesView.getLineCount() > notesMaxLines && linesBefore <= notesMaxLines) {
+                                Tuils.sendOutput(Color.RED, context, R.string.note_max_reached);
+                            }
+
+                            linesBefore = notesView.getLineCount();
+                        }
+                    });
+                }
+            }
+        }
+
+        if(show[Label.weather.ordinal()]) {
+            weatherRunnable = new WeatherRunnable();
+
+            weatherColor = XMLPrefsManager.getColor(Theme.weather_color);
+
+            String where = XMLPrefsManager.get(Behavior.weather_location);
+            if(where.contains(",") || Tuils.isNumber(where)) handler.post(weatherRunnable);
+
+            showWeatherUpdate = XMLPrefsManager.getBoolean(Behavior.show_weather_updates);
+        }
+
+        if(show[Label.unlock.ordinal()]) {
+            registerLockReceiver();
+
+            unlockTimes = preferences.getInt(UNLOCK_KEY, 0);
+
+            unlockColor = XMLPrefsManager.getColor(Theme.unlock_counter_color);
+            unlockFormat = XMLPrefsManager.get(Behavior.unlock_counter_format);
+            notAvailableText = XMLPrefsManager.get(Behavior.not_available_text);
+            unlockTimeDivider = XMLPrefsManager.get(Behavior.unlock_time_divider);
+            unlockTimeDivider = Tuils.patternNewline.matcher(unlockTimeDivider).replaceAll(Tuils.NEWLINE);
+
+            String start = XMLPrefsManager.get(Behavior.unlock_counter_cycle_start);
+            Pattern p = Pattern.compile("(\\d{1,2}).(\\d{1,2})");
+            Matcher m = p.matcher(start);
+            if(!m.find()) {
+                m = p.matcher(Behavior.unlock_counter_cycle_start.defaultValue());
+                m.find();
+            }
+
+            unlockHour = Integer.parseInt(m.group(1));
+            unlockMinute = Integer.parseInt(m.group(2));
+
+            unlockTimeOrder = XMLPrefsManager.getInt(Behavior.unlock_time_order);
+
+            nextUnlockCycleRestart = preferences.getLong(NEXT_UNLOCK_CYCLE_RESTART, 0);
+//            Tuils.log("set", nextUnlockCycleRestart);
+
+            m = timePattern.matcher(unlockFormat);
+            if(m.find()) {
+                String s = m.group(3);
+                if(s == null || s.length() == 0) s = "1";
+
+                lastUnlocks = new long[Integer.parseInt(s)];
+
+                for(int c = 0; c < lastUnlocks.length; c++) {
+                    lastUnlocks[c] = -1;
+                }
+            } else lastUnlocks = null;
+
+            handler.post(unlockTimeRunnable);
         }
 
         final boolean inputBottom = XMLPrefsManager.getBoolean(Ui.input_bottom);
@@ -890,18 +1286,37 @@ public class UIManager implements OnTouchListener {
         terminalView = (TextView) inputOutputView.findViewById(R.id.terminal_view);
         terminalView.setOnTouchListener(this);
         ((View) terminalView.getParent().getParent()).setOnTouchListener(this);
+        applyBgRect(terminalView, bgRectColors[OUTPUT_BGCOLOR_INDEX], bgColors[OUTPUT_BGCOLOR_INDEX], margins[OUTPUT_MARGINS_INDEX], strokeWidth, cornerRadius);
+        applyShadow(terminalView, outlineColors[OUTPUT_BGCOLOR_INDEX], shadowXOffset, shadowYOffset, shadowRadius);
 
         final EditText inputView = (EditText) inputOutputView.findViewById(R.id.input_view);
-        inputView.setOnTouchListener(this);
-
         TextView prefixView = (TextView) inputOutputView.findViewById(R.id.prefix_view);
+        applyBgRect(inputOutputView.findViewById(R.id.input_group), bgRectColors[INPUT_BGCOLOR_INDEX], bgColors[INPUT_BGCOLOR_INDEX], margins[INPUTAREA_MARGINS_INDEX], strokeWidth, cornerRadius);
 
-        ImageButton submitView = (ImageButton) inputOutputView.findViewById(R.id.submit_tv);
+        applyShadow(inputView, outlineColors[INPUT_BGCOLOR_INDEX], shadowXOffset, shadowYOffset, shadowRadius);
+        applyShadow(prefixView, outlineColors[INPUT_BGCOLOR_INDEX], shadowXOffset, shadowYOffset, shadowRadius);
+
+        applyMargins(inputView, margins[INPUTFIELD_MARGINS_INDEX]);
+        applyMargins(prefixView, margins[INPUTFIELD_MARGINS_INDEX]);
+
+        ImageView submitView = (ImageView) inputOutputView.findViewById(R.id.submit_tv);
         boolean showSubmit = XMLPrefsManager.getBoolean(Ui.show_enter_button);
         if (!showSubmit) {
             submitView.setVisibility(View.GONE);
             submitView = null;
         }
+
+//        final ImageButton finalSubmitView = submitView;
+//        inputView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+//            @Override
+//            public boolean onPreDraw() {
+//                Tuils.scaleImage(finalSubmitView, 20, 20);
+//
+//                inputView.getViewTreeObserver().removeOnPreDrawListener(this);
+//
+//                return false;
+//            }
+//        });
 
 //        toolbar
         boolean showToolbar = XMLPrefsManager.getBoolean(Toolbar.show_toolbar);
@@ -912,11 +1327,17 @@ public class UIManager implements OnTouchListener {
 
         if(!showToolbar) {
             inputOutputView.findViewById(R.id.tools_view).setVisibility(View.GONE);
+            toolbarView = null;
         } else {
             backView = (ImageButton) inputOutputView.findViewById(R.id.back_view);
             nextView = (ImageButton) inputOutputView.findViewById(R.id.next_view);
             deleteView = (ImageButton) inputOutputView.findViewById(R.id.delete_view);
             pasteView = (ImageButton) inputOutputView.findViewById(R.id.paste_view);
+
+            toolbarView = inputOutputView.findViewById(R.id.tools_view);
+            hideToolbarNoInput = XMLPrefsManager.getBoolean(Toolbar.hide_toolbar_no_input);
+
+            applyBgRect(toolbarView, bgRectColors[TOOLBAR_BGCOLOR_INDEX], bgColors[TOOLBAR_BGCOLOR_INDEX], margins[TOOLBAR_MARGINS_INDEX], strokeWidth, cornerRadius);
         }
 
         mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, context, mainPack, executer);
@@ -924,54 +1345,103 @@ public class UIManager implements OnTouchListener {
         if (XMLPrefsManager.getBoolean(Suggestions.show_suggestions)) {
             HorizontalScrollView sv = (HorizontalScrollView) rootView.findViewById(R.id.suggestions_container);
             sv.setFocusable(false);
-            sv.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if(hasFocus) {
-                        v.clearFocus();
-                    }
+            sv.setOnFocusChangeListener((v, hasFocus) -> {
+                if(hasFocus) {
+                    v.clearFocus();
                 }
             });
+            applyBgRect(sv, bgRectColors[SUGGESTIONS_BGCOLOR_INDEX], bgColors[SUGGESTIONS_BGCOLOR_INDEX], margins[SUGGESTIONS_MARGINS_INDEX], strokeWidth, cornerRadius);
 
             LinearLayout suggestionsView = (LinearLayout) rootView.findViewById(R.id.suggestions_group);
 
             suggestionsManager = new SuggestionsManager(suggestionsView, mainPack, mTerminalAdapter);
 
-            inputView.addTextChangedListener(new SuggestionTextWatcher(suggestionsManager));
+            inputView.addTextChangedListener(new SuggestionTextWatcher(suggestionsManager, (currentText, before) -> {
+                if(!hideToolbarNoInput) return;
+
+                if(currentText.length() == 0) toolbarView.setVisibility(View.GONE);
+                else if(before == 0) toolbarView.setVisibility(View.VISIBLE);
+            }));
         } else {
             rootView.findViewById(R.id.suggestions_group).setVisibility(View.GONE);
         }
 
-        lockOnDbTap = XMLPrefsManager.getBoolean(Behavior.double_tap_lock);
-        doubleTapCmd = XMLPrefsManager.get(Behavior.double_tap_cmd);
-        if(!lockOnDbTap && doubleTapCmd == null) {
-            policy = null;
-            component = null;
-            det = null;
-        } else initDetector();
+        int drawTimes = XMLPrefsManager.getInt(Ui.text_redraw_times);
+        if(drawTimes <= 0) drawTimes = 1;
+        OutlineTextView.redrawTimes = drawTimes;
+    }
 
-        if(XMLPrefsManager.getBoolean(Behavior.show_hints)) {
-            MessagesManager messagesManager = new MessagesManager(context,
-                    new MessagesManager.Message(R.string.hint_alias),
-                    new MessagesManager.Message(R.string.hint_appgroups),
-                    new MessagesManager.Message(R.string.hint_clear),
-                    new MessagesManager.Message(R.string.hint_config),
-                    new MessagesManager.Message(R.string.hint_disable),
-                    new MessagesManager.Message(R.string.hint_donate),
-                    new MessagesManager.Message(R.string.hint_googlep),
-                    new MessagesManager.Message(R.string.hint_help),
-                    new MessagesManager.Message(R.string.hint_music),
-                    new MessagesManager.Message(R.string.hint_notifications),
-                    new MessagesManager.Message(R.string.hint_telegram),
-                    new MessagesManager.Message(R.string.hint_theme),
-                    new MessagesManager.Message(R.string.hint_theme2),
-                    new MessagesManager.Message(R.string.hint_tutorial),
-                    new MessagesManager.Message(R.string.hint_twitter),
-                    new MessagesManager.Message(R.string.hint_wallpaper),
-                    new MessagesManager.Message( R.string.hint_excludenotification)
-            );
+    public static int[] getListOfIntValues(String values, int length, int defaultValue) {
+        int[] is = new int[length];
+        values = removeSquareBrackets(values);
+        String[] split = values.split(",");
+        int c = 0;
+        for(; c < split.length; c++) {
+            try {
+                is[c] = Integer.parseInt(split[c]);
+            } catch (Exception e) {
+                is[c] = defaultValue;
+            }
+        }
+        while(c < split.length) is[c] = defaultValue;
 
-            mTerminalAdapter.setMessagesManager(messagesManager);
+        return is;
+    }
+
+    public static String[] getListOfStringValues(String values, int length, String defaultValue) {
+        String[] is = new String[length];
+        String[] split = values.split(",");
+
+        int len = Math.min(split.length, is.length);
+        System.arraycopy(split, 0, is, 0, len);
+
+        while(len < is.length) is[len++] = defaultValue;
+
+        return is;
+    }
+
+    private static Pattern sbPattern = Pattern.compile("[\\[\\]\\s]");
+    private static String removeSquareBrackets(String s) {
+        return sbPattern.matcher(s).replaceAll(Tuils.EMPTYSTRING);
+    }
+
+//    0 = ext hor
+//    1 = ext ver
+//    2 = int hor
+//    3 = int ver
+    private static void applyBgRect(View v, String strokeColor, String bgColor, int[] spaces, int strokeWidth, int cornerRadius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setShape(GradientDrawable.RECTANGLE);
+        d.setCornerRadius(cornerRadius);
+
+        if(!(strokeColor.startsWith("#00") && strokeColor.length() == 9)) {
+            d.setStroke(strokeWidth, Color.parseColor(strokeColor));
+        }
+
+        applyMargins(v, spaces);
+
+        d.setColor(Color.parseColor(bgColor));
+        v.setBackgroundDrawable(d);
+    }
+
+    private static void applyMargins(View v, int[] margins) {
+        v.setPadding(margins[2], margins[3], margins[2], margins[3]);
+
+        ViewGroup.LayoutParams params = v.getLayoutParams();
+        if(params instanceof RelativeLayout.LayoutParams) {
+            ((RelativeLayout.LayoutParams) params).setMargins(margins[0], margins[1], margins[0], margins[1]);
+        } else if(params instanceof LinearLayout.LayoutParams) {
+            ((LinearLayout.LayoutParams) params).setMargins(margins[0], margins[1], margins[0], margins[1]);
+        }
+    }
+
+    private static void applyShadow(TextView v, String color, int x, int y, float radius) {
+        if(!(color.startsWith("#00") && color.length() == 9)) {
+            v.setShadowLayer(radius, x, y, Color.parseColor(color));
+            v.setTag(OutlineTextView.SHADOW_TAG);
+
+//            if(radius > v.getPaddingTop()) v.setPadding(v.getPaddingLeft(), (int) Math.floor(radius), v.getPaddingRight(), (int) Math.floor(radius));
+//            if(radius > v.getPaddingLeft()) v.setPadding((int) Math.floor(radius), v.getPaddingTop(), (int) Math.floor(radius), v.getPaddingBottom());
         }
     }
 
@@ -987,6 +1457,8 @@ public class UIManager implements OnTouchListener {
         Tuils.unregisterBatteryReceiver(mContext);
 
         Tuils.cancelFont();
+
+        unregisterLockReceiver();
     }
 
     public void openKeyboard() {
@@ -1028,11 +1500,11 @@ public class UIManager implements OnTouchListener {
     }
 
     public void disableSuggestions() {
-        if(suggestionsManager != null) suggestionsManager.hide();
+        if(suggestionsManager != null) suggestionsManager.disable();
     }
 
     public void enableSuggestions() {
-        if(suggestionsManager != null) suggestionsManager.show();
+        if(suggestionsManager != null) suggestionsManager.enable();
     }
 
     public void onBackPressed() {
@@ -1043,98 +1515,223 @@ public class UIManager implements OnTouchListener {
         mTerminalAdapter.requestInputFocus();
     }
 
-    //	 init detector for double tap
-    private void initDetector() {
-        det = new GestureDetector(mContext, TrashInterfaces.trashGestureListener);
-
-        det.setOnDoubleTapListener(new OnDoubleTapListener() {
-
-            @Override
-            public boolean onSingleTapConfirmed(MotionEvent e) {
-                return false;
-            }
-
-            @Override
-            public boolean onDoubleTapEvent(MotionEvent e) {
-                return true;
-            }
-
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-                if(doubleTapCmd != null && doubleTapCmd.length() > 0) {
-                    String input = mTerminalAdapter.getInput();
-                    mTerminalAdapter.setInput(doubleTapCmd);
-                    mTerminalAdapter.simulateEnter();
-                    mTerminalAdapter.setInput(input);
-                }
-
-                if(lockOnDbTap) {
-                    boolean admin = policy.isAdminActive(component);
-
-                    if (!admin) {
-                        Intent i = Tuils.requestAdmin(component, mContext.getString(R.string.admin_permission));
-                        mContext.startActivity(i);
-                    } else {
-                        policy.lockNow();
-                    }
-                }
-
-                return true;
-            }
-        });
-    }
-
-    protected boolean verifyDoubleTap(MotionEvent event) {
-        boolean b = det.onTouchEvent(event);
-        return det != null && b;
-    }
-
-    //	 on pause
     public void pause() {
         closeKeyboard();
     }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        if (verifyDoubleTap(event)) {
-            return true;
-        }
-
-        if (event.getAction() != MotionEvent.ACTION_DOWN)
-            return v.onTouchEvent(event);
-
-        if (v.getId() == R.id.input_view) {
-            openKeyboard();
-            return true;
-        } else
-            return v.onTouchEvent(event);
+        gestureDetector.onTouchEvent(event);
+        return v.onTouchEvent(event);
     }
 
     public OnRedirectionListener buildRedirectionListener() {
         return new OnRedirectionListener() {
             @Override
             public void onRedirectionRequest(final RedirectCommand cmd) {
-                ((Activity) mContext).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTerminalAdapter.setHint(mContext.getString(cmd.getHint()));
-                        disableSuggestions();
-                    }
+                ((Activity) mContext).runOnUiThread(() -> {
+                    mTerminalAdapter.setHint(mContext.getString(cmd.getHint()));
+                    disableSuggestions();
                 });
             }
 
             @Override
             public void onRedirectionEnd(RedirectCommand cmd) {
-                ((Activity) mContext).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mTerminalAdapter.setDefaultHint();
-                        enableSuggestions();
-                    }
+                ((Activity) mContext).runOnUiThread(() -> {
+                    mTerminalAdapter.setDefaultHint();
+                    enableSuggestions();
                 });
             }
         };
     }
 
+    private BroadcastReceiver lockReceiver = null;
+    private void registerLockReceiver() {
+        if(lockReceiver != null) return;
+
+        final IntentFilter theFilter = new IntentFilter();
+
+        theFilter.addAction(Intent.ACTION_SCREEN_ON);
+        theFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        theFilter.addAction(Intent.ACTION_USER_PRESENT);
+
+        lockReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String strAction = intent.getAction();
+
+                KeyguardManager myKM = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+                if(strAction.equals(Intent.ACTION_USER_PRESENT) || strAction.equals(Intent.ACTION_SCREEN_OFF) || strAction.equals(Intent.ACTION_SCREEN_ON)  )
+                    if(myKM.inKeyguardRestrictedInputMode()) onLock();
+                    else onUnlock();
+            }
+        };
+
+        mContext.getApplicationContext().registerReceiver(lockReceiver, theFilter);
+    }
+
+    private void unregisterLockReceiver() {
+        if(lockReceiver != null) mContext.getApplicationContext().unregisterReceiver(lockReceiver);
+    }
+
+    private void onLock() {
+        if(clearOnLock) {
+            mTerminalAdapter.clear();
+        }
+    }
+
+    private final long A_DAY = (1000 * 60 * 60 * 24);
+
+    private int unlockColor, unlockTimeOrder;
+
+    private int unlockTimes, unlockHour, unlockMinute, cycleDuration = (int) A_DAY;
+    private long lastUnlockTime = -1, nextUnlockCycleRestart;
+    private String unlockFormat, notAvailableText, unlockTimeDivider;
+
+    private final int UP_DOWN = 1;
+
+    public static String UNLOCK_KEY = "unlockTimes", NEXT_UNLOCK_CYCLE_RESTART = "nextUnlockRestart";
+
+//    last unlocks are stored here in this way
+//    0 - the first
+//    1 - the second
+//    2 - ...
+    private long[] lastUnlocks;
+
+    private void onUnlock() {
+        if(System.currentTimeMillis() - lastUnlockTime < 1000) return;
+        lastUnlockTime = System.currentTimeMillis();
+
+        unlockTimes++;
+
+        System.arraycopy(lastUnlocks, 0, lastUnlocks, 1, lastUnlocks.length - 1);
+        lastUnlocks[0] = lastUnlockTime;
+
+        preferences.edit()
+                .putInt(UNLOCK_KEY, unlockTimes)
+                .apply();
+
+        invalidateUnlockText();
+    }
+
+    final int UNLOCK_RUNNABLE_DELAY = cycleDuration / 24;
+//    this invalidates the text and checks the time values
+    Runnable unlockTimeRunnable = new Runnable() {
+        @Override
+        public void run() {
+//            Tuils.log("run");
+            long delay = nextUnlockCycleRestart - System.currentTimeMillis();
+//            Tuils.log("nucr", nextUnlockCycleRestart);
+//            Tuils.log("now", System.currentTimeMillis());
+//            Tuils.log("delay", delay);
+            if(delay <= 0) {
+                unlockTimes = 0;
+
+                if(lastUnlocks != null) {
+                    for(int c = 0; c < lastUnlocks.length; c++) {
+                        lastUnlocks[c] = -1;
+                    }
+                }
+
+                Calendar now = Calendar.getInstance();
+//                Tuils.log("nw", now.toString());
+
+                int hour = now.get(Calendar.HOUR_OF_DAY), minute = now.get(Calendar.MINUTE);
+                if(unlockHour < hour || (unlockHour == hour && unlockMinute <= minute)) {
+                    now.set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR) + 1);
+                }
+                Calendar nextRestart = now;
+                nextRestart.set(Calendar.HOUR_OF_DAY, unlockHour);
+                nextRestart.set(Calendar.MINUTE, unlockMinute);
+                nextRestart.set(Calendar.SECOND, 0);
+//                Tuils.log("nr", nextRestart.toString());
+
+                nextUnlockCycleRestart = nextRestart.getTimeInMillis();
+//                Tuils.log("new setted", nextUnlockCycleRestart);
+
+                preferences.edit()
+                        .putLong(NEXT_UNLOCK_CYCLE_RESTART, nextUnlockCycleRestart)
+                        .putInt(UNLOCK_KEY, 0)
+                        .apply();
+
+                delay = nextUnlockCycleRestart - System.currentTimeMillis();
+                if(delay < 0) delay = 0;
+            }
+
+            invalidateUnlockText();
+
+            delay = Math.min(delay, UNLOCK_RUNNABLE_DELAY);
+//            Tuils.log("with delay", delay);
+            handler.postDelayed(this, delay);
+        }
+    };
+
+    Pattern unlockCount = Pattern.compile("%c", Pattern.CASE_INSENSITIVE);
+    Pattern advancement = Pattern.compile("%a(\\d+)(.)");
+//    Pattern timePattern = Pattern.compile("(%t\\d*)(?:\\((?:(\\d+)([^\\)]*))\\)|\\((?:([^\\)]*)(\\d+))\\))?");
+    Pattern timePattern = Pattern.compile("(%t\\d*)(?:\\(([^\\)]*)\\))?(\\d+)?");
+    Pattern indexPattern = Pattern.compile("%i", Pattern.CASE_INSENSITIVE);
+    String whenPattern = "%w";
+
+    private void invalidateUnlockText() {
+        String cp = new String(unlockFormat);
+
+        cp = unlockCount.matcher(cp).replaceAll(String.valueOf(unlockTimes));
+        cp = Tuils.patternNewline.matcher(cp).replaceAll(Tuils.NEWLINE);
+
+        Matcher m = advancement.matcher(cp);
+        if(m.find()) {
+            int denominator = Integer.parseInt(m.group(1));
+            String divider = m.group(2);
+
+            long lastCycleStart = nextUnlockCycleRestart - cycleDuration;
+
+            int elapsed = (int) (System.currentTimeMillis() - lastCycleStart);
+            int numerator = denominator * elapsed / cycleDuration;
+
+            cp = m.replaceAll(numerator + divider + denominator);
+        }
+
+        CharSequence s = Tuils.span(mContext, cp, unlockColor, labelSizes[Label.unlock.ordinal()]);
+
+        Matcher timeMatcher = timePattern.matcher(cp);
+        if(timeMatcher.find()) {
+            String timeGroup = timeMatcher.group(1);
+            String text = timeMatcher.group(2);
+            if(text == null) text = whenPattern;
+
+            CharSequence cs = Tuils.EMPTYSTRING;
+
+            int c, change;
+            if(unlockTimeOrder == UP_DOWN) {
+                c = 0;
+                change = +1;
+            } else {
+                c = lastUnlocks.length - 1;
+                change = -1;
+            }
+
+            for(int counter = 0; counter < lastUnlocks.length; counter++, c += change) {
+                String t = text;
+                t = indexPattern.matcher(t).replaceAll(String.valueOf(c + 1));
+
+                cs = TextUtils.concat(cs, t);
+
+                CharSequence time;
+                if(lastUnlocks[c] > 0) time = TimeManager.instance.getCharSequence(timeGroup, lastUnlocks[c]);
+                else time = notAvailableText;
+
+                if(time == null) continue;
+
+                cs = TextUtils.replace(cs, new String[] {whenPattern}, new CharSequence[] {time});
+
+                if(counter != lastUnlocks.length - 1) cs = TextUtils.concat(cs, unlockTimeDivider);
+            }
+
+            s = TextUtils.replace(s, new String[] {timeMatcher.group(0)}, new CharSequence[] {cs});
+        }
+
+        updateText(Label.unlock, s);
+    }
 }
 

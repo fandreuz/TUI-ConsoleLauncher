@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="input_padding">15dp</dimen>
-    <dimen name="suggestion_height">40dp</dimen>
     <dimen name="cursor_width">8dp</dimen>
     <dimen name="tools_height">15dp</dimen>
 

@@ -64,7 +64,6 @@ public class LongClickableSpan extends ClickableSpan {
         this.longIntentKey = longIntentKey;
     }
 
-    @Override
     public void updateDrawState(TextPaint ds) {}
 
     @Override
@@ -132,30 +131,27 @@ public class LongClickableSpan extends ClickableSpan {
                     menu.getMenu().findItem(R.id.exclude_notification).setVisible(showExcludeNotification);
                     menu.getMenu().findItem(R.id.reply_notification).setVisible(showReply);
 
-                    menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    menu.setOnMenuItemClickListener(item -> {
+                        int id = item.getItemId();
 
-                        @Override
-                        public boolean onMenuItemClick(MenuItem item) {
-                            int id = item.getItemId();
+                        switch (id) {
+                            case R.id.exclude_app:
+                                NotificationManager.setState(n.pkg, false);
+                                break;
+                            case R.id.exclude_notification:
+                                Tuils.log(n.text);
+                                NotificationManager.addFilter(n.text, -1);
+                                break;
+                            case R.id.reply_notification:
+                                Intent intent = new Intent(PrivateIOReceiver.ACTION_INPUT);
+                                intent.putExtra(PrivateIOReceiver.TEXT, "reply -to " + n.pkg + Tuils.SPACE);
 
-                            switch (id) {
-                                case R.id.exclude_app:
-                                    NotificationManager.setState(n.pkg, false);
-                                    break;
-                                case R.id.exclude_notification:
-                                    NotificationManager.addFilter(n.text, -1);
-                                    break;
-                                case R.id.reply_notification:
-                                    Intent intent = new Intent(PrivateIOReceiver.ACTION_INPUT);
-                                    intent.putExtra(PrivateIOReceiver.TEXT, "reply -to " + n.pkg + Tuils.SPACE);
-
-                                    LocalBroadcastManager.getInstance(v.getContext().getApplicationContext()).sendBroadcast(intent);
-                                default:
-                                    return false;
-                            }
-
-                            return true;
+                                LocalBroadcastManager.getInstance(v.getContext().getApplicationContext()).sendBroadcast(intent);
+                            default:
+                                return false;
                         }
+
+                        return true;
                     });
 
                     menu.show();

@@ -11,11 +11,12 @@ import java.util.List;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.Param;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
+import ohi.andre.consolelauncher.managers.HTMLExtractManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
@@ -37,7 +38,7 @@ public class CommandTuils {
     public static List<String> xmlPrefsFiles;
 
     //	parse a command
-    public static Command parse(String input, ExecutePack info, boolean suggestion) throws Exception {
+    public static Command parse(String input, ExecutePack info) throws Exception {
         Command command = new Command();
 
         String name = CommandTuils.findName(input);
@@ -61,12 +62,13 @@ public class CommandTuils {
             if(cmd instanceof ParamCommand) {
                 ArgInfo arg = param((MainPack) info, (ParamCommand) cmd, input);
                 if(arg == null || !arg.found) {
+
                     command.indexNotFound = 0;
                     args.add(input);
                     command.nArgs = 1;
                     command.mArgs = args.toArray(new Object[args.size()]);
                     return command;
-                } else
+                }
 
                 input = arg.residualString;
                 Param p = (Param) arg.arg;
@@ -87,7 +89,7 @@ public class CommandTuils {
                         break;
                     }
 
-                    ArgInfo arg = CommandTuils.getArg(info, input, types[count], suggestion);
+                    ArgInfo arg = CommandTuils.getArg(info, input, types[count]);
                     if(arg == null) {
                         return null;
                     }
@@ -105,7 +107,9 @@ public class CommandTuils {
                     input = arg.residualString;
                 }
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            Tuils.log(e);
+        }
 
         command.mArgs = args.toArray(new Object[args.size()]);
         command.nArgs = nArgs;
@@ -125,7 +129,7 @@ public class CommandTuils {
     }
 
     //	find args
-    public static ArgInfo getArg(ExecutePack info, String input, int type, boolean suggestion) {
+    public static ArgInfo getArg(ExecutePack info, String input, int type) {
         if (type == CommandAbstraction.FILE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return file(input, pack.currentDirectory);
@@ -169,12 +173,30 @@ public class CommandTuils {
             return activityName(input, ((MainPack) info).appsManager);
         } else if(type == CommandAbstraction.LONG) {
             return numberLong(input);
+        } else if(type == CommandAbstraction.DATASTORE_PATH_TYPE) {
+            return dataStoreType(input);
         }
 
         return null;
     }
 
 //	args extractors {
+
+    private static ArgInfo dataStoreType(String input) {
+        ArgInfo a = noSpaceString(input);
+        if(a.found) {
+            String s = (String) a.arg;
+            try {
+                HTMLExtractManager.StoreableValue.Type.valueOf(s);
+                return a;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        a.found = false;
+        return a;
+    }
 
     private static ArgInfo numberLong(String input) {
         String[] split = input.split(Tuils.SPACE);
@@ -264,7 +286,7 @@ public class CommandTuils {
     @SuppressWarnings("unchecked")
     private static ArgInfo file(String input, File cd) {
         input = input.trim();
-        if(input.startsWith("\"") || input.startsWith("'") && input.substring(1, input.length()).contains("\"")) {
+        if((input.startsWith("\"") || input.startsWith("'")) && (input.substring(1, input.length()).contains("\"") || input.substring(1, input.length()).contains("'"))) {
             String afterFirst = input.substring(1, input.length());
 
             int endIndex = afterFirst.indexOf("\"");
@@ -450,7 +472,7 @@ public class CommandTuils {
 
         String candidate = index == -1 ? input : input.substring(0,index);
         for(XMLPrefsSave xs : xmlPrefsEntrys) {
-            if(xs.is(candidate)) {
+            if(xs.label().equals(candidate)) {
                 return new ArgInfo(xs, index == -1 ? null : input.substring(index + 1,input.length()), true, 1);
             }
         }

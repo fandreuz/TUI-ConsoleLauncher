@@ -9,7 +9,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.APICommand;
+import ohi.andre.consolelauncher.commands.main.specific.APICommand;
 
 /**
  * Created by andre on 03/12/15.

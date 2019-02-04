@@ -1,4 +1,4 @@
-package ohi.andre.consolelauncher.commands.specific;
+package ohi.andre.consolelauncher.commands.main.specific;
 
 /**
  * Created by francescoandreuzzi on 01/08/2017.

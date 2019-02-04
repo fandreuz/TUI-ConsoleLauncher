@@ -24,16 +24,12 @@ public interface CommandAbstraction {
     int APP_INSIDE_GROUP = 29;
     int LONG = 30;
     int BOUND_REPLY_APP = 31;
+    int DATASTORE_PATH_TYPE = 32;
 
     String exec(ExecutePack pack) throws Exception;
-
     int[] argType();
-
     int priority();
-
     int helpRes();
-
     String onArgNotFound(ExecutePack pack, int indexNotFound);
-
     String onNotArgEnough(ExecutePack pack, int nArgs);
 }

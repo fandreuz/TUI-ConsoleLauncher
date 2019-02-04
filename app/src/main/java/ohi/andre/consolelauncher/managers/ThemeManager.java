@@ -28,7 +28,11 @@ import okhttp3.Response;
 
 public class ThemeManager {
 
-    public static String ACTION_APPLY = BuildConfig.APPLICATION_ID + ".apply", ACTION_REVERT = BuildConfig.APPLICATION_ID + ".revert", ACTION_STANDARD = BuildConfig.APPLICATION_ID + ".standard", NAME = "name";
+    public static String ACTION_APPLY = BuildConfig.APPLICATION_ID + ".theme_apply";
+    public static String ACTION_REVERT = BuildConfig.APPLICATION_ID + ".theme_revert";
+    public static String ACTION_STANDARD = BuildConfig.APPLICATION_ID + ".theme_standard";
+
+    public static String NAME = "name";
 
     OkHttpClient client;
     Context context;
@@ -92,7 +96,7 @@ public class ThemeManager {
                 try {
                     response = client.newCall(builder.build()).execute();
                 } catch (IOException e) {
-                    Tuils.sendOutput(context, R.string.output_error);
+                    Tuils.sendOutput(context, e.toString());
                     return;
                 }
 
@@ -114,7 +118,7 @@ public class ThemeManager {
                         String suggestions = m.group(1);
                         String theme = m.group(2);
 
-                        applyTheme(theme, suggestions, true);
+                        applyTheme(theme, suggestions, true, themeName);
                     } else {
                         Tuils.sendOutput(context, R.string.theme_not_found);
                         return;
@@ -147,7 +151,7 @@ public class ThemeManager {
         reloadable.reload();
     }
 
-    private void applyTheme(String theme, String suggestions, boolean keepOld) {
+    private void applyTheme(String theme, String suggestions, boolean keepOld, String themeName) {
         if(theme == null || suggestions == null) {
             Tuils.sendOutput(context, R.string.theme_unable);
             return;
@@ -183,6 +187,7 @@ public class ThemeManager {
             suggestionsStream.flush();
             suggestionsStream.close();
 
+            reloadable.addMessage(context.getString(R.string.theme_applied) + Tuils.SPACE + themeName, null);
             reloadable.reload();
         } catch (IOException e) {
             Tuils.sendOutput(context, R.string.output_error);
@@ -202,7 +207,7 @@ public class ThemeManager {
         oldTheme.delete();
         oldSuggestions.delete();
 
-        reloadable.reload();
+        reloadable.addMessage(context.getString(R.string.theme_applied) + Tuils.SPACE + "standard", null);
     }
 
 //    rgba(255,87,34,1)

@@ -8,4 +8,5 @@ public interface XMLPrefsElement {
     XMLPrefsList getValues();
     void write(XMLPrefsSave save, String value);
     String[] deleted();
+    String path();
 }

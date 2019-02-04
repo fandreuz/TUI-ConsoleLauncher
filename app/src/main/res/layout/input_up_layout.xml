@@ -4,9 +4,30 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include layout="@layout/suggestions_layout"
+    <HorizontalScrollView android:id="@id/suggestions_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        android:focusableInTouchMode="false">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/suggestions_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="left|center_vertical"
+                android:orientation="horizontal"
+                android:focusable="false"
+                android:focusableInTouchMode="false">
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
 
     <LinearLayout android:id="@+id/input_group"
         android:layout_width="match_parent"
@@ -15,14 +36,12 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <TextView
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
             android:id="@+id/prefix_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="wrap_content" />
 
-            android:paddingTop="@dimen/input_padding"/>
-
-        <EditText
+        <ohi.andre.consolelauncher.tuils.OutlineEditText
             android:id="@+id/input_view"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -32,10 +51,10 @@
             android:imeOptions="actionGo|flagNoFullscreen"
             android:textCursorDrawable="@drawable/cursor"
 
-            android:paddingTop="@dimen/input_padding"
+            android:importantForAutofill="no"
 
             android:lines="1"
-            android:singleLine="true" />
+            android:singleLine="true"/>
 
         <ImageButton
             android:id="@+id/submit_tv"
@@ -44,9 +63,7 @@
             android:layout_weight="@integer/enter_view_weight"
 
             android:background="@null"
-            android:src="@drawable/ic_enter"
-
-            android:paddingTop="@dimen/input_padding"/>
+            android:src="@drawable/ic_enter"/>
 
     </LinearLayout>
 
@@ -85,7 +102,7 @@
 
             android:orientation="vertical">
 
-            <TextView
+            <ohi.andre.consolelauncher.tuils.OutlineTextView
                 android:id="@+id/terminal_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

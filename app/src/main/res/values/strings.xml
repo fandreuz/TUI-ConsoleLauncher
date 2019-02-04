@@ -10,10 +10,26 @@
     <string name="output_rate">Thank you!</string>
     <string name="start_notification">T-UI started</string>
     <string name="tui_running">T-UI is running</string>
-    <string name="anr">t-ui is having some issues. Please send to the developer your file crash.txt in the "t-ui" folder</string>
     <string name="admin_permission">Lock the screen on double tap</string>
-    <string name="reply_app_not_found">Couldn\'t find bound app:</string>
-    <string name="no_internet">No internet access</string>
+    <string name="tui_reset">t-ui reset to default settings</string>
+    <string name="copied">Copied:</string>
+    <string name="tui_busy">t-ui is busy, use \"ctrlc\" to stop the process</string>
+    <string name="donate">Do you like my work?\nIf yes, rate t-ui on Play Store (cmd: $ rate) or offer me a coffee (cmd: $ donate). Thank you!</string>
+
+    <!-- weather -->
+    <string name="weather_cant_update">You can\'t perform a manual update with the default key. You have to create a custom key on the website</string>
+    <string name="weather_error">The weather API is busy. Trying again at:</string>
+    <string name="weather_disabled">Weather is not enabled</string>
+    <string name="weather_updated">Weather updated at</string>
+
+    <!-- lock -->
+    <string name="invalid_password">Wrong password</string>
+
+    <!-- shortcuts -->
+    <string name="shortcut_index_greater">The index is greater than the shortcuts count</string>
+
+    <!-- reload message -->
+    <string name="theme_applied">Applied theme:</string>
 
     <!-- reply -->
     <string name="reply_id_not_found">No bound app found with ID:</string>
@@ -36,18 +52,18 @@
     <string name="theme_unable">Couldn\'t apply this theme</string>
 
     <!-- files -->
-    <string name="output_error">An unknown error occurred</string>
     <string name="output_isdirectory">This is a directory</string>
     <string name="output_filenotfound">File not found</string>
 
     <!-- notifications -->
     <string name="notification_reader">T-UI notification reader</string>
     <string name="no_notification_access">Unfortunately t-ui can\'t redirect you to the \"Notification access\" page of your system settings</string>
+    <string name="notification_low_api">Notifications are supported on Android 4.3+ only. Use \'config -set show_notifications false\' to disable this message</string>
 
     <!-- helps texts -->
     <string name="firsthelp_text">First time with t-ui? Use the command \"tutorial\" or \"help\"</string>
     <string name="permissions_toast">You have to grant Storage permission</string>
-    <string name="output_usedefapp">You can use "apps -default_app" instead</string>
+    <string name="output_usedefapp">You can use \"apps -default_app\" instead</string>
 
     <!-- tui folder not found -->
     <string name="tuinotfound_app">Your apps preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
@@ -56,31 +72,43 @@
     <string name="tuinotfound_xmlprefs">Your xml preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
 
     <!-- hints -->
-    <string name="hint_donate">Do you like my work?\nIf yes, rate t-ui on Play Store (cmd: $ rate) or offer me a coffee (cmd: $ donate). Thank you!</string>
-    <string name="hint_twitter">Did you know? t-ui is on Twitter. You can have a look with the cmd \"$ tui -twitter\"</string>
-    <string name="hint_telegram">Did you know? There\'s a Telegram group with many enthusiastic users, where you can discuss, share and chat.\nJust use the cmd \"$ tui -telegram\"</string>
-    <string name="hint_googlep">Did you know? Our official Google+ community is full of tips, experimental apks and discussions.\nYou can have a look with the cmd \"$ tui -googlep\"</string>
-    <string name="hint_tutorial">Did you read the tutorial? If you don\'t remember how to see it, use \"$ tutorial\"</string>
-    <string name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</string>
-    <string name="hint_theme2">Did you know? You can create your custom theme and share it to other users. Have a look at the cmd \"$ theme -create\"</string>
-    <string name="hint_help">Doubts about a command? Just use \"$ help cmdName\"</string>
-    <string name="hint_music">Did you know? You can listen your music without launching other apps than t-ui. Have a look at the cmd \"$ music\"</string>
-    <string name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups, a feature that let\'s you customize your app suggestions, creating different categories.\nYou can get more details with the cmd
-        \"$ apps -tutorial\"</string>
-    <string name="hint_notifications">Did you know? You can see your notifications directly inside t-ui.\nIf you\'re interested, have a look at the tutorial: \"$ notifications -tutorial\"</string>
-    <string name="hint_clear">Are you sick of clearing your screen? Have a look at the options \"clear_after_cmds\", \"clear_after_seconds\" and \"maxlines\"</string>
-    <string name="hint_wallpaper">Do you want to use your wallpaper as t-ui background? Use the cmd: \"$ config -set system_wallpaper true\"</string>
-    <string name="hint_config">Doubts about any config option? Use the cmd \"$ config -info [option]\"table</string>
-    <string name="hint_alias">Did you know that t-ui supports aliases? \nFor more info, use the cmd \"$ alias -tutorial\"</string>
-    <string name="hint_excludenotification">Did you know? You can exclude an unwanted notification by long-clicking on it</string>
+    <string-array name="hints">
+        <item name="hint_twitter">Did you know? t-ui is on Twitter. Have a look (\"$ tui -twitter\")</item>
+        <item name="hint_telegram">Did you know? There\'s a Telegram group with many enthusiastic users, where you can discuss, share and chat (\"$ tui -telegram\")</item>
+        <item name="hint_googlep">Did you know? Our official Google+ community is full of tips, experimental apks and discussions (\"$ tui -googlep\")</item>
+        <item name="hint_tutorial">Did you read the tutorial? (\"$ tutorial\")</item>
+        <item name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</item>
+        <item name="hint_theme2">Did you know? You can create your custom theme and share it with other users. Have a look at the cmd \"$ theme -create\"</item>
+        <item name="hint_help">Doubts about a command? Just use \"$ help cmdName\"</item>
+        <item name="hint_music">Did you know? You can listen your music without launching other apps than t-ui. Have a look at the cmd \"$ music\"</item>
+        <item name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups, a feature that let\'s you customize your app suggestions, creating different categories.\nYou can get more details with the cmd
+        \"$ apps -tutorial\"</item>
+        <item name="hint_notifications">Did you know? You can see your notifications directly inside t-ui.\nIf you\'re interested, have a look at the tutorial: \"$ notifications -tutorial\"</item>
+        <item name="hint_clear">Are you sick of clearing your screen? Have a look at the options \"clear_after_cmds\", \"clear_after_seconds\" and \"maxlines\"</item>
+        <item name="hint_wallpaper">Do you want to use your wallpaper as t-ui background? Use the cmd: \"$ config -set system_wallpaper true\"</item>
+        <item name="hint_config">Doubts about any config option? Use the cmd \"$ config -info [option]\"table</item>
+        <item name="hint_alias">Did you know that t-ui supports aliases? \nFor more info, use the cmd \"$ alias -tutorial\"</item>
+        <item name="hint_excludenotification">Did you know? You can exclude an unwanted notification by long-clicking on it</item>
+        <item name="hint_disable">You can disable this messages with the cmd \"$ config -set show_hints false\"</item>
+    </string-array>
 
-    <string name="hint_disable">You can disable this messages with the cmd \"$ config -set show_hints false\"</string>
+
+    <string-array name="tutorial">
+        <item>You can get a list of the commands using the cmd \"help\". Type it and press enter</item>
+        <item>If you want to understand the behavior of a command, type \"help cmdName\"</item>
+        <item>Launch your apps by typing their name. You can also click on the suggestions to increase the launch speed</item>
+        <item>You can call your contacts with the cmd \"call contactName\"</item>
+        <item>t-ui is highly customizable. Check \"config -ls\" or use the cmd \"config -tutorial\" to see what you can change</item>
+        <item>You can choose within a large database of themes uploaded by t-ui users. Check the cmd \"theme -view\"</item>
+        <item>Join our community! Google+, Twitter, Telegram and GitHub. Use the cmd \"tui\"</item>
+    </string-array>
 
     <!-- apps -->
     <string name="output_appnotfound">Application not found</string>
     <string name="activity_not_found">Activity not found</string>
     <string name="app_installed">App installed:</string>
     <string name="app_uninstalled">App uninstalled:</string>
+    <string name="app_shortcut_not_found">Shortcut not found</string>
 
     <!-- pending operation -->
     <string name="calling">Calling:</string>
@@ -93,7 +121,7 @@
     <string name="output_invalidarg">Invalid argument</string>
     <string name="output_lessarg">Less arguments than expected</string>
     <string name="invalid_integer">Invalid integer</string>
-    <string name="output_nothing_found">Nothing was found</string>
+    <string name="output_nothing_found">Not found</string>
     <string name="output_xmlproblem1">There was an XML problem with your file</string>
     <string name="output_xmlproblem2">, t-ui will use default values.\nFix or delete the file to recover your options</string>
     <string name="output_errorlabel">Error:</string>
@@ -102,13 +130,25 @@
     <string name="output_groupexists">This group already exists</string>
     <string name="output_groupspace">Spaces are not allowed inside group names</string>
     <string name="output_notification_error">The notification service couldn\'t be started:</string>
+    <string name="reply_app_not_found">Couldn\'t find bound app:</string>
+    <string name="no_internet">No internet access</string>
+    <string name="invalid_number">Invalid number</string>
+    <string name="output_error">An unknown error occurred</string>
+    <string name="internet_error">Internet error. Response code:</string>
+    <string name="no_result">No results</string>
+    <string name="unavailable_name">Name unavailable</string>
+    <string name="invalid_name">Invalid name</string>
+    <string name="api_low">Low Android version</string>
+    <string name="invalid_datastoretype">Invalid type</string>
+    <string name="location_error">Couldn\'t get your location</string>
 
     <!-- note -->
     <string name="note_not_found">Note not found</string>
     <string name="row_used">This row is busy</string>
+    <string name="note_max_reached">Your notes reached the value set in notes_max_lines. You can scroll to see them all, change the value, or disable this message (ui.xml: show_scroll_notes_message).</string>
 
     <!-- id -->
-    <string name="id_already">This ID has already been used</string>
+    <string name="id_already">Busy ID</string>
     <string name="id_notfound">Invalid ID</string>
 
     <!-- rss -->
@@ -165,9 +205,12 @@
     <string name="output_flashlightnotavailable">Your device doesn\'t support flashlight</string>
 
     <!-- status -->
-    <string name="battery_charge">Battery:</string>
-    <string name="mobile_data">Mobile data:</string>
-    <string name="wifi">WiFi:</string>
+    <string name="battery_label">Battery:</string>
+    <string name="mobile_data_label">Mobile data:</string>
+    <string name="wifi_label">WiFi:</string>
+    <string name="location_label">Location:</string>
+    <string name="brightness_label">Brightness:</string>
+    <string name="bluetooth_label">Bluetooth:</string>
 
     <!-- contacts -->
     <string name="sms_hint">write your SMS or nothing to cancel</string>
@@ -201,6 +244,8 @@
         \n-lsgp [OPTIONAL: groupName] -> list your groups, or list the content of the given group
     </string>
     <string name="help_bluetooth">Toggle bluetooth</string>
+    <string name="help_brightness">Set the brightness of your device
+        \n$ brightness [0-100]</string>
     <string name="help_clear">Clear the screen</string>
     <string name="help_calc" formatted="false">Perform basic operations (+ - * / % ^ sqrt)
         \nExample:
@@ -215,10 +260,14 @@
         \n\nUsage:
         \n$ call [number] OR [contactName]
     </string>
+    <string name="help_changelog">Show the changelog of the current version</string>
     <string name="help_config">-set [option] [value] -> set the value of an option
         \n-append [option] [value] -> append the given string to the value of the selected option
         \n-file [file] -> open a config file (behavior.xml, ui.xml, theme.xml, ...)
+        \n-erase [option] -> set the value of an option to \"\"
+        \n-setr [option] [value] -> same to \"-set\", but restarts t-ui automatically
         \n-get [option] -> get the value of an option
+        \n-fontsize [value] -> change the global font size
         \n-reset [option] -> reset the value of an option
         \n-info [option] -> request info about the given option
         \n-apply [file] -> move a file to the t-ui directory
@@ -232,6 +281,14 @@
         \n\nUsage:
         \n$ help [command]
     </string>
+    <string name="help_htmlextract">Extract text from HTML pages
+        \n-query [filter ID] [optional: format ID] [URL] -> parse the specified XPath entry with the specified URL
+        \n-add [type] [ID] [expression] -> add a new expression of the given type (json, xpath or format)
+        \n-rm [ID] -> remove an existing expression
+        \n-edit [ID] [expression] -> change an existing expression
+        \n-ls [type] -> shows the expressions of the given type
+        \n-tutorial -> show the tutorial on GitHub
+        \n-file -> open the file htmlextract.xml</string>
     <string name="help_music">-next -> play the next song
         \n-previous -> play the previous song
         \n-play -> play/pause the player
@@ -242,10 +299,12 @@
         \n-seekto [seconds] -> seek to the selected part of the current song</string>
     <string name="help_notes">-add [optional: lock {true/false}] [text] -> add a new note
         \n-rm [row] OR [text] -> remove an existing note
+        \n-cp [row] OR [text] -> copy an existing note to clipboard
         \n-ls -> list all your notes
         \n-clear -> remove all notes (except the locked ones)
         \n-lock [id] OR [text] -> lock an existing note
-        \n-unlock [id] OR [text] -> unlock an existing note</string>
+        \n-unlock [id] OR [text] -> unlock an existing note
+        \n-tutorial -> open the tutorial page on GitHub</string>
     <string name="help_rate">Leave a feedback on the Play Store page</string>
     <string name="help_refresh">Refresh apps, alias, music, contacts</string>
     <string name="help_regex">-add [ID] [regex] -> add a new regex with the given ID
@@ -255,7 +314,8 @@
         \n-bind [appName] -> bind the application
         \n-unbind [appName] -> unbind the application
         \n-ls -> show your bound applications
-        \n-check [ID or packageName] -> check the last notification from the application bound with the given ID</string>
+        \n-check [ID or packageName] -> check the last notification from the application bound with the given ID
+        \n-tutorial -> open the tutorial page on GitHub</string>
     <string name="help_restart">Restart t-ui and load modified values</string>
     <string name="help_search">-gg [search this...] -> Google Search
         \n-ps [search this...] -> Google Play Store
@@ -266,6 +326,9 @@
     <string name="help_share">$ share [pathToFile]
     </string>
     <string name="help_shellcommands">Print the commands in /system/bin and /system/xbin</string>
+    <string name="help_shortcut">-ls [appName] -> show the shortcuts of this app
+        \n-use [shortcutID OR shortcut index] [optional: appName] -> use the specified shortcut
+        \n-cp [index] [appName] -> copy to clipboard the nth shortcut of the selected app (first: 0)</string>
     <string name="help_status">Get info about battery charge, wifi status and mobile data</string>
     <string name="help_theme">-apply [name] -> apply the selected theme (case sensitive). require internet connection. may take some seconds
         \n-old -> re-apply the theme that was replaced by the current one
@@ -287,6 +350,7 @@
         \n-twitter -> show t-ui Twitter page
         \n-googlep -> show the community on Google+
         \n-telegram -> open the official Telegram group
+        \n-sourcecode -> open the GitHub page
         \n-folder -> print the path of the t-ui folder</string>
     <string name="help_tuinotes">-add [line] [text] -> add a new note at the specified line (the note will be appended if line is omitted)
         \n-rm [line] -> remove the note at the specified line
@@ -309,6 +373,25 @@
         \n\nExample:
         \n$ vibrate 300
         \n$ vibrate 0,300,500,300</string>
+    <string name="help_volume">-set [stream] [volume: 0-100] -> set the volume for the selected stream
+        \n-profile [mode] -> set the profile mode
+        \n-get [stream] -> get info about the selected stream
+        \n\nstream:
+        \n\t* voice call -> 0
+        \n\t* system -> 1
+        \n\t* ringer -> 2
+        \n\t* media -> 3
+        \n\t* alarm -> 4
+        \n\t* notificaton -> 5
+        \n\nmode:
+        \n\t* silent -> 0
+        \n\t* vibrate -> 1
+        \n\t* normal -> 2</string>
+    <string name="help_weather">- update -> perform a manual update (this won\'t work unless you set a custom weather key)
+        \n-enable -> enable weather
+        \n-disable -> disable weather
+        \n-tutorial -> open the weather tutorial webpage
+        \n-set_key [key] -> set a custom weather key</string>
     <string name="help_beep">Emit a \"beep\".
         \n\nUsage:
         \n$ beep</string>

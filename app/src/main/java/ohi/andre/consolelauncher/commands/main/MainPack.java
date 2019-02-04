@@ -2,7 +2,6 @@ package ohi.andre.consolelauncher.commands.main;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 
@@ -16,6 +15,7 @@ import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.RssManager;
+import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
@@ -56,8 +56,6 @@ public class MainPack extends ExecutePack {
 
     public CommandsPreferences cmdPrefs;
 
-    public LocationManager locationManager;
-
     public String lastCommand;
 
     public Redirectator redirectator;
@@ -68,13 +66,13 @@ public class MainPack extends ExecutePack {
 
     public OkHttpClient client;
 
+    public int commandColor = TerminalManager.NO_COLOR;
+
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager2 p,
-                    ContactManager c, Redirectator redirectator, ShellHolder shellHolder, RssManager rssManager, OkHttpClient client) {
+                    ContactManager c, Redirectator redirectator, RssManager rssManager, OkHttpClient client) {
         super(commandGroup);
 
         this.currentDirectory = XMLPrefsManager.get(File.class, Behavior.home_path);
-
-        this.shellHolder = shellHolder;
 
         this.rssManager = rssManager;
 
@@ -105,5 +103,12 @@ public class MainPack extends ExecutePack {
         appsManager.onDestroy();
         if(rssManager != null) rssManager.dispose();
         contacts.destroy(context);
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+
+        commandColor = TerminalManager.NO_COLOR;
     }
 }

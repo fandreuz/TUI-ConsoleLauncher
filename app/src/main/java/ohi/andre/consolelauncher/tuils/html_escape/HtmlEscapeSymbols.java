@@ -201,10 +201,10 @@ final class HtmlEscapeSymbols {
 
 
         // Initialize some auxiliary structures
-        final List<char[]> ncrs = new ArrayList<char[]>(references.references.size() + 5);
-        final List<Integer> codepoints = new ArrayList<Integer>(references.references.size() + 5);
-        final List<int[]> doubleCodepoints = new ArrayList<int[]>(100);
-        final Map<Integer,Short> ncrsByCodepointOverflow = new HashMap<Integer, Short>(20);
+        final List<char[]> ncrs = new ArrayList<>(references.references.size() + 5);
+        final List<Integer> codepoints = new ArrayList<>(references.references.size() + 5);
+        final List<int[]> doubleCodepoints = new ArrayList<>(100);
+        final Map<Integer,Short> ncrsByCodepointOverflow = new HashMap<>(20);
 
         // For each reference, initialize its corresponding codepoint -> ncr and ncr -> codepoint structures
         for (final Reference reference : references.references) {
@@ -248,12 +248,8 @@ final class HtmlEscapeSymbols {
         SORTED_NCRS = new char[ncrs.size()][];
         SORTED_CODEPOINTS = new int[codepoints.size()];
 
-        final List<char[]> ncrsOrdered = new ArrayList<char[]>(ncrs);
-        Collections.sort(ncrsOrdered, new Comparator<char[]>() {
-            public int compare(final char[] o1, final char[] o2) {
-                return HtmlEscapeSymbols.compare(o1, o2, 0, o2.length);
-            }
-        });
+        final List<char[]> ncrsOrdered = new ArrayList<>(ncrs);
+        Collections.sort(ncrsOrdered, (o1, o2) -> compare(o1, o2, 0, o2.length));
 
         for (short i = 0; i < SORTED_NCRS.length; i++) {
 
@@ -537,7 +533,7 @@ final class HtmlEscapeSymbols {
 
     static final class References {
 
-        private final List<Reference> references = new ArrayList<Reference>(200);
+        private final List<Reference> references = new ArrayList<>(200);
 
         References() {
             super();

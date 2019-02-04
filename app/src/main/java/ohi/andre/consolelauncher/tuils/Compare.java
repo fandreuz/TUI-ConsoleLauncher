@@ -17,17 +17,12 @@ public class Compare {
     static final char[] allowed_separators = {' ', '-', '_'};
     private static final String ACCENTS_PATTERN = "\\p{InCombiningDiacriticalMarks}+";
 
-    public static int MAX_RATE = 1000000, MIN_RATE = -1000000;
+    public static int MAX_RATE = 1000000;
 
     static Pattern unconsideredSymbols = Pattern.compile("[\\s_-]");
     static Pattern accentPattern = Pattern.compile(ACCENTS_PATTERN);
 
-    private static Comparator<SimpleMutableEntry<? extends Object, Integer>> entryComparator = new Comparator<SimpleMutableEntry<? extends Object, Integer>>() {
-        @Override
-        public int compare(SimpleMutableEntry<? extends Object, Integer> o1, SimpleMutableEntry<? extends Object, Integer> o2) {
-            return o2.getValue() - o1.getValue();
-        }
-    };
+    private static Comparator<SimpleMutableEntry<? extends Object, Integer>> entryComparator = (o1, o2) -> o2.getValue() - o1.getValue();
 
     public static String removeAccents(String s) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.GINGERBREAD) {
@@ -233,6 +228,8 @@ public class Compare {
             }
         }
 
+        if(maxRate < minimum || maxRate < 0) throw new CompareStringLowerThanMinimumException();
+
 //        int delay = (int) (System.currentTimeMillis() - time);
 //        Tuils.log("return", Math.round(maxRate));
 //        Tuils.log("normal time: " + delay);
@@ -244,7 +241,6 @@ public class Compare {
 //        n++;
 
         int r = Math.round(maxRate);
-        if(r < minimum) throw new CompareStringLowerThanMinimumException();
         if(r == comparator.length() && maxRateIndex == 0) {
             return maximum;
         }

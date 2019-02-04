@@ -42,12 +42,7 @@ public class help implements CommandAbstraction {
         MainPack info = (MainPack) pack;
         List<String> toPrint = new ArrayList<>(Arrays.asList(info.commandGroup.getCommandNames()));
 
-        Collections.sort(toPrint, new Comparator<String>() {
-            @Override
-            public int compare(String lhs, String rhs) {
-                return Tuils.alphabeticCompare(lhs, rhs);
-            }
-        });
+        Collections.sort(toPrint, Tuils::alphabeticCompare);
 
         Tuils.addPrefix(toPrint, Tuils.DOUBLE_SPACE);
         Tuils.addSeparator(toPrint, Tuils.TRIBLE_SPACE);

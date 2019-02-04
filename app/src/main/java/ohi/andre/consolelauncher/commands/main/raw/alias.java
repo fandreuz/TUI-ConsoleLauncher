@@ -7,7 +7,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -24,11 +24,8 @@ public class alias extends ParamCommand {
                 ArrayList<String> args = pack.getList();
                 if(args.size() < 2) return pack.context.getString(R.string.output_lessarg);
 
-                if( ((MainPack) pack).aliasManager.add(args.remove(0), Tuils.toPlanString(args, Tuils.SPACE)) ) {
-                    return null;
-                } else {
-                    return pack.context.getString(R.string.output_problemaddingalias);
-                }
+                ((MainPack) pack).aliasManager.add(pack.context, args.remove(0), Tuils.toPlanString(args, Tuils.SPACE));
+                return null;
             }
 
             @Override
@@ -41,8 +38,8 @@ public class alias extends ParamCommand {
             public String exec(ExecutePack pack) {
                 ArrayList<String> args = pack.getList();
                 if(args.size() < 1) return pack.context.getString(R.string.output_lessarg);
-                if(((MainPack) pack).aliasManager.remove(args.get(0))) return null;
-                else return pack.context.getString(R.string.output_aliasnotfound) + Tuils.SPACE + args.get(0);
+                ((MainPack) pack).aliasManager.remove(pack.context, args.get(0));
+                return null;
             }
 
             @Override
@@ -53,7 +50,7 @@ public class alias extends ParamCommand {
         file {
             @Override
             public String exec(ExecutePack pack) {
-                pack.context.startActivity(Tuils.openFile(new File(Tuils.getFolder(), AliasManager.PATH)));
+                pack.context.startActivity(Tuils.openFile(pack.context, new File(Tuils.getFolder(), AliasManager.PATH)));
                 return null;
             }
 

@@ -1,12 +1,17 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableString;
@@ -34,6 +39,7 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.commands.main.raw.shortcut;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
@@ -41,6 +47,7 @@ import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
+import static android.content.Context.CLIPBOARD_SERVICE;
 import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
 import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
 
@@ -50,8 +57,16 @@ import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
 
 public class NotesManager {
 
-    public static final String ACTION_RM = BuildConfig.APPLICATION_ID + ".rm_note", ACTION_ADD = BuildConfig.APPLICATION_ID + ".add_note", ACTION_CLEAR = BuildConfig.APPLICATION_ID + ".clear_notes",
-            ACTION_LS = BuildConfig.APPLICATION_ID + ".ls_notes", ACTION_LOCK = BuildConfig.APPLICATION_ID + ".lock_notes", CREATION_TIME = "creationTime", TEXT = "text", LOCK = "lock";
+    public static String ACTION_RM = BuildConfig.APPLICATION_ID + ".rm_note";
+    public static String ACTION_ADD = BuildConfig.APPLICATION_ID + ".add_note";
+    public static String ACTION_CLEAR = BuildConfig.APPLICATION_ID + ".clear_notes";
+    public static String ACTION_LS = BuildConfig.APPLICATION_ID + ".ls_notes";
+    public static String ACTION_LOCK = BuildConfig.APPLICATION_ID + ".lock_notes";
+    public static String ACTION_CP = BuildConfig.APPLICATION_ID + ".cp_notes";
+
+    public static String BROADCAST_COUNT = "broadcastCount";
+    public static String CREATION_TIME = "creationTime", TEXT = "text", LOCK = "lock";
+
     private final String PATH = "notes.xml", NAME = "NOTES", NOTE_NODE = "note";
 
     CharSequence oldNotes;
@@ -62,7 +77,7 @@ public class NotesManager {
 
     Pattern optionalPattern;
     String footer, header, divider;
-    int color, lockedColor, timeColor;
+    int color, lockedColor;
 
     boolean allowLink;
     int linkColor;
@@ -71,10 +86,18 @@ public class NotesManager {
 
     PackageManager packageManager;
 
+    Context mContext;
+
+    public static int broadcastCount;
+
 //    noteview can't be changed too much, it may be shared
     public NotesManager(Context context, TextView noteView) {
         classes = new HashSet<>();
         notes = new ArrayList<>();
+
+        broadcastCount = 0;
+
+        this.mContext = context;
 
         packageManager = context.getPackageManager();
 
@@ -84,7 +107,6 @@ public class NotesManager {
 
         color = XMLPrefsManager.getColor(Theme.notes_color);
         lockedColor = XMLPrefsManager.getColor(Theme.notes_locked_color);
-        timeColor = XMLPrefsManager.getColor(Theme.time_color);
 
         footer = XMLPrefsManager.get(Ui.notes_footer);
         header = XMLPrefsManager.get(Ui.notes_header);
@@ -99,30 +121,6 @@ public class NotesManager {
 
         Note.sorting = XMLPrefsManager.getInt(Behavior.notes_sorting);
 
-//        String[] split = footer.split(separator);
-//        if(split.length > 1) {
-//            footerActive = split[0];
-//            footerDisabled = split[1];
-//        } else if(split[0].length() < footer.length()) {
-//            footerActive = split[0];
-//            footerDisabled = Tuils.EMPTYSTRING;
-//        } else {
-//            footerActive = footer;
-//            footerDisabled = footer;
-//        }
-//
-//        split = header.split(separator);
-//        if(split.length > 1) {
-//            headerActive = split[0];
-//            headerDisabled = split[1];
-//        } else if(split[0].length() < header.length()) {
-//            headerActive = split[0];
-//            headerDisabled = Tuils.EMPTYSTRING;
-//        } else {
-//            headerActive = header;
-//            headerDisabled = header;
-//        }
-
         load(context, true);
 
         IntentFilter filter = new IntentFilter();
@@ -131,16 +129,14 @@ public class NotesManager {
         filter.addAction(ACTION_CLEAR);
         filter.addAction(ACTION_LS);
         filter.addAction(ACTION_LOCK);
+        filter.addAction(ACTION_CP);
 
         receiver = new BroadcastReceiver() {
 
-            long last = -1;
-
             @Override
             public void onReceive(Context context, Intent intent) {
-                long t = System.currentTimeMillis();
-                if(t - last < 100) return;
-                last = t;
+                if(intent.getIntExtra(BROADCAST_COUNT, 0) < broadcastCount) return;
+                broadcastCount++;
 
                 if(intent.getAction().equals(ACTION_ADD)) {
                     String text = intent.getStringExtra(TEXT);
@@ -162,12 +158,12 @@ public class NotesManager {
                         text = Tuils.toPlanString(ar, Tuils.SPACE);
                     }
 
-                    addNote(context, text, lock);
+                    addNote(text, lock);
                 } else if(intent.getAction().equals(ACTION_RM)) {
                     String s = intent.getStringExtra(TEXT);
                     if(s == null) return;
 
-                    rmNote(context, s);
+                    rmNote(s);
                 } else if(intent.getAction().equals(ACTION_CLEAR)) {
                     clearNotes(context);
                 } else if(intent.getAction().equals(ACTION_LS)) {
@@ -177,6 +173,11 @@ public class NotesManager {
                     boolean lock = intent.getBooleanExtra(LOCK, false);
 
                     lockNote(context, text, lock);
+                } else if(intent.getAction().equals(ACTION_CP)) {
+                    String s = intent.getStringExtra(TEXT);
+                    if(s == null) return;
+
+                    cpNote(s);
                 }
             }
         };
@@ -282,7 +283,7 @@ public class NotesManager {
 
             t = Tuils.span(t, n.lock ? lockedColor : this.color);
 
-            t = TimeManager.instance.replace(t, n.creationTime, timeColor);
+            t = TimeManager.instance.replace(t, n.creationTime);
 
             if(allowLink) {
                 Matcher m = uriPattern.matcher(t);
@@ -299,7 +300,6 @@ public class NotesManager {
 
                     SpannableString sp = new SpannableString(m.group());
                     sp.setSpan(new LongClickableSpan(u), 0, sp.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    sp.setSpan(new UnderlineSpan(), 0, sp.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     sp.setSpan(new ForegroundColorSpan(linkColor), 0, sp.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                     t = TextUtils.replace(t, new String[] {m.group()}, new CharSequence[] {sp});
@@ -360,7 +360,7 @@ public class NotesManager {
         return oldNotes;
     }
 
-    private void addNote(Context context, String s, boolean lock) {
+    private void addNote(String s, boolean lock) {
         long t = System.currentTimeMillis();
 
         notes.add(new Note(t, s, lock));
@@ -373,17 +373,17 @@ public class NotesManager {
 
         String output = XMLPrefsManager.add(file, NOTE_NODE, new String[] {CREATION_TIME, VALUE_ATTRIBUTE, LOCK}, new String[] {String.valueOf(t), s, String.valueOf(lock)});
         if(output != null) {
-            if(output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
-            else Tuils.sendOutput(Color.RED, context, R.string.output_error);
+            if(output.length() > 0) Tuils.sendOutput(mContext, output);
+            else Tuils.sendOutput(mContext, R.string.output_error);
         }
 
         invalidateNotes();
     }
 
-    private void rmNote(Context context, String s) {
+    private void rmNote(String s) {
         int index = findNote(s);
         if(index == -1) {
-            Tuils.sendOutput(Color.RED, context, R.string.note_not_found);
+            Tuils.sendOutput(mContext, R.string.note_not_found);
             return;
         }
 
@@ -396,13 +396,32 @@ public class NotesManager {
 
         String output = XMLPrefsManager.removeNode(file, new String[] {CREATION_TIME}, new String[] {String.valueOf(time)});
         if(output != null) {
-            if(output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
-            else {
-                Tuils.sendOutput(Color.RED, context, R.string.note_not_found);
-            }
+            if(output.length() > 0) Tuils.sendOutput(mContext, output);
         }
 
         invalidateNotes();
+    }
+
+    private void cpNote(String s) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
+            Tuils.sendOutput(mContext, R.string.api_low);
+            return;
+        }
+
+        int index = findNote(s);
+        if(index == -1) {
+            Tuils.sendOutput(mContext, R.string.note_not_found);
+            return;
+        }
+
+        final String text = notes.get(index).text;
+
+        ((Activity) mContext).runOnUiThread(() -> {
+            final ClipboardManager clipboard = (ClipboardManager) mContext.getSystemService(CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("note", text);
+            clipboard.setPrimaryClip(clip);
+            Tuils.sendOutput(mContext, mContext.getString(R.string.copied) + Tuils.SPACE + text);
+        });
     }
 
     private void clearNotes(Context context) {
@@ -435,7 +454,7 @@ public class NotesManager {
     private void lockNote(Context context, String s, boolean lock) {
         int index = findNote(s);
         if(index == -1) {
-            Tuils.sendOutput(Color.RED, context, R.string.note_not_found);
+            Tuils.sendOutput(context, R.string.note_not_found);
             return;
         }
 
@@ -451,7 +470,7 @@ public class NotesManager {
         }
 
         String output = XMLPrefsManager.set(file, NOTE_NODE, new String[] {CREATION_TIME}, new String[] {String.valueOf(time)}, new String[] {LOCK}, new String[] {String.valueOf(lock)}, true);
-        if(output != null && output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
+        if(output != null && output.length() > 0) Tuils.sendOutput(context, output);
 
         invalidateNotes();
     }
@@ -590,6 +609,11 @@ public class NotesManager {
                 default:
                     return 1;
             }
+        }
+
+        @Override
+        public String toString() {
+            return creationTime + " : " + text;
         }
     }
 }

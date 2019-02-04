@@ -19,7 +19,7 @@ public class call implements CommandAbstraction {
 
     @Override
     public String exec(ExecutePack pack) {
-        MainPack info = (MainPack) pack;
+        final MainPack info = (MainPack) pack;
         if (ContextCompat.checkSelfPermission(info.context, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(info.context, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
 
@@ -28,17 +28,21 @@ public class call implements CommandAbstraction {
         }
 
         String number = info.getString();
-        String s = Tuils.EMPTYSTRING;
+        if(number == null) return pack.context.getString(R.string.invalid_number);
+
+        StringBuilder s = new StringBuilder(Tuils.EMPTYSTRING);
         for(char c : number.toCharArray()) {
-            if(c == '#') s += Uri.encode("#");
-            else s += c;
+            if(c == '#') s.append(Uri.encode("#"));
+            else s.append(c);
         }
 
         Uri uri = Uri.parse("tel:" + s);
-        Intent intent = new Intent(Intent.ACTION_CALL, uri);
+        if(uri == null) return pack.context.getString(R.string.invalid_number);
+
+        final Intent intent = new Intent(Intent.ACTION_CALL, uri);
 
         try {
-            info.context.startActivity(intent);
+            ((Activity) pack.context).runOnUiThread(() -> info.context.startActivity(intent));
         } catch (SecurityException e) {
             return info.res.getString(R.string.output_nopermissions);
         }

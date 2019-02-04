@@ -34,7 +34,6 @@ import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
-import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.html_escape.HtmlEscape;
@@ -53,23 +52,27 @@ import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
 
 public class RssManager implements XMLPrefsElement {
 
-//    header:
-//    last-modified
-//    etag
-//    last_checked_client
-
     private final int RSS_CHECK_DELAY = 5000;
 
     private final String RSS_FOLDER = "rss";
 
-    public static final String TIME_ATTRIBUTE  = "updateTimeSec", SHOW_ATTRIBUTE = "show", URL_ATTRIBUTE = "url", LASTCHECKED_ATTRIBUTE = "lastChecked", LASTMODIFIED_ATTRIBUTE = "lastModified", ETAG_ATTRIBUTE = "etag",
-                            LAST_SHOWN_ITEM_ATTRIBUTE = "lastShownItem", ID_ATTRIBUTE = "id", FORMAT_ATTRIBUTE = "format", INCLUDE_ATTRIBUTE = "includeIfMatches", EXCLUDE_ATTRIBUTE = "excludeIfMatches",
-                            COLOR_ATTRIBUTE = "color", WIFIONLY_ATTRIBUTE = "wifiOnly", TIME_FORMAT_ATTRIBUTE = "timeFormat", DATE_TAG_ATTRIBUTE = "pubDateTag",
-                            ENTRY_TAG_ATTRIBUTE = "entryTag", ON_ATTRIBUTE = "on", CMD_ATTRIBUTE = "cmd";
+    public static String TIME_ATTRIBUTE  = "updateTimeSec";
+    public static String SHOW_ATTRIBUTE = "show";
+    public static String URL_ATTRIBUTE = "url";
+    public static String LASTCHECKED_ATTRIBUTE = "lastChecked";
+    public static String LAST_SHOWN_ITEM_ATTRIBUTE = "lastShownItem";
+    public static String ID_ATTRIBUTE = "id", FORMAT_ATTRIBUTE = "format";
+    public static String INCLUDE_ATTRIBUTE = "includeIfMatches";
+    public static String EXCLUDE_ATTRIBUTE = "excludeIfMatches";
+    public static String COLOR_ATTRIBUTE = "color";
+    public static String WIFIONLY_ATTRIBUTE = "wifiOnly";
+    public static String TIME_FORMAT_ATTRIBUTE = "timeFormat";
+    public static String DATE_TAG_ATTRIBUTE = "pubDateTag";
+    public static String ENTRY_TAG_ATTRIBUTE = "entryTag";
+    public static String ON_ATTRIBUTE = "on";
+    public static String CMD_ATTRIBUTE = "cmd";
 
     public static final String RSS_LABEL = "rss", FORMAT_LABEL = "format", REGEX_CMD_LABEL = "regex";
-
-//    private final String LAST_MODIFIED_FIELD = "Last-Modified", ETAG_FIELD = "ETag", IF_MODIFIED_SINCE_FIELD = "If-Modified-Since", IF_NONE_MATCH_FIELD = "If-None-Match", GET_LABEL = "GET";
 
     private final String PUBDATE_CHILD = "pubDate", ENTRY_CHILD = "item", LINK_CHILD = "link", HREF_ATTRIBUTE = "href";
 
@@ -97,7 +100,12 @@ public class RssManager implements XMLPrefsElement {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
-    private int defaultColor, timeColor, downloadMessageColor;
+    @Override
+    public String path() {
+        return PATH;
+    }
+
+    private int defaultColor, downloadMessageColor;
     private String defaultFormat, timeFormat, downloadFormat;
 
     private boolean includeRssDefault, showDownloadMessage, click;
@@ -295,7 +303,6 @@ public class RssManager implements XMLPrefsElement {
                     kbPattern = Pattern.compile(size + "kb", Pattern.CASE_INSENSITIVE);
                     bPattern = Pattern.compile(size + "b", Pattern.CASE_INSENSITIVE);
 
-                    timeColor = XMLPrefsManager.getColor(Theme.time_color);
                     downloadMessageColor = XMLPrefsManager.getColor(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_download_message_color);
                 }
 
@@ -668,7 +675,7 @@ public class RssManager implements XMLPrefsElement {
                             c = kbPattern.matcher(c).replaceAll(String.valueOf(kb));
                             c = bPattern.matcher(c).replaceAll(String.valueOf(bytes));
 
-                            c = TimeManager.instance.replace(c, timeColor);
+                            c = TimeManager.instance.replace(c);
 
                             Tuils.sendOutput(downloadMessageColor, context, c);
                         }
@@ -901,7 +908,7 @@ public class RssManager implements XMLPrefsElement {
         if(url == null || url.length() == 0) action = null;
         else action = OPEN_URL + url;
 
-        Tuils.sendOutput(context, s, TerminalManager.CATEGORY_RSS, click ? action : null);
+        Tuils.sendOutput(context, s, TerminalManager.CATEGORY_NO_COLOR, click ? action : null);
     }
 
     public static class Rss {
@@ -927,12 +934,12 @@ public class RssManager implements XMLPrefsElement {
         public SimpleDateFormat timeFormat;
 
         public Rss(String url, long updateTimeSeconds, int id, boolean show) {
-            this(url, updateTimeSeconds, -1, -1, id, show, null, null, null, null, null, Integer.MAX_VALUE, false, null, null, null);
+            this(url, updateTimeSeconds, -1, -1, id, show, null, null, null, Integer.MAX_VALUE, false, null, null, null);
         }
 
-        public Rss(String url, long updateTimeSeconds, long lastCheckedClient, long lastShownItem, int id, boolean show, String lMod, String etag, String format,
+        public Rss(String url, long updateTimeSeconds, long lastCheckedClient, long lastShownItem, int id, boolean show, String format,
                    String includeIfMatches, String excludeIfMatches, int color, boolean wifiOnly, String timeFormat, String rootNode, String timeNode) {
-            setAll(url, updateTimeSeconds, lastCheckedClient, lastShownItem, id, show, lMod, etag, format, includeIfMatches, excludeIfMatches, color, wifiOnly, timeFormat, rootNode, timeNode);
+            setAll(url, updateTimeSeconds, lastCheckedClient, lastShownItem, id, show, format, includeIfMatches, excludeIfMatches, color, wifiOnly, timeFormat, rootNode, timeNode);
         }
 
         public static Rss fromElement(Element t) {
@@ -961,9 +968,6 @@ public class RssManager implements XMLPrefsElement {
 
             long lastChecked = XMLPrefsManager.getLongAttribute(t, LASTCHECKED_ATTRIBUTE);
             long lastShown = XMLPrefsManager.getLongAttribute(t, LAST_SHOWN_ITEM_ATTRIBUTE);
-            
-            String lastModified = XMLPrefsManager.getStringAttribute(t, LASTMODIFIED_ATTRIBUTE);
-            String etag = XMLPrefsManager.getStringAttribute(t, ETAG_ATTRIBUTE);
 
             String format = XMLPrefsManager.getStringAttribute(t, FORMAT_ATTRIBUTE);
             String includeIfMatches = XMLPrefsManager.getStringAttribute(t, INCLUDE_ATTRIBUTE);
@@ -985,10 +989,10 @@ public class RssManager implements XMLPrefsElement {
             String rootNode = XMLPrefsManager.getStringAttribute(t, ENTRY_TAG_ATTRIBUTE);
             String timeNode = XMLPrefsManager.getStringAttribute(t, DATE_TAG_ATTRIBUTE);
 
-            return new Rss(url, updateTime, lastChecked, lastShown, id, show, lastModified, etag, format, includeIfMatches, excludeIfMatches, color, wifiOnly, timeFormat, rootNode, timeNode);
+            return new Rss(url, updateTime, lastChecked, lastShown, id, show, format, includeIfMatches, excludeIfMatches, color, wifiOnly, timeFormat, rootNode, timeNode);
         }
 
-        private void setAll(String url, long updateTimeSeconds, long lastCheckedClient, long lastShownItem, int id, boolean show, String lMod, String etag, String format,
+        private void setAll(String url, long updateTimeSeconds, long lastCheckedClient, long lastShownItem, int id, boolean show, String format,
                             String includeIfMatches, String excludeIfMatches, int color, boolean wifiOnly, String timeFormat, String rootNode, String timeNode) {
             this.url = url;
             this.updateTimeSeconds = updateTimeSeconds;

@@ -2,6 +2,7 @@ package ohi.andre.consolelauncher.managers;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.IBinder;
 import android.text.InputType;
@@ -17,9 +18,11 @@ import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,10 +56,9 @@ public class TerminalManager {
     private final int SCROLL_DELAY = 200;
     private final int CMD_LIST_SIZE = 40;
 
-    public static final int CATEGORY_INPUT = 10;
-    public static final int CATEGORY_OUTPUT = 11;
-    public static final int CATEGORY_NOTIFICATION = 12;
-    public static final int CATEGORY_RSS = 14;
+    public static final int CATEGORY_INPUT = 10, CATEGORY_OUTPUT = 11, CATEGORY_NO_COLOR = 20;
+
+    public static int NO_COLOR = Integer.MAX_VALUE;
 
     private long lastEnter;
 
@@ -69,8 +71,6 @@ public class TerminalManager {
 
     private TextView mPrefix;
     private boolean suMode;
-
-    private MessagesManager messagesManager;
 
     private List<String> cmdList = new ArrayList<>(CMD_LIST_SIZE);
     private int howBack = -1;
@@ -104,11 +104,11 @@ public class TerminalManager {
 
     private boolean clickCommands, longClickCommands;
 
-    private Context mContext;
+    public Context mContext;
 
     private CommandExecuter executer;
 
-    public TerminalManager(final TextView terminalView, EditText inputView, TextView prefixView, ImageButton submitView, final ImageButton backView, ImageButton nextView, ImageButton deleteView,
+    public TerminalManager(final TextView terminalView, EditText inputView, TextView prefixView, ImageView submitView, final ImageView backView, ImageButton nextView, ImageButton deleteView,
                            ImageButton pasteView, final Context context, MainPack mainPack, CommandExecuter executer) {
         if (terminalView == null || inputView == null || prefixView == null)
             throw new UnsupportedOperationException();
@@ -144,56 +144,32 @@ public class TerminalManager {
 
         if (submitView != null) {
             submitView.setColorFilter(XMLPrefsManager.getColor(Theme.enter_color));
-            submitView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onNewInput();
-                }
-            });
+            submitView.setOnClickListener(v -> onNewInput());
         }
 
         if (backView != null) {
-            ((View) backView.getParent()).setBackgroundColor(XMLPrefsManager.getColor(Theme.toolbar_bg));
             backView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
-            backView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onBackPressed();
-                }
-            });
+            backView.setOnClickListener(v -> onBackPressed());
         }
 
         if (nextView != null) {
             nextView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
-            nextView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onNextPressed();
-                }
-            });
+            nextView.setOnClickListener(v -> onNextPressed());
         }
 
         if (pasteView != null) {
             pasteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
-            pasteView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String text = Tuils.getTextFromClipboard(context);
-                    if(text != null && text.length() > 0) {
-                        setInput(getInput() + text);
-                    }
+            pasteView.setOnClickListener(v -> {
+                String text = Tuils.getTextFromClipboard(context);
+                if(text != null && text.length() > 0) {
+                    setInput(getInput() + text);
                 }
             });
         }
 
         if (deleteView != null) {
             deleteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
-            deleteView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    setInput(Tuils.EMPTYSTRING);
-                }
-            });
+            deleteView.setOnClickListener(v -> setInput(Tuils.EMPTYSTRING));
         }
 
         this.mTerminalView = terminalView;
@@ -202,34 +178,52 @@ public class TerminalManager {
         this.mTerminalView.setFocusable(false);
         this.mTerminalView.setMovementMethod(LongClickMovementMethod.getInstance(XMLPrefsManager.getInt(Behavior.long_click_duration)));
 
+        int hintColor = XMLPrefsManager.getColor(Theme.session_info_color);
+
+        ColorStateList list = mTerminalView.getHintTextColors();
+        try {
+            Field colors = list.getClass().getDeclaredField("mColors");
+            Field dColor = list.getClass().getDeclaredField("mDefaultColor");
+
+            colors.setAccessible(true);
+            dColor.setAccessible(true);
+
+            int[] a = (int[]) colors.get(list);
+            for(int c = 0; c < a.length; c++) {
+                a[c] = hintColor;
+            }
+
+            colors.set(list, a);
+            dColor.set(list, hintColor);
+        } catch (Exception e) {
+            Tuils.log(e);
+        }
+
         if(clearAfterMs > 0) this.mTerminalView.postDelayed(clearRunnable, clearAfterMs);
         if(maxLines > 0) {
-            this.mTerminalView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-                @Override
-                public boolean onPreDraw() {
-                    if(TerminalManager.this.mTerminalView == null) return true;
+            this.mTerminalView.getViewTreeObserver().addOnPreDrawListener(() -> {
+                if(TerminalManager.this.mTerminalView == null) return true;
 
-                    Layout l = terminalView.getLayout();
-                    if(l == null) return true;
+                Layout l = terminalView.getLayout();
+                if(l == null) return true;
 
-                    int count = l.getLineCount() - 1;
+                int count = l.getLineCount() - 1;
 
-                    if(count > maxLines) {
-                        int excessive = count - maxLines;
+                if(count > maxLines) {
+                    int excessive = count - maxLines;
 
-                        CharSequence text = terminalView.getText();
-                        while (excessive >= 0) {
-                            int index = TextUtils.indexOf(text, Tuils.NEWLINE);
-                            if(index == -1) break;
-                            text = text.subSequence(index + 1, text.length());
-                            excessive--;
-                        }
-
-                        terminalView.setText(text);
+                    CharSequence text = terminalView.getText();
+                    while (excessive >= 0) {
+                        int index = TextUtils.indexOf(text, Tuils.NEWLINE);
+                        if(index == -1) break;
+                        text = text.subSequence(index + 1, text.length());
+                        excessive--;
                     }
 
-                    return true;
+                    terminalView.setText(text);
                 }
+
+                return true;
             });
         }
 
@@ -240,6 +234,9 @@ public class TerminalManager {
         this.mScrollView = (ScrollView) v;
 
         this.mInputView = inputView;
+
+
+
         this.mInputView.setTextSize(ioSize);
         this.mInputView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
         this.mInputView.setTypeface(Tuils.getTypeface(context));
@@ -247,34 +244,30 @@ public class TerminalManager {
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         Tuils.setCursorDrawableColor(this.mInputView, XMLPrefsManager.getColor(Theme.cursor_color));
         this.mInputView.setHighlightColor(Color.TRANSPARENT);
-        this.mInputView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(!mInputView.hasFocus()) mInputView.requestFocus();
+        this.mInputView.setOnEditorActionListener((v1, actionId, event) -> {
+            if(!mInputView.hasFocus()) mInputView.requestFocus();
 
 //                physical enter
-                if(actionId == KeyEvent.ACTION_DOWN) {
-                    if(lastEnter == 0) {
-                        lastEnter = System.currentTimeMillis();
-                    } else {
-                        long difference = System.currentTimeMillis() - lastEnter;
-                        lastEnter = System.currentTimeMillis();
-                        if(difference < 350) {
-                            return true;
-                        }
+            if(actionId == KeyEvent.ACTION_DOWN) {
+                if(lastEnter == 0) {
+                    lastEnter = System.currentTimeMillis();
+                } else {
+                    long difference = System.currentTimeMillis() - lastEnter;
+                    lastEnter = System.currentTimeMillis();
+                    if(difference < 350) {
+                        return true;
                     }
                 }
+            }
 
-                if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
-                    onNewInput();
-                }
+            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
+                onNewInput();
+            }
 
 //                if (event == null && actionId == EditorInfo.IME_NULL) onNewInput();
 //                if (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) onNewInput();
 
-                return true;
-            }
+            return true;
         });
 //        if(autoLowerFirstChar) {
 //            this.mInputView.setFilters(new InputFilter[] {new InputFilter() {
@@ -318,10 +311,7 @@ public class TerminalManager {
 
         if(input.length() > 0) {
             clearCmdsCount++;
-
             if(clearCmdsCount != 0 && clearAfterCmds > 0 && clearCmdsCount % clearAfterCmds == 0) clear();
-
-            if(messagesManager != null) messagesManager.onCmd();
 
             writeToView(input, CATEGORY_INPUT);
 
@@ -364,7 +354,7 @@ public class TerminalManager {
     public void setOutput(int color, CharSequence output) {
         if(output == null || output.length() == 0) return;
 
-        if(color == Integer.MAX_VALUE) {
+        if(color == TerminalManager.NO_COLOR) {
             color = XMLPrefsManager.getColor(Theme.output_color);
         }
 
@@ -420,12 +410,9 @@ public class TerminalManager {
     }
 
     private void writeToView(final CharSequence text) {
-        mTerminalView.post(new Runnable() {
-            @Override
-            public void run() {
-                mTerminalView.append(text);
-                scrollToEnd();
-            }
+        mTerminalView.post(() -> {
+            mTerminalView.append(text);
+            scrollToEnd();
         });
     }
 
@@ -433,7 +420,7 @@ public class TerminalManager {
         CharSequence s;
         switch (type) {
             case CATEGORY_INPUT:
-                t = t.toString().trim();
+                t = t.toString();
 
                 boolean su = t.toString().startsWith("su ") || suMode;
 
@@ -441,14 +428,14 @@ public class TerminalManager {
                 if(clickCommands || longClickCommands) si.setSpan(new LongClickableSpan(clickCommands ? t.toString() : null, longClickCommands ? t.toString() : null, PrivateIOReceiver.ACTION_INPUT), 0,
                         si.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                s = TimeManager.instance.replace(si,XMLPrefsManager.getColor(Theme.time_color));
+                s = TimeManager.instance.replace(si);
                 s = TextUtils.replace(s,
                         new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE, FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
                         new CharSequence[] {t, su ? suPrefix : prefix, Tuils.NEWLINE, t, su ? suPrefix : prefix, Tuils.NEWLINE});
 
                 break;
             case CATEGORY_OUTPUT:
-                t = t.toString().trim();
+                t = t.toString();
 
                 SpannableString so = Tuils.span(outputFormat, outputColor);
 
@@ -458,7 +445,7 @@ public class TerminalManager {
 
                 break;
 //            already colored here
-            case CATEGORY_NOTIFICATION:case CATEGORY_RSS:
+            case CATEGORY_NO_COLOR:
                 s = t;
                 break;
             default:
@@ -506,10 +493,6 @@ public class TerminalManager {
         }
     }
 
-    public void setMessagesManager(MessagesManager msg) {
-        this.messagesManager = msg;
-    }
-
     public void focusInputEnd() {
         mInputView.setSelection(getInput().length());
     }
@@ -531,33 +514,22 @@ public class TerminalManager {
     }
 
     public void clear() {
-        mTerminalView.post(new Runnable() {
-            @Override
-            public void run() {
-                mTerminalView.setText(Tuils.EMPTYSTRING);
-            }
-        });
+        mTerminalView.post(() -> mTerminalView.setText(Tuils.EMPTYSTRING));
         cmdList.clear();
         clearCmdsCount = 0;
     }
 
     public void onRoot() {
-        ((Activity) mContext).runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                suMode = true;
-                mPrefix.setText(suPrefix.endsWith(Tuils.SPACE) ? suPrefix : suPrefix + Tuils.SPACE);
-            }
+        ((Activity) mContext).runOnUiThread(() -> {
+            suMode = true;
+            mPrefix.setText(suPrefix.endsWith(Tuils.SPACE) ? suPrefix : suPrefix + Tuils.SPACE);
         });
     }
 
     public void onStandard() {
-        ((Activity) mContext).runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                suMode = false;
-                mPrefix.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
-            }
+        ((Activity) mContext).runOnUiThread(() -> {
+            suMode = false;
+            mPrefix.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
         });
     }
 }

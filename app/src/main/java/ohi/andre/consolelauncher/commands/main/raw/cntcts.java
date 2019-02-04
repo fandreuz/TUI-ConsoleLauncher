@@ -15,7 +15,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -105,8 +105,8 @@ public class cntcts extends ParamCommand {
 
                 builder.append(about[ContactManager.NAME]).append(Tuils.NEWLINE);
                 builder.append("\t\t").append(about[ContactManager.NUMBERS].replaceAll(Tuils.NEWLINE, Tuils.NEWLINE + "\t\t")).append(Tuils.NEWLINE);
-                builder.append("ID: " + about[ContactManager.CONTACT_ID]).append(Tuils.NEWLINE);
-                builder.append("Contacted " + about[ContactManager.TIME_CONTACTED] + " time(s)").append(Tuils.NEWLINE);
+                builder.append("ID: ").append(about[ContactManager.CONTACT_ID]).append(Tuils.NEWLINE);
+                builder.append("Contacted ").append(about[ContactManager.TIME_CONTACTED]).append(" time(s)").append(Tuils.NEWLINE);
 
                 return builder.toString();
             }

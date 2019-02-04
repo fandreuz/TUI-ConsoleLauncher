@@ -1,7 +1,11 @@
 package ohi.andre.consolelauncher.managers;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,12 +20,19 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class AliasManager {
+
+    public static String ACTION_LS = BuildConfig.APPLICATION_ID + ".alias_ls";
+    public static String ACTION_ADD = BuildConfig.APPLICATION_ID + ".alias_add";
+    public static String ACTION_RM = BuildConfig.APPLICATION_ID + ".alias_rm";
+
+    public static String NAME = "name";
 
     public static final String PATH = "alias.txt";
 
@@ -31,13 +42,37 @@ public class AliasManager {
 
     private Context context;
 
+    private String paramMarker;
     private Pattern parameterPattern;
+
+    private BroadcastReceiver receiver;
 
     public AliasManager(Context c) {
         this.context = c;
 
-        parameterPattern = Pattern.compile(Pattern.quote(XMLPrefsManager.get(Behavior.alias_param_marker)));
-        paramSeparator = Pattern.quote(XMLPrefsManager.get(Behavior.alias_param_separator));
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_ADD);
+        filter.addAction(ACTION_LS);
+        filter.addAction(ACTION_RM);
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+
+                if(action.equals(ACTION_ADD)) {
+                    add(context, intent.getStringExtra(NAME), intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE));
+                } else if(action.equals(ACTION_RM)) {
+                    remove(context, intent.getStringExtra(NAME));
+                } else if(action.equals(ACTION_LS)) {
+                    Tuils.sendOutput(context, printAliases());
+                }
+            }
+        };
+
+        paramMarker = XMLPrefsManager.get(Behavior.alias_param_marker);
+        parameterPattern = Pattern.compile(Pattern.quote(paramMarker));
+        paramSeparator = XMLPrefsManager.get(Behavior.alias_param_separator);
         aliasLabelFormat = XMLPrefsManager.get(Behavior.alias_content_format);
         replaceAllMarkers = XMLPrefsManager.getBoolean(Behavior.alias_replace_all_markers);
 
@@ -80,17 +115,19 @@ public class AliasManager {
         }
     }
 
-//    this prevents some erros related to the % sign
+//    this prevents some errors related to the % sign
     private final String SECURITY_REPLACEMENT = "{#@";
     private Pattern securityPattern = Pattern.compile(Pattern.quote(SECURITY_REPLACEMENT));
 
     public String format(String aliasValue, String params) {
         params = params.trim();
-
-        aliasValue = parameterPattern.matcher(aliasValue).replaceAll(SECURITY_REPLACEMENT);
-
         if(params.length() == 0) return aliasValue;
-        String[] split = params.split(paramSeparator);
+
+        int before = aliasValue.length();
+        aliasValue = parameterPattern.matcher(aliasValue).replaceAll(SECURITY_REPLACEMENT);
+        int replaced = (aliasValue.length() - before) / Math.abs(SECURITY_REPLACEMENT.length() - paramMarker.length());
+
+        String[] split = params.split(Pattern.quote(paramSeparator), replaced);
 
         for(String s : split) {
             aliasValue = securityPattern.matcher(aliasValue).replaceFirst(s);
@@ -109,14 +146,16 @@ public class AliasManager {
         return null;
     }
 
-    private void removeAlias(String name) {
+    private boolean removeAlias(String name) {
         for(int c = 0; c < aliases.size(); c++) {
             Alias a = aliases.get(c);
             if(name.equals(a.name)) {
                 aliases.remove(c);
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 
     private final Pattern pv = Pattern.compile("%v", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
@@ -174,7 +213,17 @@ public class AliasManager {
         }
     }
 
-    public boolean add(String name, String value) {
+    public void dispose() {
+        LocalBroadcastManager.getInstance(context.getApplicationContext()).unregisterReceiver(receiver);
+    }
+
+    public void add(Context context, String name, String value) {
+        for(Alias a : aliases) {
+            if(name.equals(a.name)) {
+                Tuils.sendOutput(context, R.string.unavailable_name);
+                return;
+            }
+        }
 
         FileOutputStream fos;
         try {
@@ -183,16 +232,19 @@ public class AliasManager {
             fos.close();
 
             aliases.add(new Alias(name, value, parameterPattern));
-
-            return true;
         } catch (Exception e) {
-            return false;
+            Tuils.sendOutput(context, e.toString());
         }
 
     }
 
-    public boolean remove(String name) {
+    public void remove(Context context, String name) {
         reload();
+
+        if(!removeAlias(name)) {
+            Tuils.sendOutput(context, R.string.invalid_name);
+            return;
+        }
 
         try {
             File inputFile = new File(Tuils.getFolder(), PATH);
@@ -210,12 +262,9 @@ public class AliasManager {
             writer.close();
             reader.close();
 
-
-            removeAlias(name);
-
-            return tempFile.renameTo(inputFile);
+            tempFile.renameTo(inputFile);
         } catch (Exception e) {
-            return false;
+            Tuils.sendOutput(context, e.toString());
         }
     }
 

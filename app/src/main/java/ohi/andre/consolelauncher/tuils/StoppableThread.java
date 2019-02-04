@@ -8,13 +8,10 @@ public class StoppableThread extends Thread {
 
     private volatile boolean stopped = false;
     public StoppableThread() {
-        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                Tuils.log(e);
-                Tuils.toFile(e);
-                System.exit(1);
-            }
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            Tuils.log(e);
+            Tuils.toFile(e);
+            System.exit(1);
         });
     }
 

@@ -44,6 +44,7 @@ public class PrivateIOReceiver extends BroadcastReceiver {
     public static final String PENDING_INTENT = BuildConfig.APPLICATION_ID + ".pending_intent";
     public static final String ID = BuildConfig.APPLICATION_ID + ".id";
     public static final String CURRENT_ID = BuildConfig.APPLICATION_ID + ".current_id";
+    public static final String INFO_AREA = BuildConfig.APPLICATION_ID + ".info_area";
 
     Outputable outputable;
     Inputable inputable;
@@ -72,6 +73,7 @@ public class PrivateIOReceiver extends BroadcastReceiver {
             if(text == null) return;
 
             if(intent.getAction().equals(ACTION_OUTPUT)) {
+                boolean infoArea = intent.getBooleanExtra(INFO_AREA, false);
                 int color = intent.getIntExtra(COLOR, Integer.MAX_VALUE);
 
                 Object singleClickExtraObject, longClickExtraObject;
@@ -87,9 +89,8 @@ public class PrivateIOReceiver extends BroadcastReceiver {
                     ((SpannableStringBuilder) text).setSpan(new LongClickableSpan(singleClickExtraObject, longClickExtraObject), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
 
-                if(color != Integer.MAX_VALUE) {
-                    outputable.onOutput(color, text);
-                } else {
+                if(color != Integer.MAX_VALUE) outputable.onOutput(color, text);
+                else {
                     int type = intent.getIntExtra(TYPE, -1);
                     if(type != -1) outputable.onOutput(text, type);
                     else outputable.onOutput(text, TerminalManager.CATEGORY_OUTPUT);

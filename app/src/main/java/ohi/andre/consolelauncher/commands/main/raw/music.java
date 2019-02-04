@@ -4,7 +4,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -109,8 +109,8 @@ public class music extends ParamCommand {
                 Song song = m.get(m.getSongIndex());
                 if(song == null) return pack.context.getString(R.string.output_songnotfound);
 
-                builder.append("Name: " + song.getTitle()).append(Tuils.NEWLINE);
-                if(song.getID() == -1) builder.append("Path: " + song.getPath()).append(Tuils.NEWLINE);
+                builder.append("Name: ").append(song.getTitle()).append(Tuils.NEWLINE);
+                if(song.getID() == -1) builder.append("Path: ").append(song.getPath()).append(Tuils.NEWLINE);
                 builder.append(Tuils.NEWLINE);
 
                 int curS = m.getCurrentPosition() / 1000;
@@ -127,7 +127,7 @@ public class music extends ParamCommand {
                     s = s % 60;
                 }
 
-                builder.append((curMin > 0 ? curMin + "." + curS : curS + "s") + " of " + (min > 0 ? min + "." + s : s + "s") + " (" + (Tuils.percentage(m.getCurrentPosition(), m.getDuration())) + "%)");
+                builder.append(curMin > 0 ? curMin + "." + curS : curS + "s").append(" of ").append(min > 0 ? min + "." + s : s + "s").append(" (").append(Tuils.percentage(m.getCurrentPosition(), m.getDuration())).append("%)");
                 return builder.toString();
             }
         },

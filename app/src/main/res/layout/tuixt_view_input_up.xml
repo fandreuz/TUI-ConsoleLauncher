@@ -16,9 +16,7 @@
         <TextView
             android:id="@+id/prefix_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:paddingTop="@dimen/input_padding"/>
+            android:layout_height="wrap_content"/>
 
         <EditText
             android:id="@+id/input_view"
@@ -30,8 +28,6 @@
             android:imeOptions="actionGo|flagNoFullscreen"
             android:textCursorDrawable="@drawable/cursor"
 
-            android:paddingTop="@dimen/input_padding"
-
             android:lines="1"
             android:singleLine="true" />
 
@@ -42,9 +38,7 @@
             android:layout_weight="@integer/enter_view_weight"
 
             android:background="@null"
-            android:src="@drawable/ic_enter"
-
-            android:paddingTop="@dimen/input_padding"/>
+            android:src="@drawable/ic_enter"/>
 
     </LinearLayout>
 

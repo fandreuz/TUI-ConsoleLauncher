@@ -1,10 +1,8 @@
 package ohi.andre.consolelauncher.commands;
 
-import android.content.res.Resources;
-
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.main.Param;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class Command {
@@ -15,27 +13,22 @@ public class Command {
 
     public int indexNotFound = -1;
 
-    public String exec(Resources resources, ExecutePack info) throws Exception {
+    public String exec(ExecutePack info) throws Exception {
         info.set(mArgs);
 
         if(cmd instanceof ParamCommand) {
             if(indexNotFound == 0) {
-                return cmd.onArgNotFound(info, indexNotFound);
+                return info.context.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
             }
 
             ParamCommand pCmd = (ParamCommand) cmd;
-
-            if(mArgs == null || mArgs.length == 0) {
-                return cmd.onNotArgEnough(info, 0);
-            }
-
             Param param = (Param) mArgs[0];
 
             int[] args = param.args();
-            if(args == null || mArgs[0] instanceof String) {
-                if(((String) mArgs[0]).length() == 0) return cmd.onNotArgEnough(info, 0);
-                else return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
-            }
+//            if(args == null || mArgs[0] instanceof String) {
+//                if(((String) mArgs[0]).length() == 0) return cmd.onNotArgEnough(info, 0);
+//                else return resources.getString(R.string.output_invalid_param) + Tuils.SPACE + mArgs[0];
+//            }
 
             if(indexNotFound != -1) {
                 return param.onArgNotFound(info, indexNotFound);
@@ -60,9 +53,7 @@ public class Command {
             }
         }
 
-        String output = cmd.exec(info);
-        info.clear();
-        return output;
+        return cmd.exec(info);
     }
 
     public int nextArg() {

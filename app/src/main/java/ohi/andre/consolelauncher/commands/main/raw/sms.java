@@ -12,7 +12,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.RedirectCommand;
+import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
 
 /**
  * Created by francescoandreuzzi on 02/03/2017.

@@ -8,8 +8,8 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.APICommand;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.APICommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -91,6 +91,18 @@ public class reply extends ParamCommand implements APICommand {
             public String exec(ExecutePack pack) {
                 Intent intent = new Intent(ReplyManager.ACTION_LS);
                 LocalBroadcastManager.getInstance(pack.context).sendBroadcast(intent);
+                return null;
+            }
+        },
+        tutorial {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher/wiki/Reply"));
                 return null;
             }
         };

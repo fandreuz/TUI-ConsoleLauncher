@@ -8,15 +8,23 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.APICommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
+
+import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
 
 /**
  * Created by francescoandreuzzi on 29/04/2017.
  */
 
-public class notifications extends ParamCommand {
+public class notifications extends ParamCommand implements APICommand {
+
+    @Override
+    public boolean willWorkOn(int api) {
+        return api >= JELLY_BEAN_MR2;
+    }
 
     private enum Param implements ohi.andre.consolelauncher.commands.main.Param {
 
@@ -180,7 +188,7 @@ public class notifications extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                pack.context.startActivity(Tuils.openFile(new File(Tuils.getFolder(), NotificationManager.PATH)));
+                pack.context.startActivity(Tuils.openFile(pack.context, new File(Tuils.getFolder(), NotificationManager.PATH)));
                 return null;
             }
         },

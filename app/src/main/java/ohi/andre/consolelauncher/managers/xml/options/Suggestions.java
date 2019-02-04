@@ -279,7 +279,7 @@ public enum Suggestions implements XMLPrefsSave {
     noinput_suggestions_order {
         @Override
         public String defaultValue() {
-            return "0(5)1(5)2(5)3(3)";
+            return "0(5)1(5)2(2)3(5)";
         }
 
         @Override
@@ -295,7 +295,7 @@ public enum Suggestions implements XMLPrefsSave {
     suggestions_order {
         @Override
         public String defaultValue() {
-            return "0(5)1(5)2(5)3(3)";
+            return "2(2)0(5)1(5)3(3)";
         }
 
         @Override
@@ -387,6 +387,38 @@ public enum Suggestions implements XMLPrefsSave {
         public String info() {
             return "The minimum rate of a song suggestion";
         }
+    },
+    hide_suggestions_when_empty {
+        @Override
+        public String defaultValue() {
+            return "always";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "If \"always\" the suggestion area will be hidden when there are no suggestions. If \"true\" it will be hidden only if also the input area is empty. \"false\" disables the feature";
+        }
+    },
+    suggestions_spaces {
+        @Override
+        public String defaultValue() {
+            return "15,15,25,20";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+        }
     };
 
     @Override
@@ -397,11 +429,6 @@ public enum Suggestions implements XMLPrefsSave {
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public boolean is(String s) {
-        return name().equals(s);
     }
 
     @Override

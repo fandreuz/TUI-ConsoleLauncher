@@ -1,22 +1,32 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.content.SharedPreferences;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
+import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
+import ohi.andre.consolelauncher.managers.xml.options.Rss;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
+
+import static ohi.andre.consolelauncher.UIManager.PREFS_NAME;
 
 /**
  * Created by francescoandreuzzi on 11/06/2017.
@@ -35,17 +45,27 @@ public class config extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 XMLPrefsSave save = pack.getPrefsSave();
-                save.parent().write(save, pack.getString());
+                String value = pack.getString();
+                save.parent().write(save, value);
+
+                ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + value);
 
                 if(save.label().startsWith("default_app_n")) {
                     return pack.context.getString(R.string.output_usedefapp);
+                } else if(save == Behavior.unlock_counter_cycle_start) {
+                    SharedPreferences preferences = pack.context.getSharedPreferences(PREFS_NAME, 0);
+                    preferences.edit()
+                            .putLong(UIManager.NEXT_UNLOCK_CYCLE_RESTART, 0)
+                            .putInt(UIManager.UNLOCK_KEY, 0)
+                            .apply();
                 }
+
                 return null;
             }
 
             @Override
             public String onNotArgEnough(ExecutePack pack, int n) {
-                pack.args = new Object[] {pack.args[0], pack.args[1], Tuils.EMPTYSTRING};
+                pack.args = new Object[] {pack.args[1], Tuils.EMPTYSTRING};
                 return set.exec(pack);
             }
         },
@@ -73,7 +93,7 @@ public class config extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 File file = new File(Tuils.getFolder(), pack.getString());
-                pack.context.startActivity(Tuils.openFile(file));
+                pack.context.startActivity(Tuils.openFile(pack.context, file));
                 return null;
             }
 
@@ -91,7 +111,11 @@ public class config extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 XMLPrefsSave save = pack.getPrefsSave();
-                save.parent().write(save, XMLPrefsManager.get(save) + pack.getString());
+                String value = XMLPrefsManager.get(save) + pack.getString();
+
+                save.parent().write(save, value);
+
+                ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + value);
 
                 return null;
             }
@@ -100,6 +124,22 @@ public class config extends ParamCommand {
             public String onNotArgEnough(ExecutePack pack, int n) {
                 pack.args = new Object[] {pack.args[0], pack.args[1], Tuils.EMPTYSTRING};
                 return set.exec(pack);
+            }
+        },
+        erase {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.CONFIG_ENTRY};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                XMLPrefsSave save = pack.getPrefsSave();
+                save.parent().write(save, Tuils.EMPTYSTRING);
+
+                ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + "\"\"");
+
+                return null;
             }
         },
         get {
@@ -162,6 +202,11 @@ public class config extends ParamCommand {
 
             @Override
             public String onArgNotFound(ExecutePack pack, int index) {
+                return pack.context.getString(R.string.output_filenotfound);
+            }
+
+            @Override
+            public String onNotArgEnough(ExecutePack pack, int n) {
                 List<String> ss = new ArrayList<>();
 
                 for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
@@ -178,13 +223,38 @@ public class config extends ParamCommand {
                 for(XMLPrefsSave save : Notifications.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
+                ss.add(RssManager.PATH);
+                for(XMLPrefsSave save : Rss.values()) {
+                    ss.add(Tuils.DOUBLE_SPACE + save.label());
+                }
 
                 return Tuils.toPlanString(ss);
             }
+        },
+        fontsize {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.INT};
+            }
 
             @Override
-            public String onNotArgEnough(ExecutePack pack, int n) {
-                return onArgNotFound(pack, -1);
+            public String exec(ExecutePack pack) {
+                XMLPrefsElement parent = Ui.device_size.parent();
+
+                int size = pack.getInt();
+
+                parent.write(Ui.device_size, String.valueOf(size));
+                parent.write(Ui.ram_size, String.valueOf(size));
+                parent.write(Ui.network_size, String.valueOf(size));
+                parent.write(Ui.storage_size, String.valueOf(size));
+                parent.write(Ui.battery_size, String.valueOf(size));
+                parent.write(Ui.notes_size, String.valueOf(size));
+                parent.write(Ui.time_size, String.valueOf(size));
+                parent.write(Ui.weather_size, String.valueOf(size));
+                parent.write(Ui.unlock_size, String.valueOf(size));
+                parent.write(Ui.input_output_size, String.valueOf(size));
+
+                return null;
             }
         },
         reset {
@@ -197,6 +267,9 @@ public class config extends ParamCommand {
             public String exec(ExecutePack pack) {
                 XMLPrefsSave save = pack.getPrefsSave();
                 save.parent().write(save, save.defaultValue());
+
+                ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + save.defaultValue());
+
                 return null;
             }
         },
@@ -217,7 +290,7 @@ public class config extends ParamCommand {
                         if (font.exists()) {
                             File[] files = font.listFiles();
                             if (files.length > 0) Tuils.insertOld(files[0]);
-                            Tuils.deleteContent(font);
+                            Tuils.deleteContentOnly(font);
                         } else {
                             font.mkdir();
                         }

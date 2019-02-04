@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.*/
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -59,7 +60,9 @@ public class SuggestionRunnable implements Runnable {
     private int suggAppBg, suggAliasBg, suggCmdBg, suggContactBg, suggFileBg, suggSongBg, suggDefaultBg;
     private int suggAppText, suggAliasText, suggCmdText, suggContactText, suggFileText, suggSongText, suggDefaultText;
 
-    public SuggestionRunnable(MainPack pack, ViewGroup suggestionsView, LinearLayout.LayoutParams suggestionViewParams, HorizontalScrollView parent) {
+    private int[] spaces;
+
+    public SuggestionRunnable(MainPack pack, ViewGroup suggestionsView, LinearLayout.LayoutParams suggestionViewParams, HorizontalScrollView parent, int[] spaces) {
         this.suggestionsView = suggestionsView;
         this.suggestionViewParams = suggestionViewParams;
         this.scrollView = parent;
@@ -83,6 +86,10 @@ public class SuggestionRunnable implements Runnable {
         suggDefaultText = XMLPrefsManager.getColor(Suggestions.default_text_color);
         suggFileText = XMLPrefsManager.getColor(Suggestions.file_text_color);
         suggSongText = XMLPrefsManager.getColor(Suggestions.song_text_color);
+
+        this.spaces = spaces;
+
+        suggestionViewParams.setMargins(spaces[0], spaces[1], spaces[0], spaces[1]);
 
         reset();
     }
@@ -166,7 +173,7 @@ public class SuggestionRunnable implements Runnable {
                 }
 
                 if(bgColor != Integer.MAX_VALUE) sggView.setBackgroundColor(bgColor);
-                else sggView.setBackgroundDrawable(getSuggestionBg(s.type));
+                else sggView.setBackgroundDrawable(getSuggestionBg(pack.context, s.type));
                 if(foreColor != Integer.MAX_VALUE) sggView.setTextColor(foreColor);
                 else sggView.setTextColor(getSuggestionTextColor(s.type));
 //                end bg and fore
@@ -192,7 +199,8 @@ public class SuggestionRunnable implements Runnable {
         interrupted = false;
     }
 
-    public Drawable getSuggestionBg(int type) {
+    public Drawable getSuggestionBg(Context context, int type) {
+
         if(transparentSuggestions) {
             return new ColorDrawable(Color.TRANSPARENT);
         } else {

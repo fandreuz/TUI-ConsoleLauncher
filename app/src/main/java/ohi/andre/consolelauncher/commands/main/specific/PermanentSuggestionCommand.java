@@ -1,4 +1,4 @@
-package ohi.andre.consolelauncher.commands.specific;
+package ohi.andre.consolelauncher.commands.main.specific;
 
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 

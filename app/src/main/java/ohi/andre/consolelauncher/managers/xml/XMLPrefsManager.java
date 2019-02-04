@@ -54,37 +54,39 @@ public class XMLPrefsManager {
 
     public enum XMLPrefsRoot implements XMLPrefsElement {
 
-        THEME("theme.xml", Theme.values()) {
-            @Override
-            public String[] deleted() {
-                return new String[] {"notes_unlocked_color"};
-            }
-        },
-        CMD("cmd.xml", Cmd.values()) {
+        THEME(Theme.values()) {
             @Override
             public String[] deleted() {
                 return new String[] {};
             }
         },
-        TOOLBAR("toolbar.xml", Toolbar.values()) {
+        CMD(Cmd.values()) {
             @Override
             public String[] deleted() {
                 return new String[] {};
             }
         },
-        UI("ui.xml", Ui.values()) {
+        TOOLBAR(Toolbar.values()) {
             @Override
             public String[] deleted() {
                 return new String[] {};
             }
         },
-        BEHAVIOR("behavior.xml", Behavior.values()) {
+        UI(Ui.values()) {
+            @Override
+            public String[] deleted() {
+                return new String[] {"status_line8_alignment","status_line7_alignment","status_line6_alignment","status_line5_alignment","status_line4_alignment","status_line3_alignment",
+                        "status_line2_alignment","status_line1_alignment","status_line0_alignment","left_margin_mm","top_margin_mm","right_margin_mm","bottom_margin_mm", "text_redraw_times", "bgrect_margins",
+                        "status_bar_light_icons"};
+            }
+        },
+        BEHAVIOR(Behavior.values()) {
             @Override
             public String[] deleted() {
                 return new String[] {};
             }
         },
-        SUGGESTIONS("suggestions.xml", Suggestions.values()) {
+        SUGGESTIONS(Suggestions.values()) {
             @Override
             public String[] deleted() {
                 return new String[] {};
@@ -99,11 +101,11 @@ public class XMLPrefsManager {
         XMLPrefsList values;
         public List<XMLPrefsSave> enums;
 
-        XMLPrefsRoot(String path, XMLPrefsSave[] en) {
-            this.path = path;
+        XMLPrefsRoot(XMLPrefsSave[] en) {
             this.values = new XMLPrefsList();
 
             this.enums = new ArrayList<>(Arrays.asList(en));
+            this.path = this.name().toLowerCase() + ".xml";
         }
 
         @Override
@@ -113,6 +115,11 @@ public class XMLPrefsManager {
 
         public XMLPrefsList getValues() {
             return values;
+        }
+
+        @Override
+        public String path() {
+            return path;
         }
     }
 
@@ -306,10 +313,12 @@ public class XMLPrefsManager {
 //            }
             return (T) transform(prefsSave.parent().getValues().get(prefsSave).value, c);
         } catch (Exception e) {
+            Tuils.log(e);
 //            this will happen if the option is not found
             try {
                 return (T) transform(prefsSave.defaultValue(), c);
             } catch (Exception e1) {
+                Tuils.log(e1);
 //                attempts to get a default value for the given type, as we say in italian, "the last beach"
                 return Tuils.getDefaultValue(c);
             }
@@ -322,6 +331,11 @@ public class XMLPrefsManager {
 
     public static String get(XMLPrefsRoot root, String s) {
         return get(String.class, root, s);
+    }
+
+    public static boolean wasChanged(XMLPrefsSave save, boolean allowLengthZero) {
+        String value = get(save);
+        return (allowLengthZero || value.length() > 0) && !value.equals(save.defaultValue());
     }
 
     static final Pattern p1 = Pattern.compile(">");

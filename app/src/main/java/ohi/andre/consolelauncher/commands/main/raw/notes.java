@@ -7,7 +7,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.NotesManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -29,6 +29,7 @@ public class notes extends ParamCommand {
             public String exec(ExecutePack pack) {
                 Intent i = new Intent(NotesManager.ACTION_ADD);
                 i.putExtra(NotesManager.TEXT, pack.getString());
+                i.putExtra(NotesManager.BROADCAST_COUNT, NotesManager.broadcastCount);
 
                 LocalBroadcastManager.getInstance(pack.context).sendBroadcast(i);
                 return null;
@@ -44,6 +45,23 @@ public class notes extends ParamCommand {
             public String exec(ExecutePack pack) {
                 Intent i = new Intent(NotesManager.ACTION_RM);
                 i.putExtra(NotesManager.TEXT, pack.getString());
+                i.putExtra(NotesManager.BROADCAST_COUNT, NotesManager.broadcastCount);
+
+                LocalBroadcastManager.getInstance(pack.context).sendBroadcast(i);
+                return null;
+            }
+        },
+        cp {
+            @Override
+            public int[] args() {
+                return new int[] {CommandAbstraction.PLAIN_TEXT};
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                Intent i = new Intent(NotesManager.ACTION_CP);
+                i.putExtra(NotesManager.TEXT, pack.getString());
+                i.putExtra(NotesManager.BROADCAST_COUNT, NotesManager.broadcastCount);
 
                 LocalBroadcastManager.getInstance(pack.context).sendBroadcast(i);
                 return null;
@@ -53,6 +71,7 @@ public class notes extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 Intent i = new Intent(NotesManager.ACTION_LS);
+                i.putExtra(NotesManager.BROADCAST_COUNT, NotesManager.broadcastCount);
 
                 LocalBroadcastManager.getInstance(pack.context).sendBroadcast(i);
                 return null;
@@ -62,6 +81,7 @@ public class notes extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 Intent i = new Intent(NotesManager.ACTION_CLEAR);
+                i.putExtra(NotesManager.BROADCAST_COUNT, NotesManager.broadcastCount);
 
                 LocalBroadcastManager.getInstance(pack.context).sendBroadcast(i);
                 return null;
@@ -78,6 +98,7 @@ public class notes extends ParamCommand {
                 Intent i = new Intent(NotesManager.ACTION_LOCK);
                 i.putExtra(NotesManager.TEXT, pack.getString());
                 i.putExtra(NotesManager.LOCK, true);
+                i.putExtra(NotesManager.BROADCAST_COUNT, NotesManager.broadcastCount);
 
                 LocalBroadcastManager.getInstance(pack.context).sendBroadcast(i);
                 return null;
@@ -94,8 +115,21 @@ public class notes extends ParamCommand {
                 Intent i = new Intent(NotesManager.ACTION_LOCK);
                 i.putExtra(NotesManager.TEXT, pack.getString());
                 i.putExtra(NotesManager.LOCK, false);
+                i.putExtra(NotesManager.BROADCAST_COUNT, NotesManager.broadcastCount);
 
                 LocalBroadcastManager.getInstance(pack.context).sendBroadcast(i);
+                return null;
+            }
+        },
+        tutorial {
+            @Override
+            public int[] args() {
+                return new int[0];
+            }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                pack.context.startActivity(Tuils.webPage("https://github.com/Andre1299/TUI-ConsoleLauncher/wiki/Notes"));
                 return null;
             }
         };

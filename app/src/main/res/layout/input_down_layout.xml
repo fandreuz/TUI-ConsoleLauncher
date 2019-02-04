@@ -10,13 +10,22 @@
         android:focusable="false"
 
         android:layout_alignParentBottom="true">
+
         <LinearLayout
-            android:id="@+id/suggestions_group"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/suggestion_height"
-            android:gravity="left|center_vertical"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/suggestions_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="left|center_vertical"
+                android:orientation="horizontal">
+
+            </LinearLayout>
+
         </LinearLayout>
+
     </HorizontalScrollView>
 
     <LinearLayout android:id="@+id/tools_view"
@@ -56,14 +65,12 @@
 
         android:layout_above="@id/tools_view">
 
-        <TextView
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
             android:id="@+id/prefix_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="wrap_content"/>
 
-            android:paddingTop="@dimen/input_padding"/>
-
-        <EditText
+        <ohi.andre.consolelauncher.tuils.OutlineEditText
             android:id="@+id/input_view"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -73,21 +80,29 @@
             android:imeOptions="actionGo|flagNoFullscreen"
             android:textCursorDrawable="@drawable/cursor"
 
-            android:paddingTop="@dimen/input_padding"
+            android:importantForAutofill="no"
 
             android:lines="1"
             android:singleLine="true"/>
 
-        <ImageButton
-            android:id="@+id/submit_tv"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="@integer/enter_view_weight"
 
-            android:background="@null"
-            android:src="@drawable/ic_enter"
+            android:orientation="vertical"
+            android:gravity="center">
 
-            android:paddingTop="@dimen/input_padding"/>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:id="@+id/submit_tv"
+
+                android:background="@null"
+                android:src="@drawable/ic_enter"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -110,7 +125,7 @@
                 android:layout_weight="1"
                 android:layout_height="match_parent"/>
 
-            <TextView
+            <ohi.andre.consolelauncher.tuils.OutlineTextView
                 android:id="@+id/terminal_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

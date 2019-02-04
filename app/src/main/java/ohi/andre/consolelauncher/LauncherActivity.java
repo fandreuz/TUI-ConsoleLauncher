@@ -4,9 +4,10 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.MenuItem;
@@ -23,8 +25,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Set;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
@@ -32,6 +36,7 @@ import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.RegexManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
+import ohi.andre.consolelauncher.managers.TuiLocationManager;
 import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationMonitorService;
@@ -55,11 +60,10 @@ import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
 public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
-    private final String FIRSTACCESS_KEY = "x3";
-
     public static final int COMMAND_REQUEST_PERMISSION = 10;
     public static final int STARTING_PERMISSION = 11;
     public static final int COMMAND_SUGGESTION_REQUEST_PERMISSION = 12;
+    public static final int LOCATION_REQUEST_PERMISSION = 13;
 
     public static final int TUIXT_REQUEST = 10;
 
@@ -69,18 +73,23 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     private PrivateIOReceiver privateIOReceiver;
     private PublicIOReceiver publicIOReceiver;
 
-    private boolean openKeyboardOnStart, canApplyTheme;
+    private boolean openKeyboardOnStart, canApplyTheme, backButtonEnabled;
 
-    private Runnable stopActivity = new Runnable() {
-        @Override
-        public void run() {
+    private Set<ReloadMessageCategory> categories;
+    private Runnable stopActivity = () -> {
             dispose();
             finish();
 
             Intent startMain = new Intent(Intent.ACTION_MAIN);
             startMain.addCategory(Intent.CATEGORY_HOME);
+
+            CharSequence reloadMessage = Tuils.EMPTYSTRING;
+            for (ReloadMessageCategory c : categories) {
+                reloadMessage = TextUtils.concat(reloadMessage, Tuils.NEWLINE, c.text());
+            }
+            startMain.putExtra(Reloadable.MESSAGE, reloadMessage);
+
             startActivity(startMain);
-        }
     };
 
     private Inputable in = new Inputable() {
@@ -92,22 +101,12 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         @Override
         public void changeHint(final String s) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ui.setHint(s);
-                }
-            });
+            runOnUiThread(() -> ui.setHint(s));
         }
 
         @Override
         public void resetHint() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ui.resetHint();
-                }
-            });
+            runOnUiThread(() -> ui.resetHint());
         }
     };
 
@@ -191,7 +190,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     };
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         overridePendingTransition(0,0);
@@ -216,7 +215,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         XMLPrefsManager.loadCommons(this);
         new RegexManager(LauncherActivity.this);
-        new TimeManager();
+        new TimeManager(this);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(PrivateIOReceiver.ACTION_INPUT);
@@ -234,9 +233,12 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         getApplicationContext().registerReceiver(publicIOReceiver, filter1);
 
         int requestedOrientation = XMLPrefsManager.getInt(Behavior.orientation);
-        if(requestedOrientation != 2 && requestedOrientation != -1) {
+        if(requestedOrientation >= 0 && requestedOrientation != 2) {
             int orientation = getResources().getConfiguration().orientation;
             if(orientation != requestedOrientation) setRequestedOrientation(requestedOrientation);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+            }
         }
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color)) {
@@ -247,6 +249,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             window.setStatusBarColor(XMLPrefsManager.getColor(Theme.statusbar_color));
             window.setNavigationBarColor(XMLPrefsManager.getColor(Theme.navigationbar_color));
         }
+
+        backButtonEnabled = XMLPrefsManager.getBoolean(Behavior.back_button_enabled);
 
         boolean showNotification = XMLPrefsManager.getBoolean(Behavior.tui_notification);
         Intent keeperIntent = new Intent(this, KeeperService.class);
@@ -260,20 +264,16 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         }
 
         boolean fullscreen = XMLPrefsManager.getBoolean(Ui.fullscreen);
+        if(fullscreen) {
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
 
         boolean useSystemWP = XMLPrefsManager.getBoolean(Ui.system_wallpaper);
         if (useSystemWP) {
-            if(fullscreen) {
-                setTheme(R.style.Custom_SystemWP_Fullscreen);
-            } else {
-                setTheme(R.style.Custom_SystemWP);
-            }
+            setTheme(R.style.Custom_SystemWP);
         } else {
-            if(fullscreen) {
-                setTheme(R.style.Custom_Solid_Fullscreen);
-            } else {
-                setTheme(R.style.Custom_Solid);
-            }
+            setTheme(R.style.Custom_Solid);
         }
 
         try {
@@ -284,29 +284,32 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         boolean notifications = XMLPrefsManager.getBoolean(Notifications.show_notifications) || XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
         if(notifications) {
-            try {
-                ComponentName notificationComponent = new ComponentName(this, NotificationService.class);
-                PackageManager pm = getPackageManager();
-                pm.setComponentEnabledSetting(notificationComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                try {
+                    ComponentName notificationComponent = new ComponentName(this, NotificationService.class);
+                    PackageManager pm = getPackageManager();
+                    pm.setComponentEnabledSetting(notificationComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
 
-                if(!Tuils.hasNotificationAccess(this)) {
-                    Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                    if(i.resolveActivity(getPackageManager()) == null) {
-                        Toast.makeText(this, R.string.no_notification_access, Toast.LENGTH_LONG).show();
-                    } else {
-                        startActivity(i);
+                    if (!Tuils.hasNotificationAccess(this)) {
+                        Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                        if (i.resolveActivity(getPackageManager()) == null) {
+                            Toast.makeText(this, R.string.no_notification_access, Toast.LENGTH_LONG).show();
+                        } else {
+                            startActivity(i);
+                        }
                     }
+
+                    Intent monitor = new Intent(this, NotificationMonitorService.class);
+                    startService(monitor);
+
+                    Intent notificationIntent = new Intent(this, NotificationService.class);
+                    startService(notificationIntent);
+                } catch (NoClassDefFoundError er) {
+                    Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+                    intent.putExtra(PrivateIOReceiver.TEXT, getString(R.string.output_notification_error) + Tuils.SPACE + er.toString());
                 }
-
-                Intent monitor = new Intent(this, NotificationMonitorService.class);
-                startService(monitor);
-
-                Intent notificationIntent = new Intent(this, NotificationService.class);
-                notificationIntent.putExtra(Theme.time_color.label(), XMLPrefsManager.getColor(Theme.time_color));
-                startService(notificationIntent);
-            } catch (NoClassDefFoundError er) {
-                Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
-                intent.putExtra(PrivateIOReceiver.TEXT, getString(R.string.output_notification_error) + Tuils.SPACE + er.toString());
+            } else {
+                Tuils.sendOutput(Color.RED, this, R.string.notification_low_api);
             }
         }
 
@@ -319,9 +322,25 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
         setContentView(R.layout.base_view);
 
+        if(XMLPrefsManager.getBoolean(Ui.show_restart_message)) {
+            CharSequence s = getIntent().getCharSequenceExtra(Reloadable.MESSAGE);
+            if(s != null) out.onOutput(Tuils.span(s, XMLPrefsManager.getColor(Theme.restart_message_color)));
+        }
+
+        categories = new HashSet<>();
+
         main = new MainManager(this);
 
         ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
+
+//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color) && !XMLPrefsManager.getBoolean(Ui.statusbar_light_icons)) {
+//            mainView.setSystemUiVisibility(0);
+//        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color) && !XMLPrefsManager.getBoolean(Ui.statusbar_light_icons)) {
+            mainView.setSystemUiVisibility(mainView.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+
         ui = new UIManager(this, mainView, main.getMainPack(), canApplyTheme, main.executer());
 
         main.setRedirectionListener(ui.buildRedirectionListener());
@@ -331,19 +350,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         ui.focusTerminal();
 
         if(fullscreen) Assist.assistActivity(this);
-
-        SharedPreferences preferences = getPreferences(0);
-        SharedPreferences.Editor editor = preferences.edit();
-
-        boolean firstAccess = preferences.getBoolean(FIRSTACCESS_KEY, true);
-        if (firstAccess) {
-            editor.putBoolean(FIRSTACCESS_KEY, false);
-
-            ui.setOutput(getString(R.string.firsthelp_text), TerminalManager.CATEGORY_OUTPUT);
-            ui.setInput("tutorial");
-        }
-
-        editor.apply();
 
         System.gc();
     }
@@ -397,7 +403,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             Intent notificationIntent = new Intent(this, NotificationService.class);
             notificationIntent.putExtra(NotificationService.DESTROY, true);
             startService(notificationIntent);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Tuils.log(e);
         }
 
@@ -422,7 +428,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     @Override
     public void onBackPressed() {
-        if (main != null) {
+        if (backButtonEnabled && main != null) {
             ui.onBackPressed();
         }
     }
@@ -440,6 +446,21 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     @Override
     public void reload() {
         runOnUiThread(stopActivity);
+    }
+
+    @Override
+    public void addMessage(String header, String message) {
+        for(ReloadMessageCategory cs : categories) {
+            Tuils.log(cs.header, header);
+            if(cs.header.equals(header)) {
+                cs.lines.add(message);
+                return;
+            }
+        }
+
+        ReloadMessageCategory c = new ReloadMessageCategory(header);
+        if(message != null) c.lines.add(message);
+        categories.add(c);
     }
 
     @Override
@@ -508,7 +529,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                 case COMMAND_REQUEST_PERMISSION:
                     if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                         MainPack info = main.getMainPack();
-                        main.onCommand(info.lastCommand, null, false);
+                        main.onCommand(info.lastCommand, (String) null, false);
                     } else {
                         ui.setOutput(getString(R.string.output_nopermissions), TerminalManager.CATEGORY_OUTPUT);
                         main.sendPermissionNotGrantedWarning();
@@ -542,6 +563,16 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                     if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                         ui.setOutput(getString(R.string.output_nopermissions), TerminalManager.CATEGORY_OUTPUT);
                     }
+                    break;
+                case LOCATION_REQUEST_PERMISSION:
+//                    Intent i = new Intent(UIManager.ACTION_WEATHER_GOT_PERMISSION);
+//                    i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, grantResults[0]);
+//                    LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(i);
+
+                    Intent i = new Intent(TuiLocationManager.ACTION_GOT_PERMISSION);
+                    i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, grantResults[0]);
+                    LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(i);
+
                     break;
             }
         } catch (Exception e) {}

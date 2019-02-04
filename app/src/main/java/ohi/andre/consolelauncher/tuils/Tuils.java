@@ -13,10 +13,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -25,6 +30,7 @@ import android.os.Parcelable;
 import android.os.Process;
 import android.os.StatFs;
 import android.provider.Settings;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.TelephonyManager;
 import android.text.SpannableString;
@@ -38,10 +44,12 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.MimeTypeMap;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.w3c.dom.Node;
 import org.xml.sax.SAXParseException;
 
 import java.io.BufferedReader;
@@ -69,12 +77,22 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import dalvik.system.DexFile;
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
@@ -101,6 +119,39 @@ public class Tuils {
 
     private static Typeface globalTypeface = null;
     public static String fontPath = null;
+
+    static Pattern calculusPattern = Pattern.compile("([\\+\\-\\*\\/\\^])(\\d+\\.?\\d*)");
+    public static double textCalculus(double input, String text) {
+        Tuils.log("in", input);
+
+        Matcher m = calculusPattern.matcher(text);
+        while(m.find()) {
+            char operator = m.group(1).charAt(0);
+            double value = Double.parseDouble(m.group(2));
+
+            switch (operator) {
+                case '+':
+                    input += value;
+                    break;
+                case '-':
+                    input -= value;
+                    break;
+                case '*':
+                    input *= value;
+                    break;
+                case '/':
+                    input = input / value;
+                    break;
+                case '^':
+                    input = Math.pow(input, value);
+                    break;
+            }
+
+            Tuils.log("now im", input);
+        }
+
+        return input;
+    }
 
     public static Typeface getTypeface(Context context) {
         if(globalTypeface == null) {
@@ -150,6 +201,17 @@ public class Tuils {
         fontPath = null;
     }
 
+    public static String locationName(Context context, double lat, double lng) {
+        Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocation(lat, lng, 1);
+            return addresses.get(0).getAddressLine(2);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public static boolean notificationServiceIsRunning(Context context) {
         ComponentName collectorComponent = new ComponentName(context, NotificationService.class);
         ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -179,44 +241,6 @@ public class Tuils {
             }
         }
         return false;
-    }
-
-    static final char CHAR_SPACE = ' ';
-    public static boolean equalsIgnoreSpaceAndCase(String s1, String s2) {
-        if (s1 == s2) {
-            return true;
-        }
-
-        int i1 = 0, i2 = 0;
-        while(true) {
-            if(i1 == s1.length() || i2 == s2.length()) break;
-
-            char c1 = Character.toLowerCase(s1.charAt(i1));
-            char c2 = Character.toLowerCase(s2.charAt(i2));
-
-            if(c1 != CHAR_SPACE) {
-                if(c2 != CHAR_SPACE) {
-                    if(c1 != c2) return false;
-                } else {
-//                    c1 is not space, c2 is space
-//                    i1 remains, i2 changes
-                    i2++;
-                    continue;
-                }
-            }
-
-//            c1 is space
-            if(c2 == CHAR_SPACE) {
-//                c1 is space, c2 is space
-                i1++;i2++;
-            } else {
-//                c1 is space, c2 is not space
-                i1++;
-                continue;
-            }
-        }
-
-        return true;
     }
 
     public static String readerToString(Reader initialReader) throws IOException {
@@ -475,6 +499,28 @@ public class Tuils {
         return round(result, 2);
     }
 
+    public static boolean isMyLauncherDefault(PackageManager packageManager) {
+        final IntentFilter filter = new IntentFilter(Intent.ACTION_MAIN);
+        filter.addCategory(Intent.CATEGORY_HOME);
+
+        List<IntentFilter> filters = new ArrayList<>();
+        filters.add(filter);
+
+        final String myPackageName = BuildConfig.APPLICATION_ID;
+        List<ComponentName> activities = new ArrayList<>();
+
+        // You can use name of your package here as third argument
+        packageManager.getPreferredActivities(filters, activities, null);
+
+        for (ComponentName activity : activities) {
+            if (myPackageName.equals(activity.getPackageName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public static SpannableString span(CharSequence text, int color) {
         return span(null, text, color, Integer.MAX_VALUE);
     }
@@ -484,18 +530,26 @@ public class Tuils {
     }
 
     public static SpannableString span(Context context, CharSequence text, int color, int size) {
-        SpannableString spannableString = new SpannableString(text);
-        if(size != Integer.MAX_VALUE && context != null) spannableString.setSpan(new AbsoluteSizeSpan(convertSpToPixels(size, context)), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        if(color != Integer.MAX_VALUE) {
-            spannableString.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        return spannableString;
+        return span(context, Integer.MAX_VALUE, color, text, size);
     }
 
     public static SpannableString span(int bgColor, int foreColor, CharSequence text) {
-        SpannableString spannableString = new SpannableString(text);
-        spannableString.setSpan(new BackgroundColorSpan(bgColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        spannableString.setSpan(new ForegroundColorSpan(foreColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return span(null, bgColor, foreColor, text, Integer.MAX_VALUE);
+    }
+
+    public static SpannableString span(Context context, int bgColor, int foreColor, CharSequence text, int size) {
+        if(text == null) {
+            text = Tuils.EMPTYSTRING;
+        }
+
+        SpannableString spannableString;
+        if(text instanceof SpannableString) spannableString = (SpannableString) text;
+        else spannableString = new SpannableString(text);
+
+        if(size != Integer.MAX_VALUE && context != null) spannableString.setSpan(new AbsoluteSizeSpan(convertSpToPixels(size, context)), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if(foreColor != Integer.MAX_VALUE) spannableString.setSpan(new ForegroundColorSpan(foreColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if(bgColor != Integer.MAX_VALUE) spannableString.setSpan(new BackgroundColorSpan(bgColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
         return spannableString;
     }
 
@@ -512,6 +566,131 @@ public class Tuils {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
     }
 
+    public static String inputStreamToString(InputStream is) {
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : Tuils.EMPTYSTRING;
+    }
+
+//    static final int WEATHER_TIMEOUT = 6000;
+//    public static boolean location(Context context, final ArgsRunnable whenFound, final Runnable notFound, final Handler handler) {
+//        final LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+//        if(locationManager == null) return false;
+//
+//        final LocationListener locationListener = new LocationListener() {
+//            @Override
+//            public void onLocationChanged(Location location) {
+//                whenFound.run(location.getLatitude(), location.getLongitude());
+//            }
+//
+//            @Override
+//            public void onStatusChanged(String provider, int status, Bundle extras) {
+//            }
+//
+//            @Override
+//            public void onProviderEnabled(String provider) {
+//            }
+//
+//            @Override
+//            public void onProviderDisabled(String provider) {
+//            }
+//        };
+//
+//        boolean gpsProvider = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+//        boolean networkProvider = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+//        boolean passiveProvider = locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER);
+//
+//        if (!gpsStatus && !networkStatus) return false;
+//
+//        try {
+//            locationManager.requestSingleUpdate(gpsStatus ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER, locationListener, Looper.getMainLooper());
+//        } catch (SecurityException e) {
+//            Tuils.log(e);
+//            Tuils.toFile(e);
+//            return false;
+//        }
+//
+//        Location location;
+//        try {
+//            Location[] ls = {
+//                    locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER),
+//                    locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER),
+//                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)};
+//
+//            location = ls[0];
+//            for(int c = 1; c < ls.length; c++) {
+//                if(location == null) location = ls[c];
+//                else if(ls[c] != null && location.getTime() < ls[c].getTime()) location = ls[c];
+//            }
+//        } catch (SecurityException e) {
+//            Tuils.toFile(e);
+//            return false;
+//        }
+//
+//        if(handler != null) {
+//            handler.postDelayed(notFound, WEATHER_TIMEOUT);
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    if(locationManager != null) locationManager.removeUpdates(locationListener);
+//                }
+//            }, WEATHER_TIMEOUT);
+//        }
+//
+//        return true;
+//    }
+
+//    public static Location getLocation(Context context) {
+//        final LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+//        if(locationManager == null) return null;
+//
+//        Location location;
+//        try {
+//            Location[] ls = {
+//                    locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER),
+//                    locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER),
+//                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)};
+//
+//            location = ls[0];
+//            for(int c = 1; c < ls.length; c++) {
+//                if(location == null) location = ls[c];
+//                else if(ls[c] != null && location.getTime() < ls[c].getTime()) location = ls[c];
+//            }
+//
+//            return location;
+//        } catch (SecurityException e) {
+//            Tuils.toFile(e);
+//            return null;
+//        }
+//    }
+
+    public abstract static class ArgsRunnable implements Runnable {
+        private Object[] args;
+
+        public void setArgs(Object... args) {
+            this.args = args;
+        }
+
+        public void run(Object... args) {
+            setArgs(args);
+            run();
+        }
+
+        public <T> T get(Class<T> c, int index) {
+            if(index < args.length) return (T) args[index];
+            return null;
+        }
+    }
+
+    public static void deleteContentOnly(File dir) {
+        File[] files = dir.listFiles();
+        if(files == null) return;
+
+        for(File f : dir.listFiles()) {
+            if(f.isDirectory()) delete(f);
+            f.delete();
+        }
+    }
+
     public static void delete(File dir) {
         File[] files = dir.listFiles();
         if(files == null) return;
@@ -521,16 +700,6 @@ public class Tuils {
             f.delete();
         }
         dir.delete();
-    }
-
-    public static void deleteContent(File dir) {
-        File[] files = dir.listFiles();
-        if(files == null) return;
-
-        for(File f : dir.listFiles()) {
-            if(f.isDirectory()) delete(f);
-            f.delete();
-        }
     }
 
     public static boolean insertOld(File oldFile) {
@@ -567,6 +736,73 @@ public class Tuils {
         Tuils.log("end of parents of: " + v.toString());
     }
 
+    private static View.OnClickListener deepClickListener = v -> Tuils.log(v.toString());
+
+    public static void deepClickView(View v) {
+        v.setOnClickListener(deepClickListener);
+
+        if(!(v instanceof ViewGroup)) return;
+        ViewGroup g = (ViewGroup) v;
+
+        for(int c = 0; c < g.getChildCount(); c++) deepClickView(g.getChildAt(c));
+    }
+
+    public static void scaleImage(ImageView view, int newX, int newY) throws NoSuchElementException {
+        // Get bitmap from the the ImageView.
+        Bitmap bitmap = null;
+
+        try {
+            Drawable drawing = view.getDrawable();
+            bitmap = ((BitmapDrawable) drawing).getBitmap();
+        } catch (NullPointerException e) {
+            throw new NoSuchElementException("No drawable on given view");
+        }
+
+        // Get current dimensions AND the desired bounding box
+        int width = 0;
+
+        try {
+            width = bitmap.getWidth();
+        } catch (NullPointerException e) {
+            throw new NoSuchElementException("Can't find bitmap on given view/drawable");
+        }
+
+        int height = bitmap.getHeight();
+        int xBounding = dpToPx(view.getContext(), newX);
+        int yBounding = dpToPx(view.getContext(), newY);
+
+        // Determine how much to scale: the dimension requiring less scaling is
+        // closer to the its side. This way the image always stays inside your
+        // bounding box AND either x/y axis touches it.
+        float xScale = ((float) xBounding) / width;
+        float yScale = ((float) yBounding) / height;
+        float scale = (xScale <= yScale) ? xScale : yScale;
+
+        // Create a matrix for the scaling and add the scaling data
+        Matrix matrix = new Matrix();
+        matrix.postScale(scale, scale);
+
+        // Create a new bitmap and convert it to a format understood by the ImageView
+        Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        width = scaledBitmap.getWidth(); // re-use
+        height = scaledBitmap.getHeight(); // re-use
+        BitmapDrawable result = new BitmapDrawable(scaledBitmap);
+
+        // Apply the scaled bitmap
+        view.setImageDrawable(result);
+
+        // Now change ImageView's dimensions to match the scaled image
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) view.getLayoutParams();
+        params.width = width;
+        params.height = height;
+        view.setLayoutParams(params);
+    }
+
+    public static int dpToPx(Context context, int dp) {
+        float density = context.getApplicationContext().getResources().getDisplayMetrics().density;
+        return Math.round((float)dp * density);
+    }
+
     public static void sendOutput(Context context, int res) {
         sendOutput(Integer.MAX_VALUE, context, res);
     }
@@ -601,6 +837,10 @@ public class Tuils {
         intent.putExtra(PrivateIOReceiver.COLOR, color);
         intent.putExtra(PrivateIOReceiver.TYPE, type);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    public static void sendOutput(MainPack mainPack, CharSequence s, int type) {
+        sendOutput(mainPack.commandColor, mainPack.context, s, type);
     }
 
     public static void sendOutput(Context context, CharSequence s, int type, Object action) {
@@ -734,13 +974,13 @@ public class Tuils {
 
             if (o instanceof XMLPrefsSave) {
                 try {
-                    if (((XMLPrefsSave) o).is((String) x)) return count;
+                    if (((XMLPrefsSave) o).label().equals((String) x)) return count;
                 } catch (Exception e) {}
             }
 
             if (o instanceof String && x instanceof XMLPrefsSave) {
                 try {
-                    if (((XMLPrefsSave) x).is((String) o)) return count;
+                    if (((XMLPrefsSave) x).label().equals((String) o)) return count;
                 } catch (Exception e) {}
             }
 
@@ -844,6 +1084,25 @@ public class Tuils {
             if (count < strings.size() - 1) output = output.concat(separator);
         }
         return output;
+    }
+
+    public static String nodeToString(Node node) {
+        try {
+            TransformerFactory transfac = TransformerFactory.newInstance();
+            Transformer trans = transfac.newTransformer();
+            trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            trans.setOutputProperty(OutputKeys.INDENT, "yes");
+            StringWriter sw = new StringWriter();
+            StreamResult result = new StreamResult(sw);
+            DOMSource source = new DOMSource(node);
+            trans.transform(source, result);
+
+            return sw.toString();
+        }
+        catch (TransformerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static void log(Object o) {
@@ -967,11 +1226,9 @@ public class Tuils {
         return output.toString();
     }
 
+    static Pattern unnecessarySpaces = Pattern.compile("\\s{2,}");
     public static String removeUnncesarySpaces(String string) {
-        while (string.contains(DOUBLE_SPACE)) {
-            string = string.replace(DOUBLE_SPACE, SPACE);
-        }
-        return string;
+        return unnecessarySpaces.matcher(string).replaceAll(Tuils.SPACE);
     }
 
     public static String getStackTrace(final Throwable throwable) {
@@ -1026,30 +1283,54 @@ public class Tuils {
         return 0;
     }
 
-    public static Intent openFile(File url) {
-        Uri u = Uri.fromFile(url);
-        Intent intent = new Intent(android.content.Intent.ACTION_VIEW);
+    public static boolean isNumber(String s) {
+        if(s == null || s.length() == 0) {
+            return false;
+        }
 
-        String extension = MimeTypeMap.getFileExtensionFromUrl(u.toString());
-        String mimetype = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        char[] chars = s.toCharArray();
 
-        intent.setDataAndType(u,mimetype);
-        return intent;
+        for (char c : chars) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    public static Intent shareFile(File url) {
-        Intent intent = new Intent(Intent.ACTION_SEND);
+    public static Intent openFile(Context c, File f) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        Uri u = Uri.fromFile(url);
+        Uri u = buildFile(c, f);
 
-        String extension = MimeTypeMap.getFileExtensionFromUrl(u.toString());
-        String mimetype = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        String mimetype = MimeTypes.getMimeType(f.getAbsolutePath(), f.isDirectory());
 
         intent.setDataAndType(u,mimetype);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(Intent.EXTRA_STREAM, u);
 
         return intent;
+    }
+
+    public static Intent shareFile(Context c, File f) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        Uri u = buildFile(c, f);
+
+        String mimetype = MimeTypes.getMimeType(f.getAbsolutePath(), f.isDirectory());
+
+        intent.setDataAndType(u,mimetype);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.putExtra(Intent.EXTRA_STREAM, u);
+
+        return intent;
+    }
+
+    private static Uri buildFile(Context context, File file) {
+        return FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
     }
 
     private static File getTuiFolder() {
@@ -1151,13 +1432,13 @@ public class Tuils {
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
-    private static final int FILEUPDATE_DELAY = 50;
+    private static final int FILEUPDATE_DELAY = 100;
     private static File folder = null;
     public static File getFolder() {
         if(folder != null) return folder;
 
         int elapsedTime = 0;
-        while (elapsedTime < 3000) {
+        while (elapsedTime < 1000) {
             File tuiFolder = Tuils.getTuiFolder();
             if(tuiFolder != null && ((tuiFolder.exists() && tuiFolder.isDirectory()) || tuiFolder.mkdir())) {
                 folder = tuiFolder;

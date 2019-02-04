@@ -20,6 +20,7 @@ import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -35,7 +36,6 @@ import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
-import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -46,13 +46,15 @@ public class NotificationService extends NotificationListenerService {
     public static final String DESTROY = "destroy";
 
     private final int UPDATE_TIME = 2000;
-    private final String LINES_LABEL = "Lines", ANDROID_LABEL_PREFIX = "android.", NULL_LABEL = "null";
+    private String LINES_LABEL = "Lines";
+    private String ANDROID_LABEL_PREFIX = "android.";
+    private String NULL_LABEL = "null";
 
     HashMap<String, List<Notification>> pastNotifications;
     Handler handler = new Handler();
 
     String format;
-    int timeColor, color, maxOptionalDepth;
+    int color, maxOptionalDepth;
     boolean enabled, click, longClick, active;
 
     Queue<StatusBarNotification> queue;
@@ -213,7 +215,7 @@ public class NotificationService extends NotificationListenerService {
 
                             String text = s.toString();
 
-                            if(notificationManager.match(pack, text)) continue;
+                            if(notificationManager.match(text)) continue;
 
                             int found = isInPastNotifications(pack, text);
 //                        if(found == 0) {
@@ -243,7 +245,7 @@ public class NotificationService extends NotificationListenerService {
                             }
 
                             try {
-                                s = TimeManager.instance.replace(s, timeColor);
+                                s = TimeManager.instance.replace(s);
                             } catch (Exception e) {
                                 Tuils.log(e);
                             }
@@ -251,7 +253,7 @@ public class NotificationService extends NotificationListenerService {
 //                        Tuils.log("text", text);
 //                        Tuils.log("--------");
 
-                            Tuils.sendOutput(NotificationService.this.getApplicationContext(), s, TerminalManager.CATEGORY_NOTIFICATION, click ? notification.contentIntent : null, longClick ? n : null);
+                            Tuils.sendOutput(NotificationService.this.getApplicationContext(), s, TerminalManager.CATEGORY_NO_COLOR, click ? notification.contentIntent : null, longClick ? n : null);
 
                             if(replyManager != null) replyManager.onNotification(sbn, s);
                         }
@@ -309,9 +311,6 @@ public class NotificationService extends NotificationListenerService {
         if(intent != null) {
             boolean destroy = intent.getBooleanExtra(DESTROY, false);
             if(destroy) dispose();
-            else timeColor = intent.getIntExtra(Theme.time_color.label(), Color.parseColor(Theme.time_color.defaultValue()));
-        } else {
-            timeColor = Color.parseColor(Theme.time_color.defaultValue());
         }
 
         if(!active) init();
@@ -364,9 +363,11 @@ public class NotificationService extends NotificationListenerService {
 //    1 = the app wasnt found -> this is the first notification from this app
 //    2 = found
     private int isInPastNotifications(String pkg, String text) {
-        List<Notification> notifications = pastNotifications.get(pkg);
-        if(notifications == null) return 1;
-        for(Notification n : notifications) if(n.text.equals(text)) return 2;
+        try {
+            List<Notification> notifications = pastNotifications.get(pkg);
+            if(notifications == null) return 1;
+            for(Notification n : notifications) if(n.text.equals(text)) return 2;
+        } catch (ConcurrentModificationException e) {}
         return 0;
     }
 

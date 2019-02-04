@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,13 +22,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.CommandTuils;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.Param;
-import ohi.andre.consolelauncher.commands.specific.ParamCommand;
-import ohi.andre.consolelauncher.commands.specific.PermanentSuggestionCommand;
+import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
+import ohi.andre.consolelauncher.commands.main.specific.PermanentSuggestionCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
@@ -50,7 +52,6 @@ import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
-import ohi.andre.consolelauncher.tuils.interfaces.SuggestionViewDecorer;
 
 import static ohi.andre.consolelauncher.commands.CommandTuils.xmlPrefsEntrys;
 import static ohi.andre.consolelauncher.commands.CommandTuils.xmlPrefsFiles;
@@ -59,6 +60,8 @@ import static ohi.andre.consolelauncher.commands.CommandTuils.xmlPrefsFiles;
  * Created by francescoandreuzzi on 25/12/15.
  */
 public class SuggestionsManager {
+
+    private HideSuggestionViewValues hideViewValue;
 
     public static final String SINGLE_QUOTE = "'", DOUBLE_QUOTES = "\"";
     private final int NO_RATE = -1, FIRST_INTERVAL = 6;
@@ -70,19 +73,15 @@ public class SuggestionsManager {
 
     private boolean doubleSpaceFirstSuggestion;
     private LinearLayout suggestionsView;
-    private SuggestionViewDecorer suggestionViewDecorer;
     private SuggestionRunnable suggestionRunnable;
     private LinearLayout.LayoutParams suggestionViewParams;
     private SuggestionsManager.Suggestion lastFirst;
 
     private TerminalManager mTerminalAdapter;
 
-    private View.OnClickListener clickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            SuggestionsManager.Suggestion suggestion = (SuggestionsManager.Suggestion) v.getTag(R.id.suggestion_id);
-            clickSuggestion(suggestion);
-        }
+    private View.OnClickListener clickListener = v -> {
+        Suggestion suggestion = (Suggestion) v.getTag(R.id.suggestion_id);
+        clickSuggestion(suggestion);
     };
 
     private MainPack pack;
@@ -92,6 +91,8 @@ public class SuggestionsManager {
     private RemoverRunnable removeAllSuggestions;
 
     private int minAppRate, minFileRate, minContactRate, minSongRate;
+
+    private int[] spaces;
 
     int[] indexes, counts;
     Comparator<Suggestion> comparator = new Comparator<Suggestion>() {
@@ -106,7 +107,14 @@ public class SuggestionsManager {
             int i = indexes[o1.type] - indexes[o2.type];
 
             if(i == 0) {
-                return o2.rate - o1.rate;
+//                same type
+
+                int difference = o2.rate - o1.rate;
+                if(difference == 0) {
+                    try {
+                        return ((AppsManager.LaunchInfo) o2.object).launchedTimes - ((AppsManager.LaunchInfo) o1.object).launchedTimes;
+                    } catch (Exception e) {}
+                } else return difference;
             }
             return i;
         }
@@ -142,31 +150,6 @@ public class SuggestionsManager {
 
         enabled = true;
 
-        suggestionViewDecorer = new SuggestionViewDecorer() {
-
-            final int PADDING = 15;
-
-            @Override
-            public TextView getSuggestionView(Context context) {
-                TextView textView = new TextView(context);
-                textView.setOnClickListener(clickListener);
-
-                textView.setFocusable(false);
-                textView.setLongClickable(false);
-                textView.setClickable(true);
-
-                textView.setTypeface(Tuils.getTypeface(context));
-                textView.setTextSize(XMLPrefsManager.getInt(Suggestions.suggestions_size));
-
-                textView.setPadding(PADDING, PADDING, PADDING, PADDING);
-
-                textView.setLines(1);
-                textView.setMaxLines(1);
-
-                return textView;
-            }
-        };
-
         showAliasDefault = XMLPrefsManager.getBoolean(Suggestions.suggest_alias_default);
         showAppsGpDefault = XMLPrefsManager.getBoolean(Suggestions.suggest_appgp_default);
         clickToLaunch = XMLPrefsManager.getBoolean(Suggestions.click_to_launch);
@@ -177,6 +160,14 @@ public class SuggestionsManager {
         minSongRate = XMLPrefsManager.getInt(Suggestions.song_suggestions_minrate);
         minContactRate = XMLPrefsManager.getInt(Suggestions.contact_suggestions_minrate);
         minFileRate = XMLPrefsManager.getInt(Suggestions.file_suggestions_minrate);
+
+        spaces = UIManager.getListOfIntValues(XMLPrefsManager.get(Suggestions.suggestions_spaces), 4, 0);
+
+        try {
+            hideViewValue = HideSuggestionViewValues.valueOf(XMLPrefsManager.get(Suggestions.hide_suggestions_when_empty).toUpperCase());
+        } catch (Exception e) {
+            hideViewValue = HideSuggestionViewValues.valueOf(Suggestions.hide_suggestions_when_empty.defaultValue().toUpperCase());
+        }
 
         String s = XMLPrefsManager.get(Suggestions.suggestions_order);
         Pattern orderPattern = Pattern.compile("(\\d+)\\((\\d+)\\)");
@@ -235,6 +226,33 @@ public class SuggestionsManager {
 
             index++;
         }
+
+        TextView uselessView = getSuggestionView(pack.context);
+        uselessView.setVisibility(View.INVISIBLE);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.setMargins(spaces[0], spaces[1], spaces[2], spaces[3]);
+
+        ((LinearLayout) suggestionsView.getParent()).addView(uselessView, params);
+    }
+
+    public TextView getSuggestionView(Context context) {
+        TextView textView = new TextView(context);
+        textView.setOnClickListener(clickListener);
+
+        textView.setFocusable(false);
+        textView.setLongClickable(false);
+        textView.setClickable(true);
+
+        textView.setTypeface(Tuils.getTypeface(context));
+        textView.setTextSize(XMLPrefsManager.getInt(Suggestions.suggestions_size));
+
+        textView.setPadding(spaces[2], spaces[3], spaces[2], spaces[3]);
+
+        textView.setLines(1);
+        textView.setMaxLines(1);
+
+        return textView;
     }
 
     private void stop() {
@@ -251,16 +269,46 @@ public class SuggestionsManager {
         suggestionsView.removeAllViews();
     }
 
-    public void hide() {
-        enabled = false;
-        suggestionsView.setVisibility(View.GONE);
+    Runnable hideRunnable = new Runnable() {
+        @Override
+        public void run() {
+            suggestionsView.setVisibility(View.GONE);
 
-        stop();
+            stop();
+        }
+    };
+    public void hide() {
+        if(Looper.getMainLooper() == Looper.myLooper()) {
+            hideRunnable.run();
+        } else {
+            ((Activity) mTerminalAdapter.mContext).runOnUiThread(hideRunnable);
+        }
     }
 
+    Runnable showRunnable = new Runnable() {
+        @Override
+        public void run() {
+            suggestionsView.setVisibility(View.VISIBLE);
+        }
+    };
     public void show() {
+        if(Looper.getMainLooper() == Looper.myLooper()) {
+            showRunnable.run();
+        } else {
+            ((Activity) mTerminalAdapter.mContext).runOnUiThread(showRunnable);
+        }
+    }
+
+    public void enable() {
         enabled = true;
-        suggestionsView.setVisibility(View.VISIBLE);
+
+        show();
+    }
+
+    public void disable() {
+        enabled = false;
+
+        hide();
     }
 
     public void clickSuggestion(SuggestionsManager.Suggestion suggestion) {
@@ -315,7 +363,7 @@ public class SuggestionsManager {
         }
 
         if(suggestionRunnable == null) {
-            suggestionRunnable = new SuggestionRunnable(pack, suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent());
+            suggestionRunnable = new SuggestionRunnable(pack, suggestionsView, suggestionViewParams, (HorizontalScrollView) suggestionsView.getParent().getParent(), spaces);
         }
 
         if (lastSuggestionThread != null) {
@@ -394,8 +442,18 @@ public class SuggestionsManager {
                     ((Activity) pack.context).runOnUiThread(removeAllSuggestions);
                     removeAllSuggestions.isGoingToRun = true;
 
+                    if(hideViewValue == HideSuggestionViewValues.ALWAYS || (hideViewValue == HideSuggestionViewValues.TRUE && input.length() == 0)) {
+                        hide();
+                    }
+
                     return;
-                } else if(removeAllSuggestions.isGoingToRun) removeAllSuggestions.stop = true;
+                } else {
+                    if(removeAllSuggestions.isGoingToRun) {
+                        removeAllSuggestions.stop = true;
+                    }
+
+                    show();
+                }
 
                 if (Thread.interrupted()) {
                     suggestionRunnable.interrupt();
@@ -422,7 +480,7 @@ public class SuggestionsManager {
                     toRecycle = existingViews;
                     toAdd = new TextView[n];
                     for (int count = 0; count < toAdd.length; count++) {
-                        toAdd[count] = suggestionViewDecorer.getSuggestionView(pack.context);
+                        toAdd[count] = getSuggestionView(pack.context);
                     }
                 } else if (n < 0) {
                     toAdd = null;
@@ -486,7 +544,7 @@ public class SuggestionsManager {
 //                check if this is a command
                 Command cmd = null;
                 try {
-                    cmd = CommandTuils.parse(beforeLastSpace , pack, true);
+                    cmd = CommandTuils.parse(beforeLastSpace , pack);
                 } catch (Exception e) {}
 
                 if (cmd != null) {
@@ -541,7 +599,7 @@ public class SuggestionsManager {
 //                lastword > 0 && beforeLastSpace  > 0
                 Command cmd = null;
                 try {
-                    cmd = CommandTuils.parse(beforeLastSpace , pack, true);
+                    cmd = CommandTuils.parse(beforeLastSpace , pack);
                 } catch (Exception e) {}
 
                 if (cmd != null) {
@@ -697,6 +755,9 @@ public class SuggestionsManager {
             case CommandAbstraction.BOUND_REPLY_APP:
                 suggestBoundReplyApp(suggestions, afterLastSpace, beforeLastSpace);
                 break;
+            case CommandAbstraction.DATASTORE_PATH_TYPE:
+                suggestDataStoreType(suggestions, beforeLastSpace);
+                break;
         }
     }
 
@@ -840,6 +901,12 @@ public class SuggestionsManager {
         }
     }
 
+    private void suggestDataStoreType(List<Suggestion> suggestions, String beforeLastSpace) {
+        suggestions.add(new Suggestion(beforeLastSpace, "json", false, NO_RATE, Suggestion.TYPE_BOOLEAN));
+        suggestions.add(new Suggestion(beforeLastSpace, "xpath", false, NO_RATE, Suggestion.TYPE_BOOLEAN));
+        suggestions.add(new Suggestion(beforeLastSpace, "format", false, NO_RATE, Suggestion.TYPE_BOOLEAN));
+    }
+
     private void suggestSong(MainPack info, List<Suggestion> suggestions, String afterLastSpace, String beforeLastSpace ) {
         if(info.player == null) return;
 
@@ -890,7 +957,8 @@ public class SuggestionsManager {
         CommandAbstraction[] cmds = info.commandGroup.getCommands();
         if(cmds == null) return;
 
-        int canInsert = noInputCounts[Suggestion.TYPE_COMMAND];
+//        if there's a beforelastspace -> help ...
+        int canInsert = beforeLastSpace != null && beforeLastSpace.length() > 0 ? Integer.MAX_VALUE : noInputCounts[Suggestion.TYPE_COMMAND];
         for (CommandAbstraction cmd : cmds) {
             if(canInsert == 0 || Thread.currentThread().isInterrupted()) return;
 
@@ -930,6 +998,13 @@ public class SuggestionsManager {
         suggestApp(info.appsManager.shownApps(), suggestions, afterLastSpace, beforeLastSpace, true);
     }
 
+    private Comparator<SimpleMutableEntry<? extends Compare.Stringable, Integer>> appsComparator = (o1, o2) -> {
+        int d = o2.getValue() - o1.getValue();
+        if(d != 0) return d;
+
+        return ((AppsManager.LaunchInfo) o2.getKey()).launchedTimes - ((AppsManager.LaunchInfo) o1.getKey()).launchedTimes;
+    };
+
     private void suggestApp(List<AppsManager.LaunchInfo> apps, List<Suggestion> suggestions, String afterLastSpace, String beforeLastSpace, boolean canClickToLaunch) {
         if(apps == null) return;
 
@@ -943,7 +1018,8 @@ public class SuggestionsManager {
             }
         }
         else {
-            List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.compareWithRates(minAppRate, apps, true, afterLastSpace, true);
+            List<SimpleMutableEntry<Compare.Stringable, Integer>> infos = Compare.compareWithRates(minAppRate, apps, true, afterLastSpace, false);
+            Collections.sort(infos, appsComparator);
 
             for(SimpleMutableEntry<Compare.Stringable, Integer> i : infos) {
                 if(canInsert == 0) return;
@@ -1215,7 +1291,7 @@ public class SuggestionsManager {
 
         @Override
         public String toString() {
-            return text;
+            return text + ": " + rate;
         }
     }
 }

@@ -492,116 +492,20 @@ public enum Ui implements XMLPrefsSave {
             return "This is used to order the labels on top of the screen";
         }
     },
-    status_line0_alignment {
+    status_lines_alignment {
         @Override
         public String defaultValue() {
-            return "-1";
+            return "0,-1,-1,-1,-1,-1,-1,-1,-1";
         }
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.TEXT;
         }
 
         @Override
         public String info() {
-            return "The alignment of the 1st status line (<0 = left, =0 = center, >0 = right)";
-        }
-    },
-    status_line1_alignment {
-        @Override
-        public String defaultValue() {
-            return "-1";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The alignment of the 2nd status line (<0 = left, =0 = center, >0 = right)";
-        }
-    },
-    status_line2_alignment {
-        @Override
-        public String defaultValue() {
-            return "-1";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The alignment of the 3rd status line (<0 = left, =0 = center, >0 = right)";
-        }
-    },
-    status_line3_alignment {
-        @Override
-        public String defaultValue() {
-            return "-1";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The alignment of the 4th status line (<0 = left, =0 = center, >0 = right)";
-        }
-    },
-    status_line4_alignment {
-        @Override
-        public String defaultValue() {
-            return "-1";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The alignment of the 5th status line (<0 = left, =0 = center, >0 = right)";
-        }
-    },
-    status_line5_alignment {
-        @Override
-        public String defaultValue() {
-            return "-1";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The alignment of the 6th status line (<0 = left, =0 = center, >0 = right)";
-        }
-    },
-    status_line6_alignment {
-        @Override
-        public String defaultValue() {
-            return "0";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The alignment of the 7th status line (<0 = left, =0 = center, >0 = right)";
+            return "The alignment of the nth status line (<0 = left, =0 = center, >0 = right)";
         }
     },
     input_prefix {
@@ -636,68 +540,20 @@ public enum Ui implements XMLPrefsSave {
             return "The prefix placed before a root command (\"su ...\")";
         }
     },
-    left_margin_mm {
+    display_margin_mm {
         @Override
         public String defaultValue() {
-            return "0";
+            return "0,0,0,0";
         }
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return XMLPrefsSave.TEXT;
         }
 
         @Override
         public String info() {
-            return "The left margin (in millimeters)";
-        }
-    },
-    right_margin_mm {
-        @Override
-        public String defaultValue() {
-            return "0";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The right margin (in millimeters)";
-        }
-    },
-    top_margin_mm {
-        @Override
-        public String defaultValue() {
-            return "0";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The top margin (in millimeters)";
-        }
-    },
-    bottom_margin_mm {
-        @Override
-        public String defaultValue() {
-            return "0";
-        }
-
-        @Override
-        public String type() {
-            return XMLPrefsSave.INTEGER;
-        }
-
-        @Override
-        public String info() {
-            return "The bottom margin (in millimeters)";
+            return "[left margin],[top margin],[right margin],[bottom margin]";
         }
     },
     ignore_bar_color {
@@ -811,6 +667,310 @@ public enum Ui implements XMLPrefsSave {
         public String info() {
             return "The divider between two notes";
         }
+    },
+    show_restart_message {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String info() {
+            return "If false, the restart message won\'t be shown";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    notes_max_lines {
+        @Override
+        public String defaultValue() {
+            return "10";
+        }
+
+        @Override
+        public String info() {
+            return "The max number of lines of notes (-1 to disable)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+    },
+    show_scroll_notes_message {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String info() {
+            return "If true, you will get a message when your notes reach the value set in notes_max_lines";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    show_weather {
+        @Override
+        public String defaultValue() {
+            return "false";
+        }
+
+        @Override
+        public String info() {
+            return "If true, you will see a label containing the weather in your area";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    weather_index {
+        @Override
+        public String defaultValue() {
+            return "7";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "This is used to order the labels on top of the screen";
+        }
+    },
+    weather_size {
+        @Override
+        public String defaultValue() {
+            return "13";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "Weather size";
+        }
+    },
+    show_unlock_counter {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+
+        @Override
+        public String info() {
+            return "If false, the unlock counter feature will be disabled";
+        }
+    },
+    unlock_index {
+        @Override
+        public String defaultValue() {
+            return "8";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "This is used to order the labels on top of the screen";
+        }
+    },
+    unlock_size {
+        @Override
+        public String defaultValue() {
+            return "13";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "Unlock size";
+        }
+    },
+    statusbar_light_icons {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+
+        @Override
+        public String info() {
+            return "If true, your status bar icons will be white. Dark otherwise";
+        }
+    },
+    bgrect_params {
+        @Override
+        public String defaultValue() {
+            return "2,0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[Stroke width],[Rect corner radius]";
+        }
+    },
+    shadow_params {
+        @Override
+        public String defaultValue() {
+            return "2,2,0.2";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[Shadow X offset],[Shadow Y offset],[Shadow radius]";
+        }
+    },
+    text_redraw_times {
+        @Override
+        public String defaultValue() {
+            return "1";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "A greater value will result in a bigger outline";
+        }
+    },
+    status_lines_margins {
+        @Override
+        public String defaultValue() {
+            return "3,3,0,0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+        }
+    },
+    output_field_margins {
+        @Override
+        public String defaultValue() {
+            return "3,3,0,0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+        }
+    },
+    input_field_margins {
+        @Override
+        public String defaultValue() {
+            return "3,3,0,0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+        }
+    },
+    input_area_margins {
+        @Override
+        public String defaultValue() {
+            return "3,3,0,0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+        }
+    },
+    toolbar_margins {
+        @Override
+        public String defaultValue() {
+            return "3,3,0,0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+        }
+    },
+    suggestions_area_margin {
+        @Override
+        public String defaultValue() {
+            return "3,3,0,0";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+        }
     };
 
     @Override
@@ -821,10 +981,5 @@ public enum Ui implements XMLPrefsSave {
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public boolean is(String s) {
-        return name().equals(s);
     }
 }

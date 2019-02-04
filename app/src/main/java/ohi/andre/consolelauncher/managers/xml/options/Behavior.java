@@ -263,7 +263,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "This is the separator between your different time formats (see also Multiple time formats)";
+            return "This is the separator between your different time formats";
         }
 
         @Override
@@ -916,6 +916,310 @@ public enum Behavior implements XMLPrefsSave {
         public String type() {
             return XMLPrefsSave.INTEGER;
         }
+    },
+    htmlextractor_default_format {
+        @Override
+        public String defaultValue() {
+            return "%t -> %v%n%a(%an = %av)(%n)";
+        }
+
+        @Override
+        public String info() {
+            return "The default format used by htmlextract -use";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+    },
+    htmlextractor_notfound_message {
+        @Override
+        public String defaultValue() {
+            return "Not found";
+        }
+
+        @Override
+        public String info() {
+            return "The message printed when there are no result inside your htmlextract query";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+    },
+    tui_notification_time_color {
+        @Override
+        public String defaultValue() {
+            return Theme.time_color.defaultValue();
+        }
+
+        @Override
+        public String info() {
+            return "The time color inside the t-ui notification";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.COLOR;
+        }
+    },
+    tui_notification_input_color {
+        @Override
+        public String defaultValue() {
+            return Theme.input_color.defaultValue();
+        }
+
+        @Override
+        public String info() {
+            return "The input color inside the t-ui notification";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.COLOR;
+        }
+    },
+    weather_key {
+        @Override
+        public String defaultValue() {
+            return "1f798f99228596c20ccfda51b9771a86";
+        }
+
+        @Override
+        public String info() {
+            return "The key of your account on OpenWeatherMap. You can keep the default one, or create your custom key (check the wiki)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+    },
+    weather_temperature_measure {
+        @Override
+        public String defaultValue() {
+            return "metric";
+        }
+
+        @Override
+        public String info() {
+            return "metric = Celsius; imperial = Fahrenheit; standard = Kelvin";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+    },
+    weather_location {
+        @Override
+        public String defaultValue() {
+            return "null";
+        }
+
+        @Override
+        public String info() {
+            return "The ID of your country (check the wiki) or your coords separated by a comma (lat,lon)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+    },
+    weather_format {
+        @Override
+        public String defaultValue() {
+            return "Weather: %main, Temp: %temp";
+        }
+
+        @Override
+        public String info() {
+            return "The format used to show the weather";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+    },
+    clear_on_lock {
+        @Override
+        public String defaultValue() {
+            return "false";
+        }
+
+        @Override
+        public String info() {
+            return "If true, t-ui will clear the screen when you lock the phone";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    unlock_counter_format {
+        @Override
+        public String defaultValue() {
+            return "Unlocked %c times (%a10/)%n%t(Unlock n. %i --> %w)3";
+        }
+
+        @Override
+        public String info() {
+            return "The format used to show the unlock counter";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+    },
+    unlock_time_divider {
+        @Override
+        public String defaultValue() {
+            return "%n";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "The divider between the last unlock times";
+        }
+    },
+    unlock_time_order {
+        @Override
+        public String defaultValue() {
+            return "1";
+        }
+
+        @Override
+        public String info() {
+            return "1 = up-down. 2 = down-up";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+    },
+    unlock_counter_cycle_start {
+        @Override
+        public String defaultValue() {
+            return "6.00";
+        }
+
+        @Override
+        public String info() {
+            return "The starting hour of the unlock counter cycle (hh.mm)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+    },
+    not_available_text {
+        @Override
+        public String defaultValue() {
+            return "n/a";
+        }
+
+        @Override
+        public String info() {
+            return "The text shown when a value is not available";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+    },
+    back_button_enabled {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String info() {
+            return "If true, the back button will put the previous command inside the input area";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    weather_update_time {
+        @Override
+        public String defaultValue() {
+            return "3600";
+        }
+
+        @Override
+        public String info() {
+            return "The weather update time in seconds. This can only be used if you\'re using a custom weather key";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+    },
+    location_update_mintime {
+        @Override
+        public String defaultValue() {
+            return "20";
+        }
+
+        @Override
+        public String info() {
+            return "The amount of time between two location updates (in minutes, must be an integer value)";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+    },
+    location_update_mindistance {
+        @Override
+        public String defaultValue() {
+            return "500";
+        }
+
+        @Override
+        public String info() {
+            return "The minimum distance (in meters) to get a location update";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+    },
+    show_weather_updates {
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String info() {
+            return "If false, t-ui won't show information about the weather in the output field";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
     };
 
     @Override
@@ -926,10 +1230,5 @@ public enum Behavior implements XMLPrefsSave {
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public boolean is(String s) {
-        return name().equals(s);
     }
 }
