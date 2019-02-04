@@ -21,3 +21,5 @@
 -dontwarn org.htmlcleaner.**
 -dontwarn com.jayway.jsonpath.**
 -dontwarn org.slf4j.**
+
+-dontwarn org.jdom2.**
