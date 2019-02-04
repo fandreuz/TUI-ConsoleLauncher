@@ -45,7 +45,7 @@ android {
 }
 dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    implementation files('../libs/htmlcleaner-2.21.jar')
+    implementation group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.6'
     implementation 'com.jayway.jsonpath:json-path:2.3.0'
-    implementation files('../libs/jsoup-1.11.3.jar')
+    implementation group: 'org.jsoup', name: 'jsoup', version: '1.11.3'
 }
