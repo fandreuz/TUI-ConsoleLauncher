@@ -2,7 +2,7 @@
 
     <!-- various text -->
     <string name="app_name">T-UI</string>
-    <string name="location_off">Turn on GPS or network location</string>
+    <string name="location_off">Turn on GPS</string>
     <string name="share_label">Share</string>
     <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
         \n\nThanks to Luke Winward for his original idea</string>
@@ -14,7 +14,7 @@
     <string name="tui_reset">t-ui reset to default settings</string>
     <string name="copied">Copied:</string>
     <string name="tui_busy">t-ui is busy, use \"ctrlc\" to stop the process</string>
-    <string name="donate">Do you like my work?\nIf yes, rate t-ui on Play Store (cmd: $ rate) or offer me a coffee (cmd: $ donate). Thank you!</string>
+    <string name="donate">Do you like my work? You can offer me a coffee (cmd: $ donate). Thank you!</string>
 
     <!-- weather -->
     <string name="weather_cant_update">You can\'t perform a manual update with the default key. You have to create a custom key on the website</string>
@@ -22,18 +22,15 @@
     <string name="weather_disabled">Weather is not enabled</string>
     <string name="weather_updated">Weather updated at</string>
 
-    <!-- lock -->
-    <string name="invalid_password">Wrong password</string>
-
     <!-- shortcuts -->
     <string name="shortcut_index_greater">The index is greater than the shortcuts count</string>
 
     <!-- reload message -->
-    <string name="theme_applied">Applied theme:</string>
+    <string name="theme_applied">Theme applied:</string>
 
     <!-- reply -->
     <string name="reply_id_not_found">No bound app found with ID:</string>
-    <string name="reply_notification_not_found">No notification from this app</string>
+    <string name="reply_notification_not_found">0 notifications from this app</string>
 
     <!-- notifications menu -->
     <string name="exclude_notification">Exclude notification</string>
@@ -61,7 +58,7 @@
     <string name="notification_low_api">Notifications are supported on Android 4.3+ only. Use \'config -set show_notifications false\' to disable this message</string>
 
     <!-- helps texts -->
-    <string name="firsthelp_text">First time with t-ui? Use the command \"tutorial\" or \"help\"</string>
+    <string name="firsthelp_text">First time with t-ui?\n\ttutorial -> view the tutorial on GitHub\n\thelp     -> get a list of available commands</string>
     <string name="permissions_toast">You have to grant Storage permission</string>
     <string name="output_usedefapp">You can use \"apps -default_app\" instead</string>
 
@@ -79,24 +76,23 @@
         <item name="hint_tutorial">Did you read the tutorial? (\"$ tutorial\")</item>
         <item name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</item>
         <item name="hint_theme2">Did you know? You can create your custom theme and share it with other users. Have a look at the cmd \"$ theme -create\"</item>
-        <item name="hint_help">Doubts about a command? Just use \"$ help cmdName\"</item>
-        <item name="hint_music">Did you know? You can listen your music without launching other apps than t-ui. Have a look at the cmd \"$ music\"</item>
-        <item name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups, a feature that let\'s you customize your app suggestions, creating different categories.\nYou can get more details with the cmd
-        \"$ apps -tutorial\"</item>
-        <item name="hint_notifications">Did you know? You can see your notifications directly inside t-ui.\nIf you\'re interested, have a look at the tutorial: \"$ notifications -tutorial\"</item>
+        <item name="hint_help">Doubts about a command? Use \"$ help cmdName\"</item>
+        <item name="hint_music">Did you know? You can listen to music using t-ui. Have a look at the cmd \"$ music\"</item>
+        <item name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups.\nYou can get more details with the cmd \"$ apps -tutorial\"</item>
+        <item name="hint_notifications">Did you know? You can see your notifications inside t-ui. If you\'re interested, have a look at the tutorial: \"$ notifications -tutorial\"</item>
         <item name="hint_clear">Are you sick of clearing your screen? Have a look at the options \"clear_after_cmds\", \"clear_after_seconds\" and \"maxlines\"</item>
         <item name="hint_wallpaper">Do you want to use your wallpaper as t-ui background? Use the cmd: \"$ config -set system_wallpaper true\"</item>
         <item name="hint_config">Doubts about any config option? Use the cmd \"$ config -info [option]\"table</item>
-        <item name="hint_alias">Did you know that t-ui supports aliases? \nFor more info, use the cmd \"$ alias -tutorial\"</item>
+        <item name="hint_alias">Did you know that t-ui supports aliases? For more info, use the cmd \"$ alias -tutorial\"</item>
         <item name="hint_excludenotification">Did you know? You can exclude an unwanted notification by long-clicking on it</item>
         <item name="hint_disable">You can disable this messages with the cmd \"$ config -set show_hints false\"</item>
     </string-array>
 
 
     <string-array name="tutorial">
-        <item>You can get a list of the commands using the cmd \"help\". Type it and press enter</item>
-        <item>If you want to understand the behavior of a command, type \"help cmdName\"</item>
-        <item>Launch your apps by typing their name. You can also click on the suggestions to increase the launch speed</item>
+        <item>Use the command \"help\" to get a list of available commands</item>
+        <item>If you want to get info about the behavior of a command, type \"help cmdName\"</item>
+        <item>Launch your apps typing their name</item>
         <item>You can call your contacts with the cmd \"call contactName\"</item>
         <item>t-ui is highly customizable. Check \"config -ls\" or use the cmd \"config -tutorial\" to see what you can change</item>
         <item>You can choose within a large database of themes uploaded by t-ui users. Check the cmd \"theme -view\"</item>

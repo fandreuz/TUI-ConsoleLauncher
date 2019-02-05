@@ -9,8 +9,8 @@ android {
         minSdkVersion 14
         targetSdkVersion 26
 
-        versionCode 193
-        versionName "6.7"
+        versionCode 194
+        versionName "v6.7c"
     }
 
     buildTypes {
