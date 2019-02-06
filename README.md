@@ -49,9 +49,8 @@
 - **[DeviceCustomizer](https://youtu.be/sahFlOQA8fQ?t=1m25s)**
 - **[Diolinux](https://www.youtube.com/watch?v=5Q1gveqY4hg&t=197s)**
 
-## Pull requets & Issues
-I **do not accept** pull requests, and it's really better to **send me an email** rather than opening an issue on GitHub, since I check my emails very often everyday.<br>
-**[Email me](mailto:andreuzzi.francesco@gmail.com)**
+## Contributing
+**Pull requests** are welcome from now. But **before** you decide to make a major change you should contact me (**[e-mail](mailto:andreuzzi.francesco@gmail.com)**) in order to check if I'm going to include your change in t-ui, so you don't waste your time.
 
 ## How to format a bug report
 1. Set "**Bug report**" as subject
