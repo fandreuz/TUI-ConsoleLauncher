@@ -9,8 +9,8 @@ android {
         minSdkVersion 14
         targetSdkVersion 26
 
-        versionCode 194
-        versionName "v6.8"
+        versionCode 195
+        versionName "v6.9"
     }
 
     buildTypes {
@@ -44,8 +44,8 @@ android {
     }
 }
 dependencies {
-    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.13.1'
     implementation group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.6'
-    implementation 'com.jayway.jsonpath:json-path:2.3.0'
+    implementation 'com.jayway.jsonpath:json-path:2.4.0'
     implementation group: 'org.jsoup', name: 'jsoup', version: '1.11.3'
 }
