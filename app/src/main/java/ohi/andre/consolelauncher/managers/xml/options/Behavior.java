@@ -749,7 +749,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "If true, the last used command will appear on top\n";
+            return "If true, the last used command will appear on top";
         }
 
         @Override

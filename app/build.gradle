@@ -10,7 +10,7 @@ android {
         targetSdkVersion 26
 
         versionCode 194
-        versionName "v6.7c"
+        versionName "v6.8"
     }
 
     buildTypes {
