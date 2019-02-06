@@ -1235,8 +1235,6 @@ public class UIManager implements OnTouchListener {
         }
 
         if(show[Label.unlock.ordinal()]) {
-            registerLockReceiver();
-
             unlockTimes = preferences.getInt(UNLOCK_KEY, 0);
 
             unlockColor = XMLPrefsManager.getColor(Theme.unlock_counter_color);
@@ -1271,9 +1269,12 @@ public class UIManager implements OnTouchListener {
                 for(int c = 0; c < lastUnlocks.length; c++) {
                     lastUnlocks[c] = -1;
                 }
-            } else lastUnlocks = null;
 
-            handler.post(unlockTimeRunnable);
+                registerLockReceiver();
+                handler.post(unlockTimeRunnable);
+            } else {
+                lastUnlocks = null;
+            }
         }
 
         final boolean inputBottom = XMLPrefsManager.getBoolean(Ui.input_bottom);
@@ -1599,7 +1600,7 @@ public class UIManager implements OnTouchListener {
     private long[] lastUnlocks;
 
     private void onUnlock() {
-        if(System.currentTimeMillis() - lastUnlockTime < 1000) return;
+        if(System.currentTimeMillis() - lastUnlockTime < 1000 || lastUnlocks == null) return;
         lastUnlockTime = System.currentTimeMillis();
 
         unlockTimes++;

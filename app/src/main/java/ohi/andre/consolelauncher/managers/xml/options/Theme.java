@@ -398,7 +398,7 @@ public enum Theme implements XMLPrefsSave {
     status_lines_bg {
         @Override
         public String defaultValue() {
-            return "#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000";
+            return "#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000";
         }
 
         @Override
@@ -442,7 +442,7 @@ public enum Theme implements XMLPrefsSave {
     status_lines_shadow_color {
         @Override
         public String defaultValue() {
-            return "#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000";
+            return "#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000";
         }
 
         @Override
