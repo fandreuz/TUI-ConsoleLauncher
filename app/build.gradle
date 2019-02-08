@@ -8,7 +8,7 @@ android {
         targetSdkVersion 26
         flavorDimensions "default"
 
-        versionName "v6.9"
+        versionName "v6.10"
 
         manifestPlaceholders = [playstore:"false"]
     }
@@ -28,12 +28,10 @@ android {
 //        odd is fdroid, otherwise playstore
 //        !!!!!!!!!!!!!
         fdroid {
-            versionCode 196
-            manifestPlaceholders = [playstore:"false"]
+            versionCode 198
         }
         playstore {
-            versionCode 193
-            manifestPlaceholders = [playstore:"true"]
+            versionCode 195
         }
     }
 
