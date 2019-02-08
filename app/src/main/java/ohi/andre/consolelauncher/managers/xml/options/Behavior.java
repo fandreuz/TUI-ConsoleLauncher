@@ -765,7 +765,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "The priority of the T-UI notification (-2 maximum priority, 2 minimum)";
+            return "The priority of the T-UI notification (min: -2, max: 2)";
         }
 
         @Override

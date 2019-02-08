@@ -941,6 +941,10 @@ public class Tuils {
         return classes;
     }
 
+    public static int scale(int[] from, int[] to, int n) {
+        return (to[1] - to[0])*(n - from[0])/(from[1] - from[0]) + to[0];
+    }
+
     public static String[] toString(Enum[] enums) {
         String[] arr = new String[enums.length];
         for(int count = 0; count < enums.length; count++) arr[count] = enums[count].name();

@@ -135,11 +135,12 @@ public class KeeperService extends Service {
     @Override
     public boolean onUnbind(Intent intent) {
         lastCommands = null;
-
         return true;
     }
 
     public static Notification buildNotification(Context c, String title, String subtitle, String cmdLabel, String clickCmd, boolean showHome, CharSequence[] lastCommands, boolean upDown, int priority) {
+        if(priority < -2 || priority > 2) priority = NotificationCompat.PRIORITY_DEFAULT;
+
         PendingIntent pendingIntent;
         if(showHome) {
             Intent startMain = new Intent(Intent.ACTION_MAIN);
@@ -172,7 +173,10 @@ public class KeeperService extends Service {
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                NotificationChannel notificationChannel = new NotificationChannel(BuildConfig.APPLICATION_ID, c.getString(R.string.app_name), priority);
+                int oPriority = Tuils.scale(new int[] {0, 4}, new int[] {2,4}, priority + 2);
+                if(oPriority < 2 || oPriority > 4) oPriority = NotificationManager.IMPORTANCE_UNSPECIFIED;
+
+                NotificationChannel notificationChannel = new NotificationChannel(BuildConfig.APPLICATION_ID, c.getString(R.string.app_name), oPriority);
                 ((NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(notificationChannel);
             }
 
