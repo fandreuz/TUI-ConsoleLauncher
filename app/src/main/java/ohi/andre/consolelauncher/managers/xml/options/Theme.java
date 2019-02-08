@@ -343,56 +343,81 @@ public enum Theme implements XMLPrefsSave {
     status_lines_bgrectcolor {
         @Override
         public String defaultValue() {
-            return "#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000";
+            return "#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000,#00000000";
         }
 
         @Override
         public String info() {
             return "The color of the rect behind the nth status line";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000"};
+        }
     },
     input_bgrectcolor {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The color of the rect behind the input field";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
+        }
     },
     output_bgrectcolor {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The color of the rect behind the output field";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
+        }
     },
     toolbar_bgrectcolor {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The color of the rect behind the toolbar";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
+        }
     },
     suggestions_bgrectcolor {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The color of the rect behind the suggestions area";
+        }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
         }
     },
     status_lines_bg {
@@ -405,38 +430,58 @@ public enum Theme implements XMLPrefsSave {
         public String info() {
             return "The bg color of the nth line";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000"};
+        }
     },
     input_bg {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The background color of the input field";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
+        }
     },
     output_bg {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The background color of the output field";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
+        }
     },
     suggestions_bg {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The background color of the suggestions area";
+        }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
         }
     },
     status_lines_shadow_color {
@@ -449,29 +494,45 @@ public enum Theme implements XMLPrefsSave {
         public String info() {
             return "The outline color of the nth line";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000"};
+        }
     },
     input_shadow_color {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The outline color of the input field";
         }
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
+        }
     },
     output_shadow_color {
         @Override
         public String defaultValue() {
-            return "#ff000000";
+            return "#00000000";
         }
 
         @Override
         public String info() {
             return "The outline color of the output field";
         }
-    };
+
+        @Override
+        public String[] invalidValues() {
+            return new String[] {"#ff000000"};
+        }
+    }
+    ;
 
     @Override
     public XMLPrefsElement parent() {
@@ -487,4 +548,10 @@ public enum Theme implements XMLPrefsSave {
     public String type() {
         return XMLPrefsSave.COLOR;
     }
+
+    @Override
+    public String[] invalidValues() {
+        return null;
+    }
+
 }

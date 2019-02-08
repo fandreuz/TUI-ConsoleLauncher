@@ -435,4 +435,9 @@ public enum Suggestions implements XMLPrefsSave {
     public String type() {
         return XMLPrefsSave.COLOR;
     }
+
+    @Override
+    public String[] invalidValues() {
+        return null;
+    }
 }

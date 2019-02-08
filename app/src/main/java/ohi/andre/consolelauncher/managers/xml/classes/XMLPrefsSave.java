@@ -12,4 +12,5 @@ public interface XMLPrefsSave {
     String info();
     XMLPrefsElement parent();
     String label();
+    String[] invalidValues();
 }

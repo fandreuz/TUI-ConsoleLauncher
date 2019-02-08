@@ -86,8 +86,8 @@ public class RssManager implements XMLPrefsElement {
     public static XMLPrefsElement instance = null;
 
     @Override
-    public String[] deleted() {
-        return new String[] {};
+    public XMLPrefsSave[] delete() {
+        return null;
     }
 
     @Override
@@ -190,7 +190,7 @@ public class RssManager implements XMLPrefsElement {
 
                     List<ohi.andre.consolelauncher.managers.xml.options.Rss> enums = new ArrayList<>(Arrays.asList(ohi.andre.consolelauncher.managers.xml.options.Rss.values()));
 
-                    String[] deleted = instance.deleted();
+                    XMLPrefsSave[] deleted = instance.delete();
                     boolean needToWrite = false;
 
                     for(int count = 0; count < nodes.getLength(); count++) {

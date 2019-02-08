@@ -1,16 +1,16 @@
 apply plugin: 'com.android.application'
 android {
-
     compileSdkVersion 27
-
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
 
         minSdkVersion 14
         targetSdkVersion 26
+        flavorDimensions "default"
 
-        versionCode 195
         versionName "v6.9"
+
+        manifestPlaceholders = [playstore:"false"]
     }
 
     buildTypes {
@@ -22,30 +22,47 @@ android {
         }
     }
 
+    productFlavors {
+
+//        !!!!!!!!!!!!!
+//        odd is fdroid, otherwise playstore
+//        !!!!!!!!!!!!!
+        fdroid {
+            versionCode 196
+            manifestPlaceholders = [playstore:"false"]
+        }
+        playstore {
+            versionCode 193
+            manifestPlaceholders = [playstore:"true"]
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
     dependencies {
         implementation 'com.android.support:appcompat-v7:27.1.1'
     }
-
     lintOptions {
         checkReleaseBuilds false
     }
-
     android.applicationVariants.all { variant ->
         def formattedDate = new Date().format('hh.mm')
 
+        def label
+        def x = variant.versionCode % 2
+        if(x == 0) {label = "fdroid"}
+        else {label = "playstore"}
+
         variant.outputs.all {
-            outputFileName = "./${variant.versionName}/${variant.applicationId}_${variant.versionCode}_${formattedDate}.apk"
+            outputFileName = "./${variant.versionName}/${variant.applicationId}_${label}_${variant.versionCode}_${formattedDate}.apk"
         }
     }
 }
 dependencies {
-    implementation 'com.squareup.okhttp3:okhttp:3.13.1'
-    implementation group: 'net.sourceforge.htmlcleaner', name: 'htmlcleaner', version: '2.6'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6'
     implementation 'com.jayway.jsonpath:json-path:2.4.0'
-    implementation group: 'org.jsoup', name: 'jsoup', version: '1.11.3'
+    implementation 'org.jsoup:jsoup:1.11.3'
 }

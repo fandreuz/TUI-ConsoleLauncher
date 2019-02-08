@@ -120,10 +120,10 @@ public class Tuils {
     private static Typeface globalTypeface = null;
     public static String fontPath = null;
 
+    public static boolean FDROID;
+
     static Pattern calculusPattern = Pattern.compile("([\\+\\-\\*\\/\\^])(\\d+\\.?\\d*)");
     public static double textCalculus(double input, String text) {
-        Tuils.log("in", input);
-
         Matcher m = calculusPattern.matcher(text);
         while(m.find()) {
             char operator = m.group(1).charAt(0);

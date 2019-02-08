@@ -171,4 +171,9 @@ public enum Rss implements XMLPrefsSave {
     public String label() {
         return name();
     }
+
+    @Override
+    public String[] invalidValues() {
+        return null;
+    }
 }

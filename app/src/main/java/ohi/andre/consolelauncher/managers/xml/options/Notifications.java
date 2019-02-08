@@ -149,4 +149,9 @@ public enum Notifications implements XMLPrefsSave {
     public String type() {
         return XMLPrefsSave.BOOLEAN;
     }
+
+    @Override
+    public String[] invalidValues() {
+        return null;
+    }
 }

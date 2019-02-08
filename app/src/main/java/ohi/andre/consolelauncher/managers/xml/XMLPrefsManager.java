@@ -56,40 +56,38 @@ public class XMLPrefsManager {
 
         THEME(Theme.values()) {
             @Override
-            public String[] deleted() {
-                return new String[] {};
+            public XMLPrefsSave[] delete() {
+                return new XMLPrefsSave[] {};
             }
         },
         CMD(Cmd.values()) {
             @Override
-            public String[] deleted() {
-                return new String[] {};
+            public XMLPrefsSave[] delete() {
+                return new XMLPrefsSave[] {};
             }
         },
         TOOLBAR(Toolbar.values()) {
             @Override
-            public String[] deleted() {
-                return new String[] {};
+            public XMLPrefsSave[] delete() {
+                return new XMLPrefsSave[] {};
             }
         },
         UI(Ui.values()) {
             @Override
-            public String[] deleted() {
-                return new String[] {"status_line8_alignment","status_line7_alignment","status_line6_alignment","status_line5_alignment","status_line4_alignment","status_line3_alignment",
-                        "status_line2_alignment","status_line1_alignment","status_line0_alignment","left_margin_mm","top_margin_mm","right_margin_mm","bottom_margin_mm", "text_redraw_times", "bgrect_margins",
-                        "status_bar_light_icons"};
+            public XMLPrefsSave[] delete() {
+                return new XMLPrefsSave[] {};
             }
         },
         BEHAVIOR(Behavior.values()) {
             @Override
-            public String[] deleted() {
-                return new String[] {};
+            public XMLPrefsSave[] delete() {
+                return new XMLPrefsSave[] {};
             }
         },
         SUGGESTIONS(Suggestions.values()) {
             @Override
-            public String[] deleted() {
-                return new String[] {};
+            public XMLPrefsSave[] delete() {
+                return new XMLPrefsSave[] {};
             }
         };
 
@@ -168,9 +166,10 @@ public class XMLPrefsManager {
             Document d = (Document) o[0];
             Element root = (Element) o[1];
 
+//            we are keeping this because maybe there are some new values to write
             List<XMLPrefsSave> enums = new ArrayList<>(element.enums);
 
-            String[] deleted = element.deleted();
+            XMLPrefsSave[] deleted = element.delete();
             boolean needToWrite = false;
 
             if(root == null) {
@@ -193,12 +192,31 @@ public class XMLPrefsManager {
                     continue;
                 }
 
-                element.values.add(nn, value);
-
                 boolean check = false;
                 for(int en = 0; en < enums.size(); en++) {
-                    if(enums.get(en).label().equals(nn)) {
-                        enums.remove(en);
+                    XMLPrefsSave opt = enums.get(en);
+
+                    if(opt.label().equals(nn)) {
+                        XMLPrefsSave s = enums.remove(en);
+
+                        String[] iv = s.invalidValues();
+                        if(iv != null) {
+                            for(String temp : iv) {
+                                if(temp.equals(value)) {
+                                    value = opt.defaultValue();
+
+                                    Element em = (Element) node;
+                                    em.setAttribute(VALUE_ATTRIBUTE, value);
+
+                                    needToWrite = true;
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        element.values.add(nn, value);
+
                         check = true;
                         break;
                     }
@@ -214,6 +232,8 @@ public class XMLPrefsManager {
                         needToWrite = true;
                     }
                 }
+
+
             }
 
             if(enums.size() == 0) {

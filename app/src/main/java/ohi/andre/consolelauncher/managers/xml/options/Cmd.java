@@ -36,4 +36,9 @@ public enum Cmd implements XMLPrefsSave {
     public String label() {
         return name();
     }
+
+    @Override
+    public String[] invalidValues() {
+        return null;
+    }
 }

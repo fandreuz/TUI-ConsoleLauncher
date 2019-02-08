@@ -1,10 +1,24 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.telephony.SmsManager;
+
+import ohi.andre.consolelauncher.LauncherActivity;
+import ohi.andre.consolelauncher.R;
+import ohi.andre.consolelauncher.commands.CommandAbstraction;
+import ohi.andre.consolelauncher.commands.ExecutePack;
+import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
+
 /**
  * Created by francescoandreuzzi on 02/03/2017.
  */
 
-/*public class sms extends RedirectCommand {
+public class sms extends RedirectCommand {
 
     @Override
     public String exec(ExecutePack pack) throws Exception {
@@ -93,4 +107,4 @@ package ohi.andre.consolelauncher.commands.main.raw;
     public boolean isWaitingPermission() {
         return beforeObjects.size() == 1 && afterObjects.size() == 1;
     }
-}*/
+}

@@ -90,8 +90,8 @@ public class AppsManager implements XMLPrefsElement {
     int appInstalledColor, appUninstalledColor;
 
     @Override
-    public String[] deleted() {
-        return new String[0];
+    public XMLPrefsSave[] delete() {
+        return null;
     }
 
     @Override

@@ -99,4 +99,9 @@ public enum Apps implements XMLPrefsSave {
     public String type() {
         return XMLPrefsSave.APP;
     }
+
+    @Override
+    public String[] invalidValues() {
+        return null;
+    }
 }

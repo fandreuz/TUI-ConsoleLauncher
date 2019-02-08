@@ -52,8 +52,8 @@ public class NotificationManager implements XMLPrefsElement {
     public String default_color;
 
     @Override
-    public String[] deleted() {
-        return new String[] {};
+    public XMLPrefsSave[] delete() {
+        return null;
     }
 
     @Override
@@ -123,7 +123,7 @@ public class NotificationManager implements XMLPrefsElement {
             List<Notifications> enums = new ArrayList<>(Arrays.asList(Notifications.values()));
             NodeList nodes = root.getElementsByTagName("*");
 
-            String[] deleted = instance.deleted();
+            XMLPrefsSave[] deleted = instance.delete();
             boolean needToWrite = false;
 
             for(int count = 0; count < nodes.getLength(); count++) {
