@@ -56,38 +56,38 @@ public class XMLPrefsManager {
 
         THEME(Theme.values()) {
             @Override
-            public XMLPrefsSave[] delete() {
-                return new XMLPrefsSave[] {};
+            public String[] delete() {
+                return new String[] {};
             }
         },
         CMD(Cmd.values()) {
             @Override
-            public XMLPrefsSave[] delete() {
-                return new XMLPrefsSave[] {};
+            public String[] delete() {
+                return new String[] {};
             }
         },
         TOOLBAR(Toolbar.values()) {
             @Override
-            public XMLPrefsSave[] delete() {
-                return new XMLPrefsSave[] {};
+            public String[] delete() {
+                return new String[] {};
             }
         },
         UI(Ui.values()) {
             @Override
-            public XMLPrefsSave[] delete() {
-                return new XMLPrefsSave[] {};
+            public String[] delete() {
+                return new String[] {};
             }
         },
         BEHAVIOR(Behavior.values()) {
             @Override
-            public XMLPrefsSave[] delete() {
-                return new XMLPrefsSave[] {};
+            public String[] delete() {
+                return new String[] {};
             }
         },
         SUGGESTIONS(Suggestions.values()) {
             @Override
-            public XMLPrefsSave[] delete() {
-                return new XMLPrefsSave[] {};
+            public String[] delete() {
+                return new String[] {"app_suggestions_minrate", "contact_suggestions_minrate", "song_suggestions_minrate", "file_suggestions_minrate"};
             }
         };
 
@@ -169,7 +169,7 @@ public class XMLPrefsManager {
 //            we are keeping this because maybe there are some new values to write
             List<XMLPrefsSave> enums = new ArrayList<>(element.enums);
 
-            XMLPrefsSave[] deleted = element.delete();
+            String[] deleted = element.delete();
             boolean needToWrite = false;
 
             if(root == null) {

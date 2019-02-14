@@ -7,7 +7,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.0'
+        classpath 'com.android.tools.build:gradle:3.3.1'
     }
 }
 
@@ -21,9 +21,7 @@ allprojects {
         maven {
             url "https://jitpack.io"
         }
-        maven {
-            url "https://s3.amazonaws.com/repo.commonsware.com"
-        }
         google()
+        mavenCentral()
     }
 }

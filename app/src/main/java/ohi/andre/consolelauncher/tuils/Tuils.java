@@ -120,8 +120,6 @@ public class Tuils {
     private static Typeface globalTypeface = null;
     public static String fontPath = null;
 
-    public static boolean FDROID;
-
     static Pattern calculusPattern = Pattern.compile("([\\+\\-\\*\\/\\^])(\\d+\\.?\\d*)");
     public static double textCalculus(double input, String text) {
         Matcher m = calculusPattern.matcher(text);
@@ -1077,14 +1075,14 @@ public class Tuils {
         return Tuils.EMPTYSTRING;
     }
 
-    public static String toPlanString(String separator, List<? extends Compare.Stringable> strings) {
+    public static String toPlanString(String separator, List strings) {
         if(strings == null) {
             return Tuils.EMPTYSTRING;
         }
 
         String output = Tuils.EMPTYSTRING;
         for (int count = 0; count < strings.size(); count++) {
-            output = output.concat(strings.get(count).getString());
+            output = output.concat(strings.get(count).toString());
             if (count < strings.size() - 1) output = output.concat(separator);
         }
         return output;
@@ -1173,17 +1171,47 @@ public class Tuils {
         return (T) Array.get(Array.newInstance(clazz, 1), 0);
     }
 
-    public static void toFile(Throwable e) {
+    public static void toFile(String s) {
         try {
             RandomAccessFile f = new RandomAccessFile(new File(Tuils.getFolder(), "crash.txt"), "rw");
             f.seek(0);
             f.write((new Date().toString() + Tuils.NEWLINE + Tuils.NEWLINE).getBytes());
             OutputStream is = Channels.newOutputStream(f.getChannel());
-            e.printStackTrace(new PrintStream(is));
+            is.write(s.getBytes());
             f.write((Tuils.NEWLINE + Tuils.NEWLINE).getBytes());
 
             is.close();
             f.close();
+        } catch (Exception e1) {}
+    }
+
+    public static void toFile(Object o) {
+        if(o == null) return;
+
+//            RandomAccessFile f = new RandomAccessFile(new File(Tuils.getFolder(), "crash.txt"), "rw");
+//            f.seek(0);
+//            f.write((new Date().toString() + Tuils.NEWLINE + Tuils.NEWLINE).getBytes());
+//            OutputStream is = Channels.newOutputStream(f.getChannel());
+//            e.printStackTrace(new PrintStream(is));
+//            f.write((Tuils.NEWLINE + Tuils.NEWLINE).getBytes());
+//
+//            is.close();
+//            f.close();
+
+        try {
+            FileOutputStream stream = new FileOutputStream(new File(Tuils.getFolder(), "crash.txt"));
+            stream.write((Tuils.NEWLINE + Tuils.NEWLINE).getBytes());
+
+            if(o instanceof Throwable) {
+                PrintStream ps = new PrintStream(stream);
+                ((Throwable) o).printStackTrace(ps);
+            } else {
+                stream.write(o.toString().getBytes());
+            }
+
+            stream.write((Tuils.NEWLINE + "----------------------------").getBytes());
+
+            stream.close();
         } catch (Exception e1) {}
     }
 
@@ -1308,12 +1336,18 @@ public class Tuils {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         Uri u = buildFile(c, f);
-
         String mimetype = MimeTypes.getMimeType(f.getAbsolutePath(), f.isDirectory());
 
-        intent.setDataAndType(u,mimetype);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.putExtra(Intent.EXTRA_STREAM, u);
+        intent.setDataAndType(u, mimetype);
+
+        int flags;
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION;
+        } else {
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+        }
+
+        intent.addFlags(flags);
 
         return intent;
     }
@@ -1326,7 +1360,8 @@ public class Tuils {
 
         String mimetype = MimeTypes.getMimeType(f.getAbsolutePath(), f.isDirectory());
 
-        intent.setDataAndType(u,mimetype);
+        intent.setDataAndType(u, mimetype);
+
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(Intent.EXTRA_STREAM, u);
 
@@ -1334,7 +1369,14 @@ public class Tuils {
     }
 
     private static Uri buildFile(Context context, File file) {
-        return FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
+        Uri uri;
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            uri = Uri.fromFile(file);
+        }
+        else {
+            uri = FileProvider.getUriForFile(context, GenericFileProvider.PROVIDER_NAME, file);
+        }
+        return uri;
     }
 
     private static File getTuiFolder() {

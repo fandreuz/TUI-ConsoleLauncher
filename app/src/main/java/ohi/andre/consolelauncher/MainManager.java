@@ -39,7 +39,6 @@ import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
-import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -581,7 +580,7 @@ public class MainManager {
     }
 
     public interface Group {
-        List<? extends Compare.Stringable> members();
+        List<? extends Object> members();
         boolean use(MainPack mainPack, String input);
         String name();
     }

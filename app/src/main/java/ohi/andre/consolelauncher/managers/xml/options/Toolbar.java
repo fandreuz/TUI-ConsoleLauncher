@@ -57,4 +57,9 @@ public enum Toolbar implements XMLPrefsSave {
     public String[] invalidValues() {
         return null;
     }
+
+    @Override
+    public String getString() {
+        return label();
+    }
 }

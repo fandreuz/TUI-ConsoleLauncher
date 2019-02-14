@@ -14,7 +14,6 @@ import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -234,9 +233,6 @@ public class TerminalManager {
         this.mScrollView = (ScrollView) v;
 
         this.mInputView = inputView;
-
-
-
         this.mInputView.setTextSize(ioSize);
         this.mInputView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
         this.mInputView.setTypeface(Tuils.getTypeface(context));

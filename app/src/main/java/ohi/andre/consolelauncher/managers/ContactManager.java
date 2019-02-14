@@ -20,9 +20,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import it.andreuzzi.comparestring2.StringableObject;
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.LauncherActivity;
-import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -300,7 +300,7 @@ public class ContactManager {
         return ContactsContract.Contacts.getLookupUri(mCurrentId, mCurrentLookupKey);
     }
 
-    public static class Contact implements Comparable<Contact>, Compare.Stringable {
+    public static class Contact implements Comparable<Contact>, StringableObject {
         public String name;
         public List<String> numbers = new ArrayList<>();
 
@@ -323,8 +323,8 @@ public class ContactManager {
         }
 
         @Override
-        public String toString() {
-            return name + " : " + numbers.toString();
+        public String getString() {
+            return name;
         }
 
         @Override
@@ -333,11 +333,6 @@ public class ContactManager {
             char of = o.name.toUpperCase().charAt(0);
 
             return tf - of;
-        }
-
-        @Override
-        public String getString() {
-            return name;
         }
     }
 }

@@ -554,4 +554,9 @@ public enum Theme implements XMLPrefsSave {
         return null;
     }
 
+    @Override
+    public String getString() {
+        return label();
+    }
+
 }

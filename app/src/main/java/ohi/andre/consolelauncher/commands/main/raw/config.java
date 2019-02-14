@@ -1,5 +1,6 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
+import android.content.ActivityNotFoundException;
 import android.content.SharedPreferences;
 
 import java.io.File;
@@ -93,7 +94,17 @@ public class config extends ParamCommand {
             @Override
             public String exec(ExecutePack pack) {
                 File file = new File(Tuils.getFolder(), pack.getString());
-                pack.context.startActivity(Tuils.openFile(pack.context, file));
+
+                try {
+                    pack.context.startActivity(Tuils.openFile(pack.context, file));
+                } catch (ActivityNotFoundException e) {
+                    Tuils.log("nf");
+                    Tuils.toFile(e);
+                } catch (Exception ex) {
+                    Tuils.log(ex);
+                    Tuils.toFile(ex);
+                }
+
                 return null;
             }
 

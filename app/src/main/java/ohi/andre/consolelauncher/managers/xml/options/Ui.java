@@ -873,7 +873,7 @@ public enum Ui implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "A greater value will result in a bigger outline";
+            return "A greater value will produce a bigger outline";
         }
     },
     status_lines_margins {
@@ -889,7 +889,7 @@ public enum Ui implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+            return "[horizontal_margin],[vertical_margin],[horizontal_padding],[vertical_padding]";
         }
     },
     output_field_margins {
@@ -905,7 +905,7 @@ public enum Ui implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+            return "[horizontal_margin],[vertical_margin],[horizontal_padding],[vertical_padding]";
         }
     },
     input_field_margins {
@@ -921,7 +921,7 @@ public enum Ui implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+            return "The dimension of the input field (where cmds are inserted). [horizontal_margin],[vertical_margin],[horizontal_padding],[vertical_padding]";
         }
     },
     input_area_margins {
@@ -937,7 +937,7 @@ public enum Ui implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+            return "The dimension of the input area (prefix + input field + toolbar + suggestions). [horizontal_margin],[vertical_margin],[horizontal_padding],[vertical_padding]";
         }
     },
     toolbar_margins {
@@ -953,7 +953,7 @@ public enum Ui implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+            return "[horizontal_margin],[vertical_margin],[horizontal_padding],[vertical_padding]";
         }
     },
     suggestions_area_margin {
@@ -969,7 +969,7 @@ public enum Ui implements XMLPrefsSave {
 
         @Override
         public String info() {
-            return "[External horizontal margin],[E. vertical margin],[Internal horizontal margin],[I. vertical margin]";
+            return "[horizontal_margin],[vertical_margin],[horizontal_padding],[vertical_padding]";
         }
     };
 
@@ -986,5 +986,10 @@ public enum Ui implements XMLPrefsSave {
     @Override
     public String[] invalidValues() {
         return null;
+    }
+
+    @Override
+    public String getString() {
+        return label();
     }
 }

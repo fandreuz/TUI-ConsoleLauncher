@@ -1298,7 +1298,6 @@ public class UIManager implements OnTouchListener {
         applyShadow(inputView, outlineColors[INPUT_BGCOLOR_INDEX], shadowXOffset, shadowYOffset, shadowRadius);
         applyShadow(prefixView, outlineColors[INPUT_BGCOLOR_INDEX], shadowXOffset, shadowYOffset, shadowRadius);
 
-
         applyMargins(inputView, margins[INPUTFIELD_MARGINS_INDEX]);
         applyMargins(prefixView, margins[INPUTFIELD_MARGINS_INDEX]);
 
@@ -1413,18 +1412,23 @@ public class UIManager implements OnTouchListener {
 //    2 = int hor
 //    3 = int ver
     private static void applyBgRect(View v, String strokeColor, String bgColor, int[] spaces, int strokeWidth, int cornerRadius) {
-        GradientDrawable d = new GradientDrawable();
-        d.setShape(GradientDrawable.RECTANGLE);
-        d.setCornerRadius(cornerRadius);
+        try {
+            GradientDrawable d = new GradientDrawable();
+            d.setShape(GradientDrawable.RECTANGLE);
+            d.setCornerRadius(cornerRadius);
 
-        if(!(strokeColor.startsWith("#00") && strokeColor.length() == 9)) {
-            d.setStroke(strokeWidth, Color.parseColor(strokeColor));
+            if(!(strokeColor.startsWith("#00") && strokeColor.length() == 9)) {
+                d.setStroke(strokeWidth, Color.parseColor(strokeColor));
+            }
+
+            applyMargins(v, spaces);
+
+            d.setColor(Color.parseColor(bgColor));
+            v.setBackgroundDrawable(d);
+        } catch (Exception e) {
+            Tuils.toFile(e);
+            Tuils.log(e);
         }
-
-        applyMargins(v, spaces);
-
-        d.setColor(Color.parseColor(bgColor));
-        v.setBackgroundDrawable(d);
     }
 
     private static void applyMargins(View v, int[] margins) {

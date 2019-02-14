@@ -1,12 +1,12 @@
 package ohi.andre.consolelauncher.managers.notifications.reply;
 
-import ohi.andre.consolelauncher.tuils.Compare;
+import it.andreuzzi.comparestring2.StringableObject;
 
 /**
  * Created by francescoandreuzzi on 24/01/2018.
  */
 
-public class BoundApp implements Compare.Stringable {
+public class BoundApp implements StringableObject {
 
     public int applicationId;
     public String label, packageName;
@@ -19,7 +19,7 @@ public class BoundApp implements Compare.Stringable {
 
     @Override
     public boolean equals(Object obj) {
-        return obj != null && obj instanceof BoundApp && applicationId == ((BoundApp) obj).applicationId;
+        return obj instanceof BoundApp && applicationId == ((BoundApp) obj).applicationId;
     }
 
     @Override

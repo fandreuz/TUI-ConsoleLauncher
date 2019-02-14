@@ -1,16 +1,20 @@
 apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
+    buildToolsVersion '28.0.3'
+    dexOptions {
+    }
+
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
 
         minSdkVersion 14
-        targetSdkVersion 26
+        targetSdkVersion 27
         flavorDimensions "default"
 
         versionName "v6.11"
+        versionCode 201
     }
-
     buildTypes {
         release {
             minifyEnabled true
@@ -19,20 +23,12 @@ android {
             zipAlignEnabled true
         }
     }
-
     productFlavors {
-
-//        !!!!!!!!!!!!!
-//        odd is fdroid, otherwise playstore
-//        !!!!!!!!!!!!!
         fdroid {
-            versionCode 200
         }
         playstore {
-            versionCode 197
         }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -48,8 +44,11 @@ android {
 
         def label
         def x = variant.versionCode % 2
-        if(x == 0) {label = "fdroid"}
-        else {label = "playstore"}
+        if (x == 0) {
+            label = "fdroid"
+        } else {
+            label = "playstore"
+        }
 
         variant.outputs.all {
             outputFileName = "./${variant.versionName}/${variant.applicationId}_${label}_${variant.versionCode}_${formattedDate}.apk"
@@ -61,4 +60,5 @@ dependencies {
     implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6'
     implementation 'com.jayway.jsonpath:json-path:2.4.0'
     implementation 'org.jsoup:jsoup:1.11.3'
+    implementation 'it.andreuzzi:CompareString2:1.0.5'
 }

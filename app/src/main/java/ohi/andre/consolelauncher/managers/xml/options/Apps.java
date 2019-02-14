@@ -104,4 +104,9 @@ public enum Apps implements XMLPrefsSave {
     public String[] invalidValues() {
         return null;
     }
+
+    @Override
+    public String getString() {
+        return label();
+    }
 }

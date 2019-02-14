@@ -2,13 +2,13 @@ package ohi.andre.consolelauncher.managers.music;
 
 import java.io.File;
 
-import ohi.andre.consolelauncher.tuils.Compare;
+import it.andreuzzi.comparestring2.StringableObject;
 
 /**
  * Created by francescoandreuzzi on 17/08/2017.
  */
 
-public class Song implements Compare.Stringable {
+public class Song implements StringableObject  {
 
     private long id;
     private String title, path;

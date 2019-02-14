@@ -199,8 +199,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             return;
         }
 
-        Tuils.FDROID = BuildConfig.VERSION_CODE % 2 == 0;
-
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED  &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
 

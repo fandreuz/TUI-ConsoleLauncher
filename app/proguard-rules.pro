@@ -6,6 +6,7 @@
 -keep public class ohi.andre.consolelauncher.managers.options.**
 -keep class ohi.andre.consolelauncher.tuils.libsuperuser.**
 -keep class ohi.andre.consolelauncher.managers.suggestions.HideSuggestionViewValues
+-keep public class it.andreuzzi.comparestring2.**
 
 -dontwarn ohi.andre.consolelauncher.commands.main.raw.**
 

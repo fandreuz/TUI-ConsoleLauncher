@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import it.andreuzzi.comparestring2.StringableObject;
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.UIManager;
@@ -49,7 +50,6 @@ import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
-import ohi.andre.consolelauncher.tuils.Compare;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -90,7 +90,7 @@ public class AppsManager implements XMLPrefsElement {
     int appInstalledColor, appUninstalledColor;
 
     @Override
-    public XMLPrefsSave[] delete() {
+    public String[] delete() {
         return null;
     }
 
@@ -378,7 +378,7 @@ public class AppsManager implements XMLPrefsElement {
 
         Group.sorting = XMLPrefsManager.getInt(Apps.app_groups_sorting);
         for(Group g : groups) g.sort();
-        Collections.sort(groups, (o1, o2) -> Tuils.alphabeticCompare(o1.getName(), o2.getName()));
+        Collections.sort(groups, (o1, o2) -> Tuils.alphabeticCompare(o1.name(), o2.name()));
     }
 
     private List<LaunchInfo> createAppMap(PackageManager mgr) {
@@ -899,7 +899,7 @@ public class AppsManager implements XMLPrefsElement {
         unregisterReceiver(context);
     }
 
-    public static class Group implements MainManager.Group {
+    public static class Group implements MainManager.Group, StringableObject {
 
         public static final int ALPHABETIC_UP_DOWN = 0;
         public static final int ALPHABETIC_DOWN_UP = 1;
@@ -994,12 +994,8 @@ public class AppsManager implements XMLPrefsElement {
             this.foreColor = foreColor;
         }
 
-        public String getName() {
-            return name;
-        }
-
         @Override
-        public List<? extends Compare.Stringable> members() {
+        public List<? extends Object> members() {
             return apps;
         }
 
@@ -1035,7 +1031,12 @@ public class AppsManager implements XMLPrefsElement {
             return false;
         }
 
-        private class GroupLaunchInfo extends LaunchInfo {
+        @Override
+        public String getString() {
+            return name;
+        }
+
+        public class GroupLaunchInfo extends LaunchInfo {
 
             int initialIndex;
 
@@ -1050,7 +1051,7 @@ public class AppsManager implements XMLPrefsElement {
 
     }
 
-    public static class LaunchInfo implements Compare.Stringable, Parcelable {
+    public static class LaunchInfo implements Parcelable, StringableObject, Comparable<LaunchInfo> {
 
         private static final String COMPONENT_SEPARATOR = "-";
 
@@ -1149,13 +1150,13 @@ public class AppsManager implements XMLPrefsElement {
             return componentName.getPackageName() + " - " + componentName.getClassName() + " --> " + publicLabel + ", n=" + launchedTimes;
         }
 
-        public String write() {
-            return this.componentName.getPackageName() + COMPONENT_SEPARATOR + this.componentName.getClassName();
-        }
-
         @Override
         public String getString() {
             return publicLabel;
+        }
+
+        public String write() {
+            return this.componentName.getPackageName() + COMPONENT_SEPARATOR + this.componentName.getClassName();
         }
 
         @Override
@@ -1172,6 +1173,11 @@ public class AppsManager implements XMLPrefsElement {
 
         public void setShortcuts(List<ShortcutInfo> s) {
             this.shortcuts = s;
+        }
+
+        @Override
+        public int compareTo(@NonNull LaunchInfo o) {
+            return o.launchedTimes - launchedTimes;
         }
     }
 

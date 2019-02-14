@@ -357,7 +357,7 @@ public class ReplyManager implements XMLPrefsElement {
     }
 
     @Override
-    public XMLPrefsSave[] delete() {
+    public String[] delete() {
         return null;
     }
 

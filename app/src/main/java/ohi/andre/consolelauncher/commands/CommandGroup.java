@@ -44,6 +44,8 @@ public class CommandGroup {
         Collections.sort(cmds);
         commandNames = new String[cmds.size()];
         cmds.toArray(commandNames);
+
+        Collections.sort(cmdAbs, (o1, o2) -> o2.priority() - o1.priority());
         commands = new CommandAbstraction[cmdAbs.size()];
         cmdAbs.toArray(commands);
     }
