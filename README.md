@@ -34,6 +34,7 @@
 6. Send it to **andreuzzi.francesco@gmail.com**
 
 ## Open source libraries
+* [**CompareString2**](https://github.com/fAndreuzzi/CompareString2)
 * [**OkHttp**](https://github.com/square/okhttp)
 * [**HTML cleaner**](http://htmlcleaner.sourceforge.net/)
 * [**JsonPath**](https://github.com/json-path/JsonPath)
