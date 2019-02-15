@@ -1022,12 +1022,9 @@ public class SuggestionsManager {
                 canInsert--;
 
                 suggestions.add(new Suggestion(beforeLastSpace , l.publicLabel, canClickToLaunch && clickToLaunch, Suggestion.TYPE_APP, l));
-                Tuils.log(new Suggestion(beforeLastSpace , l.publicLabel, canClickToLaunch && clickToLaunch, Suggestion.TYPE_APP, l).getText());
             }
         } else {
             AppsManager.LaunchInfo[] infos = CompareObjects.topMatchesWithDeadline(afterLastSpace, apps.size(), apps, canInsert, suggestionsDeadline, SPLITTERS, algInstance, alg);
-            Tuils.log(Arrays.toString(infos));
-
             for(AppsManager.LaunchInfo i : infos) {
                 if(i == null) break;
 
