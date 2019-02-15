@@ -1156,8 +1156,8 @@ public class SuggestionsManager {
         List<AppsManager.Group.GroupLaunchInfo> apps = (List<AppsManager.Group.GroupLaunchInfo>) g.members();
         if(apps != null && apps.size() > 0) {
             if (app == null || app.length() == 0) {
-                for (Object o : apps) {
-                    suggestions.add(new Suggestion(beforeLastSpace , o.toString(), clickToLaunch, Suggestion.TYPE_APP, o));
+                for (AppsManager.Group.GroupLaunchInfo o : apps) {
+                    suggestions.add(new Suggestion(beforeLastSpace , o.publicLabel, clickToLaunch, Suggestion.TYPE_APP, o));
                 }
             }
             else {
