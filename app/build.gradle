@@ -12,8 +12,8 @@ android {
         targetSdkVersion 27
         flavorDimensions "default"
 
-        versionName "v6.13.1"
-        versionCode 203
+        versionName "v6.14"
+        versionCode 204
     }
     buildTypes {
         release {
@@ -42,16 +42,8 @@ android {
     android.applicationVariants.all { variant ->
         def formattedDate = new Date().format('hh.mm')
 
-        def label
-        def x = variant.versionCode % 2
-        if (x == 0) {
-            label = "fdroid"
-        } else {
-            label = "playstore"
-        }
-
         variant.outputs.all {
-            outputFileName = "./${variant.versionName}/${variant.applicationId}_${label}_${variant.versionCode}_${formattedDate}.apk"
+            outputFileName = "./${variant.versionName}/${variant.applicationId}_${variant.getFlavorName()}_${variant.versionCode}_${formattedDate}.apk"
         }
     }
 }
@@ -60,5 +52,5 @@ dependencies {
     implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6'
     implementation 'com.jayway.jsonpath:json-path:2.4.0'
     implementation 'org.jsoup:jsoup:1.11.3'
-    implementation 'it.andreuzzi:CompareString2:1.0.6'
+    implementation 'it.andreuzzi:CompareString2:1.0.8'
 }

@@ -11,11 +11,12 @@ import it.andreuzzi.comparestring2.StringableObject;
 public class Song implements StringableObject  {
 
     private long id;
-    private String title, path;
+    private String title, path, lowercaseTitle;
 
     public Song(long songID, String songTitle) {
         id = songID;
         title = songTitle;
+        this.lowercaseTitle = title.toLowerCase();
     }
 
     public Song(File file) {
@@ -38,6 +39,11 @@ public class Song implements StringableObject  {
 
     public String getPath() {
         return path;
+    }
+
+    @Override
+    public String getLowercaseString() {
+        return lowercaseTitle;
     }
 
     @Override

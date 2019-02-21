@@ -127,7 +127,7 @@ public class SuggestionRunnable implements Runnable {
 
             SuggestionsManager.Suggestion s = suggestions.get(count);
 
-            String text = s.shownText != null ? s.shownText : s.text;
+            String text = s.text;
 
             TextView sggView = null;
             if (count < toRecycle.length) {

@@ -106,6 +106,11 @@ public enum Apps implements XMLPrefsSave {
     }
 
     @Override
+    public String getLowercaseString() {
+        return label();
+    }
+
+    @Override
     public String getString() {
         return label();
     }

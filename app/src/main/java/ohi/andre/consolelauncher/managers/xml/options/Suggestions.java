@@ -372,6 +372,22 @@ public enum Suggestions implements XMLPrefsSave {
             return "The algorithm used to compare strings";
         }
     },
+    suggestions_quickcompare_n {
+        @Override
+        public String defaultValue() {
+            return "3";
+        }
+
+        @Override
+        public String type() {
+            return INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "If the input is shorter than n characters, t-ui will try to show you the entries which start with those characters";
+        }
+    },
     hide_suggestions_when_empty {
         @Override
         public String defaultValue() {
@@ -423,6 +439,11 @@ public enum Suggestions implements XMLPrefsSave {
     @Override
     public String[] invalidValues() {
         return null;
+    }
+
+    @Override
+    public String getLowercaseString() {
+        return label();
     }
 
     @Override

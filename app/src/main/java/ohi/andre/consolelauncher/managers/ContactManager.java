@@ -154,7 +154,7 @@ public class ContactManager {
     public List<Contact> getContacts() {
         if(contacts == null || contacts.size() == 0) refreshContacts(context);
 
-        return contacts;
+        return new ArrayList<>(contacts);
     }
 
     public List<String> listNamesAndNumbers() {
@@ -301,13 +301,15 @@ public class ContactManager {
     }
 
     public static class Contact implements Comparable<Contact>, StringableObject {
-        public String name;
-        public List<String> numbers = new ArrayList<>();
+        public String name, lowercaseName;
+        public List<String> numbers;
 
         private int selectedNumber;
 
         public Contact(String name, List<String> numbers, int defNumber) {
             this.name = name;
+            this.lowercaseName = name.toLowerCase();
+
             this.numbers = numbers;
 
             setSelectedNumber(defNumber);
@@ -320,6 +322,11 @@ public class ContactManager {
 
         public int getSelectedNumber() {
             return selectedNumber;
+        }
+
+        @Override
+        public String getLowercaseString() {
+            return lowercaseName;
         }
 
         @Override

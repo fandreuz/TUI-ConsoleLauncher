@@ -43,6 +43,11 @@ public enum Cmd implements XMLPrefsSave {
     }
 
     @Override
+    public String getLowercaseString() {
+        return label();
+    }
+
+    @Override
     public String getString() {
         return label();
     }

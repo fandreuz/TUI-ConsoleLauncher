@@ -937,10 +937,12 @@ public class AppsManager implements XMLPrefsElement {
         int bgColor = Integer.MAX_VALUE;
         int foreColor = Integer.MAX_VALUE;
 
-        String name;
+        String name, lowercaseName;
 
         public Group(String name) {
             this.name = name;
+            this.lowercaseName = name.toLowerCase();
+
             apps = new ArrayList<>();
         }
 
@@ -1032,8 +1034,13 @@ public class AppsManager implements XMLPrefsElement {
         }
 
         @Override
+        public String getLowercaseString() {
+            return lowercaseName;
+        }
+
+        @Override
         public String getString() {
-            return name;
+            return name();
         }
 
         public class GroupLaunchInfo extends LaunchInfo {
@@ -1057,7 +1064,7 @@ public class AppsManager implements XMLPrefsElement {
 
         public ComponentName componentName;
 
-        public String publicLabel, unspacedLowercaseLabel;
+        public String publicLabel, unspacedLowercaseLabel, lowercaseLabel;
         public int launchedTimes = 0;
 
         public List<ShortcutInfo> shortcuts;
@@ -1087,7 +1094,8 @@ public class AppsManager implements XMLPrefsElement {
 
         public void setLabel(String s) {
             this.publicLabel = s;
-            this.unspacedLowercaseLabel = Tuils.removeSpaces(s).toLowerCase();
+            this.lowercaseLabel = s.toLowerCase();
+            this.unspacedLowercaseLabel = Tuils.removeSpaces(lowercaseLabel);
         }
 
         public boolean isInside(String apps) {
@@ -1148,6 +1156,11 @@ public class AppsManager implements XMLPrefsElement {
         @Override
         public String toString() {
             return componentName.getPackageName() + " - " + componentName.getClassName() + " --> " + publicLabel + ", n=" + launchedTimes;
+        }
+
+        @Override
+        public String getLowercaseString() {
+            return lowercaseLabel;
         }
 
         @Override

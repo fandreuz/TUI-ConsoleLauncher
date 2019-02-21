@@ -361,6 +361,6 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
     }
 
     public List<Song> getSongs() {
-        return songs;
+        return new ArrayList<>(songs);
     }
 }
