@@ -52,5 +52,5 @@ dependencies {
     implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6'
     implementation 'com.jayway.jsonpath:json-path:2.4.0'
     implementation 'org.jsoup:jsoup:1.11.3'
-    implementation 'it.andreuzzi:CompareString2:1.0.8'
+    implementation 'it.andreuzzi:CompareString2:1.0.9'
 }
