@@ -12,8 +12,8 @@ android {
         targetSdkVersion 27
         flavorDimensions "default"
 
-        versionName "v6.14"
-        versionCode 204
+        versionName "v6.15"
+        versionCode 205
     }
     buildTypes {
         release {
