@@ -1,0 +1,108 @@
+sudo: required
+dist: xenial
+language: go
+go:
+  - "1.11.x"
+
+matrix:
+  include:
+    - os: linux
+      env: VERSION_UPGRADE_TEST_WAIT_TIMEOUT=45s
+    - os: osx
+      # Do not start osx build for PR
+      if: type != pull_request
+      osx_image: xcode8
+      env: VERSION_UPGRADE_TEST_WAIT_TIMEOUT=60s
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test && sudo apt-get update -qq; fi
+
+env:
+  global:
+    - ELECTRON_CACHE: $HOME/.cache/electron
+    - ELECTRON_BUILDER_CACHE: $HOME/.cache/electron-builder
+    - BUILD_DIR: build
+    - BUILDLIB_DIR: $BUILD_DIR/libskycoin
+    - LIB_DIR: lib
+    - BUILD_UI_TRAVIS_DIR: HOME/.mdl-ui-travis
+
+cache:
+  directories:
+  - electron/node_modules
+  - electron/src/node_modules
+  - $HOME/.cache/electron
+  - $HOME/.cache/electron-builder
+  - $HOME/.npm/_prebuilds
+  - src/gui/static/node_modules
+
+addons:
+  chrome: stable
+
+install:
+  # Install gox
+  - go get github.com/gz-c/gox
+  # Install dependences for building wallet
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PULL_REQUEST" == false ]]; then sudo apt-get install --no-install-recommends -y icnsutils graphicsmagick xz-utils libudev-dev libusb-1.0-0-dev && nvm install 8; fi
+  - if [[ ! -d $GOPATH/src/github.com/MDLlife/MDL ]]; then mkdir -p $GOPATH/src/github.com/MDLlife; ln -s $TRAVIS_BUILD_DIR $GOPATH/src/github.com/MDLlife/MDL; fi
+  - cd $GOPATH/src/github.com/MDLlife/MDL
+  - go get -t ./...
+  - make install-linters
+  # Install pinned golangci-lint, overriding the latest version install by make install-linters
+  - VERSION=1.13.2 ./ci-scripts/install-golangci-lint.sh
+  - nvm install 8.11.0
+  - nvm use 8.11.0
+  - make install-deps-ui
+
+before_script:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" && "$TRAVIS_PULL_REQUEST" == false ]]; then ./ci-scripts/add-key.sh; fi
+
+services:
+  - xvfb
+
+script:
+#  - make check-newcoin
+  - make lint
+  - make test-386
+  - make test-amd64
+  # Stable integration tests
+  - make integration-test-stable
+  # Stable integration tests without CSRF
+  - make integration-test-stable-disable-csrf
+  # Disable wallet api test
+  - make integration-test-disable-wallet-api
+  # Disable seed api test
+#  - make integration-test-disable-seed-api
+  # Enable seed api test
+  - make integration-test-enable-seed-api
+  # Disable GUI test
+  - make integration-test-disable-gui
+  # Enable auth test
+  - make integration-test-auth
+  # Stable integration tests without unconfirmed transactions
+  - make integration-test-db-no-unconfirmed
+#  - make lint-ui
+#  - make build-ui-travis
+#  - make test-ui
+#  - make test-ui-e2e
+  # Build wallets
+  - if [[ "$TRAVIS_PULL_REQUEST" == false ]]; then ./ci-scripts/build-wallet.sh; fi
+
+notifications:
+  email:
+    - mdldevs@gmail.com
+  # https://github.com/kvld/travisci-telegram TravisCI Telegram Bot integration
+  webhooks: https://fathomless-fjord-24024.herokuapp.com/notify
+
+deploy:
+  provider: s3
+  access_key_id: $AWS_ACCESS_KEY_ID
+  secret_access_key: $AWS_SECRET_ACCESS_KEY
+  bucket: $AWS_BUCKET
+  skip_cleanup: true
+  local_dir: electron/release
+  upload-dir: wallet
+  acl: public_read
+  region: $AWS_REGION
+  on:
+    repo: MDLLife/MDL
+    branch: master
