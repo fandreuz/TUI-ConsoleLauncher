@@ -5,7 +5,8 @@
     <string name="app_name">T-UI Modificado</string>
     <string name="location_off">Enciende el GPS</string>
     <string name="share_label">Compartir</string>
-    <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
+    <string name="output_about">Juanse Mastrangelo (Argentina)\n\t-> Traductor
+        \n\nFrancesco Andreuzzi (Italy)\n\t-> Programmer
         \n\nThanks to Luke Winward for his original idea</string>
     <string name="output_refresh">Refrescar: apps, alias, musica, contactos, rss feeds</string>
     <string name="output_rate">Gracias!</string>
@@ -416,27 +417,27 @@
         \n-ls -> listar tus RSS feeds
         \n-l [ID] -> muestra todo el contenido del RSS feeds correspondiente
         \n-show [ID] [boolean] -> alternar la propiedad [show] de la RSS feed guardada dada
-        \n-update_time [ID] [update_time_in_seconds] -> set the update time of the corresponding RSS feed
-        \n-format [ID] [format] -> set the format of the corresponding RSS feed ([format] can be both a string or the ID of an existing format)
-        \n-color [ID] [color] -> set the base color of the corresponding RSS feed
-        \n-wifi_only [ID] [boolean] -> if [boolean] is true, the corresponding feed will be updated only if your device is connected to a WiFi network
-        \n-last_check [ID] -> show the last time t-ui checked this RSS feed
-        \n-entry_tag [ID] -> set the base tag for every single entry (default: \"item\")
-        \n-date_tag [ID] [tag] -> set the tag which holds info about the publication date (default: \"pubDate\")
-        \n-add_command [ID] [IDs (comma separated)] [regex] [cmd] -> create a new regex command that will be applied on the RSS feeds corresponding to IDs
-        \n-rm_command [ID] -> rm the corresponding regex command
-        \n-frc [ID] -> update the corresponding RSS feed
-        \n-info [ID] -> show info about the corresponding RSS feed settings
-        \n-include_if_matches [ID] [regex] -> if the given regex matches on an RSS feed item, it will be shown ([regex] can be both a string or the ID of a regex saved inside regex.xml)
-        \n-exclude_if_matches [ID] [regex] -> if the given regex matches on an RSS feed item, it won\'t be shown ([regex] can be both a string or the ID of a regex saved inside regex.xml)
-        \n-add_format [ID] [format] -> create a new format that you will be able to use for more than one RSS feed
-        \n-rm_format [ID] [format] -> remove an existing format
-        \n-file -> open the file rss.xml</string>
+        \n-update_time [ID] [update_time_in_seconds] -> establecer el tiempo de actualización de la fuente RSS correspondiente
+        \n-format [ID] [format] -> establecer el formato de la fuente RSS correspondiente ([format] puede ser una cadena o la ID de un formato existente)
+        \n-color [ID] [color] -> establecer el color base de la fuente RSS correspondiente
+        \n-wifi_only [ID] [boolean] -> si [boolean] es verdadero, la fuente correspondiente se actualizará solo si su dispositivo está conectado a una red WiFi
+        \n-last_check [ID] -> mostrar la última vez que t-ui revisó este feed RSS
+        \n-entry_tag [ID] -> establece la etiqueta base para cada entrada individual (por defecto: \ "item \")
+        \n-date_tag [ID] [tag] -> establece la etiqueta que contiene información sobre la fecha de publicación (predeterminado: \ "pubDate \")
+        \n-add_command [ID] [IDs (comma separated)] [regex] [cmd] -> cree un nuevo comando regex que se aplicará en los canales RSS correspondientes a las ID
+        \n-rm_command [ID] -> rm el comando regex correspondiente
+        \n-frc [ID] -> actualizar el feed RSS correspondiente
+        \n-info [ID] -> muestra información sobre la configuración de alimentación RSS correspondiente
+        \n-include_if_matches [ID] [regex] -> si la expresión regular dada coincide con un elemento de fuente RSS, se mostrará ([regex] puede ser una cadena o la ID de una expresión regular guardada dentro de regex.xml)
+        \n-exclude_if_matches [ID] [regex] -> si la expresión regular dada coincide con un elemento de fuente RSS, no se mostrará ([regex] puede ser una cadena o la ID de una expresión regular guardada dentro de regex.xml)
+        \n-add_format [ID] [format] -> cree un nuevo formato que podrá usar para más de un feed RSS
+        \n-rm_format [ID] [format] -> eliminar un formato
+        \n-file -> abrir el archivo rss.xml</string>
 
     <!-- linux -->
-    <string name="help_ctrlc">Interrupt the current shell process and create a new one</string>
-    <string name="help_open">Open a file
-        \nUsage:
+    <string name="help_ctrlc">Interrumpa el proceso de shell actual y cree uno nuevo</string>
+    <string name="help_open">Abrir un archivo
+        \nUso:
         \n$ open [pathToFile]
     </string>
 
