@@ -1,6 +1,5 @@
 ## T-UI Linux CLI Launcher
 
-[![HitCount](http://hits.dwyl.io/Andre1299/TUI-ConsoleLauncher.svg)](http://hits.dwyl.io/Andre1299/TUI-ConsoleLauncher)
 [![GPL Licence](https://badges.frapsoft.com/os/gpl/gpl.svg?v=103)](https://opensource.org/licenses/GPL-3.0/)
 <br><br>
 <a href="https://play.google.com/store/apps/details?id=ohi.andre.consolelauncher"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" height="60"></a>
