@@ -112,54 +112,6 @@ public class Tuils {
     // a pattern which matches a %n
     public static Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
-    public static Typeface getTypeface(Context context) {
-        if(globalTypeface == null) {
-            try {
-                XMLPrefsManager.loadCommons(context);
-            } catch (Exception e) {
-                return null;
-            }
-
-            boolean systemFont = XMLPrefsManager.getBoolean(Ui.system_font);
-            if(systemFont) globalTypeface = Typeface.DEFAULT;
-            else {
-                File tui = Tuils.getFolder();
-                if(tui == null) {
-                    return Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-                }
-
-                Pattern p = Pattern.compile(".[ot]tf$");
-
-                File font = null;
-                for(File f : tui.listFiles()) {
-                    String name = f.getName();
-                    if(p.matcher(name).find()) {
-                        font = f;
-                        fontPath = f.getAbsolutePath();
-                        break;
-                    }
-                }
-
-                if(font != null) {
-                    try {
-                        globalTypeface = Typeface.createFromFile(font);
-                        if(globalTypeface == null) throw new UnsupportedOperationException();
-                    } catch (Exception e) {
-                        globalTypeface = null;
-                    }
-                }
-            }
-
-            if(globalTypeface == null) globalTypeface = systemFont ? Typeface.DEFAULT : Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
-        }
-        return globalTypeface;
-    }
-
-    public static void cancelFont() {
-        globalTypeface = null;
-        fontPath = null;
-    }
-
     public static String locationName(Context context, double lat, double lng) {
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
         List<Address> addresses = null;
