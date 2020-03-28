@@ -1,4 +1,4 @@
-package ohi.andre.consolelauncher.managers.xml.classes;
+package ohi.andre.consolelauncher.managers.settings.classes;
 
 import java.util.HashMap;
 import java.util.Map;

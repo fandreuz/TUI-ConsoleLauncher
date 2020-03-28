@@ -33,9 +33,9 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.managers.xml.options.Notifications;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.options.Notifications;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 

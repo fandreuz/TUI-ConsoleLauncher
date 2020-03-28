@@ -18,7 +18,7 @@ import ohi.andre.consolelauncher.commands.CommandsPreferences;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;

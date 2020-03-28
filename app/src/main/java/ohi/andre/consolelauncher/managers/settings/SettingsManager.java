@@ -1,4 +1,4 @@
-package ohi.andre.consolelauncher.managers.xml;
+package ohi.andre.consolelauncher.managers.settings;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -26,15 +26,15 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.managers.xml.options.Cmd;
-import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
-import ohi.andre.consolelauncher.managers.xml.options.Theme;
-import ohi.andre.consolelauncher.managers.xml.options.Toolbar;
-import ohi.andre.consolelauncher.managers.xml.options.Ui;
+import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.options.Cmd;
+import ohi.andre.consolelauncher.managers.settings.options.Suggestions;
+import ohi.andre.consolelauncher.managers.settings.options.Theme;
+import ohi.andre.consolelauncher.managers.settings.options.Toolbar;
+import ohi.andre.consolelauncher.managers.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class SettingsManager {

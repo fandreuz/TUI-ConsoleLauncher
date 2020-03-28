@@ -1,4 +1,4 @@
-package ohi.andre.consolelauncher.managers.xml.classes;
+package ohi.andre.consolelauncher.managers.settings.classes;
 
 /**
  * Created by francescoandreuzzi on 06/03/2018.

@@ -1,10 +1,10 @@
-package ohi.andre.consolelauncher.managers.xml.options;
+package ohi.andre.consolelauncher.managers.settings.options;
 
 import android.os.Build;
 
 import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 17/01/2018.
@@ -20,7 +20,7 @@ public enum Reply implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -30,7 +30,7 @@ public enum Reply implements SettingsOption {
     };
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) return ReplyManager.instance;
         else return null;
     }

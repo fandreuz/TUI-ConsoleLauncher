@@ -11,8 +11,8 @@ import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 
 /**

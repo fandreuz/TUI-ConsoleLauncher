@@ -96,10 +96,10 @@ import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.managers.xml.options.Ui;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 

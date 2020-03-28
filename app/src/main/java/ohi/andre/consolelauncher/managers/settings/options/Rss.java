@@ -1,8 +1,9 @@
-package ohi.andre.consolelauncher.managers.xml.options;
+package ohi.andre.consolelauncher.managers.settings.options;
 
 import ohi.andre.consolelauncher.managers.RssManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 03/10/2017.
@@ -18,7 +19,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
 
         @Override
@@ -34,7 +35,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -50,7 +51,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
 
         @Override
@@ -66,7 +67,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -82,7 +83,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -98,7 +99,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
 
         @Override
@@ -114,7 +115,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -130,7 +131,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
 
         @Override
@@ -146,7 +147,7 @@ public enum Rss implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
 
         @Override
@@ -163,7 +164,7 @@ public enum Rss implements SettingsOption {
     ;
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         return RssManager.instance;
     }
 

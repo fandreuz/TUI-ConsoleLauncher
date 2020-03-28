@@ -42,21 +42,21 @@ import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
-import ohi.andre.consolelauncher.managers.xml.options.Apps;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.managers.xml.options.Theme;
-import ohi.andre.consolelauncher.managers.xml.options.Ui;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.options.Apps;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.options.Theme;
+import ohi.andre.consolelauncher.managers.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.resetFile;
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.set;
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.set;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.writeTo;
 
 public class AppsManager implements XMLPrefsElement {
 

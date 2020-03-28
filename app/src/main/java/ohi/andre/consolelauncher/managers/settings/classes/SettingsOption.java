@@ -1,4 +1,4 @@
-package ohi.andre.consolelauncher.managers.xml.classes;
+package ohi.andre.consolelauncher.managers.settings.classes;
 
 import it.andreuzzi.comparestring2.StringableObject;
 

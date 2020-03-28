@@ -30,8 +30,8 @@ import java.util.List;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Suggestions;
 
 public class SuggestionRunnable implements Runnable {
 

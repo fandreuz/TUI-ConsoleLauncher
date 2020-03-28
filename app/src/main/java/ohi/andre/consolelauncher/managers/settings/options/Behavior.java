@@ -1,13 +1,12 @@
-package ohi.andre.consolelauncher.managers.xml.options;
+package ohi.andre.consolelauncher.managers.settings.options;
 
 import android.os.Environment;
 
 import java.io.File;
 
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
-import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -28,7 +27,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     double_tap_cmd {
@@ -44,7 +43,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     random_play {
@@ -60,7 +59,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     songs_folder {
@@ -76,7 +75,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     songs_from_mediastore {
@@ -92,7 +91,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     tui_notification {
@@ -108,7 +107,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     auto_show_keyboard {
@@ -124,7 +123,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     auto_scroll {
@@ -140,7 +139,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     show_hints {
@@ -156,7 +155,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     show_alias_content {
@@ -172,7 +171,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     show_launch_history {
@@ -188,7 +187,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     clear_after_cmds {
@@ -204,7 +203,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     clear_after_seconds {
@@ -220,7 +219,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     max_lines {
@@ -236,7 +235,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     time_format {
@@ -252,7 +251,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     time_format_separator {
@@ -268,7 +267,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     battery_medium {
@@ -284,7 +283,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     battery_low {
@@ -300,7 +299,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     device_format {
@@ -316,7 +315,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     ram_format {
@@ -332,7 +331,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     battery_format {
@@ -348,7 +347,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     storage_format {
@@ -364,7 +363,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     network_info_format {
@@ -380,7 +379,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     input_format {
@@ -396,7 +395,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     output_format {
@@ -412,7 +411,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     session_info_format {
@@ -428,7 +427,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     enable_app_launch {
@@ -444,7 +443,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     app_launch_format {
@@ -460,7 +459,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     alias_param_marker {
@@ -476,7 +475,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     alias_param_separator {
@@ -492,7 +491,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     alias_replace_all_markers {
@@ -508,7 +507,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     multiple_cmd_separator {
@@ -524,7 +523,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     alias_content_format {
@@ -540,19 +539,19 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     external_storage_path {
         @Override
         public String defaultValue() {
             String path = System.getenv("SECONDARY_STORAGE");
-            if(path == null) return Tuils.EMPTYSTRING;
+            if(path == null) return "";
 
             File file = new File(path);
             if(file != null && file.exists()) return file.getAbsolutePath();
 
-            return Tuils.EMPTYSTRING;
+            return "";
         }
 
         @Override
@@ -562,7 +561,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     home_path {
@@ -578,7 +577,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     app_installed_format {
@@ -594,7 +593,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     app_uninstalled_format {
@@ -610,7 +609,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     enable_music {
@@ -626,7 +625,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     max_optional_depth {
@@ -642,7 +641,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     network_info_update_ms {
@@ -658,7 +657,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     tui_notification_title {
@@ -674,7 +673,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     tui_notification_subtitle {
@@ -690,7 +689,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     tui_notification_click_cmd {
@@ -706,7 +705,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     tui_notification_click_showhome {
@@ -722,7 +721,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     tui_notification_lastcmds_size {
@@ -738,7 +737,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     tui_notification_lastcmds_updown {
@@ -754,7 +753,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     tui_notification_priority {
@@ -770,7 +769,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     long_click_vibration_duration {
@@ -786,7 +785,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     long_click_duration {
@@ -802,7 +801,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     click_commands {
@@ -818,7 +817,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     long_click_commands {
@@ -834,7 +833,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     append_quote_before_file {
@@ -850,7 +849,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     optional_values_separator {
@@ -866,7 +865,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     notes_sorting {
@@ -882,7 +881,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     notes_allow_link {
@@ -898,7 +897,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     orientation {
@@ -914,7 +913,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     htmlextractor_default_format {
@@ -930,7 +929,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     htmlextractor_notfound_message {
@@ -946,7 +945,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     tui_notification_time_color {
@@ -962,7 +961,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
     },
     tui_notification_input_color {
@@ -978,7 +977,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
     },
     weather_key {
@@ -994,7 +993,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     weather_temperature_measure {
@@ -1010,7 +1009,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     weather_location {
@@ -1026,7 +1025,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     weather_format {
@@ -1042,7 +1041,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     clear_on_lock {
@@ -1058,7 +1057,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     unlock_counter_format {
@@ -1074,7 +1073,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     unlock_time_divider {
@@ -1085,7 +1084,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -1106,7 +1105,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     unlock_counter_cycle_start {
@@ -1122,7 +1121,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     not_available_text {
@@ -1138,7 +1137,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
     },
     back_button_enabled {
@@ -1154,7 +1153,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     weather_update_time {
@@ -1170,7 +1169,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     location_update_mintime {
@@ -1186,7 +1185,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     location_update_mindistance {
@@ -1202,7 +1201,7 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     show_weather_updates {
@@ -1218,12 +1217,12 @@ public enum Behavior implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     };
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         return SettingsManager.XMLPrefsRoot.BEHAVIOR;
     }
 

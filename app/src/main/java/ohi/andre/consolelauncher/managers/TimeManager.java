@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.options.Theme;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 

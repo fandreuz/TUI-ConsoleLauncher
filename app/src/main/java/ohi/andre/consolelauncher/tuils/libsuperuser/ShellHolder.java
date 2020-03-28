@@ -6,8 +6,8 @@ import java.io.File;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**

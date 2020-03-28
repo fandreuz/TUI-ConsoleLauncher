@@ -2,9 +2,9 @@ package ohi.andre.consolelauncher.commands;
 
 import java.util.HashMap;
 
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
-import ohi.andre.consolelauncher.managers.xml.options.Cmd;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.options.Cmd;
 
 /**
  * Created by francescoandreuzzi on 06/01/2017.

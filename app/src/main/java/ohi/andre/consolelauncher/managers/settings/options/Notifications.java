@@ -1,8 +1,8 @@
-package ohi.andre.consolelauncher.managers.xml.options;
+package ohi.andre.consolelauncher.managers.settings.options;
 
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -40,7 +40,7 @@ public enum Notifications implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.COLOR;
+            return SettingsOption.TYPE_COLOR;
         }
 
         @Override
@@ -56,7 +56,7 @@ public enum Notifications implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -99,7 +99,7 @@ public enum Notifications implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     notification_popup_exclude_notification {
@@ -115,7 +115,7 @@ public enum Notifications implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     notification_popup_reply {
@@ -131,12 +131,12 @@ public enum Notifications implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     };
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         return NotificationManager.instance;
     }
 
@@ -147,7 +147,7 @@ public enum Notifications implements SettingsOption {
 
     @Override
     public String type() {
-        return SettingsOption.BOOLEAN;
+        return SettingsOption.TYPE_BOOLEAN;
     }
 
     @Override

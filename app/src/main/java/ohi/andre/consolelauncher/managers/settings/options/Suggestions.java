@@ -1,8 +1,8 @@
-package ohi.andre.consolelauncher.managers.xml.options;
+package ohi.andre.consolelauncher.managers.settings.options;
 
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -18,7 +18,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -34,7 +34,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -204,7 +204,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -220,7 +220,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -236,7 +236,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -252,7 +252,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -268,7 +268,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return BOOLEAN;
+            return TYPE_BOOLEAN;
         }
 
         @Override
@@ -284,7 +284,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -300,7 +300,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -316,7 +316,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -332,7 +332,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -348,7 +348,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -364,7 +364,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -380,7 +380,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return INTEGER;
+            return TYPE_INTEGER;
         }
 
         @Override
@@ -396,7 +396,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -412,7 +412,7 @@ public enum Suggestions implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -422,7 +422,7 @@ public enum Suggestions implements SettingsOption {
     };
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         return SettingsManager.XMLPrefsRoot.SUGGESTIONS;
     }
 
@@ -433,7 +433,7 @@ public enum Suggestions implements SettingsOption {
 
     @Override
     public String type() {
-        return SettingsOption.COLOR;
+        return SettingsOption.TYPE_COLOR;
     }
 
     @Override

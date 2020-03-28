@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Random;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Theme;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**

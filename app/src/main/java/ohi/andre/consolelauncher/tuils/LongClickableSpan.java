@@ -16,8 +16,8 @@ import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Notifications;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Notifications;
 
 /**
  * Created by francescoandreuzzi on 22/10/2017.

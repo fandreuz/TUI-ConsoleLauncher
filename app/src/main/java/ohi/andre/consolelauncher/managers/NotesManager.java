@@ -36,16 +36,16 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
-import ohi.andre.consolelauncher.managers.xml.options.Theme;
-import ohi.andre.consolelauncher.managers.xml.options.Ui;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.options.Theme;
+import ohi.andre.consolelauncher.managers.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.resetFile;
 
 /**
  * Created by francescoandreuzzi on 12/02/2018.

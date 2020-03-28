@@ -29,17 +29,17 @@ import java.util.Set;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
-import ohi.andre.consolelauncher.managers.xml.options.Reply;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.options.Reply;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.set;
-import static ohi.andre.consolelauncher.managers.xml.SettingsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.set;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.writeTo;
 
 /**
  * Created by francescoandreuzzi on 17/01/2018.

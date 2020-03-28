@@ -1,10 +1,10 @@
-package ohi.andre.consolelauncher.managers.xml.options;
+package ohi.andre.consolelauncher.managers.settings.options;
 
 import android.os.Build;
 
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -20,7 +20,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -36,7 +36,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -52,7 +52,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -68,7 +68,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -84,7 +84,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -100,7 +100,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -116,7 +116,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -132,7 +132,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -148,7 +148,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -164,7 +164,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -180,7 +180,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -196,7 +196,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -212,7 +212,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -228,7 +228,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -244,7 +244,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -260,7 +260,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -276,7 +276,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -292,7 +292,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -308,7 +308,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -324,7 +324,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -340,7 +340,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -356,7 +356,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -372,7 +372,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -388,7 +388,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -404,7 +404,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -420,7 +420,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -436,7 +436,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -452,7 +452,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -468,7 +468,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -484,7 +484,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -500,7 +500,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -516,7 +516,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -532,7 +532,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -548,7 +548,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -564,7 +564,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -580,7 +580,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -596,7 +596,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -612,7 +612,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -628,7 +628,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -644,7 +644,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -660,7 +660,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -681,7 +681,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     notes_max_lines {
@@ -697,7 +697,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     },
     show_scroll_notes_message {
@@ -713,7 +713,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     show_weather {
@@ -729,7 +729,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
     },
     weather_index {
@@ -740,7 +740,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -756,7 +756,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -772,7 +772,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -788,7 +788,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -804,7 +804,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -820,7 +820,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.BOOLEAN;
+            return SettingsOption.TYPE_BOOLEAN;
         }
 
         @Override
@@ -836,7 +836,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -852,7 +852,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -868,7 +868,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
 
         @Override
@@ -884,7 +884,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -900,7 +900,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -916,7 +916,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -932,7 +932,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -948,7 +948,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -964,7 +964,7 @@ public enum Ui implements SettingsOption {
 
         @Override
         public String type() {
-            return SettingsOption.TEXT;
+            return SettingsOption.TYPE_TEXT;
         }
 
         @Override
@@ -974,7 +974,7 @@ public enum Ui implements SettingsOption {
     };
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         return SettingsManager.XMLPrefsRoot.UI;
     }
 

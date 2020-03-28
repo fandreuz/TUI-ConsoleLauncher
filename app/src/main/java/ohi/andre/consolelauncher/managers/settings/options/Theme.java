@@ -1,8 +1,8 @@
-package ohi.andre.consolelauncher.managers.xml.options;
+package ohi.andre.consolelauncher.managers.settings.options;
 
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -535,7 +535,7 @@ public enum Theme implements SettingsOption {
     ;
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         return SettingsManager.XMLPrefsRoot.THEME;
     }
 
@@ -546,7 +546,7 @@ public enum Theme implements SettingsOption {
 
     @Override
     public String type() {
-        return SettingsOption.COLOR;
+        return SettingsOption.TYPE_COLOR;
     }
 
     @Override

@@ -23,8 +23,8 @@ import java.util.List;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.LauncherActivity;
-import ohi.andre.consolelauncher.managers.xml.SettingsManager;
-import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class TuiLocationManager {
