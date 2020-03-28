@@ -75,6 +75,7 @@
         android:required="false" />
 
     <application
+
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -144,16 +145,6 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LauncherActivity" />
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.EDIT" />
-
-                <data android:mimeType="text/*" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
