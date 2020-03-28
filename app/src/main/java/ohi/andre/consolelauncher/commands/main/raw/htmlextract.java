@@ -11,7 +11,7 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.HTMLExtractManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
@@ -34,7 +34,7 @@ public class htmlextract extends ParamCommand {
 
                 i.putExtra(HTMLExtractManager.ID, pack.getInt());
                 i.putExtra(HTMLExtractManager.FORMAT_ID, pack.getInt());
-                i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, pack.getString());
+                i.putExtra(SettingsManager.VALUE_ATTRIBUTE, pack.getString());
                 i.putExtra(HTMLExtractManager.BROADCAST_COUNT, HTMLExtractManager.broadcastCount);
                 LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(i);
 
@@ -53,7 +53,7 @@ public class htmlextract extends ParamCommand {
 
                     Intent i = new Intent(HTMLExtractManager.ACTION_QUERY);
                     i.putExtra(HTMLExtractManager.ID, pack.getInt());
-                    i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, pack.getString());
+                    i.putExtra(SettingsManager.VALUE_ATTRIBUTE, pack.getString());
                     i.putExtra(HTMLExtractManager.BROADCAST_COUNT, HTMLExtractManager.broadcastCount);
                     LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(i);
 
@@ -74,7 +74,7 @@ public class htmlextract extends ParamCommand {
                 Intent i = new Intent(HTMLExtractManager.ACTION_ADD);
                 i.putExtra(HTMLExtractManager.TAG_NAME, pack.getString());
                 i.putExtra(HTMLExtractManager.ID, pack.getInt());
-                i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, pack.getString());
+                i.putExtra(SettingsManager.VALUE_ATTRIBUTE, pack.getString());
                 i.putExtra(HTMLExtractManager.BROADCAST_COUNT, HTMLExtractManager.broadcastCount);
                 LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(i);
 
@@ -114,7 +114,7 @@ public class htmlextract extends ParamCommand {
                 Intent i = new Intent(HTMLExtractManager.ACTION_EDIT);
                 i.putExtra(HTMLExtractManager.ID, pack.getInt());
                 i.putExtra(HTMLExtractManager.BROADCAST_COUNT, HTMLExtractManager.broadcastCount);
-                i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, pack.getString());
+                i.putExtra(SettingsManager.VALUE_ATTRIBUTE, pack.getString());
                 LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(i);
 
                 return null;

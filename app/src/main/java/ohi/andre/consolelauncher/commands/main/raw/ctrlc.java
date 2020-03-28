@@ -11,7 +11,7 @@ import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 
@@ -34,7 +34,7 @@ public class ctrlc implements CommandAbstraction {
 
                 MainManager.interactive = ((MainPack) pack).shellHolder.build();
 
-                ((MainPack) pack).currentDirectory = XMLPrefsManager.get(File.class, Behavior.home_path);
+                ((MainPack) pack).currentDirectory = SettingsManager.get(File.class, Behavior.home_path);
                 LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(new Intent(UIManager.ACTION_UPDATE_HINT));
             }
         }.start();

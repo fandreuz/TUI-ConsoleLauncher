@@ -17,7 +17,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.PorterDuff;
-import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
@@ -97,8 +96,8 @@ import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
@@ -111,6 +110,25 @@ public class Tuils {
 
     // a pattern which matches a %n
     public static Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+
+    public static CharSequence trim(CharSequence str) {
+        if (str == null || str.length() == 0) {
+            return "";
+        }
+        int len = str.length();
+        int start = 0;
+        int end = len - 1;
+        while (Character.isWhitespace(str.charAt(start)) && start < len) {
+            start++;
+        }
+        while (Character.isWhitespace(str.charAt(end)) && end > 0) {
+            end--;
+        }
+        if (end > start) {
+            return str.subSequence(start, end + 1);
+        }
+        return "";
+    }
 
     public static String locationName(Context context, double lat, double lng) {
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
@@ -348,7 +366,7 @@ public class Tuils {
 
     public static double getAvailableExternalMemorySize(int unit) {
         try {
-            return getAvailableSpace(XMLPrefsManager.get(File.class, Behavior.external_storage_path), unit);
+            return getAvailableSpace(SettingsManager.get(File.class, Behavior.external_storage_path), unit);
         } catch (Exception e) {
             return -1;
         }
@@ -356,7 +374,7 @@ public class Tuils {
 
     public static double getTotalExternalMemorySize(int unit) {
         try {
-            return getTotaleSpace(XMLPrefsManager.get(File.class, Behavior.external_storage_path), unit);
+            return getTotaleSpace(SettingsManager.get(File.class, Behavior.external_storage_path), unit);
         } catch (Exception e) {
             return -1;
         }
@@ -865,7 +883,7 @@ public class Tuils {
     private static String getNicePath(String filePath) {
         if(filePath == null) return "null";
 
-        String home = XMLPrefsManager.get(File.class, Behavior.home_path).getAbsolutePath();
+        String home = SettingsManager.get(File.class, Behavior.home_path).getAbsolutePath();
 
         if(filePath.equals(home)) {
             return "~";
@@ -887,15 +905,15 @@ public class Tuils {
 
             if(o == x) return count;
 
-            if (o instanceof XMLPrefsSave) {
+            if (o instanceof SettingsOption) {
                 try {
-                    if (((XMLPrefsSave) o).label().equals((String) x)) return count;
+                    if (((SettingsOption) o).label().equals((String) x)) return count;
                 } catch (Exception e) {}
             }
 
-            if (o instanceof String && x instanceof XMLPrefsSave) {
+            if (o instanceof String && x instanceof SettingsOption) {
                 try {
-                    if (((XMLPrefsSave) x).label().equals((String) o)) return count;
+                    if (((SettingsOption) x).label().equals((String) o)) return count;
                 } catch (Exception e) {}
             }
 
@@ -912,17 +930,17 @@ public class Tuils {
     static Pattern pu = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     static Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     public static String getHint(String currentPath) {
-        if(!XMLPrefsManager.getBoolean(Ui.show_session_info)) return null;
+        if(!SettingsManager.getBoolean(Ui.show_session_info)) return null;
 
-        String format = XMLPrefsManager.get(Behavior.session_info_format);
+        String format = SettingsManager.get(Behavior.session_info_format);
         if(format.length() == 0) return null;
 
-        String deviceName = XMLPrefsManager.get(Ui.deviceName);
+        String deviceName = SettingsManager.get(Ui.deviceName);
         if(deviceName == null || deviceName.length() == 0) {
             deviceName = Build.DEVICE;
         }
 
-        String username = XMLPrefsManager.get(Ui.username);
+        String username = SettingsManager.get(Ui.username);
         if(username == null) username = "";
 
         format = pd.matcher(format).replaceAll(Matcher.quoteReplacement(deviceName));

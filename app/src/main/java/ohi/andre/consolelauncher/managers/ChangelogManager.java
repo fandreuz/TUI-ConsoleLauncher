@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import okhttp3.OkHttpClient;
@@ -90,8 +90,8 @@ public class ChangelogManager {
 
                         if(cut) {
                             SpannableString sp = new SpannableString("Click here to see the full changelog");
-                            sp.setSpan(new ForegroundColorSpan(XMLPrefsManager.getColor(Theme.output_color)), 0, sp.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            sp.setSpan(new ForegroundColorSpan(XMLPrefsManager.getColor(Theme.link_color)), 6, 10, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            sp.setSpan(new ForegroundColorSpan(SettingsManager.getColor(Theme.output_color)), 0, sp.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            sp.setSpan(new ForegroundColorSpan(SettingsManager.getColor(Theme.link_color)), 6, 10, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             Tuils.sendOutput(context, sp, TerminalManager.CATEGORY_NO_COLOR, Uri.parse(changelogUrl));
                         }
 

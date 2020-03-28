@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Random;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -24,7 +24,6 @@ public class MessagesManager {
 
     final String MARKER = "---------------";
 
-    boolean donate = false;
     final int REACH_THIS = 20;
 
     List<String> original;
@@ -45,7 +44,7 @@ public class MessagesManager {
     public MessagesManager(Context context) {
         this.context = context;
 
-        color = XMLPrefsManager.getColor(Theme.hint_color);
+        color = SettingsManager.getColor(Theme.hint_color);
 
         tutorialMode = isShowingFirstTimeTutorial(context);
         if(tutorialMode) {
@@ -91,9 +90,6 @@ public class MessagesManager {
         } else if(count == REACH_THIS) {
             count = 0;
 
-            if(donate) {
-                Tuils.sendOutput(color, context, R.string.donate);
-            } else {
                 if(copy.size() == 0) {
                     copy = new ArrayList<>(original);
                     random = new Random();
@@ -105,9 +101,6 @@ public class MessagesManager {
                 }
 
                 Tuils.sendOutput(color, context, MARKER + Tuils.NEWLINE + copy.remove(index) + Tuils.NEWLINE + MARKER);
-            }
-
-            donate = !donate;
         }
     }
 

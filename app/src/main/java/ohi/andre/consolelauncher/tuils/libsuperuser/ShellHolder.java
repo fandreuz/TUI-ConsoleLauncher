@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -35,7 +35,7 @@ public class ShellHolder {
                     Tuils.sendOutput(context, line, TerminalManager.CATEGORY_OUTPUT);
                 })
                 .open();
-        interactive.addCommand("cd " + XMLPrefsManager.get(File.class, Behavior.home_path));
+        interactive.addCommand("cd " + SettingsManager.get(File.class, Behavior.home_path));
         return interactive;
     }
 }

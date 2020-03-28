@@ -2,13 +2,13 @@ package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Notifications implements XMLPrefsSave {
+public enum Notifications implements SettingsOption {
 
     show_notifications {
         @Override
@@ -40,7 +40,7 @@ public enum Notifications implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
 
         @Override
@@ -56,7 +56,7 @@ public enum Notifications implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -99,7 +99,7 @@ public enum Notifications implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     notification_popup_exclude_notification {
@@ -115,7 +115,7 @@ public enum Notifications implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     notification_popup_reply {
@@ -131,7 +131,7 @@ public enum Notifications implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     };
 
@@ -147,7 +147,7 @@ public enum Notifications implements XMLPrefsSave {
 
     @Override
     public String type() {
-        return XMLPrefsSave.BOOLEAN;
+        return SettingsOption.BOOLEAN;
     }
 
     @Override

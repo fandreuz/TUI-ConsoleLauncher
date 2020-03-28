@@ -20,17 +20,17 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.RegexManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.set;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.set;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.writeTo;
 
 /**
  * Created by francescoandreuzzi on 29/04/2017.
@@ -57,12 +57,12 @@ public class NotificationManager implements XMLPrefsElement {
     }
 
     @Override
-    public XMLPrefsList getValues() {
+    public SettingsEntriesContainer getValues() {
         return values;
     }
 
     @Override
-    public void write(XMLPrefsSave save, String value) {
+    public void write(SettingsOption save, String value) {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
@@ -71,10 +71,10 @@ public class NotificationManager implements XMLPrefsElement {
         return PATH;
     }
 
-    private XMLPrefsList values;
+    private SettingsEntriesContainer values;
     private List<NotificatedApp> apps;
     private List<Pattern> filters;
-    private List<XMLPrefsManager.IdValue> formats;
+    private List<SettingsManager.IdValue> formats;
 
     public static NotificationManager instance = null;
     public static NotificationManager create(Context context) {
@@ -88,7 +88,7 @@ public class NotificationManager implements XMLPrefsElement {
         apps = new ArrayList<>();
         filters = new ArrayList<>();
         formats = new ArrayList<>();
-        values = new XMLPrefsList();
+        values = new SettingsEntriesContainer();
 
         try {
             File r = Tuils.getFolder();
@@ -104,7 +104,7 @@ public class NotificationManager implements XMLPrefsElement {
 
             Object[] o;
             try {
-                o = XMLPrefsManager.buildDocument(file, NAME);
+                o = SettingsManager.buildDocument(file, NAME);
                 if(o == null) {
                     Tuils.sendXMLParseError(context, PATH);
                     return;
@@ -145,7 +145,7 @@ public class NotificationManager implements XMLPrefsElement {
 
                         Pattern pattern;
 
-                        String regex = XMLPrefsManager.getStringAttribute(e, VALUE_ATTRIBUTE);
+                        String regex = SettingsManager.getStringAttribute(e, VALUE_ATTRIBUTE);
                         if (regex == null) continue;
                         try {
                             int id = Integer.parseInt(regex);
@@ -164,7 +164,7 @@ public class NotificationManager implements XMLPrefsElement {
                     if (node.getNodeType() == Node.ELEMENT_NODE) {
                         Element e = (Element) node;
 
-                        String format = XMLPrefsManager.getStringAttribute(e, VALUE_ATTRIBUTE);
+                        String format = SettingsManager.getStringAttribute(e, VALUE_ATTRIBUTE);
                         if(format == null) continue;
 
                         int id;
@@ -174,7 +174,7 @@ public class NotificationManager implements XMLPrefsElement {
                             continue;
                         }
 
-                        formats.add(new XMLPrefsManager.IdValue(format, id));
+                        formats.add(new SettingsManager.IdValue(format, id));
                     }
                 } else {
                     int index = deleted == null ? -1 : Tuils.find(nn, deleted);
@@ -191,9 +191,9 @@ public class NotificationManager implements XMLPrefsElement {
 
                         NotificatedApp app;
 
-                        boolean enabled = XMLPrefsManager.getBooleanAttribute(e, ENABLED_ATTRIBUTE);
-                        String color = XMLPrefsManager.getStringAttribute(e, COLOR_ATTRIBUTE);
-                        String format = XMLPrefsManager.getStringAttribute(e, FORMAT_ATTRIBUTE);
+                        boolean enabled = SettingsManager.getBooleanAttribute(e, ENABLED_ATTRIBUTE);
+                        String color = SettingsManager.getStringAttribute(e, COLOR_ATTRIBUTE);
+                        String format = SettingsManager.getStringAttribute(e, FORMAT_ATTRIBUTE);
 
                         app = new NotificatedApp(nn, color, format, enabled);
                         apps.add(app);
@@ -202,7 +202,7 @@ public class NotificationManager implements XMLPrefsElement {
             }
 
             if (enums.size() > 0) {
-                for (XMLPrefsSave s : enums) {
+                for (SettingsOption s : enums) {
                     String value = s.defaultValue();
 
                     Element em = d.createElement(s.label());
@@ -225,7 +225,7 @@ public class NotificationManager implements XMLPrefsElement {
             try {
                 int formatID = Integer.parseInt(app.format);
 
-                for(XMLPrefsManager.IdValue idValue : formats) {
+                for(SettingsManager.IdValue idValue : formats) {
                     if(idValue.id == formatID) {
                         app.format = idValue.value;
                         break;
@@ -234,8 +234,8 @@ public class NotificationManager implements XMLPrefsElement {
             } catch (Exception e) {}
         }
 
-        default_app_state = XMLPrefsManager.getBoolean(Notifications.app_notification_enabled_default);
-        default_color = XMLPrefsManager.get(Notifications.default_notification_color);
+        default_app_state = SettingsManager.getBoolean(Notifications.app_notification_enabled_default);
+        default_color = SettingsManager.get(Notifications.default_notification_color);
     }
 
     public void dispose() {
@@ -264,31 +264,31 @@ public class NotificationManager implements XMLPrefsElement {
     }
 
     public static String setState(String pkg, boolean state) {
-        return XMLPrefsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {ENABLED_ATTRIBUTE}, new String[] {String.valueOf(state)});
+        return SettingsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {ENABLED_ATTRIBUTE}, new String[] {String.valueOf(state)});
     }
 
     public static String setColor(String pkg, String color) {
-        return XMLPrefsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {ENABLED_ATTRIBUTE, COLOR_ATTRIBUTE}, new String[] {String.valueOf(true), color});
+        return SettingsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {ENABLED_ATTRIBUTE, COLOR_ATTRIBUTE}, new String[] {String.valueOf(true), color});
     }
 
     public static String setFormat(String pkg, String format) {
-        return XMLPrefsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {FORMAT_ATTRIBUTE}, new String[] {format});
+        return SettingsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {FORMAT_ATTRIBUTE}, new String[] {format});
     }
 
     public static String addFilter(String pattern, int id) {
-        return XMLPrefsManager.add(new File(Tuils.getFolder(), PATH), FILTER_ATTRIBUTE, new String[] {ID_ATTRIBUTE, VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), pattern});
+        return SettingsManager.add(new File(Tuils.getFolder(), PATH), FILTER_ATTRIBUTE, new String[] {ID_ATTRIBUTE, VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), pattern});
     }
 
     public static String addFormat(String format, int id) {
-        return XMLPrefsManager.add(new File(Tuils.getFolder(), PATH), FORMAT_ATTRIBUTE, new String[] {ID_ATTRIBUTE, VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), format});
+        return SettingsManager.add(new File(Tuils.getFolder(), PATH), FORMAT_ATTRIBUTE, new String[] {ID_ATTRIBUTE, VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), format});
     }
 
     public static String rmFilter(int id) {
-        return XMLPrefsManager.removeNode(new File(Tuils.getFolder(), PATH), FILTER_ATTRIBUTE, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
+        return SettingsManager.removeNode(new File(Tuils.getFolder(), PATH), FILTER_ATTRIBUTE, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
     }
 
     public static String rmFormat(int id) {
-        return XMLPrefsManager.removeNode(new File(Tuils.getFolder(), PATH), FORMAT_ATTRIBUTE, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
+        return SettingsManager.removeNode(new File(Tuils.getFolder(), PATH), FORMAT_ATTRIBUTE, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
     }
 
     public boolean match(String text) {

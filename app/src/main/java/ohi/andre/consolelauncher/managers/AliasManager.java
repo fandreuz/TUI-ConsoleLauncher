@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -61,7 +61,7 @@ public class AliasManager {
                 String action = intent.getAction();
 
                 if(action.equals(ACTION_ADD)) {
-                    add(context, intent.getStringExtra(NAME), intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE));
+                    add(context, intent.getStringExtra(NAME), intent.getStringExtra(SettingsManager.VALUE_ATTRIBUTE));
                 } else if(action.equals(ACTION_RM)) {
                     remove(context, intent.getStringExtra(NAME));
                 } else if(action.equals(ACTION_LS)) {
@@ -70,11 +70,11 @@ public class AliasManager {
             }
         };
 
-        paramMarker = XMLPrefsManager.get(Behavior.alias_param_marker);
+        paramMarker = SettingsManager.get(Behavior.alias_param_marker);
         parameterPattern = Pattern.compile(Pattern.quote(paramMarker));
-        paramSeparator = XMLPrefsManager.get(Behavior.alias_param_separator);
-        aliasLabelFormat = XMLPrefsManager.get(Behavior.alias_content_format);
-        replaceAllMarkers = XMLPrefsManager.getBoolean(Behavior.alias_replace_all_markers);
+        paramSeparator = SettingsManager.get(Behavior.alias_param_separator);
+        aliasLabelFormat = SettingsManager.get(Behavior.alias_content_format);
+        replaceAllMarkers = SettingsManager.getBoolean(Behavior.alias_replace_all_markers);
 
         reload();
     }

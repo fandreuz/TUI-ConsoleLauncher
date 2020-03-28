@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.UIManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.LongClickableSpan;
@@ -48,7 +48,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.resetFile;
 
 /**
  * Created by francescoandreuzzi on 29/03/2018.
@@ -96,7 +96,7 @@ public class HTMLExtractManager {
                 if(action.equals(ACTION_ADD)) {
                     int id = intent.getIntExtra(ID, Integer.MAX_VALUE);
                     String tag = intent.getStringExtra(TAG_NAME);
-                    String path = intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
+                    String path = intent.getStringExtra(SettingsManager.VALUE_ATTRIBUTE);
 
                     if(tag.equals(StoreableValue.Type.format.name())) {
                         for(int c = 0; c < formats.size(); c++) {
@@ -162,7 +162,7 @@ public class HTMLExtractManager {
                     if(!check) Tuils.sendOutput(context, R.string.id_notfound);
                 } else if(action.equals(ACTION_EDIT)) {
                     int id = intent.getIntExtra(ID, Integer.MAX_VALUE);
-                    String newExpression = intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
+                    String newExpression = intent.getStringExtra(SettingsManager.VALUE_ATTRIBUTE);
                     if(newExpression == null || newExpression.length() == 0) return;
 
                     for(int c = 0; c < xpaths.size(); c++) {
@@ -229,7 +229,7 @@ public class HTMLExtractManager {
                     if(text.length() == 0) text = "[]";
                     Tuils.sendOutput(context, text);
                 } else if(action.equals(ACTION_QUERY)) {
-                    String website = intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
+                    String website = intent.getStringExtra(SettingsManager.VALUE_ATTRIBUTE);
                     boolean weatherArea = intent.getBooleanExtra(WEATHER_AREA, false);
 
                     String path = intent.getStringExtra(ID);
@@ -283,7 +283,7 @@ public class HTMLExtractManager {
 
                     query(context, path, pathType, format, website, weatherArea);
                 } else if(action.equals(ACTION_WEATHER)) {
-                    String url = intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
+                    String url = intent.getStringExtra(SettingsManager.VALUE_ATTRIBUTE);
                     query(context, weatherFormat, url);
                 }
             }
@@ -299,12 +299,12 @@ public class HTMLExtractManager {
 
         this.client = client;
 
-        linkColor = XMLPrefsManager.getColor(Theme.link_color);
-        outputColor = XMLPrefsManager.getColor(Theme.output_color);
-        weatherColor = XMLPrefsManager.getColor(Theme.weather_color);
-        defaultFormat = XMLPrefsManager.get(Behavior.htmlextractor_default_format);
-        optionalValueSeparator = XMLPrefsManager.get(Behavior.optional_values_separator);
-        weatherFormat = XMLPrefsManager.get(Behavior.weather_format);
+        linkColor = SettingsManager.getColor(Theme.link_color);
+        outputColor = SettingsManager.getColor(Theme.output_color);
+        weatherColor = SettingsManager.getColor(Theme.weather_color);
+        defaultFormat = SettingsManager.get(Behavior.htmlextractor_default_format);
+        optionalValueSeparator = SettingsManager.get(Behavior.optional_values_separator);
+        weatherFormat = SettingsManager.get(Behavior.weather_format);
 
         LocalBroadcastManager.getInstance(context.getApplicationContext()).registerReceiver(receiver, filter);
         broadcastCount = 0;
@@ -320,7 +320,7 @@ public class HTMLExtractManager {
 
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, NAME);
+            o = SettingsManager.buildDocument(file, NAME);
             if(o == null) {
                 Tuils.sendXMLParseError(context, PATH);
                 return;
@@ -392,7 +392,7 @@ public class HTMLExtractManager {
 
                         if(weatherArea) {
                             Intent i = new Intent(UIManager.ACTION_WEATHER);
-                            i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, message);
+                            i.putExtra(SettingsManager.VALUE_ATTRIBUTE, message);
                             LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(i);
                         } else {
                             output(message, context, false);
@@ -449,7 +449,7 @@ public class HTMLExtractManager {
                         o = removeDelimiter(o);
 
                         Intent i = new Intent(UIManager.ACTION_WEATHER);
-                        i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, o);
+                        i.putExtra(SettingsManager.VALUE_ATTRIBUTE, o);
                         LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(i);
                     } else if(pathType == StoreableValue.Type.xpath) {
                         HtmlCleaner cleaner = new HtmlCleaner();
@@ -549,7 +549,7 @@ public class HTMLExtractManager {
     private static void output(CharSequence s, Context context, boolean weatherArea, int category) {
         if(weatherArea) {
             Intent i = new Intent(UIManager.ACTION_WEATHER);
-            i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, s);
+            i.putExtra(SettingsManager.VALUE_ATTRIBUTE, s);
             LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(i);
         } else {
             if(category != Integer.MAX_VALUE) Tuils.sendOutput(context, s, category);
@@ -789,8 +789,8 @@ public class HTMLExtractManager {
         public static StoreableValue fromNode(Element e) {
             String nn = e.getNodeName();
 
-            int id = XMLPrefsManager.getIntAttribute(e, ID);
-            String value = XMLPrefsManager.getStringAttribute(e, XMLPrefsManager.VALUE_ATTRIBUTE);
+            int id = SettingsManager.getIntAttribute(e, ID);
+            String value = SettingsManager.getStringAttribute(e, SettingsManager.VALUE_ATTRIBUTE);
 
             try {
                 return new StoreableValue(id, value, nn);
@@ -812,7 +812,7 @@ public class HTMLExtractManager {
                 resetFile(file, NAME);
             }
 
-            String output = XMLPrefsManager.add(file, tag, new String[] {ID, XMLPrefsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), path});
+            String output = SettingsManager.add(file, tag, new String[] {ID, SettingsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), path});
             if(output != null) {
                 if(output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
                 else Tuils.sendOutput(Color.RED, context, R.string.output_error);
@@ -828,7 +828,7 @@ public class HTMLExtractManager {
                 resetFile(file, NAME);
             }
 
-            String output = XMLPrefsManager.removeNode(file, type.name(), new String[] {ID}, new String[] {String.valueOf(id)});
+            String output = SettingsManager.removeNode(file, type.name(), new String[] {ID}, new String[] {String.valueOf(id)});
             if(output != null) {
                 if(output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
                 else {
@@ -843,7 +843,7 @@ public class HTMLExtractManager {
                 resetFile(file, NAME);
             }
 
-            String output = XMLPrefsManager.set(file, type.name(), new String[] {ID}, new String[] {String.valueOf(id)}, new String[] {XMLPrefsManager.VALUE_ATTRIBUTE}, new String[] {newExpression}, false);
+            String output = SettingsManager.set(file, type.name(), new String[] {ID}, new String[] {String.valueOf(id)}, new String[] {SettingsManager.VALUE_ATTRIBUTE}, new String[] {newExpression}, false);
             if(output != null) {
                 if(output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
                 else {

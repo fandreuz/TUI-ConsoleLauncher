@@ -1,14 +1,14 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Toolbar implements XMLPrefsSave {
+public enum Toolbar implements SettingsOption {
 
     show_toolbar {
         @Override
@@ -23,7 +23,7 @@ public enum Toolbar implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     hide_toolbar_no_input {
@@ -39,13 +39,13 @@ public enum Toolbar implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     };
 
     @Override
     public XMLPrefsElement parent() {
-        return XMLPrefsManager.XMLPrefsRoot.TOOLBAR;
+        return SettingsManager.XMLPrefsRoot.TOOLBAR;
     }
 
     @Override

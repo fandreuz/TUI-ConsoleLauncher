@@ -14,7 +14,7 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -131,7 +131,7 @@ public class apps extends ParamCommand {
                 }
 
                 try {
-                    XMLPrefsSave save = Apps.valueOf("default_app_n" + index);
+                    SettingsOption save = Apps.valueOf("default_app_n" + index);
                     save.parent().write(save, marker);
                     return null;
                 } catch (Exception e) {

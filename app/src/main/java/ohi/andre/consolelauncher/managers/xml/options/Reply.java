@@ -4,13 +4,13 @@ import android.os.Build;
 
 import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 17/01/2018.
  */
 
-public enum Reply implements XMLPrefsSave {
+public enum Reply implements SettingsOption {
 
     reply_enabled {
         @Override
@@ -20,7 +20,7 @@ public enum Reply implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
 
         @Override

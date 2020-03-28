@@ -1,14 +1,14 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Suggestions implements XMLPrefsSave {
+public enum Suggestions implements SettingsOption {
 
     show_suggestions {
         @Override
@@ -18,7 +18,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
 
         @Override
@@ -34,7 +34,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
 
         @Override
@@ -204,7 +204,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
 
         @Override
@@ -220,7 +220,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
 
         @Override
@@ -236,7 +236,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
 
         @Override
@@ -252,7 +252,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
 
         @Override
@@ -284,7 +284,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -300,7 +300,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -316,7 +316,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
 
         @Override
@@ -332,7 +332,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
 
         @Override
@@ -348,7 +348,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -364,7 +364,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
 
         @Override
@@ -396,7 +396,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -412,7 +412,7 @@ public enum Suggestions implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -423,7 +423,7 @@ public enum Suggestions implements XMLPrefsSave {
 
     @Override
     public XMLPrefsElement parent() {
-        return XMLPrefsManager.XMLPrefsRoot.SUGGESTIONS;
+        return SettingsManager.XMLPrefsRoot.SUGGESTIONS;
     }
 
     @Override
@@ -433,7 +433,7 @@ public enum Suggestions implements XMLPrefsSave {
 
     @Override
     public String type() {
-        return XMLPrefsSave.COLOR;
+        return SettingsOption.COLOR;
     }
 
     @Override

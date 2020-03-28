@@ -19,7 +19,7 @@ import android.text.TextUtils;
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.TimeManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
@@ -53,18 +53,18 @@ public class KeeperService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(startId == 1 || startId == 0) {
 
-            title = XMLPrefsManager.get(Behavior.tui_notification_title);
-            subtitle = XMLPrefsManager.get(Behavior.tui_notification_subtitle);
-            clickCmd = XMLPrefsManager.get(Behavior.tui_notification_click_cmd);
-            inputFormat = XMLPrefsManager.get(Behavior.input_format);
-            showHome = XMLPrefsManager.getBoolean(Behavior.tui_notification_click_showhome);
-            inputColor = XMLPrefsManager.getColor(Behavior.tui_notification_input_color);
-            timeColor = XMLPrefsManager.getColor(Behavior.tui_notification_time_color);
-            prefix = XMLPrefsManager.get(Ui.input_prefix);
-            upDown = XMLPrefsManager.getBoolean(Behavior.tui_notification_lastcmds_updown);
-            suPrefix = XMLPrefsManager.get(Ui.input_root_prefix);
+            title = SettingsManager.get(Behavior.tui_notification_title);
+            subtitle = SettingsManager.get(Behavior.tui_notification_subtitle);
+            clickCmd = SettingsManager.get(Behavior.tui_notification_click_cmd);
+            inputFormat = SettingsManager.get(Behavior.input_format);
+            showHome = SettingsManager.getBoolean(Behavior.tui_notification_click_showhome);
+            inputColor = SettingsManager.getColor(Behavior.tui_notification_input_color);
+            timeColor = SettingsManager.getColor(Behavior.tui_notification_time_color);
+            prefix = SettingsManager.get(Ui.input_prefix);
+            upDown = SettingsManager.getBoolean(Behavior.tui_notification_lastcmds_updown);
+            suPrefix = SettingsManager.get(Ui.input_root_prefix);
 
-            priority = XMLPrefsManager.getInt(Behavior.tui_notification_priority);
+            priority = SettingsManager.getInt(Behavior.tui_notification_priority);
             if(priority > 2) priority = 2;
             if(priority < -2) priority = -2;
 
@@ -73,7 +73,7 @@ public class KeeperService extends Service {
             startForeground(ONGOING_NOTIFICATION_ID, buildNotification(getApplicationContext(), title, subtitle, Tuils.getHint(path),
                     clickCmd, showHome, lastCommands, upDown, priority));
 
-            int lastCmdSize = XMLPrefsManager.getInt(Behavior.tui_notification_lastcmds_size);
+            int lastCmdSize = SettingsManager.getInt(Behavior.tui_notification_lastcmds_size);
             if(lastCmdSize > 0) {
                 lastCommands = new CharSequence[lastCmdSize];
             }

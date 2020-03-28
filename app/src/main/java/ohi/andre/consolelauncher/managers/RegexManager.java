@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -55,12 +55,12 @@ public class RegexManager {
                     File file = new File(root, PATH);
                     if(!file.exists()) {
                         file.createNewFile();
-                        XMLPrefsManager.resetFile(file, ROOT);
+                        SettingsManager.resetFile(file, ROOT);
                     }
 
                     Object[] o;
                     try {
-                        o = XMLPrefsManager.buildDocument(file, ROOT);
+                        o = SettingsManager.buildDocument(file, ROOT);
                         if(o == null) {
                             Tuils.sendXMLParseError(context, PATH);
                             return;
@@ -83,8 +83,8 @@ public class RegexManager {
                     for(int c = 0; c < nodeList.getLength(); c++) {
                         Element e = (Element) nodeList.item(c);
 
-                        if(!e.hasAttribute(XMLPrefsManager.VALUE_ATTRIBUTE)) continue;
-                        String value = e.getAttribute(XMLPrefsManager.VALUE_ATTRIBUTE);
+                        if(!e.hasAttribute(SettingsManager.VALUE_ATTRIBUTE)) continue;
+                        String value = e.getAttribute(SettingsManager.VALUE_ATTRIBUTE);
 
                         int id;
                         try {
@@ -143,7 +143,7 @@ public class RegexManager {
 
         File file = new File(Tuils.getFolder(), PATH);
 
-        return XMLPrefsManager.add(file, REGEX_LABEL, new String[] {ID_ATTRIBUTE, XMLPrefsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), value});
+        return SettingsManager.add(file, REGEX_LABEL, new String[] {ID_ATTRIBUTE, SettingsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), value});
     }
 
 //    null: all good
@@ -152,7 +152,7 @@ public class RegexManager {
         try {
             File file = new File(Tuils.getFolder(), PATH);
 
-            Object[] o = XMLPrefsManager.buildDocument(file, null);
+            Object[] o = SettingsManager.buildDocument(file, null);
             if(o == null) {
                 return null;
             }
@@ -180,7 +180,7 @@ public class RegexManager {
             }
 
             if(needToWrite) {
-                XMLPrefsManager.writeTo(d, file);
+                SettingsManager.writeTo(d, file);
                 rmFromList(id);
                 return null;
             }
@@ -197,8 +197,8 @@ public class RegexManager {
         if(regex.regex == null) return "null";
         Matcher m = regex.regex.matcher(test);
 
-        int color = XMLPrefsManager.getColor(Theme.mark_color);
-        int outputColor = XMLPrefsManager.getColor(Theme.output_color);
+        int color = SettingsManager.getColor(Theme.mark_color);
+        int outputColor = SettingsManager.getColor(Theme.output_color);
 
         if(m.matches()) {
             return Tuils.span(color, outputColor, test);

@@ -36,7 +36,7 @@ import ohi.andre.consolelauncher.managers.TuiLocationManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.MusicService;
 import ohi.andre.consolelauncher.managers.notifications.KeeperService;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
@@ -139,13 +139,13 @@ public class MainManager {
     protected MainManager(LauncherActivity c) {
         mContext = c;
 
-        keeperServiceRunning = XMLPrefsManager.getBoolean(Behavior.tui_notification);
+        keeperServiceRunning = SettingsManager.getBoolean(Behavior.tui_notification);
 
-        showAliasValue = XMLPrefsManager.getBoolean(Behavior.show_alias_content);
-        showAppHistory = XMLPrefsManager.getBoolean(Behavior.show_launch_history);
-        aliasContentColor = XMLPrefsManager.getColor(Theme.alias_content_color);
+        showAliasValue = SettingsManager.getBoolean(Behavior.show_alias_content);
+        showAppHistory = SettingsManager.getBoolean(Behavior.show_launch_history);
+        aliasContentColor = SettingsManager.getColor(Theme.alias_content_color);
 
-        multipleCmdSeparator = XMLPrefsManager.get(Behavior.multiple_cmd_separator);
+        multipleCmdSeparator = SettingsManager.get(Behavior.multiple_cmd_separator);
 
         CommandGroup group = new CommandGroup(mContext, COMMANDS_PKG);
 
@@ -198,11 +198,11 @@ public class MainManager {
 
         rssManager = new RssManager(mContext, client);
         themeManager = new ThemeManager(client, mContext, c);
-        musicManager2 = XMLPrefsManager.getBoolean(Behavior.enable_music) ? new MusicManager2(mContext) : null;
+        musicManager2 = SettingsManager.getBoolean(Behavior.enable_music) ? new MusicManager2(mContext) : null;
         ChangelogManager.printLog(mContext, client);
         htmlExtractManager = new HTMLExtractManager(mContext, client);
 
-        if(XMLPrefsManager.getBoolean(Behavior.show_hints)) {
+        if(SettingsManager.getBoolean(Behavior.show_hints)) {
             messagesManager = new MessagesManager(mContext);
         }
 
@@ -416,8 +416,8 @@ public class MainManager {
 
         if(showAppHistory) {
             if(appFormat == null) {
-                appFormat = XMLPrefsManager.get(Behavior.app_launch_format);
-                outputColor = XMLPrefsManager.getColor(Theme.output_color);
+                appFormat = SettingsManager.get(Behavior.app_launch_format);
+                outputColor = SettingsManager.getColor(Theme.output_color);
             }
 
             String a = new String(appFormat);

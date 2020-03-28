@@ -47,8 +47,8 @@ import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.reply.BoundApp;
 import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
@@ -120,36 +120,36 @@ public class SuggestionsManager {
         this.pack = mainPack;
         this.mTerminalAdapter = mTerminalAdapter;
 
-        setAlgorithm(XMLPrefsManager.getInt(Suggestions.suggestions_algorithm));
+        setAlgorithm(SettingsManager.getInt(Suggestions.suggestions_algorithm));
 
-        quickCompare = XMLPrefsManager.getInt(Suggestions.suggestions_quickcompare_n);
+        quickCompare = SettingsManager.getInt(Suggestions.suggestions_quickcompare_n);
 
-        this.suggestionsPerCategory = XMLPrefsManager.getInt(Suggestions.suggestions_per_category);
-        this.suggestionsDeadline = Float.parseFloat(XMLPrefsManager.get(Suggestions.suggestions_deadline));
+        this.suggestionsPerCategory = SettingsManager.getInt(Suggestions.suggestions_per_category);
+        this.suggestionsDeadline = Float.parseFloat(SettingsManager.get(Suggestions.suggestions_deadline));
 
         this.removeAllSuggestions = new RemoverRunnable(suggestionsView);
 
-        doubleSpaceFirstSuggestion = XMLPrefsManager.getBoolean(Suggestions.double_space_click_first_suggestion);
-        SuggestionsManager.Suggestion.appendQuotesBeforeFile = XMLPrefsManager.getBoolean(Behavior.append_quote_before_file);
-        multipleCmdSeparator = XMLPrefsManager.get(Behavior.multiple_cmd_separator);
+        doubleSpaceFirstSuggestion = SettingsManager.getBoolean(Suggestions.double_space_click_first_suggestion);
+        SuggestionsManager.Suggestion.appendQuotesBeforeFile = SettingsManager.getBoolean(Behavior.append_quote_before_file);
+        multipleCmdSeparator = SettingsManager.get(Behavior.multiple_cmd_separator);
 
         enabled = true;
 
-        showAliasDefault = XMLPrefsManager.getBoolean(Suggestions.suggest_alias_default);
-        showAppsGpDefault = XMLPrefsManager.getBoolean(Suggestions.suggest_appgp_default);
-        clickToLaunch = XMLPrefsManager.getBoolean(Suggestions.click_to_launch);
+        showAliasDefault = SettingsManager.getBoolean(Suggestions.suggest_alias_default);
+        showAppsGpDefault = SettingsManager.getBoolean(Suggestions.suggest_appgp_default);
+        clickToLaunch = SettingsManager.getBoolean(Suggestions.click_to_launch);
 
-        minCmdPriority = XMLPrefsManager.getInt(Suggestions.noinput_min_command_priority);
+        minCmdPriority = SettingsManager.getInt(Suggestions.noinput_min_command_priority);
 
-        spaces = UIManager.getListOfIntValues(XMLPrefsManager.get(Suggestions.suggestions_spaces), 4, 0);
+        spaces = UIManager.getListOfIntValues(SettingsManager.get(Suggestions.suggestions_spaces), 4, 0);
 
         try {
-            hideViewValue = HideSuggestionViewValues.valueOf(XMLPrefsManager.get(Suggestions.hide_suggestions_when_empty).toUpperCase());
+            hideViewValue = HideSuggestionViewValues.valueOf(SettingsManager.get(Suggestions.hide_suggestions_when_empty).toUpperCase());
         } catch (Exception e) {
             hideViewValue = HideSuggestionViewValues.valueOf(Suggestions.hide_suggestions_when_empty.defaultValue().toUpperCase());
         }
 
-        String s = XMLPrefsManager.get(Suggestions.suggestions_order);
+        String s = SettingsManager.get(Suggestions.suggestions_order);
         Pattern orderPattern = Pattern.compile("(\\d+)\\((\\d+)\\)");
         Matcher m = orderPattern.matcher(s);
 
@@ -177,7 +177,7 @@ public class SuggestionsManager {
             index++;
         }
 
-        s = XMLPrefsManager.get(Suggestions.noinput_suggestions_order);
+        s = SettingsManager.get(Suggestions.noinput_suggestions_order);
         orderPattern = Pattern.compile("(\\d+)\\((\\d+)\\)");
         m = orderPattern.matcher(s);
 
@@ -289,7 +289,7 @@ public class SuggestionsManager {
         textView.setClickable(true);
 
         textView.setTypeface(Tuils.getTypeface(context));
-        textView.setTextSize(XMLPrefsManager.getInt(Suggestions.suggestions_size));
+        textView.setTextSize(SettingsManager.getInt(Suggestions.suggestions_size));
 
         textView.setPadding(spaces[2], spaces[3], spaces[2], spaces[3]);
 
@@ -1105,7 +1105,7 @@ public class SuggestionsManager {
         if(xmlPrefsEntrys == null) {
             xmlPrefsEntrys = new ArrayList<>();
 
-            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) xmlPrefsEntrys.addAll(element.enums);
+            for(SettingsManager.XMLPrefsRoot element : SettingsManager.XMLPrefsRoot.values()) xmlPrefsEntrys.addAll(element.enums);
 
             Collections.addAll(xmlPrefsEntrys, Apps.values());
             Collections.addAll(xmlPrefsEntrys, Notifications.values());
@@ -1113,10 +1113,10 @@ public class SuggestionsManager {
             Collections.addAll(xmlPrefsEntrys, Reply.values());
         }
 
-        List<XMLPrefsSave> list = new ArrayList<>(xmlPrefsEntrys);
+        List<SettingsOption> list = new ArrayList<>(xmlPrefsEntrys);
 
         if(afterLastSpace == null || afterLastSpace.length() == 0) {
-            for(XMLPrefsSave s : list) {
+            for(SettingsOption s : list) {
                 Suggestion sg = new Suggestion(beforeLastSpace , s.label(), false, Suggestion.TYPE_COMMAND);
                 suggestions.add(sg);
             }
@@ -1125,8 +1125,8 @@ public class SuggestionsManager {
             int counter = quickCompare(afterLastSpace, list, suggestions, beforeLastSpace, suggestionsPerCategory, false, Suggestion.TYPE_COMMAND, false);
             if(suggestionsPerCategory - counter <= 0) return;
 
-            XMLPrefsSave[] saves = CompareObjects.topMatchesWithDeadline(XMLPrefsSave.class, afterLastSpace, list.size(), list, suggestionsPerCategory - counter, suggestionsDeadline, XML_PREFS_SPLITTERS, algInstance, alg);
-            for (XMLPrefsSave s : saves) {
+            SettingsOption[] saves = CompareObjects.topMatchesWithDeadline(SettingsOption.class, afterLastSpace, list.size(), list, suggestionsPerCategory - counter, suggestionsDeadline, XML_PREFS_SPLITTERS, algInstance, alg);
+            for (SettingsOption s : saves) {
                 suggestions.add(new Suggestion(beforeLastSpace , s.label(), false, Suggestion.TYPE_COMMAND));
             }
         }
@@ -1135,7 +1135,7 @@ public class SuggestionsManager {
     private void suggestConfigFile(List<Suggestion> suggestions, String afterLastSpace, String beforeLastSpace ) {
         if(xmlPrefsFiles == null) {
             xmlPrefsFiles = new ArrayList<>();
-            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values())
+            for(SettingsManager.XMLPrefsRoot element : SettingsManager.XMLPrefsRoot.values())
                 xmlPrefsFiles.add(element.path);
             xmlPrefsFiles.add(AppsManager.PATH);
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) xmlPrefsFiles.add(ReplyManager.PATH);

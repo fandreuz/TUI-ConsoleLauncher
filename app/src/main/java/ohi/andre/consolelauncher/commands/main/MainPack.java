@@ -18,7 +18,7 @@ import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.interfaces.Redirectator;
 import ohi.andre.consolelauncher.tuils.libsuperuser.ShellHolder;
@@ -72,7 +72,7 @@ public class MainPack extends ExecutePack {
                     ContactManager c, Redirectator redirectator, RssManager rssManager, OkHttpClient client) {
         super(commandGroup);
 
-        this.currentDirectory = XMLPrefsManager.get(File.class, Behavior.home_path);
+        this.currentDirectory = SettingsManager.get(File.class, Behavior.home_path);
 
         this.rssManager = rssManager;
 

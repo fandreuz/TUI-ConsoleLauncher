@@ -11,20 +11,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GestureDetectorCompat;
-import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.DisplayMetrics;
@@ -50,7 +46,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +61,7 @@ import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.TuiLocationManager;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionTextWatcher;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
@@ -74,13 +69,11 @@ import ohi.andre.consolelauncher.managers.xml.options.Toolbar;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.AllowEqualsSequence;
 import ohi.andre.consolelauncher.tuils.NetworkUtils;
-import ohi.andre.consolelauncher.tuils.OutlineEditText;
 import ohi.andre.consolelauncher.tuils.OutlineTextView;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
-import ohi.andre.consolelauncher.tuils.interfaces.OnTextChanged;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
 
 public class UIManager implements OnTouchListener {
@@ -182,7 +175,7 @@ public class UIManager implements OnTouchListener {
         @Override
         public void update(float p) {
             if(batteryFormat == null) {
-                batteryFormat = XMLPrefsManager.get(Behavior.battery_format);
+                batteryFormat = SettingsManager.get(Behavior.battery_format);
 
                 Intent intent = mContext.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 if(intent == null) charging = false;
@@ -191,7 +184,7 @@ public class UIManager implements OnTouchListener {
                     charging = plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB;
                 }
 
-                String optionalSeparator = "\\" + XMLPrefsManager.get(Behavior.optional_values_separator);
+                String optionalSeparator = "\\" + SettingsManager.get(Behavior.optional_values_separator);
                 String optional = "%\\(([^" + optionalSeparator + "]*)" + optionalSeparator + "([^)]*)\\)";
                 optionalCharging = Pattern.compile(optional, Pattern.CASE_INSENSITIVE);
             }
@@ -202,10 +195,10 @@ public class UIManager implements OnTouchListener {
             if(!loaded) {
                 loaded = true;
 
-                manyStatus = XMLPrefsManager.getBoolean(Ui.enable_battery_status);
-                colorHigh = XMLPrefsManager.getColor(Theme.battery_color_high);
-                colorMedium = XMLPrefsManager.getColor(Theme.battery_color_medium);
-                colorLow = XMLPrefsManager.getColor(Theme.battery_color_low);
+                manyStatus = SettingsManager.getBoolean(Ui.enable_battery_status);
+                colorHigh = SettingsManager.getColor(Theme.battery_color_high);
+                colorMedium = SettingsManager.getColor(Theme.battery_color_medium);
+                colorLow = SettingsManager.getColor(Theme.battery_color_low);
             }
 
             int percentage = (int) p;
@@ -262,8 +255,8 @@ public class UIManager implements OnTouchListener {
         @Override
         public void run() {
             if(storageFormat == null) {
-                storageFormat = XMLPrefsManager.get(Behavior.storage_format);
-                color = XMLPrefsManager.getColor(Theme.storage_color);
+                storageFormat = SettingsManager.get(Behavior.storage_format);
+                color = SettingsManager.getColor(Theme.storage_color);
             }
 
             if(storagePatterns == null) {
@@ -381,9 +374,9 @@ public class UIManager implements OnTouchListener {
         @Override
         public void run() {
             if(ramFormat == null) {
-                ramFormat = XMLPrefsManager.get(Behavior.ram_format);
+                ramFormat = SettingsManager.get(Behavior.ram_format);
 
-                color = XMLPrefsManager.getColor(Theme.ram_color);
+                color = SettingsManager.getColor(Theme.ram_color);
             }
 
             if(ramPatterns == null) {
@@ -491,11 +484,11 @@ public class UIManager implements OnTouchListener {
         @Override
         public void run() {
             if (format == null) {
-                format = XMLPrefsManager.get(Behavior.network_info_format);
-                color = XMLPrefsManager.getColor(Theme.network_info_color);
-                maxDepth = XMLPrefsManager.getInt(Behavior.max_optional_depth);
+                format = SettingsManager.get(Behavior.network_info_format);
+                color = SettingsManager.getColor(Theme.network_info_color);
+                maxDepth = SettingsManager.getInt(Behavior.max_optional_depth);
 
-                updateTime = XMLPrefsManager.getInt(Behavior.network_info_update_ms);
+                updateTime = SettingsManager.getInt(Behavior.network_info_update_ms);
                 if (updateTime < 1000)
                     updateTime = Integer.parseInt(Behavior.network_info_update_ms.defaultValue());
 
@@ -503,7 +496,7 @@ public class UIManager implements OnTouchListener {
                 wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-                optionalValueSeparator = "\\" + XMLPrefsManager.get(Behavior.optional_values_separator);
+                optionalValueSeparator = "\\" + SettingsManager.get(Behavior.optional_values_separator);
 
                 String wifiRegex = "%\\(([^" + optionalValueSeparator + "]*)" + optionalValueSeparator + "([^)]*)\\)";
                 String dataRegex = "%\\[([^" + optionalValueSeparator + "]*)" + optionalValueSeparator + "([^\\]]*)\\]";
@@ -646,16 +639,16 @@ public class UIManager implements OnTouchListener {
 
         public WeatherRunnable() {
 
-            if(XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
-                weatherDelay = XMLPrefsManager.getInt(Behavior.weather_update_time);
-                key = XMLPrefsManager.get(Behavior.weather_key);
+            if(SettingsManager.wasChanged(Behavior.weather_key, false)) {
+                weatherDelay = SettingsManager.getInt(Behavior.weather_update_time);
+                key = SettingsManager.get(Behavior.weather_key);
             } else {
                 key = Behavior.weather_key.defaultValue();
                 weatherDelay = 60 * 60;
             }
             weatherDelay *= 1000;
 
-            String where = XMLPrefsManager.get(Behavior.weather_location);
+            String where = SettingsManager.get(Behavior.weather_location);
             if(where == null || where.length() == 0 || (!Tuils.isNumber(where) && !where.contains(","))) {
 //                Tuils.location(mContext, new Tuils.ArgsRunnable() {
 //                    @Override
@@ -715,17 +708,17 @@ public class UIManager implements OnTouchListener {
             if(url == null) return;
 
             Intent i = new Intent(HTMLExtractManager.ACTION_WEATHER);
-            i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, url);
+            i.putExtra(SettingsManager.VALUE_ATTRIBUTE, url);
             i.putExtra(HTMLExtractManager.BROADCAST_COUNT, HTMLExtractManager.broadcastCount);
             LocalBroadcastManager.getInstance(mContext.getApplicationContext()).sendBroadcast(i);
         }
 
         private void setUrl(String where) {
-            url = "http://api.openweathermap.org/data/2.5/weather?" + where + "&appid=" + key + "&units=" + XMLPrefsManager.get(Behavior.weather_temperature_measure);
+            url = "http://api.openweathermap.org/data/2.5/weather?" + where + "&appid=" + key + "&units=" + SettingsManager.get(Behavior.weather_temperature_measure);
         }
 
         private void setUrl(double latitude, double longitude) {
-            url = "http://api.openweathermap.org/data/2.5/weather?" + "lat=" + latitude + "&lon=" + longitude + "&appid=" + key + "&units=" + XMLPrefsManager.get(Behavior.weather_temperature_measure);
+            url = "http://api.openweathermap.org/data/2.5/weather?" + "lat=" + latitude + "&lon=" + longitude + "&appid=" + key + "&units=" + SettingsManager.get(Behavior.weather_temperature_measure);
         }
     }
 
@@ -771,6 +764,49 @@ public class UIManager implements OnTouchListener {
     public MainPack pack;
 
     private boolean clearOnLock;
+
+    public static Typeface loadTypeface(Context context) {
+        if(globalTypeface == null) {
+            try {
+                SettingsManager.loadCommons(context);
+            } catch (Exception e) {
+                return null;
+            }
+
+            boolean systemFont = SettingsManager.getBoolean(Ui.system_font);
+            if(systemFont) globalTypeface = Typeface.DEFAULT;
+            else {
+                File tui = Tuils.getFolder();
+                if(tui == null) {
+                    return Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+                }
+
+                Pattern p = Pattern.compile(".[ot]tf$");
+
+                File font = null;
+                for(File f : tui.listFiles()) {
+                    String name = f.getName();
+                    if(p.matcher(name).find()) {
+                        font = f;
+                        fontPath = f.getAbsolutePath();
+                        break;
+                    }
+                }
+
+                if(font != null) {
+                    try {
+                        globalTypeface = Typeface.createFromFile(font);
+                        if(globalTypeface == null) throw new UnsupportedOperationException();
+                    } catch (Exception e) {
+                        globalTypeface = null;
+                    }
+                }
+            }
+
+            if(globalTypeface == null) globalTypeface = systemFont ? Typeface.DEFAULT : Typeface.createFromAsset(context.getAssets(), "lucida_console.ttf");
+        }
+        return globalTypeface;
+    }
 
     protected UIManager(final Context context, final ViewGroup rootView, MainPack mainPack, boolean canApplyTheme, CommandExecuter executer) {
 
@@ -826,8 +862,8 @@ public class UIManager implements OnTouchListener {
                 } else if(action.equals(ACTION_WEATHER)) {
                     Calendar c = Calendar.getInstance();
 
-                    CharSequence s = intent.getCharSequenceExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
-                    if(s == null) s = intent.getStringExtra(XMLPrefsManager.VALUE_ATTRIBUTE);
+                    CharSequence s = intent.getCharSequenceExtra(SettingsManager.VALUE_ATTRIBUTE);
+                    if(s == null) s = intent.getStringExtra(SettingsManager.VALUE_ATTRIBUTE);
                     if(s == null) return;
 
                     s = Tuils.span(context, s, weatherColor, labelSizes[Label.weather.ordinal()]);
@@ -846,7 +882,7 @@ public class UIManager implements OnTouchListener {
 
                     if(intent.getBooleanExtra(TuiLocationManager.FAIL, false)) {
                         handler.removeCallbacks(weatherRunnable);
-                        weatherRunnable = null;
+                        //weatherRunnable = null;
 
                         CharSequence s = Tuils.span(context, context.getString(R.string.location_error), weatherColor, labelSizes[Label.weather.ordinal()]);
 
@@ -857,10 +893,10 @@ public class UIManager implements OnTouchListener {
 
                         location = Tuils.locationName(context, lastLatitude, lastLongitude);
 
-                        if(!weatherPerformedStartupRun || XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
+                        //if(!weatherPerformedStartupRun || XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
                             handler.removeCallbacks(weatherRunnable);
                             handler.post(weatherRunnable);
-                        }
+                        //}
                     }
                 } else if(action.equals(ACTION_WEATHER_DELAY)) {
                     Calendar c = Calendar.getInstance();
@@ -893,14 +929,14 @@ public class UIManager implements OnTouchListener {
 
         imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        if (!XMLPrefsManager.getBoolean(Ui.system_wallpaper) || !canApplyTheme) {
-            rootView.setBackgroundColor(XMLPrefsManager.getColor(Theme.bg_color));
+        if (!SettingsManager.getBoolean(Ui.system_wallpaper) || !canApplyTheme) {
+            rootView.setBackgroundColor(SettingsManager.getColor(Theme.bg_color));
         } else {
-            rootView.setBackgroundColor(XMLPrefsManager.getColor(Theme.overlay_color));
+            rootView.setBackgroundColor(SettingsManager.getColor(Theme.overlay_color));
         }
 
 //        scrolllllll
-        if(XMLPrefsManager.getBoolean(Behavior.auto_scroll)) {
+        if(SettingsManager.getBoolean(Behavior.auto_scroll)) {
             rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
                 int heightDiff = rootView.getRootView().getHeight() - rootView.getHeight();
                 if (heightDiff > Tuils.dpToPx(context, 200)) { // if more than 200 dp, it's probably a keyboard...
@@ -909,10 +945,10 @@ public class UIManager implements OnTouchListener {
             });
         }
 
-        clearOnLock = XMLPrefsManager.getBoolean(Behavior.clear_on_lock);
+        clearOnLock = SettingsManager.getBoolean(Behavior.clear_on_lock);
 
-        lockOnDbTap = XMLPrefsManager.getBoolean(Behavior.double_tap_lock);
-        doubleTapCmd = XMLPrefsManager.get(Behavior.double_tap_cmd);
+        lockOnDbTap = SettingsManager.getBoolean(Behavior.double_tap_lock);
+        doubleTapCmd = SettingsManager.get(Behavior.double_tap_cmd);
         if(!lockOnDbTap && doubleTapCmd == null) {
             policy = null;
             component = null;
@@ -984,19 +1020,19 @@ public class UIManager implements OnTouchListener {
             });
         }
 
-        int[] displayMargins = getListOfIntValues(XMLPrefsManager.get(Ui.display_margin_mm), 4, 0);
+        int[] displayMargins = getListOfIntValues(SettingsManager.get(Ui.display_margin_mm), 4, 0);
         DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
         rootView.setPadding(Tuils.mmToPx(metrics, displayMargins[0]), Tuils.mmToPx(metrics, displayMargins[1]), Tuils.mmToPx(metrics, displayMargins[2]), Tuils.mmToPx(metrics, displayMargins[3]));
 
-        labelSizes[Label.time.ordinal()] = XMLPrefsManager.getInt(Ui.time_size);
-        labelSizes[Label.ram.ordinal()] = XMLPrefsManager.getInt(Ui.ram_size);
-        labelSizes[Label.battery.ordinal()] = XMLPrefsManager.getInt(Ui.battery_size);
-        labelSizes[Label.storage.ordinal()] = XMLPrefsManager.getInt(Ui.storage_size);
-        labelSizes[Label.network.ordinal()] = XMLPrefsManager.getInt(Ui.network_size);
-        labelSizes[Label.notes.ordinal()] = XMLPrefsManager.getInt(Ui.notes_size);
-        labelSizes[Label.device.ordinal()] = XMLPrefsManager.getInt(Ui.device_size);
-        labelSizes[Label.weather.ordinal()] = XMLPrefsManager.getInt(Ui.weather_size);
-        labelSizes[Label.unlock.ordinal()] = XMLPrefsManager.getInt(Ui.unlock_size);
+        labelSizes[Label.time.ordinal()] = SettingsManager.getInt(Ui.time_size);
+        labelSizes[Label.ram.ordinal()] = SettingsManager.getInt(Ui.ram_size);
+        labelSizes[Label.battery.ordinal()] = SettingsManager.getInt(Ui.battery_size);
+        labelSizes[Label.storage.ordinal()] = SettingsManager.getInt(Ui.storage_size);
+        labelSizes[Label.network.ordinal()] = SettingsManager.getInt(Ui.network_size);
+        labelSizes[Label.notes.ordinal()] = SettingsManager.getInt(Ui.notes_size);
+        labelSizes[Label.device.ordinal()] = SettingsManager.getInt(Ui.device_size);
+        labelSizes[Label.weather.ordinal()] = SettingsManager.getInt(Ui.weather_size);
+        labelSizes[Label.unlock.ordinal()] = SettingsManager.getInt(Ui.unlock_size);
 
         labelViews = new TextView[] {
                 (TextView) rootView.findViewById(R.id.tv0),
@@ -1011,55 +1047,55 @@ public class UIManager implements OnTouchListener {
         };
 
         boolean[] show = new boolean[Label.values().length];
-        show[Label.notes.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_notes);
-        show[Label.ram.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_ram);
-        show[Label.device.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_device_name);
-        show[Label.time.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_time);
-        show[Label.battery.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_battery);
-        show[Label.network.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_network_info);
-        show[Label.storage.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_storage_info);
-        show[Label.weather.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_weather);
-        show[Label.unlock.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_unlock_counter);
+        show[Label.notes.ordinal()] = SettingsManager.getBoolean(Ui.show_notes);
+        show[Label.ram.ordinal()] = SettingsManager.getBoolean(Ui.show_ram);
+        show[Label.device.ordinal()] = SettingsManager.getBoolean(Ui.show_device_name);
+        show[Label.time.ordinal()] = SettingsManager.getBoolean(Ui.show_time);
+        show[Label.battery.ordinal()] = SettingsManager.getBoolean(Ui.show_battery);
+        show[Label.network.ordinal()] = SettingsManager.getBoolean(Ui.show_network_info);
+        show[Label.storage.ordinal()] = SettingsManager.getBoolean(Ui.show_storage_info);
+        show[Label.weather.ordinal()] = SettingsManager.getBoolean(Ui.show_weather);
+        show[Label.unlock.ordinal()] = SettingsManager.getBoolean(Ui.show_unlock_counter);
 
         float[] indexes = new float[Label.values().length];
-        indexes[Label.notes.ordinal()] = show[Label.notes.ordinal()] ? XMLPrefsManager.getFloat(Ui.notes_index) : Integer.MAX_VALUE;
-        indexes[Label.ram.ordinal()] = show[Label.ram.ordinal()] ? XMLPrefsManager.getFloat(Ui.ram_index) : Integer.MAX_VALUE;
-        indexes[Label.device.ordinal()] = show[Label.device.ordinal()] ? XMLPrefsManager.getFloat(Ui.device_index) : Integer.MAX_VALUE;
-        indexes[Label.time.ordinal()] = show[Label.time.ordinal()] ? XMLPrefsManager.getFloat(Ui.time_index) : Integer.MAX_VALUE;
-        indexes[Label.battery.ordinal()] = show[Label.battery.ordinal()] ? XMLPrefsManager.getFloat(Ui.battery_index) : Integer.MAX_VALUE;
-        indexes[Label.network.ordinal()] = show[Label.network.ordinal()] ? XMLPrefsManager.getFloat(Ui.network_index) : Integer.MAX_VALUE;
-        indexes[Label.storage.ordinal()] = show[Label.storage.ordinal()] ? XMLPrefsManager.getFloat(Ui.storage_index) : Integer.MAX_VALUE;
-        indexes[Label.weather.ordinal()] = show[Label.weather.ordinal()] ? XMLPrefsManager.getFloat(Ui.weather_index) : Integer.MAX_VALUE;
-        indexes[Label.unlock.ordinal()] = show[Label.unlock.ordinal()] ? XMLPrefsManager.getFloat(Ui.unlock_index) : Integer.MAX_VALUE;
+        indexes[Label.notes.ordinal()] = show[Label.notes.ordinal()] ? SettingsManager.getFloat(Ui.notes_index) : Integer.MAX_VALUE;
+        indexes[Label.ram.ordinal()] = show[Label.ram.ordinal()] ? SettingsManager.getFloat(Ui.ram_index) : Integer.MAX_VALUE;
+        indexes[Label.device.ordinal()] = show[Label.device.ordinal()] ? SettingsManager.getFloat(Ui.device_index) : Integer.MAX_VALUE;
+        indexes[Label.time.ordinal()] = show[Label.time.ordinal()] ? SettingsManager.getFloat(Ui.time_index) : Integer.MAX_VALUE;
+        indexes[Label.battery.ordinal()] = show[Label.battery.ordinal()] ? SettingsManager.getFloat(Ui.battery_index) : Integer.MAX_VALUE;
+        indexes[Label.network.ordinal()] = show[Label.network.ordinal()] ? SettingsManager.getFloat(Ui.network_index) : Integer.MAX_VALUE;
+        indexes[Label.storage.ordinal()] = show[Label.storage.ordinal()] ? SettingsManager.getFloat(Ui.storage_index) : Integer.MAX_VALUE;
+        indexes[Label.weather.ordinal()] = show[Label.weather.ordinal()] ? SettingsManager.getFloat(Ui.weather_index) : Integer.MAX_VALUE;
+        indexes[Label.unlock.ordinal()] = show[Label.unlock.ordinal()] ? SettingsManager.getFloat(Ui.unlock_index) : Integer.MAX_VALUE;
 
-        int[] statusLineAlignments = getListOfIntValues(XMLPrefsManager.get(Ui.status_lines_alignment), 9, -1);
+        int[] statusLineAlignments = getListOfIntValues(SettingsManager.get(Ui.status_lines_alignment), 9, -1);
 
-        String[] statusLinesBgRectColors = getListOfStringValues(XMLPrefsManager.get(Theme.status_lines_bgrectcolor), 9, "#ff000000");
+        String[] statusLinesBgRectColors = getListOfStringValues(SettingsManager.get(Theme.status_lines_bgrectcolor), 9, "#ff000000");
         String[] otherBgRectColors = {
-                XMLPrefsManager.get(Theme.input_bgrectcolor),
-                XMLPrefsManager.get(Theme.output_bgrectcolor),
-                XMLPrefsManager.get(Theme.suggestions_bgrectcolor),
-                XMLPrefsManager.get(Theme.toolbar_bgrectcolor)
+                SettingsManager.get(Theme.input_bgrectcolor),
+                SettingsManager.get(Theme.output_bgrectcolor),
+                SettingsManager.get(Theme.suggestions_bgrectcolor),
+                SettingsManager.get(Theme.toolbar_bgrectcolor)
         };
         String[] bgRectColors = new String[statusLinesBgRectColors.length + otherBgRectColors.length];
         System.arraycopy(statusLinesBgRectColors, 0, bgRectColors, 0, statusLinesBgRectColors.length);
         System.arraycopy(otherBgRectColors, 0, bgRectColors, statusLinesBgRectColors.length, otherBgRectColors.length);
 
-        String[] statusLineBgColors = getListOfStringValues(XMLPrefsManager.get(Theme.status_lines_bg), 9, "#00000000");
+        String[] statusLineBgColors = getListOfStringValues(SettingsManager.get(Theme.status_lines_bg), 9, "#00000000");
         String[] otherBgColors = {
-                XMLPrefsManager.get(Theme.input_bg),
-                XMLPrefsManager.get(Theme.output_bg),
-                XMLPrefsManager.get(Theme.suggestions_bg),
-                XMLPrefsManager.get(Theme.toolbar_bg)
+                SettingsManager.get(Theme.input_bg),
+                SettingsManager.get(Theme.output_bg),
+                SettingsManager.get(Theme.suggestions_bg),
+                SettingsManager.get(Theme.toolbar_bg)
         };
         String[] bgColors = new String[statusLineBgColors.length + otherBgColors.length];
         System.arraycopy(statusLineBgColors, 0, bgColors, 0, statusLineBgColors.length);
         System.arraycopy(otherBgColors, 0, bgColors, statusLineBgColors.length, otherBgColors.length);
 
-        String[] statusLineOutlineColors = getListOfStringValues(XMLPrefsManager.get(Theme.status_lines_shadow_color), 9, "#00000000");
+        String[] statusLineOutlineColors = getListOfStringValues(SettingsManager.get(Theme.status_lines_shadow_color), 9, "#00000000");
         String[] otherOutlineColors = {
-                XMLPrefsManager.get(Theme.input_shadow_color),
-                XMLPrefsManager.get(Theme.output_shadow_color),
+                SettingsManager.get(Theme.input_shadow_color),
+                SettingsManager.get(Theme.output_shadow_color),
         };
         String[] outlineColors = new String[statusLineOutlineColors.length + otherOutlineColors.length];
         System.arraycopy(statusLineOutlineColors, 0, outlineColors, 0, statusLineOutlineColors.length);
@@ -1067,7 +1103,7 @@ public class UIManager implements OnTouchListener {
 
         int shadowXOffset, shadowYOffset;
         float shadowRadius;
-        String[] shadowParams = getListOfStringValues(XMLPrefsManager.get(Ui.shadow_params), 3, "0");
+        String[] shadowParams = getListOfStringValues(SettingsManager.get(Ui.shadow_params), 3, "0");
         shadowXOffset = Integer.parseInt(shadowParams[0]);
         shadowYOffset = Integer.parseInt(shadowParams[1]);
         shadowRadius = Float.parseFloat(shadowParams[2]);
@@ -1078,7 +1114,7 @@ public class UIManager implements OnTouchListener {
         final int TOOLBAR_BGCOLOR_INDEX = 12;
 
         int strokeWidth, cornerRadius;
-        String[] rectParams = getListOfStringValues(XMLPrefsManager.get(Ui.bgrect_params), 2, "0");
+        String[] rectParams = getListOfStringValues(SettingsManager.get(Ui.bgrect_params), 2, "0");
         strokeWidth = Integer.parseInt(rectParams[0]);
         cornerRadius = Integer.parseInt(rectParams[1]);
 
@@ -1089,12 +1125,12 @@ public class UIManager implements OnTouchListener {
         final int SUGGESTIONS_MARGINS_INDEX = 5;
 
         final int[][] margins = new int[6][4];
-        margins[0] = getListOfIntValues(XMLPrefsManager.get(Ui.status_lines_margins), 4, 0);
-        margins[1] = getListOfIntValues(XMLPrefsManager.get(Ui.output_field_margins), 4, 0);
-        margins[2] = getListOfIntValues(XMLPrefsManager.get(Ui.input_area_margins), 4, 0);
-        margins[3] = getListOfIntValues(XMLPrefsManager.get(Ui.input_field_margins), 4, 0);
-        margins[4] = getListOfIntValues(XMLPrefsManager.get(Ui.toolbar_margins), 4, 0);
-        margins[5] = getListOfIntValues(XMLPrefsManager.get(Ui.suggestions_area_margin), 4, 0);
+        margins[0] = getListOfIntValues(SettingsManager.get(Ui.status_lines_margins), 4, 0);
+        margins[1] = getListOfIntValues(SettingsManager.get(Ui.output_field_margins), 4, 0);
+        margins[2] = getListOfIntValues(SettingsManager.get(Ui.input_area_margins), 4, 0);
+        margins[3] = getListOfIntValues(SettingsManager.get(Ui.input_field_margins), 4, 0);
+        margins[4] = getListOfIntValues(SettingsManager.get(Ui.toolbar_margins), 4, 0);
+        margins[5] = getListOfIntValues(SettingsManager.get(Ui.suggestions_area_margin), 4, 0);
 
         AllowEqualsSequence sequence = new AllowEqualsSequence(indexes, Label.values());
 
@@ -1154,10 +1190,10 @@ public class UIManager implements OnTouchListener {
             Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
             Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
-            String deviceFormat = XMLPrefsManager.get(Behavior.device_format);
+            String deviceFormat = SettingsManager.get(Behavior.device_format);
 
-            String username = XMLPrefsManager.get(Ui.username);
-            String deviceName = XMLPrefsManager.get(Ui.deviceName);
+            String username = SettingsManager.get(Ui.username);
+            String deviceName = SettingsManager.get(Ui.deviceName);
             if (deviceName == null || deviceName.length() == 0) {
                 deviceName = Build.DEVICE;
             }
@@ -1166,7 +1202,7 @@ public class UIManager implements OnTouchListener {
             deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(deviceName));
             deviceFormat = Tuils.patternNewline.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
 
-            updateText(Label.device, Tuils.span(mContext, deviceFormat, XMLPrefsManager.getColor(Theme.device_color), labelSizes[Label.device.ordinal()]));
+            updateText(Label.device, Tuils.span(mContext, deviceFormat, SettingsManager.getColor(Theme.device_color), labelSizes[Label.device.ordinal()]));
         }
 
         if(show[Label.time.ordinal()]) {
@@ -1177,8 +1213,8 @@ public class UIManager implements OnTouchListener {
         if(show[Label.battery.ordinal()]) {
             batteryUpdate = new BatteryUpdate();
 
-            mediumPercentage = XMLPrefsManager.getInt(Behavior.battery_medium);
-            lowPercentage = XMLPrefsManager.getInt(Behavior.battery_low);
+            mediumPercentage = SettingsManager.getInt(Behavior.battery_medium);
+            lowPercentage = SettingsManager.getInt(Behavior.battery_low);
 
             Tuils.registerBatteryReceiver(context, batteryUpdate);
         } else {
@@ -1198,14 +1234,14 @@ public class UIManager implements OnTouchListener {
 
             notesView.setMovementMethod(new LinkMovementMethod());
 
-            notesMaxLines = XMLPrefsManager.getInt(Ui.notes_max_lines);
+            notesMaxLines = SettingsManager.getInt(Ui.notes_max_lines);
             if(notesMaxLines > 0) {
                 notesView.setMaxLines(notesMaxLines);
                 notesView.setEllipsize(TextUtils.TruncateAt.MARQUEE);
 //                notesView.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
 //                notesView.setVerticalScrollBarEnabled(true);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && XMLPrefsManager.getBoolean(Ui.show_scroll_notes_message)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB && SettingsManager.getBoolean(Ui.show_scroll_notes_message)) {
                     notesView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 
                         int linesBefore = Integer.MIN_VALUE;
@@ -1226,24 +1262,24 @@ public class UIManager implements OnTouchListener {
         if(show[Label.weather.ordinal()]) {
             weatherRunnable = new WeatherRunnable();
 
-            weatherColor = XMLPrefsManager.getColor(Theme.weather_color);
+            weatherColor = SettingsManager.getColor(Theme.weather_color);
 
-            String where = XMLPrefsManager.get(Behavior.weather_location);
+            String where = SettingsManager.get(Behavior.weather_location);
             if(where.contains(",") || Tuils.isNumber(where)) handler.post(weatherRunnable);
 
-            showWeatherUpdate = XMLPrefsManager.getBoolean(Behavior.show_weather_updates);
+            showWeatherUpdate = SettingsManager.getBoolean(Behavior.show_weather_updates);
         }
 
         if(show[Label.unlock.ordinal()]) {
             unlockTimes = preferences.getInt(UNLOCK_KEY, 0);
 
-            unlockColor = XMLPrefsManager.getColor(Theme.unlock_counter_color);
-            unlockFormat = XMLPrefsManager.get(Behavior.unlock_counter_format);
-            notAvailableText = XMLPrefsManager.get(Behavior.not_available_text);
-            unlockTimeDivider = XMLPrefsManager.get(Behavior.unlock_time_divider);
+            unlockColor = SettingsManager.getColor(Theme.unlock_counter_color);
+            unlockFormat = SettingsManager.get(Behavior.unlock_counter_format);
+            notAvailableText = SettingsManager.get(Behavior.not_available_text);
+            unlockTimeDivider = SettingsManager.get(Behavior.unlock_time_divider);
             unlockTimeDivider = Tuils.patternNewline.matcher(unlockTimeDivider).replaceAll(Tuils.NEWLINE);
 
-            String start = XMLPrefsManager.get(Behavior.unlock_counter_cycle_start);
+            String start = SettingsManager.get(Behavior.unlock_counter_cycle_start);
             Pattern p = Pattern.compile("(\\d{1,2}).(\\d{1,2})");
             Matcher m = p.matcher(start);
             if(!m.find()) {
@@ -1254,7 +1290,7 @@ public class UIManager implements OnTouchListener {
             unlockHour = Integer.parseInt(m.group(1));
             unlockMinute = Integer.parseInt(m.group(2));
 
-            unlockTimeOrder = XMLPrefsManager.getInt(Behavior.unlock_time_order);
+            unlockTimeOrder = SettingsManager.getInt(Behavior.unlock_time_order);
 
             nextUnlockCycleRestart = preferences.getLong(NEXT_UNLOCK_CYCLE_RESTART, 0);
 //            Tuils.log("set", nextUnlockCycleRestart);
@@ -1277,7 +1313,7 @@ public class UIManager implements OnTouchListener {
             }
         }
 
-        final boolean inputBottom = XMLPrefsManager.getBoolean(Ui.input_bottom);
+        final boolean inputBottom = SettingsManager.getBoolean(Ui.input_bottom);
         int layoutId = inputBottom ? R.layout.input_down_layout : R.layout.input_up_layout;
 
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -1302,7 +1338,7 @@ public class UIManager implements OnTouchListener {
         applyMargins(prefixView, margins[INPUTFIELD_MARGINS_INDEX]);
 
         ImageView submitView = (ImageView) inputOutputView.findViewById(R.id.submit_tv);
-        boolean showSubmit = XMLPrefsManager.getBoolean(Ui.show_enter_button);
+        boolean showSubmit = SettingsManager.getBoolean(Ui.show_enter_button);
         if (!showSubmit) {
             submitView.setVisibility(View.GONE);
             submitView = null;
@@ -1321,7 +1357,7 @@ public class UIManager implements OnTouchListener {
 //        });
 
 //        toolbar
-        boolean showToolbar = XMLPrefsManager.getBoolean(Toolbar.show_toolbar);
+        boolean showToolbar = SettingsManager.getBoolean(Toolbar.show_toolbar);
         ImageButton backView = null;
         ImageButton nextView = null;
         ImageButton deleteView = null;
@@ -1337,14 +1373,14 @@ public class UIManager implements OnTouchListener {
             pasteView = (ImageButton) inputOutputView.findViewById(R.id.paste_view);
 
             toolbarView = inputOutputView.findViewById(R.id.tools_view);
-            hideToolbarNoInput = XMLPrefsManager.getBoolean(Toolbar.hide_toolbar_no_input);
+            hideToolbarNoInput = SettingsManager.getBoolean(Toolbar.hide_toolbar_no_input);
 
             applyBgRect(toolbarView, bgRectColors[TOOLBAR_BGCOLOR_INDEX], bgColors[TOOLBAR_BGCOLOR_INDEX], margins[TOOLBAR_MARGINS_INDEX], strokeWidth, cornerRadius);
         }
 
         mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, context, mainPack, executer);
 
-        if (XMLPrefsManager.getBoolean(Suggestions.show_suggestions)) {
+        if (SettingsManager.getBoolean(Suggestions.show_suggestions)) {
             HorizontalScrollView sv = (HorizontalScrollView) rootView.findViewById(R.id.suggestions_container);
             sv.setFocusable(false);
             sv.setOnFocusChangeListener((v, hasFocus) -> {
@@ -1368,7 +1404,7 @@ public class UIManager implements OnTouchListener {
             rootView.findViewById(R.id.suggestions_group).setVisibility(View.GONE);
         }
 
-        int drawTimes = XMLPrefsManager.getInt(Ui.text_redraw_times);
+        int drawTimes = SettingsManager.getInt(Ui.text_redraw_times);
         if(drawTimes <= 0) drawTimes = 1;
         OutlineTextView.redrawTimes = drawTimes;
     }
@@ -1741,4 +1777,3 @@ public class UIManager implements OnTouchListener {
         updateText(Label.unlock, s);
     }
 }
-

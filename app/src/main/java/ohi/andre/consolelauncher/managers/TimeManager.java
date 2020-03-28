@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
@@ -33,8 +33,8 @@ public class TimeManager {
     public static TimeManager instance;
 
     public TimeManager(Context context) {
-        String format = XMLPrefsManager.get(Behavior.time_format);
-        String separator = XMLPrefsManager.get(Behavior.time_format_separator);
+        String format = SettingsManager.get(Behavior.time_format);
+        String separator = SettingsManager.get(Behavior.time_format_separator);
 
         String[] formats = format.split(separator);
         dateFormatList = new Map.Entry[formats.length];
@@ -45,7 +45,7 @@ public class TimeManager {
             try {
                 formats[c] = Tuils.patternNewline.matcher(formats[c]).replaceAll(Tuils.NEWLINE);
 
-                int color = XMLPrefsManager.getColor(Theme.time_color);
+                int color = SettingsManager.getColor(Theme.time_color);
                 Matcher m = colorPattern.matcher(formats[c]);
                 if(m.find()) {
                     color = Color.parseColor(m.group());

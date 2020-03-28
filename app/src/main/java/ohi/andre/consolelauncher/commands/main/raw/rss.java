@@ -13,7 +13,7 @@ import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Rss;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -181,7 +181,7 @@ public class rss extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                Node n = XMLPrefsManager.findNode(new File(Tuils.getFolder(), RssManager.PATH), RssManager.RSS_LABEL, new String[] {RssManager.ID_ATTRIBUTE}, new String[] {String.valueOf(pack.getInt())});
+                Node n = SettingsManager.findNode(new File(Tuils.getFolder(), RssManager.PATH), RssManager.RSS_LABEL, new String[] {RssManager.ID_ATTRIBUTE}, new String[] {String.valueOf(pack.getInt())});
                 if(n == null) return pack.context.getString(R.string.id_notfound);
 
                 Element el = (Element) n;
@@ -190,7 +190,7 @@ public class rss extends ParamCommand {
                 if(value == null) return pack.context.getString(R.string.rss_never_checked);
 
                 try {
-                    return TimeManager.instance.replace(XMLPrefsManager.get(Rss.rss_time_format), Long.parseLong(value),
+                    return TimeManager.instance.replace(SettingsManager.get(Rss.rss_time_format), Long.parseLong(value),
                             Integer.MAX_VALUE).toString();
                 } catch (Exception e) {
                     Tuils.log(e);

@@ -1,14 +1,15 @@
 package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.AppsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsFile;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Apps implements XMLPrefsSave {
+public enum Apps implements SettingsOption {
 
     default_app_n1 {
         @Override
@@ -78,7 +79,7 @@ public enum Apps implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.TYPE_INTEGER;
         }
     };
 
@@ -91,13 +92,13 @@ public enum Apps implements XMLPrefsSave {
     }
 
     @Override
-    public XMLPrefsElement parent() {
+    public SettingsFile parent() {
         return AppsManager.instance;
     }
 
     @Override
     public String type() {
-        return XMLPrefsSave.APP;
+        return SettingsOption.TYPE_APP;
     }
 
     @Override

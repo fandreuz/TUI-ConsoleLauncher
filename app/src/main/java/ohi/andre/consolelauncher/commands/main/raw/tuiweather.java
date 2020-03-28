@@ -9,8 +9,8 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -27,9 +27,9 @@ public class tuiweather extends ParamCommand {
         update {
             @Override
             public String exec(ExecutePack pack) {
-                if(!XMLPrefsManager.getBoolean(Ui.show_weather)) {
+                if(!SettingsManager.getBoolean(Ui.show_weather)) {
                     return pack.context.getString(R.string.weather_disabled);
-                } else if(!XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
+                } else if(!SettingsManager.wasChanged(Behavior.weather_key, false)) {
                     return pack.context.getString(R.string.weather_cant_update);
                 } else {
                     LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(new Intent(UIManager.ACTION_WEATHER_MANUAL_UPDATE));
@@ -41,7 +41,7 @@ public class tuiweather extends ParamCommand {
         enable {
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = Ui.show_weather;
+                SettingsOption save = Ui.show_weather;
 
                 save.parent().write(save, "true");
                 ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + "true");
@@ -53,7 +53,7 @@ public class tuiweather extends ParamCommand {
         disable {
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = Ui.show_weather;
+                SettingsOption save = Ui.show_weather;
 
                 save.parent().write(save, "false");
                 ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + "false");

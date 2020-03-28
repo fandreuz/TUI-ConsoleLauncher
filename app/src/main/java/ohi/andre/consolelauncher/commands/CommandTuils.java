@@ -20,8 +20,8 @@ import ohi.andre.consolelauncher.managers.HTMLExtractManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.managers.xml.options.Rss;
@@ -34,7 +34,7 @@ public class CommandTuils {
     private static FileManager.SpecificExtensionFileFilter extensionFileFilter = new FileManager.SpecificExtensionFileFilter();
     private static FileManager.SpecificNameFileFilter nameFileFilter = new FileManager.SpecificNameFileFilter();
 
-    public static List<XMLPrefsSave> xmlPrefsEntrys;
+    public static List<SettingsOption> xmlPrefsEntrys;
     public static List<String> xmlPrefsFiles;
 
     //	parse a command
@@ -462,7 +462,7 @@ public class CommandTuils {
         if(xmlPrefsEntrys == null) {
             xmlPrefsEntrys = new ArrayList<>();
 
-            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
+            for(SettingsManager.XMLPrefsRoot element : SettingsManager.XMLPrefsRoot.values()) {
                 xmlPrefsEntrys.addAll(element.enums);
             }
             Collections.addAll(xmlPrefsEntrys, Apps.values());
@@ -471,7 +471,7 @@ public class CommandTuils {
         }
 
         String candidate = index == -1 ? input : input.substring(0,index);
-        for(XMLPrefsSave xs : xmlPrefsEntrys) {
+        for(SettingsOption xs : xmlPrefsEntrys) {
             if(xs.label().equals(candidate)) {
                 return new ArgInfo(xs, index == -1 ? null : input.substring(index + 1,input.length()), true, 1);
             }
@@ -482,7 +482,7 @@ public class CommandTuils {
     private static ArgInfo configFile(String input) {
         if(xmlPrefsFiles == null) {
             xmlPrefsFiles = new ArrayList<>();
-            for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values())
+            for(SettingsManager.XMLPrefsRoot element : SettingsManager.XMLPrefsRoot.values())
                 xmlPrefsFiles.add(element.path);
             xmlPrefsFiles.add(AppsManager.PATH);
             xmlPrefsFiles.add(NotificationManager.PATH);

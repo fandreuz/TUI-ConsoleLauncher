@@ -27,8 +27,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Cmd;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
@@ -37,20 +37,13 @@ import ohi.andre.consolelauncher.managers.xml.options.Toolbar;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-public class XMLPrefsManager {
+public class SettingsManager {
 
-    public static final String XML_DEFAULT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    public static final String VALUE_ATTRIBUTE = "value";
+    public final String XML_DEFAULT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    public final String VALUE_ATTRIBUTE = "value";
 
-    private static DocumentBuilderFactory factory;
-    private static DocumentBuilder builder;
-
-    static {
-        factory = DocumentBuilderFactory.newInstance();
-        try {
-            builder = factory.newDocumentBuilder();
-        } catch (ParserConfigurationException e) {}
-    }
+    private DocumentBuilderFactory factory;
+    private DocumentBuilder builder;
 
     public enum XMLPrefsRoot implements XMLPrefsElement {
 
@@ -96,22 +89,22 @@ public class XMLPrefsManager {
 //        alias
 
         public String path;
-        XMLPrefsList values;
-        public List<XMLPrefsSave> enums;
+        SettingsEntriesContainer values;
+        public List<SettingsOption> enums;
 
-        XMLPrefsRoot(XMLPrefsSave[] en) {
-            this.values = new XMLPrefsList();
+        XMLPrefsRoot(SettingsOption[] en) {
+            this.values = new SettingsEntriesContainer();
 
             this.enums = new ArrayList<>(Arrays.asList(en));
             this.path = this.name().toLowerCase() + ".xml";
         }
 
         @Override
-        public void write(XMLPrefsSave save, String value) {
+        public void write(SettingsOption save, String value) {
             set(new File(Tuils.getFolder(), path), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
         }
 
-        public XMLPrefsList getValues() {
+        public SettingsEntriesContainer getValues() {
             return values;
         }
 
@@ -121,21 +114,33 @@ public class XMLPrefsManager {
         }
     }
 
-    private XMLPrefsManager() {}
+    private static SettingsManager instance;
+
+    public static SettingsManager getInstance() {
+        if(instance == null) instance = new SettingsManager();
+        return instance;
+    }
 
     public static void dispose() {
-        commonsLoaded = false;
+        instance = null;
 
         for(XMLPrefsRoot element : XMLPrefsRoot.values()) {
             element.values.list.clear();
         }
     }
 
-    static boolean commonsLoaded = false;
-    public static void loadCommons(Context context) {
-        if(commonsLoaded) return;
-        commonsLoaded = true;
+    private SettingsManager() {
+        factory = DocumentBuilderFactory.newInstance();
+        try {
+            builder = factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+    }
 
+    // make sure to call this method from a non-UI thread
+    // loads the settings file and stores the values
+    public void loadSettings(Context context) {
         File folder = Tuils.getFolder();
         if(folder == null) {
             Tuils.sendOutput(Color.RED, context, R.string.tuinotfound_xmlprefs);
@@ -167,7 +172,7 @@ public class XMLPrefsManager {
             Element root = (Element) o[1];
 
 //            we are keeping this because maybe there are some new values to write
-            List<XMLPrefsSave> enums = new ArrayList<>(element.enums);
+            List<SettingsOption> enums = new ArrayList<>(element.enums);
 
             String[] deleted = element.delete();
             boolean needToWrite = false;
@@ -194,10 +199,10 @@ public class XMLPrefsManager {
 
                 boolean check = false;
                 for(int en = 0; en < enums.size(); en++) {
-                    XMLPrefsSave opt = enums.get(en);
+                    SettingsOption opt = enums.get(en);
 
                     if(opt.label().equals(nn)) {
-                        XMLPrefsSave s = enums.remove(en);
+                        SettingsOption s = enums.remove(en);
 
                         String[] iv = s.invalidValues();
                         if(iv != null) {
@@ -241,7 +246,7 @@ public class XMLPrefsManager {
                 continue;
             }
 
-            for(XMLPrefsSave s : enums) {
+            for(SettingsOption s : enums) {
                 String value = s.defaultValue();
 
                 Element em = d.createElement(s.label());
@@ -276,23 +281,23 @@ public class XMLPrefsManager {
         return Tuils.getDefaultValue(c);
     }
 
-    public static float getFloat(XMLPrefsSave prefsSave) {
+    public static float getFloat(SettingsOption prefsSave) {
         return get(float.class, prefsSave);
     }
 
-    public static double getDouble(XMLPrefsSave prefsSave) {
+    public static double getDouble(SettingsOption prefsSave) {
         return get(double.class, prefsSave);
     }
 
-    public static int getInt(XMLPrefsSave prefsSave) {
+    public static int getInt(SettingsOption prefsSave) {
         return get(int.class, prefsSave);
     }
 
-    public static boolean getBoolean(XMLPrefsSave prefsSave) {
+    public static boolean getBoolean(SettingsOption prefsSave) {
         return get(boolean.class, prefsSave);
     }
 
-    public static int getColor(XMLPrefsSave prefsSave) {
+    public static int getColor(SettingsOption prefsSave) {
         if(prefsSave.parent() == null) return Integer.MAX_VALUE;
 
         try {
@@ -311,7 +316,7 @@ public class XMLPrefsManager {
         }
     }
 
-    public static String getString(XMLPrefsSave prefsSave) {
+    public static String getString(SettingsOption prefsSave) {
         return get(prefsSave);
     }
 
@@ -323,7 +328,7 @@ public class XMLPrefsManager {
         }
     }
 
-    public static <T> T get(Class<T> c, XMLPrefsSave prefsSave) {
+    public static <T> T get(Class<T> c, SettingsOption prefsSave) {
         try {
 //            if(prefsSave.is(Notifications.show_notifications.label())) {
 //                Tuils.log("----------------");
@@ -345,7 +350,7 @@ public class XMLPrefsManager {
         }
     }
 
-    public static String get(XMLPrefsSave prefsSave) {
+    public static String get(SettingsOption prefsSave) {
         return get(String.class, prefsSave);
     }
 
@@ -353,7 +358,7 @@ public class XMLPrefsManager {
         return get(String.class, root, s);
     }
 
-    public static boolean wasChanged(XMLPrefsSave save, boolean allowLengthZero) {
+    public static boolean wasChanged(SettingsOption save, boolean allowLengthZero) {
         String value = get(save);
         return (allowLengthZero || value.length() > 0) && !value.equals(save.defaultValue());
     }
@@ -388,7 +393,7 @@ public class XMLPrefsManager {
 
             int nOfBytes = Tuils.nOfBytes(file);
             if(nOfBytes == 0 && rootName != null) {
-                XMLPrefsManager.resetFile(file, rootName);
+                SettingsManager.resetFile(file, rootName);
                 d = builder.parse(file);
             } else return null;
         }

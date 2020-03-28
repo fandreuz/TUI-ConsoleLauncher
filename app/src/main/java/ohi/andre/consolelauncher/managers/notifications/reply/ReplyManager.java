@@ -29,17 +29,17 @@ import java.util.Set;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Reply;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.set;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.set;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.writeTo;
 
 /**
  * Created by francescoandreuzzi on 17/01/2018.
@@ -63,7 +63,7 @@ public class ReplyManager implements XMLPrefsElement {
     private BroadcastReceiver receiver;
 
     public static ReplyManager instance;
-    private XMLPrefsList values;
+    private SettingsEntriesContainer values;
 
     private boolean enabled;
 
@@ -81,7 +81,7 @@ public class ReplyManager implements XMLPrefsElement {
         if(!enabled) return;
 
         notificationWears = new HashSet<>();
-        values = new XMLPrefsList();
+        values = new SettingsEntriesContainer();
         this.context = context;
 
         instance = this;
@@ -146,7 +146,7 @@ public class ReplyManager implements XMLPrefsElement {
 
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, NAME);
+            o = SettingsManager.buildDocument(file, NAME);
             if(o == null) {
                 Tuils.sendXMLParseError(context, PATH);
                 return;
@@ -183,7 +183,7 @@ public class ReplyManager implements XMLPrefsElement {
                         }
                     }
                 } else {
-                    int id = XMLPrefsManager.getIntAttribute((Element) node, ID_ATTRIBUTE);
+                    int id = SettingsManager.getIntAttribute((Element) node, ID_ATTRIBUTE);
 
                     ApplicationInfo info;
                     try {
@@ -199,7 +199,7 @@ public class ReplyManager implements XMLPrefsElement {
             }
 
             if (loadPrefs && enums.size() > 0) {
-                for (XMLPrefsSave s : enums) {
+                for (SettingsOption s : enums) {
                     String value = s.defaultValue();
 
                     Element em = d.createElement(s.label());
@@ -347,12 +347,12 @@ public class ReplyManager implements XMLPrefsElement {
     }
 
     @Override
-    public XMLPrefsList getValues() {
+    public SettingsEntriesContainer getValues() {
         return values;
     }
 
     @Override
-    public void write(XMLPrefsSave save, String value) {
+    public void write(SettingsOption save, String value) {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
@@ -380,11 +380,11 @@ public class ReplyManager implements XMLPrefsElement {
     }
 
     public static String bind(String pkg) {
-        return XMLPrefsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(nextUsableId)});
+        return SettingsManager.set(new File(Tuils.getFolder(), PATH), pkg, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(nextUsableId)});
     }
 
     public static String unbind(String pkg) {
-        return XMLPrefsManager.removeNode(new File(Tuils.getFolder(), PATH), pkg);
+        return SettingsManager.removeNode(new File(Tuils.getFolder(), PATH), pkg);
     }
 
     private int nextUsableId() {

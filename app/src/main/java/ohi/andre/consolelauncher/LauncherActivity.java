@@ -10,7 +10,6 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -26,8 +25,6 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Set;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
@@ -42,22 +39,23 @@ import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationMonitorService;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Assist;
-import ohi.andre.consolelauncher.tuils.CustomExceptionHandler;
 import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.PublicIOReceiver;
-import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
+/*
+The main activity of the launcher.
+ */
 public class LauncherActivity extends AppCompatActivity implements Reloadable {
 
     public static final int COMMAND_REQUEST_PERMISSION = 10;
@@ -73,119 +71,64 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     private PrivateIOReceiver privateIOReceiver;
     private PublicIOReceiver publicIOReceiver;
 
-    private boolean openKeyboardOnStart, canApplyTheme, backButtonEnabled;
+    private boolean openKeyboardOnStart, backButtonEnabled;
 
+    // a restart message is shown the next time the user restarts t-ui
+    // note that a restart message is lost if t-ui doesn't quit properly
+    // each category holds the messages sent around by the components of t-ui
     private Set<ReloadMessageCategory> categories;
-    private Runnable stopActivity = () -> {
-            dispose();
-            finish();
 
-            Intent startMain = new Intent(Intent.ACTION_MAIN);
-            startMain.addCategory(Intent.CATEGORY_HOME);
+    // build the restart message
+    private CharSequence restartMessage() {
+        CharSequence reloadMessage = "";
+        for (ReloadMessageCategory c : categories) {
+            reloadMessage = TextUtils.concat(reloadMessage, "\n", c.text());
+        }
+        return reloadMessage;
+    }
 
-            CharSequence reloadMessage = Tuils.EMPTYSTRING;
-            for (ReloadMessageCategory c : categories) {
-                reloadMessage = TextUtils.concat(reloadMessage, Tuils.NEWLINE, c.text());
-            }
-            startMain.putExtra(Reloadable.MESSAGE, reloadMessage);
+    // cleanup, build the restart message, and restart the activity
+    private void restartActivity() {
+        dispose();
+        finish();
 
-            startActivity(startMain);
-    };
+        // build a new intent
+        Intent startMain = new Intent(Intent.ACTION_MAIN);
+        startMain.addCategory(Intent.CATEGORY_HOME);
 
-    private Inputable in = new Inputable() {
+        // put the restart message inside the intent
+        startMain.putExtra(Reloadable.MESSAGE, restartMessage());
+
+        startActivity(startMain);
+    }
+
+    // the bridge makes sure that the code runs on the proper thread, so UiManager doesn't need
+    // to care
+    private InputBridge inputBridge = new InputBridge() {
 
         @Override
-        public void in(String s) {
-            if(ui != null) ui.setInput(s);
+        public void setInput(String s) {
+            if(ui != null) runOnUiThread(() -> ui.setInput(s));
         }
 
         @Override
         public void changeHint(final String s) {
-            runOnUiThread(() -> ui.setHint(s));
+            if(ui != null) runOnUiThread(() -> ui.setHint(s));
         }
 
         @Override
         public void resetHint() {
-            runOnUiThread(() -> ui.resetHint());
+            if(ui != null) runOnUiThread(() -> ui.resetHint());
         }
     };
 
-    private Outputable out = new Outputable() {
-
-        private final int DELAY = 500;
-
-        Queue<SimpleMutableEntry<CharSequence,Integer>> textColor = new LinkedList<>();
-        Queue<SimpleMutableEntry<CharSequence,Integer>> textCategory = new LinkedList<>();
-
-        boolean charged = false;
-        Handler handler = new Handler();
-
-        Runnable r = new Runnable() {
-            @Override
-            public void run() {
-                if(ui == null) {
-                    handler.postDelayed(this, DELAY);
-                    return;
-                }
-
-                SimpleMutableEntry<CharSequence,Integer> sm;
-                while ((sm = textCategory.poll()) != null) {
-                    ui.setOutput(sm.getKey(), sm.getValue());
-                }
-
-                while ((sm = textColor.poll()) != null) {
-                    ui.setOutput(sm.getValue(), sm.getKey());
-                }
-
-                textCategory = null;
-                textColor = null;
-                handler = null;
-                r = null;
-            }
-        };
+    // the bridge makes sure that the code runs on the proper thread, so UiManager doesn't need
+    // to care
+    private OutputBridge outputBridge = new OutputBridge() {
 
         @Override
-        public void onOutput(CharSequence output) {
-            if(ui != null) ui.setOutput(output, TerminalManager.CATEGORY_OUTPUT);
-            else {
-                textCategory.add(new SimpleMutableEntry<>(output, TerminalManager.CATEGORY_OUTPUT));
-
-                if(!charged) {
-                    charged = true;
-                    handler.postDelayed(r, DELAY);
-                }
-            }
-        }
-
-        @Override
-        public void onOutput(CharSequence output, int category) {
-            if(ui != null) ui.setOutput(output, category);
-            else {
-                textCategory.add(new SimpleMutableEntry<>(output, category));
-
-                if(!charged) {
-                    charged = true;
-                    handler.postDelayed(r, DELAY);
-                }
-            }
-        }
-
-        @Override
-        public void onOutput(int color, CharSequence output) {
-            if(ui != null) ui.setOutput(color, output);
-            else {
-                textColor.add(new SimpleMutableEntry<>(output, color));
-
-                if(!charged) {
-                    charged = true;
-                    handler.postDelayed(r, DELAY);
-                }
-            }
-        }
-
-        @Override
-        public void dispose() {
-            if(handler != null) handler.removeCallbacksAndMessages(null);
+        public void sendOutput(CharSequence output) {
+            ui.setOutput(output);
         }
     };
 
@@ -193,165 +136,165 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        overridePendingTransition(0,0);
+        // remove fancy animations
+        overridePendingTransition(0, 0);
 
+        // detect if the activity is going to finish, may filter some unexpected behaviors
         if (isFinishing()) {
             return;
         }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED  &&
+        // ask storage permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
 
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, LauncherActivity.STARTING_PERMISSION);
         } else {
-            canApplyTheme = true;
-            finishOnCreate();
-        }
-    }
+            SettingsManager.loadCommons(this);
+            new RegexManager(LauncherActivity.this);
+            new TimeManager(this);
 
-    private void finishOnCreate() {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(PrivateIOReceiver.ACTION_INPUT);
+            filter.addAction(PrivateIOReceiver.ACTION_OUTPUT);
+            filter.addAction(PrivateIOReceiver.ACTION_REPLY);
 
-        Thread.currentThread().setUncaughtExceptionHandler(new CustomExceptionHandler());
+            // todo: improve
+            privateIOReceiver = new PrivateIOReceiver(this, outputBridge, inputBridge);
+            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(privateIOReceiver, filter);
 
-        XMLPrefsManager.loadCommons(this);
-        new RegexManager(LauncherActivity.this);
-        new TimeManager(this);
+            IntentFilter filter1 = new IntentFilter();
+            filter1.addAction(PublicIOReceiver.ACTION_CMD);
+            filter1.addAction(PublicIOReceiver.ACTION_OUTPUT);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(PrivateIOReceiver.ACTION_INPUT);
-        filter.addAction(PrivateIOReceiver.ACTION_OUTPUT);
-        filter.addAction(PrivateIOReceiver.ACTION_REPLY);
+            // todo: improve
+            publicIOReceiver = new PublicIOReceiver();
+            getApplicationContext().registerReceiver(publicIOReceiver, filter1);
 
-        privateIOReceiver = new PrivateIOReceiver(this, out, in);
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(privateIOReceiver, filter);
-
-        IntentFilter filter1 = new IntentFilter();
-        filter1.addAction(PublicIOReceiver.ACTION_CMD);
-        filter1.addAction(PublicIOReceiver.ACTION_OUTPUT);
-
-        publicIOReceiver = new PublicIOReceiver();
-        getApplicationContext().registerReceiver(publicIOReceiver, filter1);
-
-        int requestedOrientation = XMLPrefsManager.getInt(Behavior.orientation);
-        if(requestedOrientation >= 0 && requestedOrientation != 2) {
-            int orientation = getResources().getConfiguration().orientation;
-            if(orientation != requestedOrientation) setRequestedOrientation(requestedOrientation);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-            }
-        }
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color)) {
-            Window window = getWindow();
-
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(XMLPrefsManager.getColor(Theme.statusbar_color));
-            window.setNavigationBarColor(XMLPrefsManager.getColor(Theme.navigationbar_color));
-        }
-
-        backButtonEnabled = XMLPrefsManager.getBoolean(Behavior.back_button_enabled);
-
-        boolean showNotification = XMLPrefsManager.getBoolean(Behavior.tui_notification);
-        Intent keeperIntent = new Intent(this, KeeperService.class);
-        if (showNotification) {
-            keeperIntent.putExtra(KeeperService.PATH_KEY, XMLPrefsManager.get(Behavior.home_path));
-            startService(keeperIntent);
-        } else {
-            try {
-                stopService(keeperIntent);
-            } catch (Exception e) {}
-        }
-
-        boolean fullscreen = XMLPrefsManager.getBoolean(Ui.fullscreen);
-        if(fullscreen) {
-            requestWindowFeature(Window.FEATURE_NO_TITLE);
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
-
-        boolean useSystemWP = XMLPrefsManager.getBoolean(Ui.system_wallpaper);
-        if (useSystemWP) {
-            setTheme(R.style.Custom_SystemWP);
-        } else {
-            setTheme(R.style.Custom_Solid);
-        }
-
-        try {
-            NotificationManager.create(this);
-        } catch (Exception e) {
-            Tuils.toFile(e);
-        }
-
-        boolean notifications = XMLPrefsManager.getBoolean(Notifications.show_notifications) || XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
-        if(notifications) {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                try {
-                    ComponentName notificationComponent = new ComponentName(this, NotificationService.class);
-                    PackageManager pm = getPackageManager();
-                    pm.setComponentEnabledSetting(notificationComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
-
-                    if (!Tuils.hasNotificationAccess(this)) {
-                        Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                        if (i.resolveActivity(getPackageManager()) == null) {
-                            Toast.makeText(this, R.string.no_notification_access, Toast.LENGTH_LONG).show();
-                        } else {
-                            startActivity(i);
-                        }
-                    }
-
-                    Intent monitor = new Intent(this, NotificationMonitorService.class);
-                    startService(monitor);
-
-                    Intent notificationIntent = new Intent(this, NotificationService.class);
-                    startService(notificationIntent);
-                } catch (NoClassDefFoundError er) {
-                    Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
-                    intent.putExtra(PrivateIOReceiver.TEXT, getString(R.string.output_notification_error) + Tuils.SPACE + er.toString());
+            int requestedOrientation = SettingsManager.getInt(Behavior.orientation);
+            if (requestedOrientation >= 0 && requestedOrientation != 2) {
+                int orientation = getResources().getConfiguration().orientation;
+                if (orientation != requestedOrientation)
+                    setRequestedOrientation(requestedOrientation);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
                 }
-            } else {
-                Tuils.sendOutput(Color.RED, this, R.string.notification_low_api);
             }
-        }
 
-        LongClickableSpan.longPressVibrateDuration = XMLPrefsManager.getInt(Behavior.long_click_vibration_duration);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !SettingsManager.getBoolean(Ui.ignore_bar_color)) {
+                Window window = getWindow();
 
-        openKeyboardOnStart = XMLPrefsManager.getBoolean(Behavior.auto_show_keyboard);
-        if (!openKeyboardOnStart) {
-            this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-        }
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                window.setStatusBarColor(SettingsManager.getColor(Theme.statusbar_color));
+                window.setNavigationBarColor(SettingsManager.getColor(Theme.navigationbar_color));
+            }
 
-        setContentView(R.layout.base_view);
+            backButtonEnabled = SettingsManager.getBoolean(Behavior.back_button_enabled);
 
-        if(XMLPrefsManager.getBoolean(Ui.show_restart_message)) {
-            CharSequence s = getIntent().getCharSequenceExtra(Reloadable.MESSAGE);
-            if(s != null) out.onOutput(Tuils.span(s, XMLPrefsManager.getColor(Theme.restart_message_color)));
-        }
+            boolean showNotification = SettingsManager.getBoolean(Behavior.tui_notification);
+            Intent keeperIntent = new Intent(this, KeeperService.class);
+            if (showNotification) {
+                keeperIntent.putExtra(KeeperService.PATH_KEY, SettingsManager.get(Behavior.home_path));
+                startService(keeperIntent);
+            } else {
+                try {
+                    stopService(keeperIntent);
+                } catch (Exception e) {
+                }
+            }
 
-        categories = new HashSet<>();
+            boolean fullscreen = SettingsManager.getBoolean(Ui.fullscreen);
+            if (fullscreen) {
+                requestWindowFeature(Window.FEATURE_NO_TITLE);
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
 
-        main = new MainManager(this);
+            boolean useSystemWP = SettingsManager.getBoolean(Ui.system_wallpaper);
+            if (useSystemWP) {
+                setTheme(R.style.Custom_SystemWP);
+            } else {
+                setTheme(R.style.Custom_Solid);
+            }
 
-        ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
+            try {
+                NotificationManager.create(this);
+            } catch (Exception e) {
+                Tuils.toFile(e);
+            }
+
+            boolean notifications = SettingsManager.getBoolean(Notifications.show_notifications) || SettingsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
+            if (notifications) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                    try {
+                        ComponentName notificationComponent = new ComponentName(this, NotificationService.class);
+                        PackageManager pm = getPackageManager();
+                        pm.setComponentEnabledSetting(notificationComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+
+                        if (!Tuils.hasNotificationAccess(this)) {
+                            Intent i = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                            if (i.resolveActivity(getPackageManager()) == null) {
+                                Toast.makeText(this, R.string.no_notification_access, Toast.LENGTH_LONG).show();
+                            } else {
+                                startActivity(i);
+                            }
+                        }
+
+                        Intent monitor = new Intent(this, NotificationMonitorService.class);
+                        startService(monitor);
+
+                        Intent notificationIntent = new Intent(this, NotificationService.class);
+                        startService(notificationIntent);
+                    } catch (NoClassDefFoundError er) {
+                        Intent intent = new Intent(PrivateIOReceiver.ACTION_OUTPUT);
+                        intent.putExtra(PrivateIOReceiver.TEXT, getString(R.string.output_notification_error) + Tuils.SPACE + er.toString());
+                    }
+                } else {
+                    Tuils.sendOutput(Color.RED, this, R.string.notification_low_api);
+                }
+            }
+
+            LongClickableSpan.longPressVibrateDuration = SettingsManager.getInt(Behavior.long_click_vibration_duration);
+
+            openKeyboardOnStart = SettingsManager.getBoolean(Behavior.auto_show_keyboard);
+            if (!openKeyboardOnStart) {
+                this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+            }
+
+            setContentView(R.layout.base_view);
+
+            if (SettingsManager.getBoolean(Ui.show_restart_message)) {
+                CharSequence s = getIntent().getCharSequenceExtra(Reloadable.MESSAGE);
+                if (s != null)
+                    out.onOutput(Tuils.span(s, SettingsManager.getColor(Theme.restart_message_color)));
+            }
+
+            categories = new HashSet<>();
+
+            main = new MainManager(this);
+
+            ViewGroup mainView = (ViewGroup) findViewById(R.id.mainview);
 
 //        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color) && !XMLPrefsManager.getBoolean(Ui.statusbar_light_icons)) {
 //            mainView.setSystemUiVisibility(0);
 //        }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color) && !XMLPrefsManager.getBoolean(Ui.statusbar_light_icons)) {
-            mainView.setSystemUiVisibility(mainView.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !SettingsManager.getBoolean(Ui.ignore_bar_color) && !SettingsManager.getBoolean(Ui.statusbar_light_icons)) {
+                mainView.setSystemUiVisibility(mainView.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            }
+
+            ui = new UIManager(this, mainView, main.getMainPack(), main.executer());
+
+            main.setRedirectionListener(ui.buildRedirectionListener());
+            ui.pack = main.getMainPack();
+
+            in.in(Tuils.EMPTYSTRING);
+            ui.focusTerminal();
+
+            if (fullscreen) Assist.assistActivity(this);
+
+            System.gc();
         }
-
-        ui = new UIManager(this, mainView, main.getMainPack(), canApplyTheme, main.executer());
-
-        main.setRedirectionListener(ui.buildRedirectionListener());
-        ui.pack = main.getMainPack();
-
-        in.in(Tuils.EMPTYSTRING);
-        ui.focusTerminal();
-
-        if(fullscreen) Assist.assistActivity(this);
-
-        System.gc();
     }
 
     @Override
@@ -412,7 +355,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         if(main != null) main.destroy();
         if(ui != null) ui.dispose();
 
-        XMLPrefsManager.dispose();
+        SettingsManager.dispose();
         RegexManager.instance.dispose();
         TimeManager.instance.dispose();
 
@@ -556,8 +499,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                         }
                         count++;
                     }
-                    canApplyTheme = false;
-                    finishOnCreate();
+                    onCreate(null);
                     break;
                 case COMMAND_SUGGESTION_REQUEST_PERMISSION:
                     if (grantResults.length == 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
@@ -570,7 +512,7 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
 //                    LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(i);
 
                     Intent i = new Intent(TuiLocationManager.ACTION_GOT_PERMISSION);
-                    i.putExtra(XMLPrefsManager.VALUE_ATTRIBUTE, grantResults[0]);
+                    i.putExtra(SettingsManager.VALUE_ATTRIBUTE, grantResults[0]);
                     LocalBroadcastManager.getInstance(this.getApplicationContext()).sendBroadcast(i);
 
                     break;
@@ -596,4 +538,28 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
+
+    /*
+    An instance of InputBridge can be sent around t-ui components safely, in order
+    to provide a convenient way to set the input and the hint.
+     */
+    public interface InputBridge {
+        // set the input
+        void setInput(String s);
+
+        // set the hint
+        void changeHint(String s);
+
+        // reset the hint to the default value
+        void resetHint();
+    }
+
+    /*
+    An instance of InputBridge can be sent around t-ui components safely, in order
+    to provide a convenient way to send an output to t-ui.
+     */
+    public interface OutputBridge {
+        void sendOutput(CharSequence output);
+    }
+
 }

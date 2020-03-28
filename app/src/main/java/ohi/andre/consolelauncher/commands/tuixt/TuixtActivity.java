@@ -31,7 +31,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -79,28 +79,28 @@ public class TuixtActivity extends Activity {
         CommandGroup group = new CommandGroup(this, "ohi.andre.consolelauncher.commands.tuixt.raw");
 
         try {
-            XMLPrefsManager.loadCommons(this);
+            SettingsManager.loadCommons(this);
         } catch (Exception e) {
             finish();
         }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !XMLPrefsManager.getBoolean(Ui.ignore_bar_color)) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !SettingsManager.getBoolean(Ui.ignore_bar_color)) {
             Window window = getWindow();
 
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(XMLPrefsManager.getColor(Theme.statusbar_color));
-            window.setNavigationBarColor(XMLPrefsManager.getColor(Theme.navigationbar_color));
+            window.setStatusBarColor(SettingsManager.getColor(Theme.statusbar_color));
+            window.setNavigationBarColor(SettingsManager.getColor(Theme.navigationbar_color));
         }
 
-        if (!XMLPrefsManager.getBoolean(Ui.system_wallpaper)) {
-            rootView.setBackgroundColor(XMLPrefsManager.getColor(Theme.bg_color));
+        if (!SettingsManager.getBoolean(Ui.system_wallpaper)) {
+            rootView.setBackgroundColor(SettingsManager.getColor(Theme.bg_color));
         } else {
             setTheme(R.style.Custom_SystemWP);
-            rootView.setBackgroundColor(XMLPrefsManager.getColor(Theme.overlay_color));
+            rootView.setBackgroundColor(SettingsManager.getColor(Theme.overlay_color));
         }
 
-        final boolean inputBottom = XMLPrefsManager.getBoolean(Ui.input_bottom);
+        final boolean inputBottom = SettingsManager.getBoolean(Ui.input_bottom);
         int layoutId = inputBottom ? R.layout.tuixt_view_input_down : R.layout.tuixt_view_input_up;
 
         LayoutInflater inflater = getLayoutInflater();
@@ -114,17 +114,17 @@ public class TuixtActivity extends Activity {
         TextView prefixView = (TextView) inputOutputView.findViewById(R.id.prefix_view);
 
         ImageButton submitView = (ImageButton) inputOutputView.findViewById(R.id.submit_tv);
-        boolean showSubmit = XMLPrefsManager.getBoolean(Ui.show_enter_button);
+        boolean showSubmit = SettingsManager.getBoolean(Ui.show_enter_button);
         if (!showSubmit) {
             submitView.setVisibility(View.GONE);
             submitView = null;
         }
 
-        String prefix = XMLPrefsManager.get(Ui.input_prefix);
+        String prefix = SettingsManager.get(Ui.input_prefix);
 
-        int ioSize = XMLPrefsManager.getInt(Ui.input_output_size);
-        int outputColor = XMLPrefsManager.getColor(Theme.output_color);
-        int inputColor = XMLPrefsManager.getColor(Theme.input_color);
+        int ioSize = SettingsManager.getInt(Ui.input_output_size);
+        int outputColor = SettingsManager.getColor(Theme.output_color);
+        int inputColor = SettingsManager.getColor(Theme.input_color);
 
         prefixView.setTypeface(Tuils.getTypeface(this));
         prefixView.setTextColor(inputColor);
@@ -132,7 +132,7 @@ public class TuixtActivity extends Activity {
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
 
         if (submitView != null) {
-            submitView.setColorFilter(XMLPrefsManager.getColor(Theme.enter_color));
+            submitView.setColorFilter(SettingsManager.getColor(Theme.enter_color));
             submitView.setOnClickListener(v -> onNewInput());
         }
 

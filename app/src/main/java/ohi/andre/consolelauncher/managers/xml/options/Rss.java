@@ -2,13 +2,13 @@ package ohi.andre.consolelauncher.managers.xml.options;
 
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 03/10/2017.
  */
 
-public enum Rss implements XMLPrefsSave {
+public enum Rss implements SettingsOption {
 
     rss_default_color {
         @Override
@@ -18,7 +18,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
 
         @Override
@@ -34,7 +34,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -50,7 +50,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
 
         @Override
@@ -66,7 +66,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -82,7 +82,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -98,7 +98,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
 
         @Override
@@ -114,7 +114,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -130,7 +130,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
 
         @Override
@@ -146,7 +146,7 @@ public enum Rss implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
 
         @Override

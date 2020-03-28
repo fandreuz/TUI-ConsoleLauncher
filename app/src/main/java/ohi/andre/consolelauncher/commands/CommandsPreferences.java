@@ -2,8 +2,8 @@ package ohi.andre.consolelauncher.commands;
 
 import java.util.HashMap;
 
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Cmd;
 
 /**
@@ -19,18 +19,18 @@ public class CommandsPreferences {
     public CommandsPreferences() {
         preferenceHashMap = new HashMap<>();
 
-        for(XMLPrefsSave save : Cmd.values()) {
-            preferenceHashMap.put(save.label(), XMLPrefsManager.get(save));
+        for(SettingsOption save : Cmd.values()) {
+            preferenceHashMap.put(save.label(), SettingsManager.get(save));
         }
     }
 
     public String get(String s) {
         String v = preferenceHashMap.get(s);
-        if(v == null) return XMLPrefsManager.get(XMLPrefsManager.XMLPrefsRoot.CMD, s);
+        if(v == null) return SettingsManager.get(SettingsManager.XMLPrefsRoot.CMD, s);
         return v;
     }
 
-    public String get(XMLPrefsSave save) {
+    public String get(SettingsOption save) {
         String v = get(save.label());
         if(v == null || v.length() == 0) v = save.defaultValue();
         return v;

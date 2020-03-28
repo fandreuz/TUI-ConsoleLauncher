@@ -4,16 +4,16 @@ import android.os.Environment;
 
 import java.io.File;
 
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
  */
 
-public enum Behavior implements XMLPrefsSave {
+public enum Behavior implements SettingsOption {
 
     double_tap_lock {
         @Override
@@ -28,7 +28,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     double_tap_cmd {
@@ -44,7 +44,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     random_play {
@@ -60,7 +60,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     songs_folder {
@@ -76,7 +76,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     songs_from_mediastore {
@@ -92,7 +92,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     tui_notification {
@@ -108,7 +108,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     auto_show_keyboard {
@@ -124,7 +124,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     auto_scroll {
@@ -140,7 +140,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     show_hints {
@@ -156,7 +156,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     show_alias_content {
@@ -172,7 +172,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     show_launch_history {
@@ -188,7 +188,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     clear_after_cmds {
@@ -204,7 +204,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     clear_after_seconds {
@@ -220,7 +220,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     max_lines {
@@ -236,7 +236,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     time_format {
@@ -252,7 +252,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     time_format_separator {
@@ -268,7 +268,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     battery_medium {
@@ -284,7 +284,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     battery_low {
@@ -300,7 +300,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     device_format {
@@ -316,7 +316,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     ram_format {
@@ -332,7 +332,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     battery_format {
@@ -348,7 +348,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     storage_format {
@@ -364,7 +364,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     network_info_format {
@@ -380,7 +380,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     input_format {
@@ -396,7 +396,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     output_format {
@@ -412,7 +412,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     session_info_format {
@@ -428,7 +428,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     enable_app_launch {
@@ -444,7 +444,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     app_launch_format {
@@ -460,7 +460,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     alias_param_marker {
@@ -476,7 +476,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     alias_param_separator {
@@ -492,7 +492,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     alias_replace_all_markers {
@@ -508,7 +508,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     multiple_cmd_separator {
@@ -524,7 +524,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     alias_content_format {
@@ -540,7 +540,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     external_storage_path {
@@ -562,7 +562,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     home_path {
@@ -578,7 +578,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     app_installed_format {
@@ -594,7 +594,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     app_uninstalled_format {
@@ -610,7 +610,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     enable_music {
@@ -626,7 +626,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     max_optional_depth {
@@ -642,7 +642,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     network_info_update_ms {
@@ -658,7 +658,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     tui_notification_title {
@@ -674,7 +674,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     tui_notification_subtitle {
@@ -690,7 +690,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     tui_notification_click_cmd {
@@ -706,7 +706,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     tui_notification_click_showhome {
@@ -722,7 +722,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     tui_notification_lastcmds_size {
@@ -738,7 +738,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     tui_notification_lastcmds_updown {
@@ -754,7 +754,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     tui_notification_priority {
@@ -770,7 +770,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     long_click_vibration_duration {
@@ -786,7 +786,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     long_click_duration {
@@ -802,7 +802,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     click_commands {
@@ -818,7 +818,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     long_click_commands {
@@ -834,7 +834,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     append_quote_before_file {
@@ -850,7 +850,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     optional_values_separator {
@@ -866,7 +866,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     notes_sorting {
@@ -882,7 +882,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     notes_allow_link {
@@ -898,7 +898,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     orientation {
@@ -914,7 +914,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     htmlextractor_default_format {
@@ -930,7 +930,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     htmlextractor_notfound_message {
@@ -946,7 +946,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     tui_notification_time_color {
@@ -962,7 +962,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
     },
     tui_notification_input_color {
@@ -978,7 +978,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.COLOR;
+            return SettingsOption.COLOR;
         }
     },
     weather_key {
@@ -994,7 +994,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     weather_temperature_measure {
@@ -1010,7 +1010,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     weather_location {
@@ -1026,7 +1026,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     weather_format {
@@ -1042,7 +1042,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     clear_on_lock {
@@ -1058,7 +1058,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     unlock_counter_format {
@@ -1074,7 +1074,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     unlock_time_divider {
@@ -1085,7 +1085,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
 
         @Override
@@ -1106,7 +1106,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     unlock_counter_cycle_start {
@@ -1122,7 +1122,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     not_available_text {
@@ -1138,7 +1138,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.TEXT;
+            return SettingsOption.TEXT;
         }
     },
     back_button_enabled {
@@ -1154,7 +1154,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     weather_update_time {
@@ -1170,7 +1170,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     location_update_mintime {
@@ -1186,7 +1186,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     },
     location_update_mindistance {
@@ -1202,7 +1202,7 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.INTEGER;
+            return SettingsOption.INTEGER;
         }
     },
     show_weather_updates {
@@ -1218,13 +1218,13 @@ public enum Behavior implements XMLPrefsSave {
 
         @Override
         public String type() {
-            return XMLPrefsSave.BOOLEAN;
+            return SettingsOption.BOOLEAN;
         }
     };
 
     @Override
     public XMLPrefsElement parent() {
-        return XMLPrefsManager.XMLPrefsRoot.BEHAVIOR;
+        return SettingsManager.XMLPrefsRoot.BEHAVIOR;
     }
 
     @Override

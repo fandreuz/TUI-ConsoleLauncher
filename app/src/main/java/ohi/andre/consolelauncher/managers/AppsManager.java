@@ -42,10 +42,10 @@ import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
@@ -53,10 +53,10 @@ import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.set;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.set;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.writeTo;
 
 public class AppsManager implements XMLPrefsElement {
 
@@ -81,7 +81,7 @@ public class AppsManager implements XMLPrefsElement {
 
     public static XMLPrefsElement instance = null;
 
-    private XMLPrefsList prefsList;
+    private SettingsEntriesContainer prefsList;
 
     public List<Group> groups;
 
@@ -95,7 +95,7 @@ public class AppsManager implements XMLPrefsElement {
     }
 
     @Override
-    public void write(XMLPrefsSave save, String value) {
+    public void write(SettingsOption save, String value) {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
@@ -105,7 +105,7 @@ public class AppsManager implements XMLPrefsElement {
     }
 
     @Override
-    public XMLPrefsList getValues() {
+    public SettingsEntriesContainer getValues() {
         return prefsList;
     }
 
@@ -128,15 +128,15 @@ public class AppsManager implements XMLPrefsElement {
 
         this.context = context;
 
-        appInstalledFormat = XMLPrefsManager.getBoolean(Ui.show_app_installed) ? XMLPrefsManager.get(Behavior.app_installed_format) : null;
-        appUninstalledFormat = XMLPrefsManager.getBoolean(Ui.show_app_uninstalled) ? XMLPrefsManager.get(Behavior.app_uninstalled_format) : null;
+        appInstalledFormat = SettingsManager.getBoolean(Ui.show_app_installed) ? SettingsManager.get(Behavior.app_installed_format) : null;
+        appUninstalledFormat = SettingsManager.getBoolean(Ui.show_app_uninstalled) ? SettingsManager.get(Behavior.app_uninstalled_format) : null;
 
         if(appInstalledFormat != null || appUninstalledFormat != null) {
             pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE);
             pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE);
 
-            appInstalledColor = XMLPrefsManager.getColor(Theme.app_installed_color);
-            appUninstalledColor = XMLPrefsManager.getColor(Theme.app_uninstalled_color);
+            appInstalledColor = SettingsManager.getColor(Theme.app_installed_color);
+            appUninstalledColor = SettingsManager.getColor(Theme.app_uninstalled_color);
         } else {
             pp = null;
             pl = null;
@@ -180,7 +180,7 @@ public class AppsManager implements XMLPrefsElement {
         groups.clear();
 
         try {
-            prefsList = new XMLPrefsList();
+            prefsList = new SettingsEntriesContainer();
 
             if(file != null) {
                 if(!file.exists()) {
@@ -189,7 +189,7 @@ public class AppsManager implements XMLPrefsElement {
 
                 Object[] o;
                 try {
-                    o = XMLPrefsManager.buildDocument(file, NAME);
+                    o = SettingsManager.buildDocument(file, NAME);
                     if(o == null) {
                         Tuils.sendXMLParseError(context, PATH);
                         return;
@@ -218,7 +218,7 @@ public class AppsManager implements XMLPrefsElement {
                         if(nn.startsWith("d")) {
                             prefsList.add(nn, node.getAttributes().getNamedItem(VALUE_ATTRIBUTE).getNodeValue());
                         } else {
-                            prefsList.add(nn, XMLPrefsManager.getStringAttribute((Element) node, VALUE_ATTRIBUTE));
+                            prefsList.add(nn, SettingsManager.getStringAttribute((Element) node, VALUE_ATTRIBUTE));
                         }
 
                         for (int en = 0; en < enums.size(); en++) {
@@ -325,7 +325,7 @@ public class AppsManager implements XMLPrefsElement {
                 }
 
                 if (enums.size() > 0) {
-                    for (XMLPrefsSave s : enums) {
+                    for (SettingsOption s : enums) {
                         String value = s.defaultValue();
 
                         Element em = d.createElement(s.label());
@@ -376,7 +376,7 @@ public class AppsManager implements XMLPrefsElement {
         appsHolder = new AppsHolder(allApps, prefsList);
         AppUtils.checkEquality(hiddenApps);
 
-        Group.sorting = XMLPrefsManager.getInt(Apps.app_groups_sorting);
+        Group.sorting = SettingsManager.getInt(Apps.app_groups_sorting);
         for(Group g : groups) g.sort();
         Collections.sort(groups, (o1, o2) -> Tuils.alphabeticCompare(o1.name(), o2.name()));
     }
@@ -575,7 +575,7 @@ public class AppsManager implements XMLPrefsElement {
         int index = Tuils.find(name, groups);
         if(index == -1) {
             groups.add(new Group(name));
-            return XMLPrefsManager.set(file, name, new String[]{APPS_ATTRIBUTE}, new String[]{Tuils.EMPTYSTRING});
+            return SettingsManager.set(file, name, new String[]{APPS_ATTRIBUTE}, new String[]{Tuils.EMPTYSTRING});
         }
 
         return context.getString(R.string.output_groupexists);
@@ -588,7 +588,7 @@ public class AppsManager implements XMLPrefsElement {
         }
 
         groups.get(index).setBgColor(Color.parseColor(color));
-        return XMLPrefsManager.set(file, name, new String[]{BGCOLOR_ATTRIBUTE}, new String[]{color});
+        return SettingsManager.set(file, name, new String[]{BGCOLOR_ATTRIBUTE}, new String[]{color});
     }
 
     public String groupForeColor(String name, String color) {
@@ -598,11 +598,11 @@ public class AppsManager implements XMLPrefsElement {
         }
 
         groups.get(index).setForeColor(Color.parseColor(color));
-        return XMLPrefsManager.set(file, name, new String[]{FORECOLOR_ATTRIBUTE}, new String[]{color});
+        return SettingsManager.set(file, name, new String[]{FORECOLOR_ATTRIBUTE}, new String[]{color});
     }
 
     public String removeGroup(String name) {
-        String output = XMLPrefsManager.removeNode(file, name);
+        String output = SettingsManager.removeNode(file, name);
 
         if(output == null) return null;
         if(output.length() == 0) return context.getString(R.string.output_groupnotfound);
@@ -616,7 +616,7 @@ public class AppsManager implements XMLPrefsElement {
     public String addAppToGroup(String group, LaunchInfo app) {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, null);
+            o = SettingsManager.buildDocument(file, null);
             if(o == null) {
                 Tuils.sendXMLParseError(context, PATH);
                 return null;
@@ -628,7 +628,7 @@ public class AppsManager implements XMLPrefsElement {
         Document d = (Document) o[0];
         Element root = (Element) o[1];
 
-        Node node = XMLPrefsManager.findNode(root, group);
+        Node node = SettingsManager.findNode(root, group);
         if(node == null) return context.getString(R.string.output_groupnotfound);
 
         Element e = (Element) node;
@@ -641,7 +641,7 @@ public class AppsManager implements XMLPrefsElement {
 
         e.setAttribute(APPS_ATTRIBUTE, apps);
 
-        XMLPrefsManager.writeTo(d, file);
+        SettingsManager.writeTo(d, file);
 
         int index = Tuils.find(group, groups);
         if(index != -1) groups.get(index).add(app, true);
@@ -652,7 +652,7 @@ public class AppsManager implements XMLPrefsElement {
     public String removeAppFromGroup(String group, LaunchInfo app) {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, null);
+            o = SettingsManager.buildDocument(file, null);
             if(o == null) {
                 Tuils.sendXMLParseError(context, PATH);
                 return null;
@@ -664,7 +664,7 @@ public class AppsManager implements XMLPrefsElement {
         Document d = (Document) o[0];
         Element root = (Element) o[1];
 
-        Node node = XMLPrefsManager.findNode(root, group);
+        Node node = SettingsManager.findNode(root, group);
         if(node == null) return context.getString(R.string.output_groupnotfound);
 
         Element e = (Element) node;
@@ -683,7 +683,7 @@ public class AppsManager implements XMLPrefsElement {
 
             e.setAttribute(APPS_ATTRIBUTE, apps);
 
-            XMLPrefsManager.writeTo(d, file);
+            SettingsManager.writeTo(d, file);
 
             int index = Tuils.find(group, groups);
             if(index != -1) groups.get(index).remove(app);
@@ -738,7 +738,7 @@ public class AppsManager implements XMLPrefsElement {
     public String listGroup(String group) {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, null);
+            o = SettingsManager.buildDocument(file, null);
             if(o == null) {
                 Tuils.sendXMLParseError(context, PATH);
                 return null;
@@ -749,7 +749,7 @@ public class AppsManager implements XMLPrefsElement {
 
         Element root = (Element) o[1];
 
-        Node node = XMLPrefsManager.findNode(root, group);
+        Node node = SettingsManager.findNode(root, group);
         if(node == null) return context.getString(R.string.output_groupnotfound);
 
         Element e = (Element) node;
@@ -790,7 +790,7 @@ public class AppsManager implements XMLPrefsElement {
     public String listGroups() {
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, null);
+            o = SettingsManager.buildDocument(file, null);
             if(o == null) {
                 Tuils.sendXMLParseError(context, PATH);
                 return null;
@@ -1199,7 +1199,7 @@ public class AppsManager implements XMLPrefsElement {
         final int MOST_USED = 10, NULL = 11, USER_DEFINIED = 12;
 
         private List<LaunchInfo> infos;
-        private XMLPrefsList values;
+        private SettingsEntriesContainer values;
 
         private SuggestedAppMgr suggestedAppMgr;
 
@@ -1207,7 +1207,7 @@ public class AppsManager implements XMLPrefsElement {
             private List<SuggestedApp> suggested;
             private int lastWriteable = -1;
 
-            public SuggestedAppMgr(XMLPrefsList values, List<LaunchInfo> apps) {
+            public SuggestedAppMgr(SettingsEntriesContainer values, List<LaunchInfo> apps) {
                 suggested = new ArrayList<>();
 
                 final String PREFIX = "default_app_n";
@@ -1384,7 +1384,7 @@ public class AppsManager implements XMLPrefsElement {
 
         Comparator<LaunchInfo> mostUsedComparator = (lhs, rhs) -> rhs.launchedTimes > lhs.launchedTimes ? -1 : rhs.launchedTimes == lhs.launchedTimes ? 0 : 1;
 
-        public AppsHolder(List<LaunchInfo> infos, XMLPrefsList values) {
+        public AppsHolder(List<LaunchInfo> infos, SettingsEntriesContainer values) {
             this.infos = infos;
             this.values = values;
             update(true);

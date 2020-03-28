@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
@@ -117,47 +117,47 @@ public class TerminalManager {
 
         this.mainPack = mainPack;
 
-        this.clickCommands = XMLPrefsManager.getBoolean(Behavior.click_commands);
-        this.longClickCommands = XMLPrefsManager.getBoolean(Behavior.long_click_commands);
+        this.clickCommands = SettingsManager.getBoolean(Behavior.click_commands);
+        this.longClickCommands = SettingsManager.getBoolean(Behavior.long_click_commands);
 
-        this.clearAfterMs = XMLPrefsManager.getInt(Behavior.clear_after_seconds) * 1000;
-        this.clearAfterCmds = XMLPrefsManager.getInt(Behavior.clear_after_cmds);
-        this.maxLines = XMLPrefsManager.getInt(Behavior.max_lines);
+        this.clearAfterMs = SettingsManager.getInt(Behavior.clear_after_seconds) * 1000;
+        this.clearAfterCmds = SettingsManager.getInt(Behavior.clear_after_cmds);
+        this.maxLines = SettingsManager.getInt(Behavior.max_lines);
 
-        inputFormat = XMLPrefsManager.get(Behavior.input_format);
-        outputFormat = XMLPrefsManager.get(Behavior.output_format);
+        inputFormat = SettingsManager.get(Behavior.input_format);
+        outputFormat = SettingsManager.get(Behavior.output_format);
 
-        inputColor = XMLPrefsManager.getColor(Theme.input_color);
-        outputColor = XMLPrefsManager.getColor(Theme.output_color);
+        inputColor = SettingsManager.getColor(Theme.input_color);
+        outputColor = SettingsManager.getColor(Theme.output_color);
 
-        prefix = XMLPrefsManager.get(Ui.input_prefix);
-        suPrefix = XMLPrefsManager.get(Ui.input_root_prefix);
+        prefix = SettingsManager.get(Ui.input_prefix);
+        suPrefix = SettingsManager.get(Ui.input_root_prefix);
 
-        int ioSize = XMLPrefsManager.getInt(Ui.input_output_size);
+        int ioSize = SettingsManager.getInt(Ui.input_output_size);
 
         prefixView.setTypeface(Tuils.getTypeface(context));
-        prefixView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
+        prefixView.setTextColor(SettingsManager.getColor(Theme.input_color));
         prefixView.setTextSize(ioSize);
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
         this.mPrefix = prefixView;
 
         if (submitView != null) {
-            submitView.setColorFilter(XMLPrefsManager.getColor(Theme.enter_color));
+            submitView.setColorFilter(SettingsManager.getColor(Theme.enter_color));
             submitView.setOnClickListener(v -> onNewInput());
         }
 
         if (backView != null) {
-            backView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            backView.setColorFilter(SettingsManager.getColor(Theme.toolbar_color));
             backView.setOnClickListener(v -> onBackPressed());
         }
 
         if (nextView != null) {
-            nextView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            nextView.setColorFilter(SettingsManager.getColor(Theme.toolbar_color));
             nextView.setOnClickListener(v -> onNextPressed());
         }
 
         if (pasteView != null) {
-            pasteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            pasteView.setColorFilter(SettingsManager.getColor(Theme.toolbar_color));
             pasteView.setOnClickListener(v -> {
                 String text = Tuils.getTextFromClipboard(context);
                 if(text != null && text.length() > 0) {
@@ -167,7 +167,7 @@ public class TerminalManager {
         }
 
         if (deleteView != null) {
-            deleteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            deleteView.setColorFilter(SettingsManager.getColor(Theme.toolbar_color));
             deleteView.setOnClickListener(v -> setInput(Tuils.EMPTYSTRING));
         }
 
@@ -175,9 +175,9 @@ public class TerminalManager {
         this.mTerminalView.setTypeface(Tuils.getTypeface(context));
         this.mTerminalView.setTextSize(ioSize);
         this.mTerminalView.setFocusable(false);
-        this.mTerminalView.setMovementMethod(LongClickMovementMethod.getInstance(XMLPrefsManager.getInt(Behavior.long_click_duration)));
+        this.mTerminalView.setMovementMethod(LongClickMovementMethod.getInstance(SettingsManager.getInt(Behavior.long_click_duration)));
 
-        int hintColor = XMLPrefsManager.getColor(Theme.session_info_color);
+        int hintColor = SettingsManager.getColor(Theme.session_info_color);
 
         ColorStateList list = mTerminalView.getHintTextColors();
         try {
@@ -234,11 +234,11 @@ public class TerminalManager {
 
         this.mInputView = inputView;
         this.mInputView.setTextSize(ioSize);
-        this.mInputView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
+        this.mInputView.setTextColor(SettingsManager.getColor(Theme.input_color));
         this.mInputView.setTypeface(Tuils.getTypeface(context));
         this.mInputView.setHint(Tuils.getHint(mainPack.currentDirectory.getAbsolutePath()));
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
-        Tuils.setCursorDrawableColor(this.mInputView, XMLPrefsManager.getColor(Theme.cursor_color));
+        Tuils.setCursorDrawableColor(this.mInputView, SettingsManager.getColor(Theme.cursor_color));
         this.mInputView.setHighlightColor(Color.TRANSPARENT);
         this.mInputView.setOnEditorActionListener((v1, actionId, event) -> {
             if(!mInputView.hasFocus()) mInputView.requestFocus();
@@ -351,7 +351,7 @@ public class TerminalManager {
         if(output == null || output.length() == 0) return;
 
         if(color == TerminalManager.NO_COLOR) {
-            color = XMLPrefsManager.getColor(Theme.output_color);
+            color = SettingsManager.getColor(Theme.output_color);
         }
 
         SpannableString si = new SpannableString(output);

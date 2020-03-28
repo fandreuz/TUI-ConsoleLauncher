@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -184,7 +184,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                     if(songs == null) songs = new ArrayList<>();
                     else songs.clear();
 
-                    if(XMLPrefsManager.getBoolean(Behavior.songs_from_mediastore)) {
+                    if(SettingsManager.getBoolean(Behavior.songs_from_mediastore)) {
                         ContentResolver musicResolver = mContext.getContentResolver();
                         Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
@@ -200,14 +200,14 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
                         }
                         musicCursor.close();
                     } else {
-                        String path = XMLPrefsManager.get(Behavior.songs_folder);
+                        String path = SettingsManager.get(Behavior.songs_folder);
                         if(path.length() == 0) return;
 
                         File file;
                         if(path.startsWith(File.separator)) {
                             file = new File(path);
                         } else {
-                            file = new File(XMLPrefsManager.get(Behavior.home_path), path);
+                            file = new File(SettingsManager.get(Behavior.home_path), path);
                         }
 
                         if(file.exists() && file.isDirectory()) songs.addAll(Tuils.getSongsInFolder(file));
@@ -230,7 +230,7 @@ public class MusicManager2 implements MediaController.MediaPlayerControl {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
             musicSrv = binder.getService();
-            musicSrv.setShuffle(XMLPrefsManager.getBoolean(Behavior.random_play));
+            musicSrv.setShuffle(SettingsManager.getBoolean(Behavior.random_play));
 
             if(loader.isAlive()) {
                 synchronized (songs) {

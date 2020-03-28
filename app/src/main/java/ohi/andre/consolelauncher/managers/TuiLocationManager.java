@@ -23,7 +23,7 @@ import java.util.List;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.LauncherActivity;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -99,7 +99,7 @@ public class TuiLocationManager {
                 String action = intent.getAction();
 
                 if(action.equals(ACTION_GOT_PERMISSION)) {
-                    if (intent.getIntExtra(XMLPrefsManager.VALUE_ATTRIBUTE, 1) == PackageManager.PERMISSION_GRANTED) {
+                    if (intent.getIntExtra(SettingsManager.VALUE_ATTRIBUTE, 1) == PackageManager.PERMISSION_GRANTED) {
                         register();
                     }
                 }
@@ -137,7 +137,7 @@ public class TuiLocationManager {
         LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         try {
-            manager.requestLocationUpdates(XMLPrefsManager.getInt(Behavior.location_update_mintime) * 60 * 1000, XMLPrefsManager.getInt(Behavior.location_update_mindistance),
+            manager.requestLocationUpdates(SettingsManager.getInt(Behavior.location_update_mintime) * 60 * 1000, SettingsManager.getInt(Behavior.location_update_mindistance),
                     c, locationListener, Looper.getMainLooper());
         } catch (Exception e) {
             Tuils.log(e);

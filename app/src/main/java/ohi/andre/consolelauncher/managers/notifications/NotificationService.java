@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -80,7 +80,7 @@ public class NotificationService extends NotificationListenerService {
     private void init() {
         try {
             notificationManager = NotificationManager.create(this);
-            XMLPrefsManager.loadCommons(this);
+            SettingsManager.loadCommons(this);
         } catch (Exception e) {
             Tuils.log(e);
             return;
@@ -270,17 +270,17 @@ public class NotificationService extends NotificationListenerService {
         };
 
         manager = getPackageManager();
-        enabled = XMLPrefsManager.getBoolean(Notifications.show_notifications) || XMLPrefsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
+        enabled = SettingsManager.getBoolean(Notifications.show_notifications) || SettingsManager.get(Notifications.show_notifications).equalsIgnoreCase("enabled");
 
         pastNotifications = new HashMap<>();
 
-        format = XMLPrefsManager.get(Notifications.notification_format);
-        color = XMLPrefsManager.getColor(Notifications.default_notification_color);
+        format = SettingsManager.get(Notifications.notification_format);
+        color = SettingsManager.getColor(Notifications.default_notification_color);
 
-        click = XMLPrefsManager.getBoolean(Notifications.click_notification);
-        longClick = XMLPrefsManager.getBoolean(Notifications.long_click_notification);
+        click = SettingsManager.getBoolean(Notifications.click_notification);
+        longClick = SettingsManager.getBoolean(Notifications.long_click_notification);
 
-        maxOptionalDepth = XMLPrefsManager.getInt(Behavior.max_optional_depth);
+        maxOptionalDepth = SettingsManager.getInt(Behavior.max_optional_depth);
 
         handler.post(new Runnable() {
             @Override

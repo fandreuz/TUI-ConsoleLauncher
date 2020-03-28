@@ -30,7 +30,7 @@ import java.util.List;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
 
 public class SuggestionRunnable implements Runnable {
@@ -68,24 +68,24 @@ public class SuggestionRunnable implements Runnable {
         this.scrollView = parent;
         this.pack = pack;
 
-        transparentSuggestions = XMLPrefsManager.getBoolean(Suggestions.transparent_suggestions);
+        transparentSuggestions = SettingsManager.getBoolean(Suggestions.transparent_suggestions);
         if(!transparentSuggestions) {
-            suggAppBg = XMLPrefsManager.getColor(Suggestions.apps_bg_color);
-            suggAliasBg = XMLPrefsManager.getColor(Suggestions.alias_bg_color);
-            suggCmdBg = XMLPrefsManager.getColor(Suggestions.cmd_bg_color);
-            suggContactBg = XMLPrefsManager.getColor(Suggestions.contact_bg_color);
-            suggFileBg = XMLPrefsManager.getColor(Suggestions.file_bg_color);
-            suggSongBg = XMLPrefsManager.getColor(Suggestions.song_bg_color);
-            suggDefaultBg = XMLPrefsManager.getColor(Suggestions.default_bg_color);
+            suggAppBg = SettingsManager.getColor(Suggestions.apps_bg_color);
+            suggAliasBg = SettingsManager.getColor(Suggestions.alias_bg_color);
+            suggCmdBg = SettingsManager.getColor(Suggestions.cmd_bg_color);
+            suggContactBg = SettingsManager.getColor(Suggestions.contact_bg_color);
+            suggFileBg = SettingsManager.getColor(Suggestions.file_bg_color);
+            suggSongBg = SettingsManager.getColor(Suggestions.song_bg_color);
+            suggDefaultBg = SettingsManager.getColor(Suggestions.default_bg_color);
         }
 
-        suggAppText = XMLPrefsManager.getColor(Suggestions.apps_text_color);
-        suggAliasText = XMLPrefsManager.getColor(Suggestions.alias_text_color);
-        suggCmdText = XMLPrefsManager.getColor(Suggestions.cmd_text_color);
-        suggContactText = XMLPrefsManager.getColor(Suggestions.contact_text_color);
-        suggDefaultText = XMLPrefsManager.getColor(Suggestions.default_text_color);
-        suggFileText = XMLPrefsManager.getColor(Suggestions.file_text_color);
-        suggSongText = XMLPrefsManager.getColor(Suggestions.song_text_color);
+        suggAppText = SettingsManager.getColor(Suggestions.apps_text_color);
+        suggAliasText = SettingsManager.getColor(Suggestions.alias_text_color);
+        suggCmdText = SettingsManager.getColor(Suggestions.cmd_text_color);
+        suggContactText = SettingsManager.getColor(Suggestions.contact_text_color);
+        suggDefaultText = SettingsManager.getColor(Suggestions.default_text_color);
+        suggFileText = SettingsManager.getColor(Suggestions.file_text_color);
+        suggSongText = SettingsManager.getColor(Suggestions.song_text_color);
 
         this.spaces = spaces;
 

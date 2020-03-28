@@ -30,10 +30,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsList;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.html_escape.HtmlEscape;
@@ -42,9 +42,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.set;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.set;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.writeTo;
 
 /**
  * Created by francescoandreuzzi on 01/10/2017.
@@ -78,7 +78,7 @@ public class RssManager implements XMLPrefsElement {
 
     private SimpleDateFormat defaultRSSDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 
-    private static XMLPrefsList values;
+    private static SettingsEntriesContainer values;
 
     public static final String PATH = "rss.xml";
     public static final String NAME = "RSS";
@@ -91,12 +91,12 @@ public class RssManager implements XMLPrefsElement {
     }
 
     @Override
-    public XMLPrefsList getValues() {
+    public SettingsEntriesContainer getValues() {
         return values;
     }
 
     @Override
-    public void write(XMLPrefsSave save, String value) {
+    public void write(SettingsOption save, String value) {
         set(new File(Tuils.getFolder(), PATH), save.label(), new String[] {VALUE_ATTRIBUTE}, new String[] {value});
     }
 
@@ -116,7 +116,7 @@ public class RssManager implements XMLPrefsElement {
     private File root, rssIndexFile;
 
     private List<Rss> feeds;
-    private List<XMLPrefsManager.IdValue> formats;
+    private List<SettingsManager.IdValue> formats;
     private List<CmdableRegex> cmdRegexes;
 
     private OkHttpClient client;
@@ -141,7 +141,7 @@ public class RssManager implements XMLPrefsElement {
 
         prepare();
 
-        values = new XMLPrefsList();
+        values = new SettingsEntriesContainer();
 
         handler = new Handler();
         refresh();
@@ -168,7 +168,7 @@ public class RssManager implements XMLPrefsElement {
 
                 Object[] o;
                 try {
-                    o = XMLPrefsManager.buildDocument(rssIndexFile, NAME);
+                    o = SettingsManager.buildDocument(rssIndexFile, NAME);
                     if(o == null) {
                         Tuils.sendXMLParseError(context, PATH);
                         return;
@@ -235,9 +235,9 @@ public class RssManager implements XMLPrefsElement {
 
                                     if(id == -1) continue;
 
-                                    String format = XMLPrefsManager.getStringAttribute(e, XMLPrefsManager.VALUE_ATTRIBUTE);
+                                    String format = SettingsManager.getStringAttribute(e, SettingsManager.VALUE_ATTRIBUTE);
 
-                                    XMLPrefsManager.IdValue i = new XMLPrefsManager.IdValue(format, id);
+                                    SettingsManager.IdValue i = new SettingsManager.IdValue(format, id);
                                     formats.add(i);
                                 } else if(name.equals(REGEX_CMD_LABEL)) {
                                     Element e = (Element) node;
@@ -249,13 +249,13 @@ public class RssManager implements XMLPrefsElement {
                                         continue;
                                     }
 
-                                    String regex = XMLPrefsManager.getStringAttribute(e, XMLPrefsManager.VALUE_ATTRIBUTE);
+                                    String regex = SettingsManager.getStringAttribute(e, SettingsManager.VALUE_ATTRIBUTE);
                                     if(regex == null || regex.length() == 0) continue;
 
-                                    String on = XMLPrefsManager.getStringAttribute(e, ON_ATTRIBUTE);
+                                    String on = SettingsManager.getStringAttribute(e, ON_ATTRIBUTE);
                                     if(on == null || on.length() == 0) continue;
 
-                                    String cmd = XMLPrefsManager.getStringAttribute(e, CMD_ATTRIBUTE);
+                                    String cmd = SettingsManager.getStringAttribute(e, CMD_ATTRIBUTE);
                                     if(cmd == null || cmd.length() == 0) continue;
 
                                     cmdRegexes.add(new CmdableRegex(id, on, regex, cmd));
@@ -265,7 +265,7 @@ public class RssManager implements XMLPrefsElement {
                     }
 
                     if (enums.size() > 0) {
-                        for (XMLPrefsSave s : enums) {
+                        for (SettingsOption s : enums) {
                             String value = s.defaultValue();
 
                             Element em = document.createElement(s.label());
@@ -284,15 +284,15 @@ public class RssManager implements XMLPrefsElement {
                     Tuils.toFile(e);
                 }
 
-                click = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.click_rss);
+                click = SettingsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.click_rss);
 //                longClick = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.long_click_rss);
-                defaultFormat = XMLPrefsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_default_format);
-                defaultColor = XMLPrefsManager.getColor(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_default_color);
-                includeRssDefault = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.include_rss_default);
-                timeFormat = XMLPrefsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_time_format);
-                showDownloadMessage = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.show_rss_download);
+                defaultFormat = SettingsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_default_format);
+                defaultColor = SettingsManager.getColor(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_default_color);
+                includeRssDefault = SettingsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.include_rss_default);
+                timeFormat = SettingsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_time_format);
+                showDownloadMessage = SettingsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.show_rss_download);
                 if(showDownloadMessage) {
-                    downloadFormat = XMLPrefsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_download_format);
+                    downloadFormat = SettingsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_download_format);
 
                     String size = "%s";
 
@@ -303,10 +303,10 @@ public class RssManager implements XMLPrefsElement {
                     kbPattern = Pattern.compile(size + "kb", Pattern.CASE_INSENSITIVE);
                     bPattern = Pattern.compile(size + "b", Pattern.CASE_INSENSITIVE);
 
-                    downloadMessageColor = XMLPrefsManager.getColor(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_download_message_color);
+                    downloadMessageColor = SettingsManager.getColor(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_download_message_color);
                 }
 
-                String hiddenTags = XMLPrefsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_hidden_tags).replaceAll(Tuils.SPACE, Tuils.EMPTYSTRING);
+                String hiddenTags = SettingsManager.get(ohi.andre.consolelauncher.managers.xml.options.Rss.rss_hidden_tags).replaceAll(Tuils.SPACE, Tuils.EMPTYSTRING);
                 String[] split = null;
                 for(int c = 0; c < hiddenTags.length(); c++) {
                     char ch = hiddenTags.charAt(c);
@@ -355,7 +355,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String add(int id, long timeInSeconds, String url) {
-        String output = XMLPrefsManager.add(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE, TIME_ATTRIBUTE, SHOW_ATTRIBUTE, URL_ATTRIBUTE},
+        String output = SettingsManager.add(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE, TIME_ATTRIBUTE, SHOW_ATTRIBUTE, URL_ATTRIBUTE},
                 new String[] {String.valueOf(id), String.valueOf(timeInSeconds), String.valueOf(true), url});
 
         if(output == null) {
@@ -377,15 +377,15 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String addFormat(int id, String value) {
-        String output = XMLPrefsManager.add(rssIndexFile, FORMAT_LABEL, new String[] {ID_ATTRIBUTE, XMLPrefsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), value});
+        String output = SettingsManager.add(rssIndexFile, FORMAT_LABEL, new String[] {ID_ATTRIBUTE, SettingsManager.VALUE_ATTRIBUTE}, new String[] {String.valueOf(id), value});
         if(output == null) {
-            formats.add(new XMLPrefsManager.IdValue(value, id));
+            formats.add(new SettingsManager.IdValue(value, id));
             return null;
         } else return output;
     }
 
     public String removeFormat(int id) {
-        String output = XMLPrefsManager.removeNode(rssIndexFile, FORMAT_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});;
+        String output = SettingsManager.removeNode(rssIndexFile, FORMAT_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});;
         if(output == null) {
             return null;
         } else {
@@ -395,7 +395,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String rm(int id) {
-        String output = XMLPrefsManager.removeNode(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
+        String output = SettingsManager.removeNode(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
         if(output == null) {
             File rss = new File(root, RSS_LABEL + id + ".xml");
             if(rss.exists()) rss.delete();
@@ -440,7 +440,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setShow(int id, boolean show) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {SHOW_ATTRIBUTE}, new String[] {String.valueOf(show)}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {SHOW_ATTRIBUTE}, new String[] {String.valueOf(show)}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.show = show;
@@ -453,7 +453,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setTime(int id, long timeSeconds) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {TIME_ATTRIBUTE}, new String[] {String.valueOf(timeSeconds)}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {TIME_ATTRIBUTE}, new String[] {String.valueOf(timeSeconds)}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.updateTimeSeconds = timeSeconds;
@@ -466,7 +466,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setTimeFormat(int id, String format) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {TIME_FORMAT_ATTRIBUTE}, new String[] {format}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {TIME_FORMAT_ATTRIBUTE}, new String[] {format}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.timeFormat = new SimpleDateFormat(format);
@@ -479,7 +479,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setFormat(int id, String format) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {FORMAT_ATTRIBUTE}, new String[] {format}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {FORMAT_ATTRIBUTE}, new String[] {format}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.setFormat(formats, format);
@@ -492,7 +492,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setColor(int id, String color) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {COLOR_ATTRIBUTE}, new String[] {color}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {COLOR_ATTRIBUTE}, new String[] {color}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.color = Color.parseColor(color);
@@ -505,7 +505,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setDateTag(int id, String tag) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {DATE_TAG_ATTRIBUTE}, new String[] {tag}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {DATE_TAG_ATTRIBUTE}, new String[] {tag}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.dateTag = tag;
@@ -518,7 +518,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setEntryTag(int id, String tag) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {ENTRY_TAG_ATTRIBUTE}, new String[] {tag}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {ENTRY_TAG_ATTRIBUTE}, new String[] {tag}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.entryTag = tag;
@@ -531,7 +531,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setIncludeIfMatches(int id, String regex) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {INCLUDE_ATTRIBUTE}, new String[] {regex}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {INCLUDE_ATTRIBUTE}, new String[] {regex}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.setIncludeIfMatches(regex);
@@ -544,7 +544,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setExcludeIfMatches(int id, String regex) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {EXCLUDE_ATTRIBUTE}, new String[] {regex}, false);
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {EXCLUDE_ATTRIBUTE}, new String[] {regex}, false);
         if(output == null) {
             Rss r = findId(id);
             if(r != null) r.setExcludeIfMatches(regex);
@@ -557,7 +557,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String setWifiOnly(int id, boolean wifiOnly) {
-        String output = XMLPrefsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {WIFIONLY_ATTRIBUTE}, new String[] {String.valueOf(wifiOnly)},
+        String output = SettingsManager.set(rssIndexFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {WIFIONLY_ATTRIBUTE}, new String[] {String.valueOf(wifiOnly)},
                 false);
         if(output == null) {
             Rss r = findId(id);
@@ -571,7 +571,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String addRegexCommand(int id, String on, String regex, String cmd) {
-        String output = XMLPrefsManager.add(rssIndexFile, REGEX_CMD_LABEL, new String[] {ID_ATTRIBUTE, ON_ATTRIBUTE, XMLPrefsManager.VALUE_ATTRIBUTE, CMD_ATTRIBUTE},
+        String output = SettingsManager.add(rssIndexFile, REGEX_CMD_LABEL, new String[] {ID_ATTRIBUTE, ON_ATTRIBUTE, SettingsManager.VALUE_ATTRIBUTE, CMD_ATTRIBUTE},
                 new String[] {String.valueOf(id), on, regex, cmd});
         if(output == null) {
             cmdRegexes.add(new CmdableRegex(id, on, regex, cmd));
@@ -583,7 +583,7 @@ public class RssManager implements XMLPrefsElement {
     }
 
     public String rmRegexCommand(int id) {
-        String output = XMLPrefsManager.removeNode(rssIndexFile, REGEX_CMD_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
+        String output = SettingsManager.removeNode(rssIndexFile, REGEX_CMD_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)});
         if(output == null) {
             for(int i = 0; i < cmdRegexes.size(); i++) {
                 if(cmdRegexes.get(i).id == id) cmdRegexes.remove(i);
@@ -966,12 +966,12 @@ public class RssManager implements XMLPrefsElement {
                 show = Boolean.parseBoolean(t.getAttribute(SHOW_ATTRIBUTE));
             } catch (Exception e) {}
 
-            long lastChecked = XMLPrefsManager.getLongAttribute(t, LASTCHECKED_ATTRIBUTE);
-            long lastShown = XMLPrefsManager.getLongAttribute(t, LAST_SHOWN_ITEM_ATTRIBUTE);
+            long lastChecked = SettingsManager.getLongAttribute(t, LASTCHECKED_ATTRIBUTE);
+            long lastShown = SettingsManager.getLongAttribute(t, LAST_SHOWN_ITEM_ATTRIBUTE);
 
-            String format = XMLPrefsManager.getStringAttribute(t, FORMAT_ATTRIBUTE);
-            String includeIfMatches = XMLPrefsManager.getStringAttribute(t, INCLUDE_ATTRIBUTE);
-            String excludeIfMatches = XMLPrefsManager.getStringAttribute(t, EXCLUDE_ATTRIBUTE);
+            String format = SettingsManager.getStringAttribute(t, FORMAT_ATTRIBUTE);
+            String includeIfMatches = SettingsManager.getStringAttribute(t, INCLUDE_ATTRIBUTE);
+            String excludeIfMatches = SettingsManager.getStringAttribute(t, EXCLUDE_ATTRIBUTE);
             int color;
             try {
                 color = Color.parseColor(t.getAttribute(COLOR_ATTRIBUTE));
@@ -984,10 +984,10 @@ public class RssManager implements XMLPrefsElement {
                 wifiOnly = Boolean.parseBoolean(t.getAttribute(WIFIONLY_ATTRIBUTE));
             } catch (Exception e) {}
 
-            String timeFormat = XMLPrefsManager.getStringAttribute(t, TIME_FORMAT_ATTRIBUTE);
+            String timeFormat = SettingsManager.getStringAttribute(t, TIME_FORMAT_ATTRIBUTE);
 
-            String rootNode = XMLPrefsManager.getStringAttribute(t, ENTRY_TAG_ATTRIBUTE);
-            String timeNode = XMLPrefsManager.getStringAttribute(t, DATE_TAG_ATTRIBUTE);
+            String rootNode = SettingsManager.getStringAttribute(t, ENTRY_TAG_ATTRIBUTE);
+            String timeNode = SettingsManager.getStringAttribute(t, DATE_TAG_ATTRIBUTE);
 
             return new Rss(url, updateTime, lastChecked, lastShown, id, show, format, includeIfMatches, excludeIfMatches, color, wifiOnly, timeFormat, rootNode, timeNode);
         }
@@ -1031,7 +1031,7 @@ public class RssManager implements XMLPrefsElement {
         }
 
         public void updateLastShownItem(File rssFile) {
-            XMLPrefsManager.set(rssFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {LAST_SHOWN_ITEM_ATTRIBUTE},
+            SettingsManager.set(rssFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)}, new String[] {LAST_SHOWN_ITEM_ATTRIBUTE},
                     new String[] {String.valueOf(lastShownItem)}, false);
         }
 
@@ -1058,16 +1058,16 @@ public class RssManager implements XMLPrefsElement {
         }
 
         private void updateFile(File rssFile) {
-            XMLPrefsManager.set(rssFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)},
+            SettingsManager.set(rssFile, RSS_LABEL, new String[] {ID_ATTRIBUTE}, new String[] {String.valueOf(id)},
                     new String[] {LASTCHECKED_ATTRIBUTE/*, LASTMODIFIED_ATTRIBUTE, ETAG_ATTRIBUTE*/}, new String[] {String.valueOf(lastCheckedClient)/*, lMod, etag*/},
                     false);
         }
 
-        public void updateFormat(List<XMLPrefsManager.IdValue> formats) {
+        public void updateFormat(List<SettingsManager.IdValue> formats) {
             if(format != null) {
                 try {
                     int id = Integer.parseInt(format);
-                    for(XMLPrefsManager.IdValue i : formats) {
+                    for(SettingsManager.IdValue i : formats) {
                         if(id == i.id) format = i.value;
                     }
                 } catch (Exception exc) {
@@ -1076,7 +1076,7 @@ public class RssManager implements XMLPrefsElement {
             }
         }
 
-        public void setFormat(List<XMLPrefsManager.IdValue> formats, String format) {
+        public void setFormat(List<SettingsManager.IdValue> formats, String format) {
             this.format = format;
             updateFormat(formats);
         }
@@ -1139,7 +1139,7 @@ public class RssManager implements XMLPrefsElement {
         if(!rssIndexFile.exists()) {
             try {
                 rssIndexFile.createNewFile();
-                XMLPrefsManager.resetFile(rssIndexFile, NAME);
+                SettingsManager.resetFile(rssIndexFile, NAME);
                 check = false;
 
                 return check && root.list().length > 1;

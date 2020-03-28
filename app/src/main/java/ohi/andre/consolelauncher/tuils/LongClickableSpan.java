@@ -9,7 +9,6 @@ import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.PopupMenu;
 
@@ -17,7 +16,7 @@ import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 
 /**
@@ -85,9 +84,9 @@ public class LongClickableSpan extends ClickableSpan {
         if(!set) {
             set = true;
 
-            showExcludeApp = XMLPrefsManager.getBoolean(Notifications.notification_popup_exclude_app);
-            showExcludeNotification = XMLPrefsManager.getBoolean(Notifications.notification_popup_exclude_notification);
-            showReply = XMLPrefsManager.getBoolean(Notifications.notification_popup_reply);
+            showExcludeApp = SettingsManager.getBoolean(Notifications.notification_popup_exclude_app);
+            showExcludeNotification = SettingsManager.getBoolean(Notifications.notification_popup_exclude_notification);
+            showReply = SettingsManager.getBoolean(Notifications.notification_popup_reply);
 
             showMenu = (showExcludeApp && showExcludeNotification) || (showExcludeApp && showReply) || (showExcludeNotification && showReply);
         }

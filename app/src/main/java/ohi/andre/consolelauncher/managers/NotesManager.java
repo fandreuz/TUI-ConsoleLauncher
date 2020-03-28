@@ -1,6 +1,5 @@
 package ohi.andre.consolelauncher.managers;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -11,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableString;
@@ -19,7 +17,6 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
-import android.text.style.UnderlineSpan;
 import android.widget.TextView;
 
 import org.w3c.dom.Element;
@@ -39,8 +36,7 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.commands.main.raw.shortcut;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
@@ -48,8 +44,8 @@ import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.xml.XMLPrefsManager.resetFile;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.xml.SettingsManager.resetFile;
 
 /**
  * Created by francescoandreuzzi on 12/02/2018.
@@ -101,25 +97,25 @@ public class NotesManager {
 
         packageManager = context.getPackageManager();
 
-        String optionalSeparator = "\\" + XMLPrefsManager.get(Behavior.optional_values_separator);
+        String optionalSeparator = "\\" + SettingsManager.get(Behavior.optional_values_separator);
         String optional = "%\\(([^" + optionalSeparator + "]*)" + optionalSeparator + "([^)]*)\\)";
         optionalPattern = Pattern.compile(optional, Pattern.CASE_INSENSITIVE);
 
-        color = XMLPrefsManager.getColor(Theme.notes_color);
-        lockedColor = XMLPrefsManager.getColor(Theme.notes_locked_color);
+        color = SettingsManager.getColor(Theme.notes_color);
+        lockedColor = SettingsManager.getColor(Theme.notes_locked_color);
 
-        footer = XMLPrefsManager.get(Ui.notes_footer);
-        header = XMLPrefsManager.get(Ui.notes_header);
-        divider = XMLPrefsManager.get(Ui.notes_divider);
+        footer = SettingsManager.get(Ui.notes_footer);
+        header = SettingsManager.get(Ui.notes_header);
+        divider = SettingsManager.get(Ui.notes_divider);
         divider = Tuils.patternNewline.matcher(divider).replaceAll(Tuils.NEWLINE);
 
-        allowLink = XMLPrefsManager.getBoolean(Behavior.notes_allow_link);
+        allowLink = SettingsManager.getBoolean(Behavior.notes_allow_link);
         if(allowLink && noteView != null) {
             noteView.setMovementMethod(new LinkMovementMethod());
-            linkColor = XMLPrefsManager.getColor(Theme.link_color);
+            linkColor = SettingsManager.getColor(Theme.link_color);
         }
 
-        Note.sorting = XMLPrefsManager.getInt(Behavior.notes_sorting);
+        Note.sorting = SettingsManager.getInt(Behavior.notes_sorting);
 
         load(context, true);
 
@@ -196,7 +192,7 @@ public class NotesManager {
 
         Object[] o;
         try {
-            o = XMLPrefsManager.buildDocument(file, NAME);
+            o = SettingsManager.buildDocument(file, NAME);
             if(o == null) {
                 Tuils.sendXMLParseError(context, PATH);
                 return;
@@ -221,9 +217,9 @@ public class NotesManager {
                 final String name = e.getNodeName();
 
                 if(name.equals(NOTE_NODE)) {
-                    long time = XMLPrefsManager.getLongAttribute(e, CREATION_TIME);
-                    String text = XMLPrefsManager.getStringAttribute(e, XMLPrefsManager.VALUE_ATTRIBUTE);
-                    boolean lock = XMLPrefsManager.getBooleanAttribute(e, LOCK);
+                    long time = SettingsManager.getLongAttribute(e, CREATION_TIME);
+                    String text = SettingsManager.getStringAttribute(e, SettingsManager.VALUE_ATTRIBUTE);
+                    boolean lock = SettingsManager.getBooleanAttribute(e, LOCK);
 
                     notes.add(new Note(time, text, lock));
                 } else if(loadClasses) {
@@ -236,7 +232,7 @@ public class NotesManager {
 
                     int color;
                     try {
-                        color = Color.parseColor(XMLPrefsManager.getStringAttribute(e, VALUE_ATTRIBUTE));
+                        color = Color.parseColor(SettingsManager.getStringAttribute(e, VALUE_ATTRIBUTE));
                     } catch (Exception ex) {
                         continue;
                     }
@@ -371,7 +367,7 @@ public class NotesManager {
             resetFile(file, NAME);
         }
 
-        String output = XMLPrefsManager.add(file, NOTE_NODE, new String[] {CREATION_TIME, VALUE_ATTRIBUTE, LOCK}, new String[] {String.valueOf(t), s, String.valueOf(lock)});
+        String output = SettingsManager.add(file, NOTE_NODE, new String[] {CREATION_TIME, VALUE_ATTRIBUTE, LOCK}, new String[] {String.valueOf(t), s, String.valueOf(lock)});
         if(output != null) {
             if(output.length() > 0) Tuils.sendOutput(mContext, output);
             else Tuils.sendOutput(mContext, R.string.output_error);
@@ -394,7 +390,7 @@ public class NotesManager {
             resetFile(file, NAME);
         }
 
-        String output = XMLPrefsManager.removeNode(file, new String[] {CREATION_TIME}, new String[] {String.valueOf(time)});
+        String output = SettingsManager.removeNode(file, new String[] {CREATION_TIME}, new String[] {String.valueOf(time)});
         if(output != null) {
             if(output.length() > 0) Tuils.sendOutput(mContext, output);
         }
@@ -434,7 +430,7 @@ public class NotesManager {
         File file = new File(Tuils.getFolder(), PATH);
         if(!file.exists()) resetFile(file, NAME);
 
-        String output = XMLPrefsManager.removeNode(file, new String[] {LOCK}, new String[] {String.valueOf(false)}, true, true);
+        String output = SettingsManager.removeNode(file, new String[] {LOCK}, new String[] {String.valueOf(false)}, true, true);
         if(output != null && output.length() > 0) Tuils.sendOutput(Color.RED, context, output);
 
         invalidateNotes();
@@ -469,7 +465,7 @@ public class NotesManager {
             resetFile(file, NAME);
         }
 
-        String output = XMLPrefsManager.set(file, NOTE_NODE, new String[] {CREATION_TIME}, new String[] {String.valueOf(time)}, new String[] {LOCK}, new String[] {String.valueOf(lock)}, true);
+        String output = SettingsManager.set(file, NOTE_NODE, new String[] {CREATION_TIME}, new String[] {String.valueOf(time)}, new String[] {LOCK}, new String[] {String.valueOf(lock)}, true);
         if(output != null && output.length() > 0) Tuils.sendOutput(context, output);
 
         invalidateNotes();

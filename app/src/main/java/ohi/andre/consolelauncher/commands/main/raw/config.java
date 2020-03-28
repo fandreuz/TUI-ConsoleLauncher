@@ -16,9 +16,9 @@ import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
+import ohi.andre.consolelauncher.managers.xml.SettingsManager;
 import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
+import ohi.andre.consolelauncher.managers.xml.classes.SettingsOption;
 import ohi.andre.consolelauncher.managers.xml.options.Apps;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Notifications;
@@ -45,7 +45,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = pack.getPrefsSave();
+                SettingsOption save = pack.getPrefsSave();
                 String value = pack.getString();
                 save.parent().write(save, value);
 
@@ -78,7 +78,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = pack.getPrefsSave();
+                SettingsOption save = pack.getPrefsSave();
 
                 return "Type:" + Tuils.SPACE + save.type() + Tuils.NEWLINE
                         + "Default:" + Tuils.SPACE + save.defaultValue() + Tuils.NEWLINE
@@ -121,8 +121,8 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = pack.getPrefsSave();
-                String value = XMLPrefsManager.get(save) + pack.getString();
+                SettingsOption save = pack.getPrefsSave();
+                String value = SettingsManager.get(save) + pack.getString();
 
                 save.parent().write(save, value);
 
@@ -145,7 +145,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = pack.getPrefsSave();
+                SettingsOption save = pack.getPrefsSave();
                 save.parent().write(save, Tuils.EMPTYSTRING);
 
                 ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + "\"\"");
@@ -161,8 +161,8 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = pack.getPrefsSave();
-                String s = XMLPrefsManager.get(String.class, save);
+                SettingsOption save = pack.getPrefsSave();
+                String s = SettingsManager.get(String.class, save);
                 if(s.length() == 0) return "\"\"";
                 return s;
             }
@@ -178,7 +178,7 @@ public class config extends ParamCommand {
                 File file = new File(Tuils.getFolder(), pack.getString());
                 String name = file.getName();
 
-                for(XMLPrefsManager.XMLPrefsRoot r : XMLPrefsManager.XMLPrefsRoot.values()) {
+                for(SettingsManager.XMLPrefsRoot r : SettingsManager.XMLPrefsRoot.values()) {
                     if(name.equalsIgnoreCase(r.path)) {
                         List<String> strings = r.getValues().values();
                         Tuils.addPrefix(strings, Tuils.DOUBLE_SPACE);
@@ -220,22 +220,22 @@ public class config extends ParamCommand {
             public String onNotArgEnough(ExecutePack pack, int n) {
                 List<String> ss = new ArrayList<>();
 
-                for(XMLPrefsManager.XMLPrefsRoot element : XMLPrefsManager.XMLPrefsRoot.values()) {
+                for(SettingsManager.XMLPrefsRoot element : SettingsManager.XMLPrefsRoot.values()) {
                     ss.add(element.path);
-                    for(XMLPrefsSave save : element.enums) {
+                    for(SettingsOption save : element.enums) {
                         ss.add(Tuils.DOUBLE_SPACE + save.label());
                     }
                 }
                 ss.add(AppsManager.PATH);
-                for(XMLPrefsSave save : Apps.values()) {
+                for(SettingsOption save : Apps.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
                 ss.add(NotificationManager.PATH);
-                for(XMLPrefsSave save : Notifications.values()) {
+                for(SettingsOption save : Notifications.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
                 ss.add(RssManager.PATH);
-                for(XMLPrefsSave save : Rss.values()) {
+                for(SettingsOption save : Rss.values()) {
                     ss.add(Tuils.DOUBLE_SPACE + save.label());
                 }
 
@@ -276,7 +276,7 @@ public class config extends ParamCommand {
 
             @Override
             public String exec(ExecutePack pack) {
-                XMLPrefsSave save = pack.getPrefsSave();
+                SettingsOption save = pack.getPrefsSave();
                 save.parent().write(save, save.defaultValue());
 
                 ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + save.defaultValue());
