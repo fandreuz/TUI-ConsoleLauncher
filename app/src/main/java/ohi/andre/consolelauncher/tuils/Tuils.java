@@ -106,50 +106,11 @@ import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
 public class Tuils {
 
-    public static final String SPACE = " ";
-    public static final String DOUBLE_SPACE = "  ";
-    public static final String NEWLINE = "\n";
-    public static final String TRIBLE_SPACE = "   ";
-    public static final String DOT = ".";
-    public static final String EMPTYSTRING = "";
+    // the name of the folder which holds the settings of t-ui
     private static final String TUI_FOLDER = "t-ui";
-    public static final String MINUS = "-";
 
+    // a pattern which matches a %n
     public static Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-
-    private static Typeface globalTypeface = null;
-    public static String fontPath = null;
-
-    static Pattern calculusPattern = Pattern.compile("([\\+\\-\\*\\/\\^])(\\d+\\.?\\d*)");
-    public static double textCalculus(double input, String text) {
-        Matcher m = calculusPattern.matcher(text);
-        while(m.find()) {
-            char operator = m.group(1).charAt(0);
-            double value = Double.parseDouble(m.group(2));
-
-            switch (operator) {
-                case '+':
-                    input += value;
-                    break;
-                case '-':
-                    input -= value;
-                    break;
-                case '*':
-                    input *= value;
-                    break;
-                case '/':
-                    input = input / value;
-                    break;
-                case '^':
-                    input = Math.pow(input, value);
-                    break;
-            }
-
-            Tuils.log("now im", input);
-        }
-
-        return input;
-    }
 
     public static Typeface getTypeface(Context context) {
         if(globalTypeface == null) {
@@ -331,10 +292,10 @@ public class Tuils {
     }
 
     public static String convertStreamToString(java.io.InputStream is) {
-        if (is == null) return Tuils.EMPTYSTRING;
+        if (is == null) return "";
 
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : Tuils.EMPTYSTRING;
+        return s.hasNext() ? s.next() : "";
     }
 
     public static long download(InputStream in, File file) throws Exception {
@@ -537,7 +498,7 @@ public class Tuils {
 
     public static SpannableString span(Context context, int bgColor, int foreColor, CharSequence text, int size) {
         if(text == null) {
-            text = Tuils.EMPTYSTRING;
+            text = "";
         }
 
         SpannableString spannableString;
@@ -566,7 +527,7 @@ public class Tuils {
 
     public static String inputStreamToString(InputStream is) {
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : Tuils.EMPTYSTRING;
+        return s.hasNext() ? s.next() : "";
     }
 
 //    static final int WEATHER_TIMEOUT = 6000;
@@ -905,7 +866,7 @@ public class Tuils {
             String line;
             while((line = reader.readLine()) != null) {
                 if(line.startsWith("MemTotal")) {
-                    line = line.replaceAll("\\D+", Tuils.EMPTYSTRING);
+                    line = line.replaceAll("\\D+", "");
                     return Long.parseLong(line);
                 }
             }
@@ -957,7 +918,7 @@ public class Tuils {
         if(filePath.equals(home)) {
             return "~";
         } else if(filePath.startsWith(home)) {
-            return "~" + filePath.replace(home, Tuils.EMPTYSTRING);
+            return "~" + filePath.replace(home, "");
         } else {
             return filePath;
         }
@@ -1010,7 +971,7 @@ public class Tuils {
         }
 
         String username = XMLPrefsManager.get(Ui.username);
-        if(username == null) username = Tuils.EMPTYSTRING;
+        if(username == null) username = "";
 
         format = pd.matcher(format).replaceAll(Matcher.quoteReplacement(deviceName));
         format = pu.matcher(format).replaceAll(Matcher.quoteReplacement(username));
@@ -1057,10 +1018,10 @@ public class Tuils {
 
     public static String toPlanString(String[] strings, String separator) {
         if(strings == null) {
-            return Tuils.EMPTYSTRING;
+            return "";
         }
 
-        String output = Tuils.EMPTYSTRING;
+        String output = "";
         for (int count = 0; count < strings.length; count++) {
             output = output.concat(strings[count]);
             if (count < strings.length - 1) output = output.concat(separator);
@@ -1072,15 +1033,15 @@ public class Tuils {
         if (strings != null) {
             return Tuils.toPlanString(strings, Tuils.NEWLINE);
         }
-        return Tuils.EMPTYSTRING;
+        return "";
     }
 
     public static String toPlanString(String separator, List strings) {
         if(strings == null) {
-            return Tuils.EMPTYSTRING;
+            return "";
         }
 
-        String output = Tuils.EMPTYSTRING;
+        String output = "";
         for (int count = 0; count < strings.size(); count++) {
             output = output.concat(strings.get(count).toString());
             if (count < strings.size() - 1) output = output.concat(separator);
@@ -1220,7 +1181,7 @@ public class Tuils {
             String[] object = new String[strings.size()];
             return Tuils.toPlanString(strings.toArray(object), separator);
         }
-        return Tuils.EMPTYSTRING;
+        return "";
     }
 
     public static String filesToPlanString(List<File> files, String separator) {
@@ -1245,7 +1206,7 @@ public class Tuils {
 
     public static String toPlanString(Object[] objs, String separator) {
         if(objs == null) {
-            return Tuils.EMPTYSTRING;
+            return "";
         }
 
         StringBuilder output = new StringBuilder();
