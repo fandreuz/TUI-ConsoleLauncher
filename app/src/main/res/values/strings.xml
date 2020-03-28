@@ -14,7 +14,6 @@
     <string name="tui_reset">t-ui reset to default settings</string>
     <string name="copied">Copied:</string>
     <string name="tui_busy">t-ui is busy, use \"ctrlc\" to stop the process</string>
-    <string name="donate">Do you like my work? You can offer me a coffee (cmd: $ donate). Thank you!</string>
     <string name="open_file_chooser">Open file with...</string>
 
     <!-- weather -->
@@ -272,7 +271,6 @@
     </string>
     <string name="help_data">Toggle mobile data</string>
     <string name="help_devutils">There\'s nothing interesting there</string>
-    <string name="help_donate">Offer a coffee to the developer (PayPal only)</string>
     <string name="help_flash">Toggle the flashlight</string>
     <string name="help_help">Print the available commands, or info about a command
         \n\nUsage:
