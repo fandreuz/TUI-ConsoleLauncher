@@ -22,8 +22,8 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.managers.RegexManager;
 import ohi.andre.consolelauncher.managers.settings.SettingsManager;
 import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsEntriesContainer;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 import ohi.andre.consolelauncher.managers.settings.options.Notifications;
 import ohi.andre.consolelauncher.tuils.Tuils;
 

@@ -3,8 +3,8 @@ package ohi.andre.consolelauncher.managers.settings.options;
 import android.os.Build;
 
 import ohi.andre.consolelauncher.managers.notifications.reply.ReplyManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 17/01/2018.
@@ -38,11 +38,6 @@ public enum Reply implements SettingsOption {
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public String[] invalidValues() {
-        return null;
     }
 
     @Override

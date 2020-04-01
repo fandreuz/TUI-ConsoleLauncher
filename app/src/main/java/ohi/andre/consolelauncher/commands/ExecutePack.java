@@ -5,7 +5,7 @@ import android.content.Context;
 import java.util.ArrayList;
 
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 
 @SuppressWarnings("deprecation")
 public abstract class ExecutePack {

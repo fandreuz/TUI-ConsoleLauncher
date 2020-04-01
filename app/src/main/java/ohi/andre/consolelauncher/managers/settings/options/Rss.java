@@ -1,9 +1,8 @@
 package ohi.andre.consolelauncher.managers.settings.options;
 
 import ohi.andre.consolelauncher.managers.RssManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
-import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 03/10/2017.
@@ -171,11 +170,6 @@ public enum Rss implements SettingsOption {
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public String[] invalidValues() {
-        return null;
     }
 
     @Override

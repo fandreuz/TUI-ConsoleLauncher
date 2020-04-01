@@ -3,7 +3,7 @@ package ohi.andre.consolelauncher.commands;
 import java.util.HashMap;
 
 import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 import ohi.andre.consolelauncher.managers.settings.options.Cmd;
 
 /**

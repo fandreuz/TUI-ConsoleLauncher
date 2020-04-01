@@ -18,7 +18,7 @@ import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
 import ohi.andre.consolelauncher.managers.settings.SettingsManager;
 import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 import ohi.andre.consolelauncher.managers.settings.options.Apps;
 import ohi.andre.consolelauncher.managers.settings.options.Behavior;
 import ohi.andre.consolelauncher.managers.settings.options.Notifications;

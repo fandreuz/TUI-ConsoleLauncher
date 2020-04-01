@@ -1,8 +1,8 @@
 package ohi.andre.consolelauncher.managers.settings.options;
 
 import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -148,11 +148,6 @@ public enum Notifications implements SettingsOption {
     @Override
     public String type() {
         return SettingsOption.TYPE_BOOLEAN;
-    }
-
-    @Override
-    public String[] invalidValues() {
-        return null;
     }
 
     @Override

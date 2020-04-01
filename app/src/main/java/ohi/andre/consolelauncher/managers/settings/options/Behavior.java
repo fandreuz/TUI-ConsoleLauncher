@@ -5,8 +5,8 @@ import android.os.Environment;
 import java.io.File;
 
 import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -1223,17 +1223,12 @@ public enum Behavior implements SettingsOption {
 
     @Override
     public SettingsFile parent() {
-        return SettingsManager.XMLPrefsRoot.BEHAVIOR;
+        return SettingsManager.SettingsFiles.BEHAVIOR;
     }
 
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public String[] invalidValues() {
-        return null;
     }
 
     @Override

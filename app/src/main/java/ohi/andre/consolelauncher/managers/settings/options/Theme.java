@@ -1,8 +1,8 @@
 package ohi.andre.consolelauncher.managers.settings.options;
 
 import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsFile;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -350,11 +350,6 @@ public enum Theme implements SettingsOption {
         public String info() {
             return "The color of the rect behind the nth status line";
         }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000"};
-        }
     },
     input_bgrectcolor {
         @Override
@@ -365,11 +360,6 @@ public enum Theme implements SettingsOption {
         @Override
         public String info() {
             return "The color of the rect behind the input field";
-        }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
         }
     },
     output_bgrectcolor {
@@ -382,11 +372,6 @@ public enum Theme implements SettingsOption {
         public String info() {
             return "The color of the rect behind the output field";
         }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
-        }
     },
     toolbar_bgrectcolor {
         @Override
@@ -397,11 +382,6 @@ public enum Theme implements SettingsOption {
         @Override
         public String info() {
             return "The color of the rect behind the toolbar";
-        }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
         }
     },
     suggestions_bgrectcolor {
@@ -414,11 +394,6 @@ public enum Theme implements SettingsOption {
         public String info() {
             return "The color of the rect behind the suggestions area";
         }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
-        }
     },
     status_lines_bg {
         @Override
@@ -429,11 +404,6 @@ public enum Theme implements SettingsOption {
         @Override
         public String info() {
             return "The bg color of the nth line";
-        }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000"};
         }
     },
     input_bg {
@@ -446,11 +416,6 @@ public enum Theme implements SettingsOption {
         public String info() {
             return "The background color of the input field";
         }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
-        }
     },
     output_bg {
         @Override
@@ -461,11 +426,6 @@ public enum Theme implements SettingsOption {
         @Override
         public String info() {
             return "The background color of the output field";
-        }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
         }
     },
     suggestions_bg {
@@ -478,11 +438,6 @@ public enum Theme implements SettingsOption {
         public String info() {
             return "The background color of the suggestions area";
         }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
-        }
     },
     status_lines_shadow_color {
         @Override
@@ -493,11 +448,6 @@ public enum Theme implements SettingsOption {
         @Override
         public String info() {
             return "The outline color of the nth line";
-        }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000,#ff000000"};
         }
     },
     input_shadow_color {
@@ -510,11 +460,6 @@ public enum Theme implements SettingsOption {
         public String info() {
             return "The outline color of the input field";
         }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
-        }
     },
     output_shadow_color {
         @Override
@@ -526,17 +471,12 @@ public enum Theme implements SettingsOption {
         public String info() {
             return "The outline color of the output field";
         }
-
-        @Override
-        public String[] invalidValues() {
-            return new String[] {"#ff000000"};
-        }
     }
     ;
 
     @Override
     public SettingsFile parent() {
-        return SettingsManager.XMLPrefsRoot.THEME;
+        return SettingsManager.SettingsFiles.THEME;
     }
 
     @Override
@@ -547,11 +487,6 @@ public enum Theme implements SettingsOption {
     @Override
     public String type() {
         return SettingsOption.TYPE_COLOR;
-    }
-
-    @Override
-    public String[] invalidValues() {
-        return null;
     }
 
     @Override

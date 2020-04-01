@@ -1,9 +1,8 @@
 package ohi.andre.consolelauncher.managers.settings.options;
 
+import ohi.andre.consolelauncher.managers.settings.SettingsFile;
 import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsFile;
-import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 
 /**
  * Created by francescoandreuzzi on 24/09/2017.
@@ -30,17 +29,12 @@ public enum Cmd implements SettingsOption {
 
     @Override
     public SettingsFile parent() {
-        return SettingsManager.XMLPrefsRoot.CMD;
+        return SettingsManager.SettingsFiles.CMD;
     }
 
     @Override
     public String label() {
         return name();
-    }
-
-    @Override
-    public String[] invalidValues() {
-        return null;
     }
 
     @Override

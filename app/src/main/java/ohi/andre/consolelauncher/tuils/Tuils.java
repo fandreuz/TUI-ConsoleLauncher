@@ -97,7 +97,7 @@ import ohi.andre.consolelauncher.managers.music.MusicManager2;
 import ohi.andre.consolelauncher.managers.music.Song;
 import ohi.andre.consolelauncher.managers.notifications.NotificationService;
 import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 import ohi.andre.consolelauncher.managers.settings.options.Behavior;
 import ohi.andre.consolelauncher.managers.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
@@ -1098,6 +1098,7 @@ public class Tuils {
         }
     }
 
+    // returns the Java default value for the given type
     public static <T> T getDefaultValue(Class<T> clazz) {
         return (T) Array.get(Array.newInstance(clazz, 1), 0);
     }

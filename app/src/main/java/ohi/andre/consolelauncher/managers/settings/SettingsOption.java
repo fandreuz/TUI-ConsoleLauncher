@@ -1,6 +1,7 @@
-package ohi.andre.consolelauncher.managers.settings.classes;
+package ohi.andre.consolelauncher.managers.settings;
 
 import it.andreuzzi.comparestring2.StringableObject;
+import ohi.andre.consolelauncher.tuils.Function;
 
 /**
  * Created by francescoandreuzzi on 06/03/2018.
@@ -34,6 +35,22 @@ public interface SettingsOption extends StringableObject {
     // returns the name of this option (as it appears in the file)
     String label();
 
-    // returns a list of invalid values. the way an invalid value if treated may vary
-    String[] invalidValues();
+    // convenient method to get the associated SettingsEntry
+    default SettingsEntry entry() {
+        return parent().entry(label());
+    }
+
+    class SettingsOptionChangedSubscription {
+        // revoke this subscription after one
+        public static final int ONE_TIME = 10;
+        public static final int FOREVER = 10;
+
+        public final int type;
+        public final Function callback;
+
+        public SettingsOptionChangedSubscription(int type, Function callback) {
+            this.type = type;
+            this.callback = callback;
+        }
+    }
 }
