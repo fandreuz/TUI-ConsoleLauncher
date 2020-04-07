@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.UIManager;
+import ohi.andre.consolelauncher.ui.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 

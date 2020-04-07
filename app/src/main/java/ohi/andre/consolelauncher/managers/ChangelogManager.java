@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.options.Theme;
+import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.settings.options.Theme;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

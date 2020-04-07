@@ -40,23 +40,23 @@ import java.util.regex.Pattern;
 import it.andreuzzi.comparestring2.StringableObject;
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.UIManager;
+import ohi.andre.consolelauncher.ui.UIManager;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.settings.SettingsEntriesContainer;
-import ohi.andre.consolelauncher.managers.settings.SettingsOption;
-import ohi.andre.consolelauncher.managers.settings.options.Apps;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Theme;
-import ohi.andre.consolelauncher.managers.settings.options.Ui;
+import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.settings.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.settings.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.settings.SettingsOption;
+import ohi.andre.consolelauncher.settings.options.Apps;
+import ohi.andre.consolelauncher.settings.options.Behavior;
+import ohi.andre.consolelauncher.settings.options.Theme;
+import ohi.andre.consolelauncher.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
-import static ohi.andre.consolelauncher.managers.settings.SettingsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.managers.settings.SettingsManager.resetFile;
-import static ohi.andre.consolelauncher.managers.settings.SettingsManager.set;
-import static ohi.andre.consolelauncher.managers.settings.SettingsManager.writeTo;
+import static ohi.andre.consolelauncher.settings.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.settings.SettingsManager.resetFile;
+import static ohi.andre.consolelauncher.settings.SettingsManager.set;
+import static ohi.andre.consolelauncher.settings.SettingsManager.writeTo;
 
 public class AppsManager implements XMLPrefsElement {
 

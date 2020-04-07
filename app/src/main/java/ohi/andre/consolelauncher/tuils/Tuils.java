@@ -89,17 +89,22 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import dalvik.system.DexFile;
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.functions.Function3;
+import io.reactivex.rxjava3.functions.Function4;
+import io.reactivex.rxjava3.functions.Predicate;
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.music.MusicManager2;
-import ohi.andre.consolelauncher.managers.music.Song;
-import ohi.andre.consolelauncher.managers.notifications.NotificationService;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsOption;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Ui;
+import ohi.andre.consolelauncher.music.MusicManager2;
+import ohi.andre.consolelauncher.music.Song;
+import ohi.andre.consolelauncher.notifications.NotificationService;
+import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.settings.SettingsOption;
+import ohi.andre.consolelauncher.settings.options.Behavior;
+import ohi.andre.consolelauncher.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
@@ -356,76 +361,8 @@ public class Tuils {
         return new Intent(Intent.ACTION_VIEW, Uri.parse(url));
     }
 
-    public static double getAvailableInternalMemorySize(int unit) {
-        return getAvailableSpace(Environment.getDataDirectory(), unit);
-    }
-
-    public static double getTotalInternalMemorySize(int unit) {
-        return getTotaleSpace(Environment.getDataDirectory(), unit);
-    }
-
-    public static double getAvailableExternalMemorySize(int unit) {
-        try {
-            return getAvailableSpace(SettingsManager.get(File.class, Behavior.external_storage_path), unit);
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    public static double getTotalExternalMemorySize(int unit) {
-        try {
-            return getTotaleSpace(SettingsManager.get(File.class, Behavior.external_storage_path), unit);
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    public static double getAvailableSpace(File dir, int unit) {
-        if(dir == null) return -1;
-
-        StatFs statFs = new StatFs(dir.getAbsolutePath());
-        long blocks = statFs.getAvailableBlocks();
-        return formatSize(blocks * statFs.getBlockSize(), unit);
-    }
-
-    public static double getTotaleSpace(File dir, int unit) {
-        if(dir == null) return -1;
-
-        StatFs statFs = new StatFs(dir.getAbsolutePath());
-        long blocks = statFs.getBlockCount();
-        return formatSize(blocks * statFs.getBlockSize(), unit);
-    }
-
     public static double percentage(double part, double total) {
         return round(part * 100 / total, 2);
-    }
-
-    public static double formatSize(long bytes, int unit) {
-        double convert = 1048576.0;
-        double smallConvert = 1024.0;
-
-        double result;
-
-        switch (unit) {
-            case TERA:
-                result = (bytes / convert) / convert;
-                break;
-            case GIGA:
-                result = (bytes / convert) / smallConvert;
-                break;
-            case MEGA:
-                result = bytes / convert;
-                break;
-            case KILO:
-                result = bytes / smallConvert;
-                break;
-            case BYTE:
-                result = bytes;
-                break;
-            default: return -1;
-        }
-
-        return round(result, 2);
     }
 
     public static boolean isMyLauncherDefault(PackageManager packageManager) {
@@ -894,6 +831,7 @@ public class Tuils {
         }
     }
 
+    // todo: replace with Arrays.binarySearch
     public static int find(Object o, Object[] array) {
         return find(o, Arrays.asList(array));
     }
@@ -957,7 +895,7 @@ public class Tuils {
         return -1;
     }
 
-    public static int mmToPx(DisplayMetrics metrics, int mm) {
+    public static int mmToPx(DisplayMetrics metrics, float mm) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, mm, metrics);
     }
 
@@ -969,7 +907,7 @@ public class Tuils {
 
             char c = st.charAt(0);
             if (current != c) {
-                s.add(count, (newLine ? NEWLINE : EMPTYSTRING) + c + (newLine ? NEWLINE : EMPTYSTRING));
+                s.add(count, (newLine ? "\n" : "") + c + (newLine ? "\n" : ""));
                 current = c;
             }
         }
@@ -1458,7 +1396,7 @@ public class Tuils {
 
     private static final String SPACE_REGEXP = "\\s";
     public static String removeSpaces(String string) {
-        return string.replaceAll(SPACE_REGEXP, EMPTYSTRING);
+        return string.replaceAll(SPACE_REGEXP, "");
     }
 
     public static String getNetworkType(Context context) {
@@ -1526,14 +1464,83 @@ public class Tuils {
     public static void sendXMLParseError(Context context, String PATH, SAXParseException e) {
         Tuils.sendOutput(
                 Color.RED,
-                context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2) + Tuils.NEWLINE + context.getString(R.string.output_errorlabel) +
-                "File: " + e.getSystemId() + Tuils.NEWLINE +
-                "Message" + e.getMessage() + Tuils.NEWLINE +
-                "Line" + e.getLineNumber() + Tuils.NEWLINE +
+                context, context.getString(R.string.output_xmlproblem1) + " " + PATH + context.getString(R.string.output_xmlproblem2) + " " + context.getString(R.string.output_errorlabel) +
+                "File: " + e.getSystemId() + "\n" +
+                "Message" + e.getMessage() + "\n" +
+                "Line" + e.getLineNumber() + "\n" +
                 "Column" + e.getColumnNumber());
     }
 
     public static void sendXMLParseError(Context context, String PATH) {
-        Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2));
+        Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + " " + PATH + context.getString(R.string.output_xmlproblem2));
+    }
+
+    // maps the argument into itself
+    private static Function functionIdentity1 = o -> o;
+    private static BiFunction functionIdentity2 = BiPack::new;
+    private static Function3 functionIdentity3 = Pack3::new;
+    private static Function4 functionIdentity4 = Pack4::new;
+
+    @SuppressWarnings("unchecked")
+    public static <T> Function<T,T> identity1() {
+        return functionIdentity1;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T1,T2> BiFunction<T1,T2,BiPack<T1,T2>> identity2() {
+        return functionIdentity2;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T1,T2,T3> Function3<T1,T2,T3,Pack3<T1,T2,T3>> identity3() {
+        return functionIdentity3;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T1,T2,T3,T4> Function4<T1,T2,T3,T4,Pack4<T1,T2,T3,T4>> identity4() {
+        return functionIdentity4;
+    }
+
+    // evaluates true if the argument is true
+    public static Predicate<Boolean> identityPredicate = (argument) -> argument;
+    // evaluates true if the argument is false
+    public static Predicate<Boolean> invertedIdentityPredicate = (argument) -> !argument;
+
+    // a convenient class to avoid Object[2] instances flowing around
+    public static class BiPack<T1,T2> {
+        public final T1 object1;
+        public final T2 object2;
+
+        public BiPack(T1 object1, T2 object2) {
+            this.object1 = object1;
+            this.object2 = object2;
+        }
+    }
+
+    // a convenient class to avoid Object[3] instances flowing around
+    public static class Pack3<T1,T2,T3> {
+        public final T1 object1;
+        public final T2 object2;
+        public final T3 object3;
+
+        public Pack3(T1 object1, T2 object2, T3 object3) {
+            this.object1 = object1;
+            this.object2 = object2;
+            this.object3 = object3;
+        }
+    }
+
+    public static class Pack4<T1,T2,T3,T4> {
+        public final T1 object1;
+        public final T2 object2;
+        public final T3 object3;
+        public final T4 object4;
+
+        public Pack4(T1 object1, T2 object2, T3 object3, T4 object4) {
+            this.object1 = object1;
+            this.object2 = object2;
+            this.object3 = object3;
+            this.object4 = object4;
+        }
     }
 }

@@ -14,10 +14,10 @@ import android.widget.PopupMenu;
 
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.managers.notifications.NotificationService;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.options.Notifications;
+import ohi.andre.consolelauncher.notifications.NotificationManager;
+import ohi.andre.consolelauncher.notifications.NotificationService;
+import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.settings.options.Notifications;
 
 /**
  * Created by francescoandreuzzi on 22/10/2017.

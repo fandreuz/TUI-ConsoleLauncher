@@ -14,8 +14,8 @@ import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsOption;
-import ohi.andre.consolelauncher.managers.settings.options.Apps;
+import ohi.andre.consolelauncher.settings.SettingsOption;
+import ohi.andre.consolelauncher.settings.options.Apps;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class apps extends ParamCommand {

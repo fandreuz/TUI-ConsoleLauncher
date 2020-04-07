@@ -37,10 +37,10 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.UIManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Theme;
+import ohi.andre.consolelauncher.ui.UIManager;
+import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.settings.options.Behavior;
+import ohi.andre.consolelauncher.settings.options.Theme;
 import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import okhttp3.CacheControl;
@@ -48,7 +48,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static ohi.andre.consolelauncher.managers.settings.SettingsManager.resetFile;
+import static ohi.andre.consolelauncher.settings.SettingsManager.resetFile;
 
 /**
  * Created by francescoandreuzzi on 29/03/2018.

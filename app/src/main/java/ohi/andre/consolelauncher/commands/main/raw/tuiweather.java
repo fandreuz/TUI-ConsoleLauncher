@@ -4,15 +4,15 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.UIManager;
+import ohi.andre.consolelauncher.ui.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsOption;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Ui;
+import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.settings.SettingsOption;
+import ohi.andre.consolelauncher.settings.options.Behavior;
+import ohi.andre.consolelauncher.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 

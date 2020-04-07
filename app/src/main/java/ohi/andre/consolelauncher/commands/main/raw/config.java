@@ -8,26 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.UIManager;
+import ohi.andre.consolelauncher.ui.UIManager;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.RssManager;
-import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.managers.settings.SettingsOption;
-import ohi.andre.consolelauncher.managers.settings.options.Apps;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Notifications;
-import ohi.andre.consolelauncher.managers.settings.options.Rss;
-import ohi.andre.consolelauncher.managers.settings.options.Ui;
+import ohi.andre.consolelauncher.notifications.NotificationManager;
+import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.settings.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.settings.SettingsOption;
+import ohi.andre.consolelauncher.settings.options.Apps;
+import ohi.andre.consolelauncher.settings.options.Behavior;
+import ohi.andre.consolelauncher.settings.options.Notifications;
+import ohi.andre.consolelauncher.settings.options.Rss;
+import ohi.andre.consolelauncher.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
-import static ohi.andre.consolelauncher.UIManager.PREFS_NAME;
+import static ohi.andre.consolelauncher.ui.UIManager.PREFS_NAME;
 
 /**
  * Created by francescoandreuzzi on 11/06/2017.
