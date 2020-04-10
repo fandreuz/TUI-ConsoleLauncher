@@ -60,5 +60,9 @@ dependencies {
     implementation 'com.github.pwittchen:reactivenetwork-rx2:3.0.8'
     implementation "com.github.akarnokd:rxjava3-bridge:3.0.0"
 
+    implementation 'eu.chainfire:libsuperuser:1.1.0.+'
+
+    implementation "com.github.nisrulz:lantern:2.0.0"
+
     testImplementation 'junit:junit:4.13'
 }

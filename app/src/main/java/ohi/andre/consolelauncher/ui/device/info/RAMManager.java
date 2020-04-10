@@ -20,16 +20,14 @@ public class RAMManager {
         activityManager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
     }
 
-    public Observable<Integer> totalRAMObservable(String unit) {
+    public Observable<Integer> totalRAMObservable() {
         return Observable.just(totalRam())
-                .map(bytes -> formatSize(bytes, unit))
                 .map(sz -> (int) Math.ceil(sz));
     }
 
-    public Observable<Integer> availableRAM(String unit) {
+    public Observable<Integer> availableRAMObservable() {
         return Observable.interval(3, TimeUnit.SECONDS)
                 .map(time -> freeRam())
-                .map(bytes -> formatSize(bytes, unit))
                 .map(sz -> (int) Math.ceil(sz));
     }
 
@@ -59,18 +57,6 @@ public class RAMManager {
         } catch (Exception e) {
             e.printStackTrace();
             return -1;
-        }
-    }
-
-    private static double formatSize(double bytes, String unit) {
-        switch (unit) {
-            case "gb":
-                return bytes / (double) (1024*1024*1024);
-            case "mb":
-                return bytes / (double) (1024*1024);
-            case "kb":
-                return bytes / (double) 1024;
-            default: return -1;
         }
     }
 }

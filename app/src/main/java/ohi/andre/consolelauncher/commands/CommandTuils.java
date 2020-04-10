@@ -12,19 +12,19 @@ import java.util.List;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.AppsManager;
+import ohi.andre.consolelauncher.managers.apps.AppsManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.FileManager;
 import ohi.andre.consolelauncher.managers.FileManager.DirInfo;
 import ohi.andre.consolelauncher.managers.HTMLExtractManager;
 import ohi.andre.consolelauncher.managers.RssManager;
-import ohi.andre.consolelauncher.music.MusicManager2;
-import ohi.andre.consolelauncher.notifications.NotificationManager;
-import ohi.andre.consolelauncher.settings.SettingsManager;
-import ohi.andre.consolelauncher.settings.SettingsOption;
-import ohi.andre.consolelauncher.settings.options.Apps;
-import ohi.andre.consolelauncher.settings.options.Notifications;
-import ohi.andre.consolelauncher.settings.options.Rss;
+import ohi.andre.consolelauncher.managers.music.MusicManager2;
+import ohi.andre.consolelauncher.managers.notifications.NotificationManager;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.options.Apps;
+import ohi.andre.consolelauncher.managers.settings.options.Notifications;
+import ohi.andre.consolelauncher.managers.settings.options.Rss;
 import ohi.andre.consolelauncher.tuils.SimpleMutableEntry;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -414,17 +414,17 @@ public class CommandTuils {
     }
 
     private static ArgInfo activityName(String input, AppsManager apps) {
-        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+        AppsManager.InstalledApplication info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
         return new ArgInfo(info, null, info != null, info != null ? 1 : 0);
     }
 
     private static ArgInfo hiddenPackage(String input, AppsManager apps) {
-        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.HIDDEN_APPS);
+        AppsManager.InstalledApplication info = apps.findLaunchInfoWithLabel(input, AppsManager.HIDDEN_APPS);
         return new ArgInfo(info, null, info != null, info != null ? 1 : 0);
     }
 
     private static ArgInfo allPackages(String input, AppsManager apps) {
-        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+        AppsManager.InstalledApplication info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
         if(info == null) {
             info = apps.findLaunchInfoWithLabel(input, AppsManager.HIDDEN_APPS);
         }
@@ -433,7 +433,7 @@ public class CommandTuils {
     }
 
     private static ArgInfo defaultApp(String input, AppsManager apps) {
-        AppsManager.LaunchInfo info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+        AppsManager.InstalledApplication info = apps.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
         if(info == null) {
             return new ArgInfo(input, null, true, 1);
         } else {

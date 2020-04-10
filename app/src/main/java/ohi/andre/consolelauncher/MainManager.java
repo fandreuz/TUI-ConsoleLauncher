@@ -23,7 +23,7 @@ import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.location;
 import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
-import ohi.andre.consolelauncher.managers.AppsManager;
+import ohi.andre.consolelauncher.managers.apps.AppsManager;
 import ohi.andre.consolelauncher.managers.ChangelogManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.HTMLExtractManager;
@@ -33,12 +33,12 @@ import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.ThemeManager;
 import ohi.andre.consolelauncher.managers.TimeManager;
 import ohi.andre.consolelauncher.managers.TuiLocationManager;
-import ohi.andre.consolelauncher.music.MusicManager2;
-import ohi.andre.consolelauncher.music.MusicService;
-import ohi.andre.consolelauncher.notifications.KeeperService;
-import ohi.andre.consolelauncher.settings.SettingsManager;
-import ohi.andre.consolelauncher.settings.options.Behavior;
-import ohi.andre.consolelauncher.settings.options.Theme;
+import ohi.andre.consolelauncher.managers.music.MusicManager2;
+import ohi.andre.consolelauncher.managers.music.MusicService;
+import ohi.andre.consolelauncher.managers.notifications.KeeperService;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.options.Theme;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -243,8 +243,8 @@ public class MainManager {
                         LocalBroadcastManager.getInstance(context.getApplicationContext()).sendBroadcast(i);
                     }
 
-                    if(p != null && p instanceof AppsManager.LaunchInfo) {
-                        onCommand(cmd, (AppsManager.LaunchInfo) p, intent.getBooleanExtra(MainManager.MUSIC_SERVICE, false));
+                    if(p != null && p instanceof AppsManager.InstalledApplication) {
+                        onCommand(cmd, (AppsManager.InstalledApplication) p, intent.getBooleanExtra(MainManager.MUSIC_SERVICE, false));
                     } else {
                         onCommand(cmd, aliasName, intent.getBooleanExtra(MainManager.MUSIC_SERVICE, false));
                     }
@@ -273,7 +273,7 @@ public class MainManager {
         }
     }
 
-    public void onCommand(String input, AppsManager.LaunchInfo launchInfo, boolean wasMusicService) {
+    public void onCommand(String input, AppsManager.InstalledApplication launchInfo, boolean wasMusicService) {
         if(launchInfo == null) {
             onCommand(input, (String) null, wasMusicService);
             return;
@@ -395,7 +395,7 @@ public class MainManager {
 
     public CommandExecuter executer() {
         return (input, obj) -> {
-            AppsManager.LaunchInfo li = obj instanceof AppsManager.LaunchInfo ? (AppsManager.LaunchInfo) obj : null;
+            AppsManager.InstalledApplication li = obj instanceof AppsManager.InstalledApplication ? (AppsManager.InstalledApplication) obj : null;
 
             onCommand(input, li, false);
         };
@@ -409,7 +409,7 @@ public class MainManager {
     Pattern pp = Pattern.compile("%p", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
     Pattern pl = Pattern.compile("%l", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
 
-    public boolean performLaunch(MainPack mainPack, AppsManager.LaunchInfo i, String input) {
+    public boolean performLaunch(MainPack mainPack, AppsManager.InstalledApplication i, String input) {
         Intent intent = appsManager.getIntent(i);
         if (intent == null) {
             return false;
@@ -486,7 +486,7 @@ public class MainManager {
                 for(Group g : appGroups) {
                     if(name.equals(g.name())) {
                         if(input == null) {
-                            Tuils.sendOutput(mContext, AppsManager.AppUtils.printApps(AppsManager.AppUtils.labelList((List<AppsManager.LaunchInfo>) g.members(), false)));
+                            Tuils.sendOutput(mContext, AppsManager.AppUtils.printApps(AppsManager.AppUtils.labelList((List<AppsManager.InstalledApplication>) g.members(), false)));
                             return true;
                         } else {
                             return g.use(mainPack, input);
@@ -544,7 +544,7 @@ public class MainManager {
 
         @Override
         public boolean trigger(MainPack info, String input) {
-            AppsManager.LaunchInfo i = appsManager.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
+            AppsManager.InstalledApplication i = appsManager.findLaunchInfoWithLabel(input, AppsManager.SHOWN_APPS);
             return i != null && performLaunch(info, i, input);
         }
     }

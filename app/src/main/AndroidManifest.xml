@@ -127,11 +127,11 @@
         </receiver>
 
         <service
-            android:name=".notifications.KeeperService"
+            android:name=".managers.notifications.KeeperService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".music.MusicService"
+            android:name=".managers.music.MusicService"
             android:enabled="true"
             android:exported="true" />
 
@@ -208,14 +208,14 @@
         </activity>
 
         <service
-            android:name=".notifications.NotificationService"
+            android:name=".managers.notifications.NotificationService"
             android:label="@string/notification_reader"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <service android:name=".notifications.NotificationMonitorService" />
+        <service android:name=".managers.notifications.NotificationMonitorService" />
 
         <activity
             android:name=".tuils.stuff.FakeLauncherActivity"

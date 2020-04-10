@@ -27,7 +27,7 @@ public class BatteryManager {
                 .share();
     }
 
-    public int batteryPercentage() {
+    private int batteryPercentage() {
         int level = batteryIntent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryIntent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1);
 
@@ -44,7 +44,7 @@ public class BatteryManager {
                 .share();
     }
 
-    public boolean isCharging() {
+    private boolean isCharging() {
         int status = batteryIntent.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
         return status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == android.os.BatteryManager.BATTERY_STATUS_FULL;

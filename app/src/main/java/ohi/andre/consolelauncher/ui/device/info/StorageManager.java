@@ -7,36 +7,35 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
-import ohi.andre.consolelauncher.settings.SettingsManager;
-import ohi.andre.consolelauncher.settings.options.Behavior;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.options.Behavior;
 
 public class StorageManager {
 
-    public Observable<Integer> totalInternalStorage(String unit) {
+    // mb
+    public Observable<Integer> totalInternalStorageObservable() {
         return Observable.just(getTotalSpace(Environment.getDataDirectory()))
-                .map(mb -> formatSize(mb, unit))
                 .map(sz -> (int) Math.ceil(sz));
     }
 
-    public Observable<Integer> totalExternalStorage(String unit) {
+    // mb
+    public Observable<Integer> totalExternalStorageObservable() {
         return SettingsManager.getInstance().requestUpdates(Behavior.external_storage_path, File.class)
                 .map(StorageManager::getTotalSpace)
-                .map(mb -> formatSize(mb, unit))
-                .map(size -> (int) Math.ceil(size));
-    }
-
-    public Observable<Integer> availableInternalStorageObservable(String unit) {
-        return Observable.interval(3, TimeUnit.SECONDS)
-                .map(x -> getAvailableSpace(Environment.getDataDirectory()))
-                .map(mb -> formatSize(mb, unit))
                 .map(size -> (int) Math.ceil(size));
     }
 
     // mb
-    public Observable<Integer> availableExternalStorage(String unit) {
+    public Observable<Integer> availableInternalStorageObservable() {
+        return Observable.interval(3, TimeUnit.SECONDS)
+                .map(x -> getAvailableSpace(Environment.getDataDirectory()))
+                .map(size -> (int) Math.ceil(size));
+    }
+
+    // mb
+    public Observable<Integer> availableExternalStorageObservable() {
         return SettingsManager.getInstance().requestUpdates(Behavior.external_storage_path, File.class)
                 .map(StorageManager::getAvailableSpace)
-                .map(mb -> formatSize(mb, unit))
                 .map(size -> (int) Math.ceil(size));
     }
 

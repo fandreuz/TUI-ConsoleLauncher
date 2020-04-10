@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 import okhttp3.OkHttpClient;

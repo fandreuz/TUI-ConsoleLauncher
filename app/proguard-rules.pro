@@ -1,11 +1,11 @@
 -keep public class ohi.andre.consolelauncher.commands.main.raw.* { public *; }
 -keep public abstract class ohi.andre.consolelauncher.commands.main.generals.* { public *; }
 -keep public class ohi.andre.consolelauncher.commands.tuixt.raw.* { public *; }
--keep public class ohi.andre.consolelauncher.notifications.NotificationService
--keep public class ohi.andre.consolelauncher.notifications.KeeperService
+-keep public class ohi.andre.consolelauncher.managers.notifications.NotificationService
+-keep public class ohi.andre.consolelauncher.managers.notifications.KeeperService
 -keep public class ohi.andre.consolelauncher.managers.options.**
 -keep class ohi.andre.consolelauncher.tuils.libsuperuser.**
--keep class ohi.andre.consolelauncher.suggestions.HideSuggestionViewValues
+-keep class ohi.andre.consolelauncher.ui.suggestions.HideSuggestionViewValues
 -keep public class it.andreuzzi.comparestring2.**
 
 -dontwarn ohi.andre.consolelauncher.commands.main.raw.**

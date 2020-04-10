@@ -30,10 +30,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import ohi.andre.consolelauncher.MainManager;
 import ohi.andre.consolelauncher.R;
-import ohi.andre.consolelauncher.settings.SettingsManager;
-import ohi.andre.consolelauncher.settings.classes.XMLPrefsElement;
-import ohi.andre.consolelauncher.settings.SettingsEntriesContainer;
-import ohi.andre.consolelauncher.settings.SettingsOption;
+import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.managers.settings.classes.XMLPrefsElement;
+import ohi.andre.consolelauncher.managers.settings.SettingsEntriesContainer;
+import ohi.andre.consolelauncher.managers.settings.SettingsOption;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.html_escape.HtmlEscape;
@@ -42,9 +42,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-import static ohi.andre.consolelauncher.settings.SettingsManager.VALUE_ATTRIBUTE;
-import static ohi.andre.consolelauncher.settings.SettingsManager.set;
-import static ohi.andre.consolelauncher.settings.SettingsManager.writeTo;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.VALUE_ATTRIBUTE;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.set;
+import static ohi.andre.consolelauncher.managers.settings.SettingsManager.writeTo;
 
 /**
  * Created by francescoandreuzzi on 01/10/2017.
@@ -188,7 +188,7 @@ public class RssManager implements XMLPrefsElement {
 
                     NodeList nodes = rootElement.getElementsByTagName("*");
 
-                    List<ohi.andre.consolelauncher.settings.options.Rss> enums = new ArrayList<>(Arrays.asList(ohi.andre.consolelauncher.settings.options.Rss.values()));
+                    List<ohi.andre.consolelauncher.managers.settings.options.Rss> enums = new ArrayList<>(Arrays.asList(ohi.andre.consolelauncher.managers.settings.options.Rss.values()));
 
                     String[] deleted = instance.delete();
                     boolean needToWrite = false;
@@ -284,15 +284,15 @@ public class RssManager implements XMLPrefsElement {
                     Tuils.toFile(e);
                 }
 
-                click = SettingsManager.getBoolean(ohi.andre.consolelauncher.settings.options.Rss.click_rss);
+                click = SettingsManager.getBoolean(ohi.andre.consolelauncher.managers.settings.options.Rss.click_rss);
 //                longClick = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Rss.long_click_rss);
-                defaultFormat = SettingsManager.get(ohi.andre.consolelauncher.settings.options.Rss.rss_default_format);
-                defaultColor = SettingsManager.getColor(ohi.andre.consolelauncher.settings.options.Rss.rss_default_color);
-                includeRssDefault = SettingsManager.getBoolean(ohi.andre.consolelauncher.settings.options.Rss.include_rss_default);
-                timeFormat = SettingsManager.get(ohi.andre.consolelauncher.settings.options.Rss.rss_time_format);
-                showDownloadMessage = SettingsManager.getBoolean(ohi.andre.consolelauncher.settings.options.Rss.show_rss_download);
+                defaultFormat = SettingsManager.get(ohi.andre.consolelauncher.managers.settings.options.Rss.rss_default_format);
+                defaultColor = SettingsManager.getColor(ohi.andre.consolelauncher.managers.settings.options.Rss.rss_default_color);
+                includeRssDefault = SettingsManager.getBoolean(ohi.andre.consolelauncher.managers.settings.options.Rss.include_rss_default);
+                timeFormat = SettingsManager.get(ohi.andre.consolelauncher.managers.settings.options.Rss.rss_time_format);
+                showDownloadMessage = SettingsManager.getBoolean(ohi.andre.consolelauncher.managers.settings.options.Rss.show_rss_download);
                 if(showDownloadMessage) {
-                    downloadFormat = SettingsManager.get(ohi.andre.consolelauncher.settings.options.Rss.rss_download_format);
+                    downloadFormat = SettingsManager.get(ohi.andre.consolelauncher.managers.settings.options.Rss.rss_download_format);
 
                     String size = "%s";
 
@@ -303,10 +303,10 @@ public class RssManager implements XMLPrefsElement {
                     kbPattern = Pattern.compile(size + "kb", Pattern.CASE_INSENSITIVE);
                     bPattern = Pattern.compile(size + "b", Pattern.CASE_INSENSITIVE);
 
-                    downloadMessageColor = SettingsManager.getColor(ohi.andre.consolelauncher.settings.options.Rss.rss_download_message_color);
+                    downloadMessageColor = SettingsManager.getColor(ohi.andre.consolelauncher.managers.settings.options.Rss.rss_download_message_color);
                 }
 
-                String hiddenTags = SettingsManager.get(ohi.andre.consolelauncher.settings.options.Rss.rss_hidden_tags).replaceAll(Tuils.SPACE, Tuils.EMPTYSTRING);
+                String hiddenTags = SettingsManager.get(ohi.andre.consolelauncher.managers.settings.options.Rss.rss_hidden_tags).replaceAll(Tuils.SPACE, Tuils.EMPTYSTRING);
                 String[] split = null;
                 for(int c = 0; c < hiddenTags.length(); c++) {
                     char ch = hiddenTags.charAt(c);
