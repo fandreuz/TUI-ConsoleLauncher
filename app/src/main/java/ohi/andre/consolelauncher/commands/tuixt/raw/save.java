@@ -4,7 +4,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtPack;
-import ohi.andre.consolelauncher.managers.FileManager;
+import ohi.andre.consolelauncher.features.FileManager;
 
 /**
  * Created by francescoandreuzzi on 24/01/2017.

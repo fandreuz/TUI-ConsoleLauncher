@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import io.reactivex.rxjava3.core.Observable;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.features.settings.SettingsManager;
+import ohi.andre.consolelauncher.features.settings.options.Behavior;
 
 public class DeviceInfoManager2 {
     

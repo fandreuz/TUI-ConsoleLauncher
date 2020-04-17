@@ -3,7 +3,7 @@ package ohi.andre.consolelauncher.commands.main.raw;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.managers.TimeManager;
+import ohi.andre.consolelauncher.features.TimeManager;
 
 /**
  * Created by andre on 03/12/15.

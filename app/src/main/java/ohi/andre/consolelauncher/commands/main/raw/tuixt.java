@@ -12,7 +12,7 @@ import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.FileManager;
+import ohi.andre.consolelauncher.features.FileManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**

@@ -96,14 +96,14 @@ import io.reactivex.rxjava3.functions.Predicate;
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.main.MainPack;
-import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.music.MusicManager2;
-import ohi.andre.consolelauncher.managers.music.Song;
-import ohi.andre.consolelauncher.managers.notifications.NotificationService;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsOption;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Ui;
+import ohi.andre.consolelauncher.features.TerminalManager;
+import ohi.andre.consolelauncher.features.music.MusicManager2;
+import ohi.andre.consolelauncher.features.music.Song;
+import ohi.andre.consolelauncher.features.notifications.NotificationService;
+import ohi.andre.consolelauncher.features.settings.SettingsManager;
+import ohi.andre.consolelauncher.features.settings.SettingsOption;
+import ohi.andre.consolelauncher.features.settings.options.Behavior;
+import ohi.andre.consolelauncher.features.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
 import ohi.andre.consolelauncher.tuils.stuff.FakeLauncherActivity;
 
@@ -1248,11 +1248,6 @@ public class Tuils {
         return uri;
     }
 
-    private static File getTuiFolder() {
-        File internalDir = Environment.getExternalStorageDirectory();
-        return new File(internalDir, TUI_FOLDER);
-    }
-
     public static double eval(final String str) {
         return new Object() {
             int pos = -1, ch;
@@ -1346,28 +1341,56 @@ public class Tuils {
         DisplayMetrics displayMetrics = resources.getDisplayMetrics();
         return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
     }
-
-    private static final int FILEUPDATE_DELAY = 100;
-    private static File folder = null;
+    
+    private static File tuiFolder = null;
+    private static final Object tuiFolderLock = new Object();
+    
+    // request the t-ui folder.
+    // this will be probably called at boot time --> unexpected behavior.
     public static File getFolder() {
-        if(folder != null) return folder;
-
-        int elapsedTime = 0;
-        while (elapsedTime < 1000) {
-            File tuiFolder = Tuils.getTuiFolder();
-            if(tuiFolder != null && ((tuiFolder.exists() && tuiFolder.isDirectory()) || tuiFolder.mkdir())) {
-                folder = tuiFolder;
-                return folder;
+        // I want a single thread per time to be able to access this method
+        synchronized (tuiFolderLock) {
+            if (tuiFolder != null) return tuiFolder;
+            
+            long start = System.currentTimeMillis();
+    
+            // 10 seconds timeout
+            while (System.currentTimeMillis() - start < 1000 * 10) {
+                File tf = new File(Environment.getExternalStorageDirectory(), TUI_FOLDER);
+                
+                if (tf != null && tf.exists() && tf.isDirectory()) {
+                    tuiFolder = tf;
+                    return tuiFolder;
+                } else if(tf.mkdir() && tf.exists() && tf.isDirectory()) {
+                    tuiFolder = tf;
+                    return tuiFolder;
+                } else {
+                    try {
+                        Thread.sleep(20);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-
-            try {
-                Thread.sleep(FILEUPDATE_DELAY);
-            } catch (InterruptedException e) {}
-
-            elapsedTime += FILEUPDATE_DELAY;
+    
+            return null;
         }
-
-        return null;
+    }
+    
+    public static int parseColorOrDefault(String color, int defaultColor) {
+        try {
+            return Color.parseColor(color);
+        } catch (Exception e) {
+            return defaultColor;
+        }
+    }
+    
+    public static int parseIntOrDefault(String integer, int defaultInteger) {
+        try {
+            return Integer.parseInt(integer);
+        } catch (Exception e) {
+            return defaultInteger;
+        }
     }
 
     public static int alphabeticCompare(String s1, String s2) {

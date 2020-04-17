@@ -10,7 +10,7 @@ import ohi.andre.consolelauncher.LauncherActivity;
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
-import ohi.andre.consolelauncher.managers.flashlight.TorchManager;
+import ohi.andre.consolelauncher.features.flashlight.TorchManager;
 
 public class flash implements CommandAbstraction {
 

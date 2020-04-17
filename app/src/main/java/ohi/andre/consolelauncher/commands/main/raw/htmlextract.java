@@ -10,8 +10,8 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.HTMLExtractManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
+import ohi.andre.consolelauncher.features.HTMLExtractManager;
+import ohi.andre.consolelauncher.features.settings.SettingsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 /**

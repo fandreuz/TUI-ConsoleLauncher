@@ -9,7 +9,7 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.APICommand;
-import ohi.andre.consolelauncher.managers.TuiLocationManager;
+import ohi.andre.consolelauncher.features.TuiLocationManager;
 
 /**
  * Created by francescoandreuzzi on 10/05/2017.

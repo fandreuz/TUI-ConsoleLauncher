@@ -1,15 +1,17 @@
 package ohi.andre.consolelauncher.tuils.xml;
 
+import android.support.v4.util.ArraySet;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -24,401 +26,335 @@ import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class XMLUtils {
     public final String XML_DEFAULT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-
-    private DocumentBuilderFactory factory;
-    private DocumentBuilder builder;
-
-    public XMLUtils() {
+    
+    private final DocumentBuilderFactory factory;
+    private final DocumentBuilder        builder;
+    
+    public XMLUtils () {
+        DocumentBuilder builder;
+        
         factory = DocumentBuilderFactory.newInstance();
         try {
             builder = factory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
+            builder = null;
             e.printStackTrace();
         }
+        
+        this.builder = builder;
     }
-
-    final Pattern p1 = Pattern.compile(">");
-    final Pattern p3 = Pattern.compile("\n\n");
-    final String p1s = ">" + "\n";
-    final String p3s = "\n";
-
-    public String fixNewlines(String s) {
-        s = p1.matcher(s).replaceAll(p1s);
-//        s = p2.matcher(s).replaceAll(p2s);
-        s = p3.matcher(s).replaceAll(p3s);
+    
+    final Pattern p1  = Pattern.compile(">");
+    final Pattern p3  = Pattern.compile("\n\n");
+    final String  p1s = ">" + "\n";
+    final String  p3s = "\n";
+    
+    public String fixNewlines (String s) {
+        s = p1.matcher(s)
+                .replaceAll(p1s);
+        s = p3.matcher(s)
+                .replaceAll(p3s);
         return s;
     }
-
-    //    rootName is needed in order to rebuild the file if it's corrupted
-//    [0] = document
-//    [1] = root
-    public Object[] buildDocument(File file, String rootName) throws Exception {
+    
+    // Build an array like [Document, Element (root)]
+    // rootName is needed in order to recreate the file if it's corrupted
+    public Object[] buildDocument (File file, String rootName) throws Exception {
         if (!file.exists()) {
             resetFile(file, rootName);
         }
-
+        
         Document d;
         try {
             d = builder.parse(file);
         } catch (Exception e) {
             Tuils.log(e);
-
+            
             int nOfBytes = Tuils.nOfBytes(file);
             if (nOfBytes == 0 && rootName != null) {
                 resetFile(file, rootName);
                 d = builder.parse(file);
             } else return null;
         }
-
+        
         Element r = d.getDocumentElement();
         return new Object[]{d, r};
     }
-
-    public void write(Document d, File f) {
-        try {
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-
-            DOMSource source = new DOMSource(d);
-            StringWriter writer = new StringWriter();
-            StreamResult result = new StreamResult(writer);
-            transformer.transform(source, result);
-
-            String s = fixNewlines(writer.toString());
-
-            FileOutputStream stream = new FileOutputStream(f);
-            stream.write(s.getBytes());
-
-            stream.flush();
-            stream.close();
-        } catch (Exception e) {
-            Tuils.log(e);
+    
+    // write the given Document to the given file
+    // this is synchronous
+    public void write (Document d, File f) throws Exception {
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        
+        DOMSource source = new DOMSource(d);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        transformer.transform(source, result);
+        
+        String s = fixNewlines(writer.toString());
+        
+        FileOutputStream stream = new FileOutputStream(f);
+        stream.write(s.getBytes());
+        
+        stream.flush();
+        stream.close();
+    }
+    
+    public void newRootNode (File file, String nodeName) throws Exception {
+        newRootNode(file, new XMLMatcher.Builder().setNodeName(nodeName)
+                .build());
+    }
+    
+    // add a new node to the root of the given file, and make this new node satisfy the given matcher.
+    // matcher.nodeName can't be null
+    public void newRootNode (File file, XMLMatcher newNodeDefinition) throws Exception {
+        Object[] o;
+        o = buildDocument(file, null);
+        
+        Document d = (Document) o[0];
+        Element root = (Element) o[1];
+        
+        newChildNode(file, d, root, newNodeDefinition);
+    }
+    
+    public void newChildNode (File file, Document document, Element parent, XMLMatcher newNodeDefinition) throws Exception {
+        Element element = document.createElement(newNodeDefinition.nodeName);
+        
+        // set the attributes
+        if (newNodeDefinition.attributeConstraints != null && newNodeDefinition.attributeConstraints.size() > 0) {
+            for (Map.Entry<String, String> entry : newNodeDefinition.attributeConstraints.entrySet()) {
+                element.setAttribute(entry.getKey(), entry.getValue());
+            }
         }
+        
+        // add the child to the root element
+        parent.appendChild(element);
+        
+        // write the file
+        write(document, file);
     }
-
-    public String add(File file, String elementName, String[] attributeNames, String[] attributeValues) {
-        try {
-            Object[] o;
-            try {
-                o = buildDocument(file, null);
-                if (o == null) return "";
-            } catch (Exception e) {
-                Tuils.log(e);
-                return e.toString();
-            }
-
-            Document d = (Document) o[0];
-            Element root = (Element) o[1];
-
-            Element element = d.createElement(elementName);
-            for (int c = 0; c < attributeNames.length; c++) {
-                if (attributeValues[c] == null) continue;
-                element.setAttribute(attributeNames[c], attributeValues[c]);
-            }
-            root.appendChild(element);
-
-            write(d, file);
-        } catch (Exception e) {
-            Tuils.log(e);
-            return e.toString();
+    
+    // an helper class used to construct matches over XML nodes.
+    // if you don't need to check a field (nodeName, attributes) pass null to the constructor.
+    public static class XMLMatcher {
+        public static int OR  = 10;
+        public static int AND = 11;
+        
+        // a check on nodeName relates to the other checks with an AND relationship
+        public final String nodeName;
+        
+        public final Map<String, String> attributeConstraints;
+        public final int                 attributesMatchMode;
+        
+        // if true, an attribute not found won't be considered as a false comparison
+        public final boolean forgiveAttributeNotFound;
+        
+        // pass a null parameter if you don't need to check a field
+        private XMLMatcher (String nodeName, Map<String, String> attributeConstraints,
+                            int matchMode, boolean forgiveNotFound) {
+            this.nodeName                 = nodeName;
+            this.attributeConstraints     = attributeConstraints;
+            this.attributesMatchMode      = matchMode;
+            this.forgiveAttributeNotFound = forgiveNotFound;
         }
-        return null;
-    }
-
-    public String set(File file, String elementName, String[] attributeNames, String[] attributeValues) {
-        return set(file, elementName, null, null, attributeNames, attributeValues, true);
-    }
-
-    public String set(File file, String elementName, String[] thatHasThose, String[] forValues, String[] attributeNames, String[] attributeValues, boolean addIfNotFound) {
-        String[][] values = new String[1][attributeValues.length];
-        values[0] = attributeValues;
-
-        return setMany(file, new String[]{elementName}, thatHasThose, forValues, attributeNames, values, addIfNotFound);
-    }
-
-    public String setMany(File file, String elementNames[], String[] attributeNames, String[][] attributeValues) {
-        return setMany(file, elementNames, null, null, attributeNames, attributeValues, true);
-    }
-
-    public String setMany(File file, String elementNames[], String[] thatHasThose, String[] forValues, String[] attributeNames, String[][] attributeValues, boolean addIfNotFound) {
-        try {
-            Object[] o;
-            try {
-                o = buildDocument(file, null);
-                if (o == null) return "";
-            } catch (Exception e) {
-                Tuils.log(e);
-                return e.toString();
-            }
-
-            Document d = (Document) o[0];
-            Element root = (Element) o[1];
-
-            if (d == null || root == null) {
-                return "";
-            }
-
-            int nFound = 0;
-
-            Main:
-            for (int c = 0; c < elementNames.length; c++) {
-                NodeList nodes = root.getElementsByTagName(elementNames[c]);
-
-                Nodes:
-                for (int j = 0; j < nodes.getLength(); j++) {
-                    Node n = nodes.item(j);
-                    if (n.getNodeType() == Node.ELEMENT_NODE) {
-                        Element e = (Element) n;
-
-                        if (!checkAttributes(e, thatHasThose, forValues, false)) {
-                            continue Nodes;
-                        }
-
-                        nFound++;
-
-                        for (int a = 0; a < attributeNames.length; a++) {
-                            e.setAttribute(attributeNames[a], attributeValues[c][a]);
-                        }
-
-                        elementNames[c] = null;
-
-                        continue Main;
+        
+        // ignores null fields
+        public boolean matches (Element element) {
+            if (nodeName != null && !nodeName.equals(element.getNodeName())) return false;
+            
+            for (Map.Entry<String, String> constraint : attributeConstraints.entrySet()) {
+                String value = element.getAttribute(constraint.getKey());
+                
+                if (value == null) {
+                    if (!forgiveAttributeNotFound) {
+                        // then consider this like a false comparison
+                        if (attributesMatchMode == AND) return false;
+                    }
+                } else {
+                    if (value.equals(constraint.getValue())) {
+                        if (attributesMatchMode == OR) return true;
+                    } else {
+                        // if the match isn't OK, we can stop. the return value can't be true
+                        if (attributesMatchMode == AND) return false;
                     }
                 }
             }
-
-            if (nFound < elementNames.length) {
-                for (int count = 0; count < elementNames.length; count++) {
-                    if (elementNames[count] == null || elementNames[count].length() == 0) continue;
-
-                    if (!addIfNotFound) continue;
-
-                    Element element = d.createElement(elementNames[count]);
-                    for (int c = 0; c < attributeNames.length; c++) {
-                        if (attributeValues[count][c] == null) continue;
-                        element.setAttribute(attributeNames[c], attributeValues[count][c]);
-                    }
-                    root.appendChild(element);
-                }
-            }
-
-            write(d, file);
-
-            if (nFound == 0) return "";
-            return null;
-        } catch (Exception e) {
-            Tuils.log(e);
-            Tuils.toFile(e);
-            return e.toString();
-        }
-    }
-
-    //    return "" if node not found, null if all good
-    public String removeNode(File file, String nodeName) {
-        return removeNode(file, nodeName, null, null);
-    }
-
-    public String removeNode(File file, String nodeName, String[] thatHasThose, String[] forValues) {
-        try {
-            Object[] o;
-            try {
-                o = buildDocument(file, null);
-                if (o == null) return "";
-            } catch (Exception e) {
-                return e.toString();
-            }
-
-            Document d = (Document) o[0];
-            Element root = (Element) o[1];
-
-            Node n = findNode(root, nodeName, thatHasThose, forValues);
-            if (n == null) return "";
-
-            root.removeChild(n);
-            write(d, file);
-
-            return null;
-        } catch (Exception e) {
-            return e.toString();
-        }
-    }
-
-    public String removeNode(File file, String[] thatHasThose, String[] forValues) {
-        return removeNode(file, thatHasThose, forValues, false, false);
-    }
-
-    public String removeNode(File file, String[] thatHasThose, String[] forValues, boolean alsoNotFound, boolean all) {
-        try {
-            Object[] o;
-            try {
-                o = buildDocument(file, null);
-                if (o == null) return "";
-            } catch (Exception e) {
-                return e.toString();
-            }
-
-            Document d = (Document) o[0];
-            Element root = (Element) o[1];
-
-            NodeList list = root.getElementsByTagName("*");
-
-            boolean check = false;
-
-            for (int c = 0; c < list.getLength(); c++) {
-                Node n = list.item(c);
-
-                if (!(n instanceof Element)) continue;
-                Element e = (Element) n;
-
-                if (checkAttributes(e, thatHasThose, forValues, alsoNotFound)) {
-                    check = true;
-                    root.removeChild(n);
-                    if (!all) break;
-                }
-            }
-
-            write(d, file);
-
-            return check ? null : "";
-        } catch (Exception e) {
-            return e.toString();
-        }
-    }
-
-    public Node findNode(File file, String nodeName) {
-        return findNode(file, nodeName, null, null);
-    }
-
-    public Node findNode(File file, String nodeName, String[] thatHasThose, String[] forValues) {
-        try {
-            Object[] o;
-            try {
-                o = buildDocument(file, null);
-                if (o == null) return null;
-            } catch (Exception e) {
-                return null;
-            }
-
-            Element root = (Element) o[1];
-
-            return findNode(root, nodeName, thatHasThose, forValues);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    //    useful only if you're looking for a single node
-    public Node findNode(Element root, String nodeName, String[] thatHasThose, String[] forValues) {
-        NodeList nodes = root.getElementsByTagName(nodeName);
-        for (int j = 0; j < nodes.getLength(); j++)
-            if (checkAttributes((Element) nodes.item(j), thatHasThose, forValues, false))
-                return nodes.item(j);
-        return null;
-    }
-
-    public Node findNode(Element root, String nodeName) {
-        return findNode(root, nodeName, null, null);
-    }
-
-    public List<Node> findNodes(Element root, String nodeName, String[] thatHasThose, String[] forValue) {
-        NodeList nodes = root.getElementsByTagName(nodeName != null ? nodeName : "*");
-
-        List<Node> nodeList = new ArrayList<>();
-
-        for (int c = 0; c < nodes.getLength(); c++) {
-            Node n = nodeList.get(c);
-
-            if (!(n instanceof Element)) continue;
-            Element e = (Element) n;
-
-            if (checkAttributes(e, thatHasThose, forValue, false)) {
-                nodeList.add(n);
-            }
-        }
-
-        return nodeList;
-    }
-
-    public List<Node> findNodes(Element root, String[] thatHasThose, String[] forValue) {
-        return findNodes(root, null, thatHasThose, forValue);
-    }
-
-    public String attrValue(File file, String nodeName, String attrName) {
-        return attrValue(file, nodeName, null, null, attrName);
-    }
-
-    public String attrValue(File file, String nodeName, String[] thatHasThose, String[] forValues, String attrName) {
-        String[] vs = attrValues(file, nodeName, thatHasThose, forValues, new String[]{attrName});
-        if (vs != null && vs.length > 0) return vs[0];
-        return null;
-    }
-
-    public String[] attrValues(File file, String nodeName, String[] attrNames) {
-        return attrValues(file, nodeName, null, null, attrNames);
-    }
-
-    public String[] attrValues(File file, String nodeName, String[] thatHasThose, String[] forValues, String[] attrNames) {
-        try {
-            Object[] o;
-            try {
-                o = buildDocument(file, null);
-                if (o == null) return null;
-            } catch (Exception e) {
-                return null;
-            }
-
-            Element root = (Element) o[1];
-            NodeList nodes = root.getElementsByTagName(nodeName);
-
-            for (int count = 0; count < nodes.getLength(); count++) {
-                Node node = nodes.item(count);
-                Element e = (Element) node;
-
-                if (!checkAttributes(e, thatHasThose, forValues, false)) continue;
-
-                String[] values = new String[attrNames.length];
-                for (int c = 0; c < attrNames.length; c++)
-                    values[count] = e.getAttribute(attrNames[c]);
-
-                return values;
-            }
-        } catch (Exception e) {
-        }
-
-        return null;
-    }
-
-    private boolean checkAttributes(Element e, String[] thatHasThose, String[] forValues, boolean alsoIfAttributeNotFound) {
-        if (thatHasThose != null && forValues != null && thatHasThose.length == forValues.length) {
-            for (int a = 0; a < thatHasThose.length; a++) {
-                if (!e.hasAttribute(thatHasThose[a])) return alsoIfAttributeNotFound;
-                if (!forValues[a].equals(e.getAttribute(thatHasThose[a]))) return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean resetFile(File f, String name) {
-        try {
-            if (f.exists()) f.delete();
-
-            FileOutputStream stream = new FileOutputStream(f);
-            stream.write(XML_DEFAULT.getBytes());
-            stream.write(("<" + name + ">\n").getBytes());
-            stream.write(("</" + name + ">\n").getBytes());
-            stream.flush();
-            stream.close();
+            
             return true;
-        } catch (Exception e) {
-            return false;
+        }
+        
+        public static class Builder {
+            private String nodeName;
+            
+            private Map<String, String> attributeConstraints;
+            private int                 attributesMatchMode = AND;
+            
+            private boolean forgiveAttributeNotFound = false;
+            
+            public Builder setNodeName (String nodeName) {
+                this.nodeName = nodeName;
+                return this;
+            }
+            
+            public Builder setAttributeConstraints (Map<String, String> attributeConstraints) {
+                this.attributeConstraints = attributeConstraints;
+                return this;
+            }
+            
+            public Builder addAttributeConstraints (String key, String value) {
+                if (this.attributeConstraints == null) this.attributeConstraints = new HashMap<>();
+                this.attributeConstraints.put(key, value);
+                return this;
+            }
+            
+            public Builder setAttributesMatchMode (int attributesMatchMode) {
+                this.attributesMatchMode = attributesMatchMode;
+                return this;
+            }
+            
+            public Builder setForgiveAttributeNotFound (boolean forgiveAttributeNotFound) {
+                this.forgiveAttributeNotFound = forgiveAttributeNotFound;
+                return this;
+            }
+            
+            public XMLMatcher build () {
+                return new XMLMatcher(nodeName, attributeConstraints, attributesMatchMode,
+                        forgiveAttributeNotFound);
+            }
         }
     }
-
-    public String getStringAttribute(Element e, String attribute) {
+    
+    // set the attributes of the nodes which satisfy the given matcher.
+    // if createNodeIfZeroMatches is true and matcher.nodeName != null, a new node will be created
+    // (matching the given constraints) in case no node which matches the given XMLMatcher is found
+    public void setAttributes (File file, XMLMatcher matcher, Map<String, String> values,
+                               boolean addAttributeIfNotFound, boolean createNodeIfZeroMatches)
+            throws Exception {
+        Object[] o;
+        o = buildDocument(file, null);
+        
+        Document d = (Document) o[0];
+        Element root = (Element) o[1];
+        
+        Set<Element> matches = findNodes(root, matcher, Integer.MAX_VALUE);
+        for (Element element : matches) {
+            for (Map.Entry<String, String> entry : values.entrySet()) {
+                // if we can attribute even it's not already there, no need to check if
+                // the attribute is already there
+                if (addAttributeIfNotFound || element.getAttribute(entry.getKey()) != null) {
+                    element.setAttribute(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        
+        if (matches.size() == 0 && createNodeIfZeroMatches && matcher.nodeName != null) {
+            Element element = d.createElement(matcher.nodeName);
+            
+            // apply constraints before, because the user may request a certain value
+            // to override it thereafter
+            for (Map.Entry<String, String> entry : matcher.attributeConstraints.entrySet()) {
+                element.setAttribute(entry.getKey(), entry.getValue());
+            }
+            
+            for (Map.Entry<String, String> entry : values.entrySet()) {
+                element.setAttribute(entry.getKey(), entry.getValue());
+            }
+            
+            root.appendChild(element);
+        }
+        
+        write(d, file);
+    }
+    
+    // this was removed because potentially dangerous, since I want to reduce the use of
+    // important values in the tag name (use <group name="group_name"> instead of
+    // <group_name>
+    /*public void removeNode (File file, String nodeName) throws Exception {
+        removeNode(file, new XMLMatcher.Builder().setNodeName(nodeName)
+                .build(), true);
+    }*/
+    
+    // remove a root node which satisfies the given matcher. if all is true, all the matching
+    // nodes will be removed.
+    // return true if successful, false otherwise
+    public void removeRootNode (File file, XMLMatcher matcher, boolean all) throws Exception {
+        Object[] o;
+        o = buildDocument(file, null);
+        
+        Document d = (Document) o[0];
+        Element root = (Element) o[1];
+        
+        removeChildNode(root, d, file, matcher, all);
+    }
+    
+    // document and file are used to write the result to the given file
+    public void removeChildNode(Element parent, Document document, File file, XMLMatcher matcher,
+                                boolean all) throws Exception {
+        Set<Element> matches = findNodes(parent, matcher, all ? Integer.MAX_VALUE : 1);
+        for (Element element : matches) {
+            parent.removeChild(element);
+        }
+    
+        if (matches.size() > 0) write(document, file);
+    }
+    
+    // search the DIRECT children of parent which satisfy the given matcher
+    // if the number of found nodes is < take, then the returned array will contain null indexes
+    public Set<Element> findNodes (Element parent, XMLMatcher matcher, int take) {
+        Set<Element> matches = new ArraySet<>();
+        
+        NodeList nodes;
+        // todo: if we check for the name with getElementsByTagName we should avoid to check the name in matcher.matches
+        if (matcher.nodeName != null) nodes = parent.getElementsByTagName(matcher.nodeName);
+        else nodes = parent.getChildNodes();
+        
+        int matchCounter = 0;
+        for (int j = 0; j < nodes.getLength() && matchCounter < take; j++) {
+            Element element = (Element) nodes.item(j);
+            
+            if (matcher.matches(element)) {
+                matches.add(element);
+                matchCounter++;
+            }
+        }
+        
+        return matches;
+    }
+    
+    public Set<Element> findRootNodes (File file, XMLMatcher matcher, int take) throws Exception {
+        Object[] o;
+        o = buildDocument(file, null);
+        if (o == null) return null;
+        
+        Element root = (Element) o[1];
+        
+        return findNodes(root, matcher, take);
+    }
+    
+    // find ONE node
+    public Element findNode (Element parent, XMLMatcher matcher) {
+        Set<Element> groupElementSet = findNodes(parent, matcher, 1);
+        if (groupElementSet.size() == 0) return null;
+        else return (Element) groupElementSet.toArray()[0];
+    }
+    
+    public void resetFile (File f, String name) throws Exception {
+        if (f.exists()) f.delete();
+        
+        FileOutputStream stream = new FileOutputStream(f);
+        stream.write(XML_DEFAULT.getBytes());
+        stream.write(("<" + name + ">\n").getBytes());
+        stream.write(("</" + name + ">\n").getBytes());
+        stream.flush();
+        stream.close();
+    }
+    
+    public String getStringAttribute (Element e, String attribute) {
         return e.hasAttribute(attribute) ? e.getAttribute(attribute) : null;
     }
-
-    public long getLongAttribute(Element e, String attribute) {
+    
+    public long getLongAttribute (Element e, String attribute) {
         String value = getStringAttribute(e, attribute);
         try {
             return Long.parseLong(value);
@@ -426,36 +362,26 @@ public class XMLUtils {
             return -1;
         }
     }
-
-    public boolean getBooleanAttribute(Element e, String attribute) {
+    
+    public boolean getBooleanAttribute (Element e, String attribute) {
         String s = getStringAttribute(e, attribute);
         return s != null && Boolean.parseBoolean(s);
-
+        
     }
-
-    public int getIntAttribute(Element e, String attribute) {
+    
+    public int getIntAttribute (Element e, String attribute) {
         try {
             return Integer.parseInt(getStringAttribute(e, attribute));
         } catch (Exception ex) {
             return -1;
         }
     }
-
-    public float getFloatAttribute(Element e, String attribute) {
+    
+    public float getFloatAttribute (Element e, String attribute) {
         try {
             return Float.parseFloat(getStringAttribute(e, attribute));
         } catch (Exception ex) {
             return -1;
-        }
-    }
-
-    public class IdValue {
-        public String value;
-        public int id;
-
-        public IdValue(String value, int id) {
-            this.value = value;
-            this.id = id;
         }
     }
 }

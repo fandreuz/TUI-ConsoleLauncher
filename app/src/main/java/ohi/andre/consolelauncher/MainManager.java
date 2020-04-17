@@ -19,26 +19,27 @@ import java.util.regex.Pattern;
 import ohi.andre.consolelauncher.commands.Command;
 import ohi.andre.consolelauncher.commands.CommandGroup;
 import ohi.andre.consolelauncher.commands.CommandTuils;
+import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.raw.location;
 import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
-import ohi.andre.consolelauncher.managers.AliasManager;
-import ohi.andre.consolelauncher.managers.apps.AppsManager;
-import ohi.andre.consolelauncher.managers.ChangelogManager;
-import ohi.andre.consolelauncher.managers.ContactManager;
-import ohi.andre.consolelauncher.managers.HTMLExtractManager;
-import ohi.andre.consolelauncher.managers.MessagesManager;
-import ohi.andre.consolelauncher.managers.RssManager;
-import ohi.andre.consolelauncher.managers.TerminalManager;
-import ohi.andre.consolelauncher.managers.ThemeManager;
-import ohi.andre.consolelauncher.managers.TimeManager;
-import ohi.andre.consolelauncher.managers.TuiLocationManager;
-import ohi.andre.consolelauncher.managers.music.MusicManager2;
-import ohi.andre.consolelauncher.managers.music.MusicService;
-import ohi.andre.consolelauncher.managers.notifications.KeeperService;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Theme;
+import ohi.andre.consolelauncher.features.AliasManager;
+import ohi.andre.consolelauncher.features.apps.AppsManager;
+import ohi.andre.consolelauncher.features.ChangelogManager;
+import ohi.andre.consolelauncher.features.ContactManager;
+import ohi.andre.consolelauncher.features.HTMLExtractManager;
+import ohi.andre.consolelauncher.features.MessagesManager;
+import ohi.andre.consolelauncher.features.RssManager;
+import ohi.andre.consolelauncher.features.TerminalManager;
+import ohi.andre.consolelauncher.features.ThemeManager;
+import ohi.andre.consolelauncher.features.TimeManager;
+import ohi.andre.consolelauncher.features.TuiLocationManager;
+import ohi.andre.consolelauncher.features.music.MusicManager2;
+import ohi.andre.consolelauncher.features.music.MusicService;
+import ohi.andre.consolelauncher.features.notifications.KeeperService;
+import ohi.andre.consolelauncher.features.settings.SettingsManager;
+import ohi.andre.consolelauncher.features.settings.options.Behavior;
+import ohi.andre.consolelauncher.features.settings.options.Theme;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -580,9 +581,9 @@ public class MainManager {
         }
     }
 
-    public interface Group {
-        List<? extends Object> members();
-        boolean use(MainPack mainPack, String input);
+    public interface Group<T> {
+        List<T> members();
+        boolean use(ExecutePack mainPack, String input);
         String name();
     }
 }

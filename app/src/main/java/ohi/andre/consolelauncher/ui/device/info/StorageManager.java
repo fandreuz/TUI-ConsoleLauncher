@@ -7,8 +7,8 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Observable;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
+import ohi.andre.consolelauncher.features.settings.SettingsManager;
+import ohi.andre.consolelauncher.features.settings.options.Behavior;
 
 public class StorageManager {
 

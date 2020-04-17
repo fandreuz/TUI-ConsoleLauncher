@@ -16,7 +16,7 @@ import android.text.Spanned;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.MainManager;
-import ohi.andre.consolelauncher.managers.TerminalManager;
+import ohi.andre.consolelauncher.features.TerminalManager;
 import ohi.andre.consolelauncher.tuils.interfaces.Inputable;
 import ohi.andre.consolelauncher.tuils.interfaces.Outputable;
 

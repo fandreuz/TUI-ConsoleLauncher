@@ -9,10 +9,10 @@ import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
-import ohi.andre.consolelauncher.managers.settings.SettingsManager;
-import ohi.andre.consolelauncher.managers.settings.SettingsOption;
-import ohi.andre.consolelauncher.managers.settings.options.Behavior;
-import ohi.andre.consolelauncher.managers.settings.options.Ui;
+import ohi.andre.consolelauncher.features.settings.SettingsManager;
+import ohi.andre.consolelauncher.features.settings.SettingsOption;
+import ohi.andre.consolelauncher.features.settings.options.Behavior;
+import ohi.andre.consolelauncher.features.settings.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
