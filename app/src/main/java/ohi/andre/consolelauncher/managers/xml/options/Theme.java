@@ -9,7 +9,17 @@ import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
  */
 
 public enum Theme implements XMLPrefsSave {
+    custom_command_color{
+        @Override
+        public String defaultValue() {
+            return "#ff00ff00";
+        }
 
+        @Override
+        public String info() {
+            return "Auto command output color";
+        }
+    },
     input_color {
         @Override
         public String defaultValue() {

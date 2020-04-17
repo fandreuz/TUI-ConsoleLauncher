@@ -79,9 +79,11 @@ import ohi.andre.consolelauncher.tuils.OutlineTextView;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.CommandExecuter;
 import ohi.andre.consolelauncher.tuils.interfaces.OnBatteryUpdate;
+import ohi.andre.consolelauncher.tuils.interfaces.OnCommandUpdate;
 import ohi.andre.consolelauncher.tuils.interfaces.OnRedirectionListener;
 import ohi.andre.consolelauncher.tuils.interfaces.OnTextChanged;
 import ohi.andre.consolelauncher.tuils.stuff.PolicyReceiver;
+import ohi.andre.consolelauncher.tuils.tasks.GetCommandOutputTask;
 
 public class UIManager implements OnTouchListener {
 
@@ -108,7 +110,8 @@ public class UIManager implements OnTouchListener {
         network,
         notes,
         weather,
-        unlock
+        unlock,
+        custom_command
     }
 
     private final int RAM_DELAY = 3000;
@@ -163,7 +166,47 @@ public class UIManager implements OnTouchListener {
             }
         }
     };
+    //runnable for executing custom commands commands
+    private CommandRunnable commandRunnable;
+    private class CommandRunnable implements Runnable{
+        int updateTime = XMLPrefsManager.getInt(Behavior.custom_command_timeout);
+        OnCommandUpdate commandUpdate;
+        public CommandRunnable(OnCommandUpdate newCommandUpdate){
+            this.commandUpdate = newCommandUpdate;
+        }
+        @Override
+        public void run(){
+            GetCommandOutputTask getCommandOutputTask = new GetCommandOutputTask(this, commandUpdate);
+            getCommandOutputTask.execute(XMLPrefsManager.getString(Behavior.custom_command));
+        }
+    }
 
+    private CommandUpdate commandUpdate;
+    private class CommandUpdate implements OnCommandUpdate {
+        @Override
+        public void update(String updateString, Runnable runnable){
+            int updateTime = XMLPrefsManager.getInt(Behavior.custom_command_timeout);
+            int stringColor;
+            String colorString = XMLPrefsManager.getString(Theme.custom_command_color);
+            if(colorString.startsWith("#")) {
+                try {
+                    stringColor = Color.parseColor(colorString);
+                } catch (Exception e) {
+                    stringColor = Color.RED;
+                }
+            } else {
+                //i dont really get what you(?) did here, will check it later
+                try {
+                    stringColor = Color.parseColor("#".concat(colorString));
+                } catch (Exception e) {
+                    stringColor = Color.RED;
+                }
+            }
+            CharSequence coloredString = Tuils.span(updateString,stringColor);
+            UIManager.this.updateText(Label.custom_command, Tuils.span(mContext, labelSizes[Label.custom_command.ordinal()], coloredString));
+            handler.postDelayed(runnable, updateTime*1000);
+        }
+    }
     private BatteryUpdate batteryUpdate;
     private class BatteryUpdate implements OnBatteryUpdate {
 
@@ -997,6 +1040,8 @@ public class UIManager implements OnTouchListener {
         labelSizes[Label.device.ordinal()] = XMLPrefsManager.getInt(Ui.device_size);
         labelSizes[Label.weather.ordinal()] = XMLPrefsManager.getInt(Ui.weather_size);
         labelSizes[Label.unlock.ordinal()] = XMLPrefsManager.getInt(Ui.unlock_size);
+        labelSizes[Label.custom_command.ordinal()] = XMLPrefsManager.getInt(Ui.custom_command_size);
+
 
         labelViews = new TextView[] {
                 (TextView) rootView.findViewById(R.id.tv0),
@@ -1008,6 +1053,7 @@ public class UIManager implements OnTouchListener {
                 (TextView) rootView.findViewById(R.id.tv6),
                 (TextView) rootView.findViewById(R.id.tv7),
                 (TextView) rootView.findViewById(R.id.tv8),
+                (TextView) rootView.findViewById(R.id.tv9)
         };
 
         boolean[] show = new boolean[Label.values().length];
@@ -1020,6 +1066,7 @@ public class UIManager implements OnTouchListener {
         show[Label.storage.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_storage_info);
         show[Label.weather.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_weather);
         show[Label.unlock.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_unlock_counter);
+        show[Label.custom_command.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_custom_command);
 
         float[] indexes = new float[Label.values().length];
         indexes[Label.notes.ordinal()] = show[Label.notes.ordinal()] ? XMLPrefsManager.getFloat(Ui.notes_index) : Integer.MAX_VALUE;
@@ -1031,6 +1078,7 @@ public class UIManager implements OnTouchListener {
         indexes[Label.storage.ordinal()] = show[Label.storage.ordinal()] ? XMLPrefsManager.getFloat(Ui.storage_index) : Integer.MAX_VALUE;
         indexes[Label.weather.ordinal()] = show[Label.weather.ordinal()] ? XMLPrefsManager.getFloat(Ui.weather_index) : Integer.MAX_VALUE;
         indexes[Label.unlock.ordinal()] = show[Label.unlock.ordinal()] ? XMLPrefsManager.getFloat(Ui.unlock_index) : Integer.MAX_VALUE;
+        indexes[Label.custom_command.ordinal()] = show[Label.custom_command.ordinal()] ? XMLPrefsManager.getFloat(Ui.custom_command_index) : Integer.MAX_VALUE;
 
         int[] statusLineAlignments = getListOfIntValues(XMLPrefsManager.get(Ui.status_lines_alignment), 9, -1);
 
@@ -1135,6 +1183,12 @@ public class UIManager implements OnTouchListener {
                 lViewsParent.removeView(labelViews[count]);
                 labelViews[count] = null;
             }
+        }
+
+        if(show[Label.custom_command.ordinal()]) {
+            commandUpdate = new CommandUpdate();
+            commandRunnable = new CommandRunnable(commandUpdate);
+            handler.post(commandRunnable);
         }
 
         if (show[Label.ram.ordinal()]) {

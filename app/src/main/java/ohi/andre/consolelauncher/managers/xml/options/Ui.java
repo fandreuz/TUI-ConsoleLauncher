@@ -11,6 +11,38 @@ import ohi.andre.consolelauncher.managers.xml.classes.XMLPrefsSave;
  */
 
 public enum Ui implements XMLPrefsSave {
+    show_custom_command{
+        @Override
+        public String defaultValue() {
+            return "true";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.BOOLEAN;
+        }
+
+        @Override
+        public String info() {
+            return "Hide/show custom_command output";
+        }
+    },
+    custom_command_size{
+        @Override
+        public String defaultValue() {
+            return "13";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "The custom_command label font size";
+        }
+    },
 
     show_enter_button {
         @Override
@@ -378,6 +410,22 @@ public enum Ui implements XMLPrefsSave {
         @Override
         public String info() {
             return "If true, t-ui will run in fullscreen mode";
+        }
+    },
+    custom_command_index{
+        @Override
+        public String defaultValue() {
+            return "9";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "This is used to order the labels on top of the screen";
         }
     },
     device_index {

@@ -14,7 +14,38 @@ import ohi.andre.consolelauncher.tuils.Tuils;
  */
 
 public enum Behavior implements XMLPrefsSave {
+    custom_command{
+        @Override
+        public String defaultValue() {
+            return "wget -qO- wttr.in/tui\\?0T";
+        }
 
+        @Override
+        public String type() {
+            return XMLPrefsSave.TEXT;
+        }
+
+        @Override
+        public String info() {
+            return "Set custom command, which output is shown on the screen";
+        }
+    },
+    custom_command_timeout{
+        @Override
+        public String defaultValue() {
+            return "60";
+        }
+
+        @Override
+        public String type() {
+            return XMLPrefsSave.INTEGER;
+        }
+
+        @Override
+        public String info() {
+            return "Define how often(in seconds) the command is executed";
+        }
+    },
     double_tap_lock {
         @Override
         public String defaultValue() {
