@@ -1537,6 +1537,14 @@ public class Tuils {
             this.object1 = object1;
             this.object2 = object2;
         }
+        
+        public <T> Pack3<T1,T2,T> extend(T arg) {
+            return new Pack3<>(object1, object2, arg);
+        }
+    
+        public <T,S> Pack4<T1,T2,T,S> extend(T arg1, S arg2) {
+            return new Pack4<>(object1, object2, arg1, arg2);
+        }
     }
 
     // a convenient class to avoid Object[3] instances flowing around
@@ -1549,6 +1557,10 @@ public class Tuils {
             this.object1 = object1;
             this.object2 = object2;
             this.object3 = object3;
+        }
+    
+        public <S> Pack4<T1,T2,T3,S> extend(S arg) {
+            return new Pack4<>(object1, object2, object3, arg);
         }
     }
 
