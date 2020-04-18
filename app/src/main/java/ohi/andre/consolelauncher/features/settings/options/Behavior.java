@@ -399,7 +399,7 @@ public enum Behavior implements SettingsOption {
             return SettingsOption.TYPE_TEXT;
         }
     },
-    alias_param_marker {
+    alias_parameters_placeholder {
         @Override
         public String defaultValue() {
             return "%";
@@ -415,7 +415,7 @@ public enum Behavior implements SettingsOption {
             return SettingsOption.TYPE_TEXT;
         }
     },
-    alias_param_separator {
+    alias_parameters_separator {
         @Override
         public String defaultValue() {
             return ",";
@@ -424,38 +424,6 @@ public enum Behavior implements SettingsOption {
         @Override
         public String info() {
             return "Define the separator between a group of params";
-        }
-
-        @Override
-        public String type() {
-            return SettingsOption.TYPE_TEXT;
-        }
-    },
-    alias_replace_all_markers {
-        @Override
-        public String defaultValue() {
-            return "true";
-        }
-
-        @Override
-        public String info() {
-            return "If true, if you pass a lower number of parameters to an alias, t-ui will use the first one to replace the others";
-        }
-
-        @Override
-        public String type() {
-            return SettingsOption.TYPE_BOOLEAN;
-        }
-    },
-    multiple_cmd_separator {
-        @Override
-        public String defaultValue() {
-            return ";";
-        }
-
-        @Override
-        public String info() {
-            return "The separator between two or more commands in a single input";
         }
 
         @Override
