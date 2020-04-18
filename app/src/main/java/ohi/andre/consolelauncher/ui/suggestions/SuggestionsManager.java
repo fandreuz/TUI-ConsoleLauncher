@@ -37,7 +37,7 @@ import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.Param;
 import ohi.andre.consolelauncher.commands.main.specific.ParamCommand;
 import ohi.andre.consolelauncher.commands.main.specific.PermanentSuggestionCommand;
-import ohi.andre.consolelauncher.features.AliasManager;
+import ohi.andre.consolelauncher.features.alias.AliasManager;
 import ohi.andre.consolelauncher.features.apps.AppsManager;
 import ohi.andre.consolelauncher.features.ContactManager;
 import ohi.andre.consolelauncher.features.FileManager;

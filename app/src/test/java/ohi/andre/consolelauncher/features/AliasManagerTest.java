@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.util.regex.Pattern;
 
+import ohi.andre.consolelauncher.features.alias.AliasManager;
+
 import static org.junit.Assert.*;
 
 public class AliasManagerTest {
