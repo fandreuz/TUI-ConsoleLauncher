@@ -1,11 +1,7 @@
 package ohi.andre.consolelauncher.features;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Color;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.util.ArraySet;
+import android.text.TextUtils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,287 +11,264 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ohi.andre.consolelauncher.BuildConfig;
-import ohi.andre.consolelauncher.R;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import ohi.andre.consolelauncher.features.settings.SettingsManager;
 import ohi.andre.consolelauncher.features.settings.options.Behavior;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class AliasManager {
-
-    public static String ACTION_LS = BuildConfig.APPLICATION_ID + ".alias_ls";
-    public static String ACTION_ADD = BuildConfig.APPLICATION_ID + ".alias_add";
-    public static String ACTION_RM = BuildConfig.APPLICATION_ID + ".alias_rm";
-
+    
+    public static final int RESULT_NOT_FOUND            = 10;
+    // returned when the file doesn't contain the alias which the user is trying to delete
+    public static final int RESULT_CORRUPTED_FILE       = 11;
+    public static final int RESULT_ALIAS_ALREADY_EXISTS = 12;
+    public static final int RESULT_FILE_SYSTEM_ERROR    = 13;
+    
     public static String NAME = "name";
-
-    public static final String PATH = "alias.txt";
-
-    private List<Alias> aliases;
-    private String paramSeparator, aliasLabelFormat;
-    private boolean replaceAllMarkers;
-
-    private Context context;
-
-    private String paramMarker;
-    private Pattern parameterPattern;
-
-    private BroadcastReceiver receiver;
-
-    public AliasManager(Context c) {
-        this.context = c;
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_ADD);
-        filter.addAction(ACTION_LS);
-        filter.addAction(ACTION_RM);
-
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-
-                if(action.equals(ACTION_ADD)) {
-                    add(context, intent.getStringExtra(NAME), intent.getStringExtra(SettingsManager.VALUE_ATTRIBUTE));
-                } else if(action.equals(ACTION_RM)) {
-                    remove(context, intent.getStringExtra(NAME));
-                } else if(action.equals(ACTION_LS)) {
-                    Tuils.sendOutput(context, printAliases());
-                }
+    
+    public static final String FILE_NAME = "alias.txt";
+    
+    private Map<String, Alias> aliases;
+    
+    // the pattern used to match the separator in a string containing the parameters
+    private Pattern aliasParametersSeparatorPattern;
+    
+    // the pattern used to match the parameters placeholders in the value of an alias
+    private Pattern aliasPlaceholderPattern;
+    
+    private String aliasContentFormat;
+    
+    // matches the symbol associated with the value of an alias
+    private final Pattern patternValue     = Pattern.compile("%v", Pattern.LITERAL);
+    // matches the symbol associated with the name of an alias
+    private final Pattern patternAliasName = Pattern.compile("%a", Pattern.LITERAL);
+    
+    private final CompositeDisposable disposable = new CompositeDisposable();
+    
+    public AliasManager () {
+        SettingsManager settingsManager = SettingsManager.getInstance();
+        disposable.add(settingsManager.requestUpdates(Behavior.alias_parameters_placeholder, String.class)
+                .map(string -> Pattern.compile(string, Pattern.LITERAL))
+                .subscribe(pattern -> aliasPlaceholderPattern = pattern)
+        );
+        
+        disposable.add(settingsManager.requestUpdates(Behavior.alias_parameters_placeholder, String.class)
+                .map(string -> Pattern.compile(string, Pattern.LITERAL))
+                .subscribe(pattern -> aliasParametersSeparatorPattern = pattern)
+        );
+        
+        disposable.add(settingsManager.requestUpdates(Behavior.alias_content_format, String.class)
+                .subscribe(string -> aliasContentFormat = string));
+        
+        load();
+    }
+    
+    public String printAliases () {
+        return Observable.fromIterable(aliases.values())
+                .map(alias -> alias.name + "=" + alias.value)
+                .toList()
+                .map(list -> TextUtils.join("\n", list))
+                .blockingGet();
+    }
+    
+    // pack.object1 : alias name
+    // pack.object2 : residual string
+    // pack.object3 : Alias
+    // from the given string, we're looking for an alias from the left. we aren't interested in an alias in the center
+    // of the string.
+    // I loop over the spaces until I find a matching name for an alias (if allowSpaces is true)
+    public Tuils.Pack3<String, String, Alias> getAlias (String string, boolean allowSpaces) {
+        return Observable.just(string)
+                .map(s -> s.split(" "))
+                // from the given splitted string, generate all the combinations taking all the possible spaces
+                .flatMap(ss -> {
+                    if (allowSpaces) {
+                        // index i: take ... + ss[i-1] + ss[i]
+                        return Observable.range(0, ss.length)
+                                // return a pack of [possibleAliasName, residualString]
+                                .map(i -> new Tuils.BiPack<>(TextUtils.join(" ", Arrays.copyOfRange(ss, 0, i + 1)),
+                                        TextUtils.join(" ", Arrays.copyOfRange(ss, i + 1, ss.length))));
+                    } else {
+                        // if the user doesn't want spaces, emit just the whole string
+                        return Observable.just(new Tuils.BiPack<>(string, ""));
+                    }
+                })
+                .map(bipack -> bipack.extend(aliases.get(bipack.object1)))
+                .filter(pack3 -> pack3.object3 != null)
+                .first(null)
+                .blockingGet();
+    }
+    
+    public String applyParameters (Alias alias, String params) {
+        return alias.applyParameters(params, aliasPlaceholderPattern, aliasParametersSeparatorPattern);
+    }
+    
+    private Alias getAliasByName (String name) {
+        return aliases.get(name);
+    }
+    
+    public String formatAliasContent (String aliasName, String aliasValue) {
+        String returnValue = aliasContentFormat;
+        returnValue = Tuils.patternNewline.matcher(returnValue)
+                .replaceAll(Matcher.quoteReplacement("\n"));
+        returnValue = patternValue.matcher(returnValue)
+                .replaceAll(Matcher.quoteReplacement(aliasValue));
+        returnValue = patternAliasName.matcher(returnValue)
+                .replaceAll(Matcher.quoteReplacement(aliasName));
+        return returnValue;
+    }
+    
+    // load the aliases from the underlying file
+    public void load () {
+        if (aliases != null) aliases.clear();
+        else aliases = new HashMap<>();
+        
+        Executors.newSingleThreadExecutor()
+                .execute(() -> {
+                    File file = new File(Tuils.getFolder(), FILE_NAME);
+                    
+                    try {
+                        if (!file.exists()) file.createNewFile();
+                        
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+                        Pattern equalPattern = Pattern.compile("=");
+                        
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            String[] split = equalPattern.split(line);
+                            // we want two strings on the line, divided by "="
+                            if (split.length != 2) continue;
+                            
+                            String name = split[0].trim();
+                            
+                            // recreate the value, which has been splitted by "="
+                            String value = TextUtils.join("=", Arrays.copyOfRange(split, 1, split.length))
+                                    .trim();
+                            
+                            // todo: during runtime of an alias check that value != name
+                            
+                            aliases.put(name, new Alias(name, value, aliasPlaceholderPattern));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+    }
+    
+    public void dispose () {
+        disposable.dispose();
+        disposable.clear();
+    }
+    
+    public int newAlias (String aliasName, String aliasValue) {
+        if (aliases.containsKey(aliasName)) return RESULT_ALIAS_ALREADY_EXISTS;
+        else {
+            FileOutputStream fos;
+            try {
+                fos = new FileOutputStream(new File(Tuils.getFolder(), FILE_NAME), true);
+                fos.write(("\n" + aliasName + "=" + aliasValue).getBytes());
+                fos.close();
+                
+                aliases.put(aliasName, new Alias(aliasName, aliasValue, aliasPlaceholderPattern));
+                return 0;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return RESULT_FILE_SYSTEM_ERROR;
             }
-        };
-
-        paramMarker = SettingsManager.get(Behavior.alias_param_marker);
-        parameterPattern = Pattern.compile(Pattern.quote(paramMarker));
-        paramSeparator = SettingsManager.get(Behavior.alias_param_separator);
-        aliasLabelFormat = SettingsManager.get(Behavior.alias_content_format);
-        replaceAllMarkers = SettingsManager.getBoolean(Behavior.alias_replace_all_markers);
-
-        reload();
-    }
-
-    public String printAliases() {
-        String output = Tuils.EMPTYSTRING;
-        for (Alias a : aliases) {
-            output = output.concat(a.name + " --> " + a.value + Tuils.NEWLINE);
         }
-
-        return output.trim();
     }
-
-//    [0] = aliasValue
-//    [1] = aliasName
-//    [2] = residualString
-    public String[] getAlias(String alias, boolean supportSpaces) {
-        if(supportSpaces) {
-            String args = Tuils.EMPTYSTRING;
-
-            String aliasValue = null;
-            while (true) {
-                aliasValue = getALias(alias);
-                if(aliasValue != null) break;
-                else {
-                    int index = alias.lastIndexOf(Tuils.SPACE);
-                    if(index == -1) return new String[] {null, null, alias};
-
-                    args = alias.substring(index + 1) + Tuils.SPACE + args;
-                    args = args.trim();
-                    alias = alias.substring(0,index);
+    
+    // remove the alias from the pool and from the underlying file.
+    // doesn't touch the pool until the file has been properly modified.
+    public int deleteAlias (String aliasName) {
+        if (aliases.containsKey(aliasName)) {
+            try {
+                File inputFile = new File(Tuils.getFolder(), FILE_NAME);
+                File tempFile = new File(Tuils.getFolder(), FILE_NAME + "2");
+                
+                BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+                
+                boolean found = false;
+                
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith(aliasName)) {
+                        writer.write(line + "\n");
+                        found = true;
+                        break;
+                    }
                 }
-            }
-
-            return new String[] {aliasValue, alias, args};
-        } else {
-            return new String[] {getALias(alias), alias, Tuils.EMPTYSTRING};
-        }
-    }
-
-//    this prevents some errors related to the % sign
-    private final String SECURITY_REPLACEMENT = "{#@";
-    private Pattern securityPattern = Pattern.compile(Pattern.quote(SECURITY_REPLACEMENT));
-
-    public String format(String aliasValue, String params) {
-        params = params.trim();
-        if(params.length() == 0) return aliasValue;
-
-        int before = aliasValue.length();
-        aliasValue = parameterPattern.matcher(aliasValue).replaceAll(SECURITY_REPLACEMENT);
-        int replaced = (aliasValue.length() - before) / Math.abs(SECURITY_REPLACEMENT.length() - paramMarker.length());
-
-        String[] split = params.split(Pattern.quote(paramSeparator), replaced);
-
-        for(String s : split) {
-            aliasValue = securityPattern.matcher(aliasValue).replaceFirst(s);
-        }
-
-        if(replaceAllMarkers) aliasValue = securityPattern.matcher(aliasValue).replaceAll(split[0]);
-
-        return aliasValue;
-    }
-
-    private String getALias(String name) {
-        for(Alias a : aliases) {
-            if(name.equals(a.name)) return a.value;
-        }
-
-        return null;
-    }
-
-    private boolean removeAlias(String name) {
-        for(int c = 0; c < aliases.size(); c++) {
-            Alias a = aliases.get(c);
-            if(name.equals(a.name)) {
-                aliases.remove(c);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private final Pattern pv = Pattern.compile("%v", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-    private final Pattern pa = Pattern.compile("%a", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-    public String formatLabel(String aliasName, String aliasValue) {
-        String a = aliasLabelFormat;
-        a = Tuils.patternNewline.matcher(a).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
-        a = pv.matcher(a).replaceAll(Matcher.quoteReplacement(aliasValue));
-        a = pa.matcher(a).replaceAll(Matcher.quoteReplacement(aliasName));
-        return a;
-    }
-
-    public void reload() {
-        if(aliases != null) aliases.clear();
-        else aliases = new ArrayList<>();
-
-        File root = Tuils.getFolder();
-        if(root == null) return;
-
-        File file = new File(root, PATH);
-
-        try {
-            if(!file.exists()) file.createNewFile();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-
-            String line;
-            while((line = reader.readLine()) != null) {
-                String[] splatted = line.split("=");
-                if(splatted.length < 2) continue;
-
-                String name, value = Tuils.EMPTYSTRING;
-                name = splatted[0];
-
-                for(int c = 1; c < splatted.length; c++) {
-                    value += splatted[c];
-                    if(c != splatted.length - 1) value += "=";
-                }
-
-                name = name.trim();
-                value = value.trim();
-
-                if(name.equalsIgnoreCase(value)) {
-                    Tuils.sendOutput(Color.RED, context,
-                            context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias2));
-                } else if(value.startsWith(name + Tuils.SPACE)) {
-                    Tuils.sendOutput(Color.RED, context,
-                            context.getString(R.string.output_notaddingalias1) + Tuils.SPACE + name + Tuils.SPACE + context.getString(R.string.output_notaddingalias3));
+                
+                writer.close();
+                reader.close();
+                
+                inputFile.delete();
+                tempFile.renameTo(inputFile);
+                
+                if (found) {
+                    aliases.remove(aliasName);
+                    return 0;
                 } else {
-                    aliases.add(new Alias(name, value, parameterPattern));
+                    // we couldn't find the alias in the file
+                    return RESULT_CORRUPTED_FILE;
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return RESULT_FILE_SYSTEM_ERROR;
             }
-        } catch (Exception e) {
-            Tuils.log(e);
+        } else {
+            return RESULT_NOT_FOUND;
         }
     }
-
-    public void dispose() {
-        LocalBroadcastManager.getInstance(context.getApplicationContext()).unregisterReceiver(receiver);
+    
+    public Set<Alias> getAliases () {
+        return Collections.unmodifiableSet(new ArraySet<>(aliases.values()));
     }
-
-    public void add(Context context, String name, String value) {
-        for(Alias a : aliases) {
-            if(name.equals(a.name)) {
-                Tuils.sendOutput(context, R.string.unavailable_name);
-                return;
-            }
-        }
-
-        FileOutputStream fos;
-        try {
-            fos = new FileOutputStream(new File(Tuils.getFolder(), PATH), true);
-            fos.write((Tuils.NEWLINE + name + "=" + value).getBytes());
-            fos.close();
-
-            aliases.add(new Alias(name, value, parameterPattern));
-        } catch (Exception e) {
-            Tuils.sendOutput(context, e.toString());
-        }
-
-    }
-
-    public void remove(Context context, String name) {
-        reload();
-
-        if(!removeAlias(name)) {
-            Tuils.sendOutput(context, R.string.invalid_name);
-            return;
-        }
-
-        try {
-            File inputFile = new File(Tuils.getFolder(), PATH);
-            File tempFile = new File(Tuils.getFolder(), PATH + "2");
-
-            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-
-            String prefix = name + "=";
-            String line;
-            while((line = reader.readLine()) != null) {
-                if(line.startsWith(prefix)) continue;
-                writer.write(line + Tuils.NEWLINE);
-            }
-            writer.close();
-            reader.close();
-
-            tempFile.renameTo(inputFile);
-        } catch (Exception e) {
-            Tuils.sendOutput(context, e.toString());
-        }
-    }
-
-    public List<Alias> getAliases(boolean excludeEmtpy) {
-        List<Alias> l = new ArrayList<>(aliases);
-        if(excludeEmtpy) {
-            for(int c = 0; c < l.size(); c++) {
-                if(l.get(c).name.length() == 0) {
-                    l.remove(c);
-                    break;
-                }
-            }
-        }
-
-        return l;
-    }
-
+    
     public static class Alias {
-        public String name, value;
-        public boolean isParametrized;
-
-        public Alias(String name, String value, Pattern parameterPattern) {
-            this.name = name;
+        public final String name, value;
+        
+        // this will be used to determin whether we can launch this alias at the first touch on its
+        // suggestion, or we should wait for the user to insert his parameters and then press enter
+        public final int parametersCount;
+        
+        public Alias (String name, String value, Pattern parameterPlaceholderPattern) {
+            this.name  = name;
             this.value = value;
-
-            isParametrized = parameterPattern.matcher(value).find();
+            
+            int counter = 0;
+            while (parameterPlaceholderPattern.matcher(value)
+                    .find()) counter++;
+            parametersCount = counter;
         }
-
-        @Override
-        public boolean equals(Object obj) {
-            return (obj instanceof Alias && ((Alias) obj).name.equals(name)) || obj.equals(name);
+        
+        // applies the given parameters to this alias, and return the complete string.
+        // throws IllegalArgumentException if too much or less than expected parameters are given
+        protected String applyParameters (String params, Pattern parameterPlaceholderPattern, Pattern parameterSeparatorPattern) {
+            if (params == null || params.length() == 0 || parametersCount == 0) return value;
+            
+            String[] splitParams = parameterSeparatorPattern.split(params);
+            if (splitParams.length != parametersCount)
+                throw new IllegalArgumentException("No. of given arguments != No. of expected argument");
+            
+            String returnValue = value;
+            for (int i = 0; i < splitParams.length; i++) {
+                returnValue = parameterPlaceholderPattern.matcher(returnValue)
+                        .replaceFirst(splitParams[i]);
+            }
+            
+            return returnValue;
         }
     }
 }
