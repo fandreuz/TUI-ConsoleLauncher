@@ -17,9 +17,6 @@ public class FileManager {
     public static final int ISDIRECTORY = 11;
     public static final int IOERROR = 12;
 
-    private static final String ASTERISK = "*";
-    private static final String DOT = Tuils.DOT;
-
     public static String writeOn(File file, String text) {
         try {
             FileOutputStream stream = new FileOutputStream(file);
@@ -127,15 +124,15 @@ public class FileManager {
     }
 
     public static WildcardInfo wildcard(String path) {
-        if (path == null || !path.contains(ASTERISK) || path.contains(File.separator)) {
+        if (path == null || !path.contains("*") || path.contains(File.separator)) {
             return null;
         }
 
-        if(path.trim().equals(ASTERISK)) {
+        if(path.trim().equals("*")) {
             return new WildcardInfo(true);
         }
 
-        int dot = path.lastIndexOf(DOT);
+        int dot = path.lastIndexOf(".");
         try {
             String beforeDot = path.substring(0, dot);
             String afterDot = path.substring(dot + 1);
@@ -170,8 +167,8 @@ public class FileManager {
             this.name = name;
             this.extension = extension;
 
-            allNames = name.length() == 0 || name.equals(ASTERISK);
-            allExtensions = extension.length() == 0 || extension.equals(ASTERISK);
+            allNames = name.length() == 0 || name.equals("*");
+            allExtensions = extension.length() == 0 || extension.equals("*");
         }
 
         public WildcardInfo(boolean all) {
@@ -192,7 +189,7 @@ public class FileManager {
 
         @Override
         public boolean accept(File dir, String filename) {
-            int dot = filename.lastIndexOf(Tuils.DOT);
+            int dot = filename.lastIndexOf(".");
             if(dot == -1) {
                 return false;
             }
@@ -212,7 +209,7 @@ public class FileManager {
 
         @Override
         public boolean accept(File dir, String filename) {
-            int dot = filename.lastIndexOf(Tuils.DOT);
+            int dot = filename.lastIndexOf(".");
             if(dot == -1) {
                 return false;
             }
