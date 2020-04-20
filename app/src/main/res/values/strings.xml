@@ -68,37 +68,6 @@
     <string name="tuinotfound_notifications">Your notifications preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
     <string name="tuinotfound_xmlprefs">Your xml preferences couldn\'t be loaded because your \"t-ui\" folder is not readable at the moment (you should try to use the command \"restart\")</string>
 
-    <!-- hints -->
-    <string-array name="hints">
-        <item name="hint_twitter">Did you know? t-ui is on Twitter. Have a look (\"$ tui -twitter\")</item>
-        <item name="hint_telegram">Did you know? There\'s a Telegram group with many enthusiastic users, where you can discuss, share and chat (\"$ tui -telegram\")</item>
-        <item name="hint_googlep">Did you know? Our official Google+ community is full of tips, experimental apks and discussions (\"$ tui -googlep\")</item>
-        <item name="hint_tutorial">Did you read the tutorial? (\"$ tutorial\")</item>
-        <item name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</item>
-        <item name="hint_theme2">Did you know? You can create your custom theme and share it with other users. Have a look at the cmd \"$ theme -create\"</item>
-        <item name="hint_help">Doubts about a command? Use \"$ help cmdName\"</item>
-        <item name="hint_music">Did you know? You can listen to music using t-ui. Have a look at the cmd \"$ music\"</item>
-        <item name="hint_appgroups">Did you know? t-ui 6.4 introduced App Groups.\nYou can get more details with the cmd \"$ apps -tutorial\"</item>
-        <item name="hint_notifications">Did you know? You can see your notifications inside t-ui. If you\'re interested, have a look at the tutorial: \"$ notifications -tutorial\"</item>
-        <item name="hint_clear">Are you sick of clearing your screen? Have a look at the options \"clear_after_cmds\", \"clear_after_seconds\" and \"maxlines\"</item>
-        <item name="hint_wallpaper">Do you want to use your wallpaper as t-ui background? Use the cmd: \"$ config -set system_wallpaper true\"</item>
-        <item name="hint_config">Doubts about any config option? Use the cmd \"$ config -info [option]\"table</item>
-        <item name="hint_alias">Did you know that t-ui supports aliases? For more info, use the cmd \"$ alias -tutorial\"</item>
-        <item name="hint_excludenotification">Did you know? You can exclude an unwanted notification by long-clicking on it</item>
-        <item name="hint_disable">You can disable this messages with the cmd \"$ config -set show_hints false\"</item>
-    </string-array>
-
-
-    <string-array name="tutorial">
-        <item>Use the command \"help\" to get a list of available commands</item>
-        <item>If you want to get info about the behavior of a command, type \"help cmdName\"</item>
-        <item>Launch your apps typing their name</item>
-        <item>You can call your contacts with the cmd \"call contactName\"</item>
-        <item>t-ui is highly customizable. Check \"config -ls\" or use the cmd \"config -tutorial\" to see what you can change</item>
-        <item>You can choose within a large database of themes uploaded by t-ui users. Check the cmd \"theme -view\"</item>
-        <item>Join our community! Google+, Twitter, Telegram and GitHub. Use the cmd \"tui\"</item>
-    </string-array>
-
     <!-- apps -->
     <string name="output_appnotfound">Application not found</string>
     <string name="activity_not_found">Activity not found</string>
