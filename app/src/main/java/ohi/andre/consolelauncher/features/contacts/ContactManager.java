@@ -1,7 +1,6 @@
-package ohi.andre.consolelauncher.features;
+package ohi.andre.consolelauncher.features.contacts;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,23 +9,22 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
-import it.andreuzzi.comparestring2.StringableObject;
+import io.reactivex.rxjava3.core.Observable;
 import ohi.andre.consolelauncher.BuildConfig;
-import ohi.andre.consolelauncher.LauncherActivity;
-import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class ContactManager {
@@ -35,7 +33,9 @@ public class ContactManager {
     
     private final Context context;
     
-    private Set<Contact> contacts;
+    // each contact has a unique ID, which is passed around the application.
+    // this is given by the system
+    private HashMap<Integer, Contact> contacts;
     
     private final BroadcastReceiver refreshContactsReceiver;
     
@@ -44,7 +44,7 @@ public class ContactManager {
         
         if (ContextCompat
                 .checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            refreshContacts();
+            loadContacts();
         }
         
         IntentFilter refreshFilter = new IntentFilter();
@@ -56,7 +56,7 @@ public class ContactManager {
                 if (intent.getAction().equals(ACTION_REFRESH)) {
                     if (ContextCompat
                             .checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-                        refreshContacts();
+                        loadContacts();
                     }
                 }
             }
@@ -72,11 +72,11 @@ public class ContactManager {
     }
     
     // before calling, make sure that t-ui has contact permissions
-    private void refreshContacts () {
+    private void loadContacts () {
         Executors.newSingleThreadExecutor()
                 .execute(() -> {
                     if (contacts == null) {
-                        contacts = new HashSet<>();
+                        contacts = new HashMap<>();
                     }
                     else {
                         contacts.clear();
@@ -85,225 +85,189 @@ public class ContactManager {
                     Cursor phones = context.getContentResolver()
                             .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                                     new String[]{ContactsContract.Contacts.DISPLAY_NAME,
-                                            ContactsContract.Data.CONTACT_ID,
                                             ContactsContract.CommonDataKinds.Phone.NUMBER,
-                                            ContactsContract.Data.IS_SUPER_PRIMARY,}, null, null,
-                                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+                                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                                            ContactsContract.Data.IS_SUPER_PRIMARY,},
+                                    null, null, null);
                     
                     if (phones != null) {
-                        int lastId = -1;
-                        List<String> lastNumbers = new ArrayList<>();
-                        List<String> nrml = new ArrayList<>();
-                        int defaultNumber = 0;
-                        String name = null, number;
-                        int id, prim;
+                        // the default phone number will be the first of the list
+                        HashMap<Integer, Tuils.BiPack<String, List<String>>> contactsMap =
+                                new HashMap<>();
                         
                         while (phones.moveToNext()) {
-                            id = phones.getInt(phones
-                                    .getColumnIndex(ContactsContract.Data.CONTACT_ID));
+                            int id = phones.getInt(phones
+                                    .getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID));
                             
-                            number = phones.getString(phones
+                            // the phone number from this record
+                            String phoneNumber = phones.getString(phones
                                     .getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                            if (phoneNumber == null || phoneNumber.length() == 0) { continue; }
                             
-                            prim = phones.getInt(phones
-                                    .getColumnIndex(ContactsContract.Data.IS_SUPER_PRIMARY));
-                            if (prim > 0) {
-                                defaultNumber = lastNumbers.size();
+                            String name = phones.getString(phones
+                                    .getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                            
+                            Tuils.BiPack<String, List<String>> pack = contactsMap.get(id);
+                            if (pack == null) {
+                                pack = new Tuils.BiPack<>(name, new ArrayList<>());
+                                contactsMap.put(id, pack);
                             }
                             
-                            if (number == null || number.length() == 0) { continue; }
-                            
-                            if (phones.isFirst()) {
-                                lastId = id;
-                                name   = phones.getString(phones
-                                        .getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                            boolean isPrimaryNumber = phones.getInt(phones
+                                    .getColumnIndex(ContactsContract.Data.IS_SUPER_PRIMARY)) > 0;
+                            if (isPrimaryNumber) {
+                                pack.object2.set(0, phoneNumber);
                             }
                             else {
-                                if (id != lastId || phones.isLast()) {
-                                    lastId = id;
-                                    
-                                    contacts.add(new Contact(name, lastNumbers, defaultNumber));
-                                    
-                                    lastNumbers   = new ArrayList<>();
-                                    nrml          = new ArrayList<>();
-                                    name          = null;
-                                    defaultNumber = 0;
-                                    
-                                    name = phones.getString(phones
-                                            .getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                                }
-                            }
-                            
-                            String normalized = Tuils.removeSpaces(number);
-                            if (!nrml.contains(normalized)) {
-                                nrml.add(normalized);
-                                lastNumbers.add(number);
-                            }
-                            
-                            if (name != null && phones.isLast()) {
-                                contacts.add(new Contact(name, lastNumbers, defaultNumber));
+                                pack.object2.add(phoneNumber);
                             }
                         }
+                        
                         phones.close();
+                        
+                        for (Map.Entry<Integer, Tuils.BiPack<String, List<String>>> entry :
+                                contactsMap.entrySet()) {
+                            // skip if no phone numbers for this contact
+                            if (entry.getValue().object2.size() > 0) {
+                                Tuils.BiPack<String, List<String>> pack = entry.getValue();
+                                
+                                contacts.put(
+                                        entry.getKey(),
+                                        new Contact(
+                                                pack.object1,
+                                                pack.object2
+                                        )
+                                );
+                            }
+                        }
                     }
-                    
-                    Iterator<Contact> iterator = contacts.iterator();
-                    while (iterator.hasNext()) {
-                        Contact c = iterator.next();
-                        if (c.numbers.size() == 0) { iterator.remove(); }
-                    }
-                    
-                    Collections.sort(contacts);
-                }
-    });
-}
-    
-    public List<String> listNames () {
-        if (contacts == null || contacts.size() == 0) { refreshContacts(context); }
-        
-        List<String> names = new ArrayList<>();
-        for (Contact c : contacts) { names.add(c.name); }
-        return names;
+                });
     }
     
-    public List<Contact> getContacts () {
-        if (contacts == null || contacts.size() == 0) { refreshContacts(context); }
-        
-        return new ArrayList<>(contacts);
+    // shows a list of contacts with the format
+    // fullName -> phoneNumber[0]
+    // ...
+    // fullName -> phoneNumber[n-1]
+    // the lines are nicely padded
+    public String lsContacts() {
+        return ls(contacts.values(), longestFullNameAndPhoneNumber(contacts.values()));
     }
     
-    public List<String> listNamesAndNumbers () {
-        if (contacts == null || contacts.size() == 0) { refreshContacts(context); }
+    protected static String ls (Collection<Contact> values, Tuils.BiPack<Integer,Integer> maxPack) {
+        // I need the longest fullName and phoneNumber in order to pad nicely
+        int longestFullNameLength = maxPack.object1;
+        int longestPhoneNumberLength = maxPack.object2;
         
-        List<String> c = new ArrayList<>();
-        
-        for (int count = 0; count < contacts.size(); count++) {
-            Contact cnt = contacts.get(count);
-            
-            StringBuilder b = new StringBuilder();
-            b.append(cnt.name);
-            
-            for (String n : cnt.numbers) {
-                b.append(Tuils.NEWLINE);
-                b.append("\t");
-                b.append(n);
-            }
-            
-            c.add(b.toString());
-        }
-        
-        return c;
+        return Observable.fromIterable(values)
+                .flatMap(contact -> Observable.fromIterable(contact.getPhoneNumbers())
+                        .map(phoneNumber -> new Tuils.BiPack<>(
+                                contact.fullName,
+                                phoneNumber)
+                        ))
+                .map(pack -> StringUtils.rightPad(pack.object1, longestFullNameLength) +
+                        ": " + StringUtils.rightPad(pack.object2, longestPhoneNumberLength)
+                )
+                .toList()
+                .map(list -> TextUtils.join("\n", list))
+                .blockingGet();
     }
     
-    public static final int NAME           = 0;
-    public static final int NUMBERS        = 1;
-    public static final int TIME_CONTACTED = 2;
-    public static final int LAST_CONTACTED = 3;
-    public static final int CONTACT_ID     = 4;
-    public static final int SIZE           = CONTACT_ID + 1;
+    protected static Tuils.BiPack<Integer, Integer> longestFullNameAndPhoneNumber (Collection<Contact> contactsCollection) {
+        Tuils.BiPack<Integer, Integer> seed = new Tuils.BiPack<>(0, 0);
+        return Observable.fromIterable(contactsCollection)
+                .flatMap(contact -> Observable.fromIterable(contact.getPhoneNumbers())
+                        .map(phoneNumber -> new Tuils.BiPack<>(
+                                contact.fullName.length(),
+                                phoneNumber.length())
+                        ))
+                // maxPack is a pack containing the lengths of the longest items so far
+                .reduce(seed, (pack1, pack2) -> new Tuils.BiPack<>(
+                        Math.max(pack1.object1, pack2.object1),
+                        Math.max(pack1.object2, pack2.object2))
+                )
+                .blockingGet();
+    }
     
-    public String[] about (String phone) {
-        Cursor mCursor = context.getContentResolver()
+    public static final int NAME_INDEX           = 0;
+    public static final int NUMBERS_INDEX        = 1;
+    public static final int TIME_CONTACTED_INDEX = 2;
+    public static final int LAST_CONTACTED_INDEX = 3;
+    public static final int CONTACT_ID_INDEX     = 4;
+    public static final int ABOUT_SIZE           = CONTACT_ID_INDEX + 1;
+    
+    // get info about the given contact
+    public String[] about (int contactID) {
+        Cursor cursor = context.getContentResolver()
                 .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        new String[]{ContactsContract.CommonDataKinds.Phone.CONTACT_ID},
-                        ContactsContract.CommonDataKinds.Phone.NUMBER + " = ?", new String[]{phone},
-                        null);
-        
-        if (mCursor == null || mCursor.getCount() == 0) { return null; }
-        String[] about = new String[SIZE];
-        
-        mCursor.moveToNext();
-        
-        String id = mCursor.getString(mCursor
-                .getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID));
-        about[CONTACT_ID] = id;
-        
-        mCursor.close();
-        mCursor = context.getContentResolver()
-                .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        new String[]{ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                                ContactsContract.CommonDataKinds.Phone.TIMES_CONTACTED,
+                        new String[]{ContactsContract.CommonDataKinds.Phone.TIMES_CONTACTED,
                                 ContactsContract.CommonDataKinds.Phone.LAST_TIME_CONTACTED,
                                 ContactsContract.CommonDataKinds.Phone.NUMBER},
                         ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                        new String[]{id},
+                        new String[]{String.valueOf(contactID)},
                         null);
         
-        if (mCursor == null || mCursor.getCount() == 0) { return null; }
-        mCursor.moveToNext();
+        if (cursor == null) { return null; }
+        if (cursor.getCount() == 0) {
+            cursor.close();
+            return null;
+        }
         
-        about[NAME]    = mCursor.getString(mCursor
+        String[] about = new String[ABOUT_SIZE];
+        
+        cursor.moveToNext();
+        
+        about[NAME_INDEX] = cursor.getString(cursor
                 .getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-        about[NUMBERS] = new String(Tuils.EMPTYSTRING);
         
-        int timesContacted = -1;
-        long lastContacted = Long.MAX_VALUE;
+        List<String> phoneNumbers = new ArrayList<>();
+        
+        int timesContacted = 0;
+        long lastTimeContacted = Long.MIN_VALUE;
+        
         do {
-            int tempT = mCursor.getInt(mCursor
+            // do this for each number of the contact
+            
+            int times = cursor.getInt(cursor
                     .getColumnIndex(ContactsContract.CommonDataKinds.Phone.TIMES_CONTACTED));
-            long tempL = mCursor.getLong(mCursor
+            long lastTime = cursor.getLong(cursor
                     .getColumnIndex(ContactsContract.CommonDataKinds.Phone.LAST_TIME_CONTACTED));
             
-            timesContacted = tempT > timesContacted ? tempT : timesContacted;
-            if (tempL > 0) { lastContacted = tempL < lastContacted ? tempL : lastContacted; }
+            timesContacted += times;
+            if (lastTime > 0) { lastTimeContacted = Math.max(lastTime, lastTimeContacted); }
             
-            String n = mCursor.getString(mCursor
+            String phoneNumber = cursor.getString(cursor
                     .getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-            about[NUMBERS] = (about[NUMBERS]
-                    .length() > 0 ? about[NUMBERS] + Tuils.NEWLINE : Tuils.EMPTYSTRING) + n;
-        } while (mCursor.moveToNext());
+            phoneNumbers.add(phoneNumber);
+        } while (cursor.moveToNext());
         
-        about[TIME_CONTACTED] = String.valueOf(timesContacted);
-        if (lastContacted != Long.MAX_VALUE) {
-            long difference = System.currentTimeMillis() - lastContacted;
-            long sc = difference / 1000;
-            if (sc < 60) {
-                about[LAST_CONTACTED] = "sec: " + String.valueOf(lastContacted);
-            }
-            else {
-                int ms = (int) (sc / 60);
-                sc = ms % 60;
-                if (ms < 60) {
-                    about[LAST_CONTACTED] = "min: " + ms + ", sec: " + sc;
-                }
-                else {
-                    int h = ms / 60;
-                    ms = h % 60;
-                    if (h < 24) {
-                        about[LAST_CONTACTED] = "h: " + h + ", min: " + ms + ", sec: " + sc;
-                    }
-                    else {
-                        int days = h / 24;
-                        h                     = days % 24;
-                        about[LAST_CONTACTED] = "d: " + days + ", h: " + h + ", min: " + ms + ", " +
-                                "sec: " + sc;
-                    }
-                }
-            }
-        }
+        about[TIME_CONTACTED_INDEX] = String.valueOf(timesContacted);
+        about[LAST_CONTACTED_INDEX] = lastTimeContacted != Long.MIN_VALUE ?
+                new Date(lastTimeContacted).toString() :
+                "n/a";
+        about[NUMBERS_INDEX]        = TextUtils.join("\n", phoneNumbers);
+        
+        cursor.close();
         
         return about;
     }
     
-    public String findNumber (String name) {
-        if (contacts == null) { refreshContacts(context); }
+    private String deleteContactPhoneNumber (int contactID, int phoneIndex) {
+        Contact contact = contacts.get(contactID);
+        if (contact == null || contact.getPhoneNumbersCount() <= phoneIndex) { return null; }
         
-        for (int count = 0; count < contacts.size(); count++) {
-            Contact c = contacts.get(count);
-            if (c.name.equalsIgnoreCase(name)) {
-                if (c.numbers.size() > 0) { return c.numbers.get(0); }
-            }
-        }
-        
-        return null;
+        String phoneNumber = contact.getPhoneNumber(phoneIndex);
+        if (deletePhoneNumber(phoneNumber)) { return phoneNumber; }
+        else { return null; }
     }
     
-    public boolean delete (String phone) {
-        return context.getContentResolver()
-                .delete(fromPhone(phone), null, null) > 0;
+    // delete the given phone number
+    private boolean deletePhoneNumber (String phone) {
+        Uri uri = fromPhone(phone);
+        return uri != null && context.getContentResolver()
+                .delete(uri, null, null) > 0;
     }
     
-    public Uri fromPhone (String phone) {
+    private Uri fromPhone (String phone) {
         Cursor mCursor = context.getContentResolver()
                 .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                         new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
