@@ -26,7 +26,7 @@ import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
 import ohi.andre.consolelauncher.features.alias.AliasManager;
 import ohi.andre.consolelauncher.features.apps.AppsManager;
 import ohi.andre.consolelauncher.features.ChangelogManager;
-import ohi.andre.consolelauncher.features.ContactManager;
+import ohi.andre.consolelauncher.features.contacts.ContactManager;
 import ohi.andre.consolelauncher.features.HTMLExtractManager;
 import ohi.andre.consolelauncher.features.MessagesManager;
 import ohi.andre.consolelauncher.features.RssManager;

@@ -34,7 +34,7 @@ import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.tuixt.TuixtActivity;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
-import ohi.andre.consolelauncher.features.ContactManager;
+import ohi.andre.consolelauncher.features.contacts.ContactManager;
 import ohi.andre.consolelauncher.features.RegexManager;
 import ohi.andre.consolelauncher.features.TerminalManager;
 import ohi.andre.consolelauncher.features.TimeManager;
