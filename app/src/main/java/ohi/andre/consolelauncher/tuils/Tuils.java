@@ -1004,7 +1004,7 @@ public class Tuils {
         String format = XMLPrefsManager.get(Behavior.session_info_format);
         if(format.length() == 0) return null;
 
-        String deviceName = XMLPrefsManager.get(Ui.deviceName);
+        String deviceName = XMLPrefsManager.get(Ui.device_name);
         if(deviceName == null || deviceName.length() == 0) {
             deviceName = Build.DEVICE;
         }

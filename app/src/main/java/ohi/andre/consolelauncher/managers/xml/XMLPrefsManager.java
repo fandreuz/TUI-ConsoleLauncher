@@ -814,7 +814,7 @@ public class XMLPrefsManager {
 //            new SimpleMutableEntry("inputFieldBottom", Ui.input_bottom),
 //            new SimpleMutableEntry("username", Ui.username),
 //            new SimpleMutableEntry("showSubmit", Ui.show_enter_button),
-//            new SimpleMutableEntry("deviceName", Ui.deviceName),
+//            new SimpleMutableEntry("deviceName", Ui.device_name),
 //            new SimpleMutableEntry("showRam", Ui.show_ram),
 //            new SimpleMutableEntry("showDevice", Ui.show_device_name),
 //            new SimpleMutableEntry("showToolbar", Toolbar.show_toolbar),
