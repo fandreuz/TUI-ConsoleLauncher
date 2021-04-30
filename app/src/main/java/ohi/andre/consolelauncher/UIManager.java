@@ -1382,7 +1382,7 @@ public class UIManager implements OnTouchListener {
         if( is_simons_sexy_view_enabled ) {
             int floatingWindowcolor = Color.argb(200, 0, 0, 0 );
 
-            int outsidePadding = 10;
+            int outsidePadding = 15;
             int insidePadding = 5;
 
             // Set our background picture
@@ -1411,14 +1411,14 @@ public class UIManager implements OnTouchListener {
 
             // Set the margin
             params = (LinearLayout.LayoutParams) terminalGroupView.getLayoutParams();
-            params.setMargins( outsidePadding, outsidePadding, outsidePadding, outsidePadding / 2 );
+            params.setMargins( outsidePadding, outsidePadding / 2, outsidePadding, outsidePadding );
             terminalGroupView.setLayoutParams( params );
 
             // Set the terminal's background colour to make it look like a floating window.
             terminalGroupView.setBackgroundColor( floatingWindowcolor );
 
             // Make the text a little further from the border.
-            terminalGroupView.setPadding(outsidePadding,outsidePadding/2, outsidePadding, outsidePadding);
+            terminalGroupView.setPadding(insidePadding,insidePadding, insidePadding, insidePadding);
 
             //-------------------//
             // Prettier Buttons. //
