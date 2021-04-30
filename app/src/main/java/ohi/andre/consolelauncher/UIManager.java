@@ -759,6 +759,8 @@ public class UIManager implements OnTouchListener {
         }
     }
 
+    private boolean is_simons_sexy_view_enabled = true;
+
     private SuggestionsManager suggestionsManager;
 
     private TextView terminalView;
@@ -1339,7 +1341,9 @@ public class UIManager implements OnTouchListener {
             toolbarView = inputOutputView.findViewById(R.id.tools_view);
             hideToolbarNoInput = XMLPrefsManager.getBoolean(Toolbar.hide_toolbar_no_input);
 
-            applyBgRect(toolbarView, bgRectColors[TOOLBAR_BGCOLOR_INDEX], bgColors[TOOLBAR_BGCOLOR_INDEX], margins[TOOLBAR_MARGINS_INDEX], strokeWidth, cornerRadius);
+            if( !is_simons_sexy_view_enabled ) {
+                applyBgRect(toolbarView, bgRectColors[TOOLBAR_BGCOLOR_INDEX], bgColors[TOOLBAR_BGCOLOR_INDEX], margins[TOOLBAR_MARGINS_INDEX], strokeWidth, cornerRadius);
+            }
         }
 
         mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, context, mainPack, executer);
@@ -1352,7 +1356,10 @@ public class UIManager implements OnTouchListener {
                     v.clearFocus();
                 }
             });
-            applyBgRect(sv, bgRectColors[SUGGESTIONS_BGCOLOR_INDEX], bgColors[SUGGESTIONS_BGCOLOR_INDEX], margins[SUGGESTIONS_MARGINS_INDEX], strokeWidth, cornerRadius);
+
+            if( !is_simons_sexy_view_enabled ) {
+                applyBgRect(sv, bgRectColors[SUGGESTIONS_BGCOLOR_INDEX], bgColors[SUGGESTIONS_BGCOLOR_INDEX], margins[SUGGESTIONS_MARGINS_INDEX], strokeWidth, cornerRadius);
+            }
 
             LinearLayout suggestionsView = (LinearLayout) rootView.findViewById(R.id.suggestions_group);
 
@@ -1371,6 +1378,58 @@ public class UIManager implements OnTouchListener {
         int drawTimes = XMLPrefsManager.getInt(Ui.text_redraw_times);
         if(drawTimes <= 0) drawTimes = 1;
         OutlineTextView.redrawTimes = drawTimes;
+
+        if( is_simons_sexy_view_enabled ) {
+            int floatingWindowcolor = Color.argb(200, 0, 0, 0 );
+
+            int outsidePadding = 15;
+            int insidePadding = 5;
+
+            // Set our background picture
+            rootView.setBackgroundResource(R.drawable.jellyfish);
+
+            //--------------------------//
+            // Prettier Device section. //
+            //--------------------------//
+
+            // Set the margins for the device info section.
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) lViewsParent.getLayoutParams();
+            params.setMargins( outsidePadding, outsidePadding, outsidePadding, outsidePadding / 2 );
+            lViewsParent.setLayoutParams( params );
+
+            // Set the device info's background colour to make it look like a floating window.
+            //lViewsParent.setBackgroundColor(Color.argb(127, 0, 0, 255));
+            lViewsParent.setBackgroundColor( floatingWindowcolor );
+
+            // Make the text a little further from the border.
+            lViewsParent.setPadding( insidePadding, insidePadding, insidePadding, insidePadding );
+
+            //----------------------------//
+            // Prettier Terminal section. //
+            //----------------------------//
+            View terminalGroupView = inputOutputView.findViewById(R.id.terminal_group);
+
+            // Set the margin
+            params = (LinearLayout.LayoutParams) terminalGroupView.getLayoutParams();
+            params.setMargins( outsidePadding, outsidePadding / 2, outsidePadding, outsidePadding );
+            terminalGroupView.setLayoutParams( params );
+
+            // Set the terminal's background colour to make it look like a floating window.
+            terminalGroupView.setBackgroundColor( floatingWindowcolor );
+
+            // Make the text a little further from the border.
+            terminalGroupView.setPadding(insidePadding,insidePadding, insidePadding, insidePadding);
+
+            //-------------------//
+            // Prettier Buttons. //
+            //-------------------//
+            // Set the background colour for these too.
+            View toolsView = inputOutputView.findViewById(R.id.tools_view);
+            toolsView.setBackgroundColor( floatingWindowcolor );
+
+            View suggestionsContainerView = inputOutputView.findViewById(R.id.suggestions_container);
+            suggestionsContainerView.setBackgroundColor( floatingWindowcolor );
+        }
     }
 
     public static int[] getListOfIntValues(String values, int length, int defaultValue) {

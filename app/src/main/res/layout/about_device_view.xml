@@ -4,94 +4,111 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv0"
+    <LinearLayout
+        android:id="@+id/tv_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv5"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv6"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv7"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv7"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
 
-    <ohi.andre.consolelauncher.tuils.OutlineTextView android:id="@+id/tv8"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
 
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical" />
+        <ohi.andre.consolelauncher.tuils.OutlineTextView
+            android:id="@+id/tv8"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+
+            android:scrollbarAlwaysDrawVerticalTrack="true"
+            android:scrollbars="vertical" />
+
+    </LinearLayout>
 
 </LinearLayout>
