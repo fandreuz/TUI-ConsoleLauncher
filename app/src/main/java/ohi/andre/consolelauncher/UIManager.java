@@ -18,6 +18,7 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.nfc.NfcAdapter;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
@@ -464,6 +465,11 @@ public class UIManager implements OnTouchListener {
         final Pattern b2 = Pattern.compile("%b2", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern b3 = Pattern.compile("%b3", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern b4 = Pattern.compile("%b4", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        final Pattern nfc0 = Pattern.compile("%nfc0", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        final Pattern nfc1 = Pattern.compile("%nfc1", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        final Pattern nfc2 = Pattern.compile("%nfc2", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        final Pattern nfc3 = Pattern.compile("%nfc3", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+        final Pattern nfc4 = Pattern.compile("%nfc4", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern ip4 = Pattern.compile("%ip4", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern ip6 = Pattern.compile("%ip6", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
         final Pattern dt = Pattern.compile("%dt", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
@@ -479,6 +485,7 @@ public class UIManager implements OnTouchListener {
 
         WifiManager wifiManager;
         BluetoothAdapter mBluetoothAdapter;
+        NfcAdapter mNfcAdapter;
 
         ConnectivityManager connectivityManager;
 
@@ -502,6 +509,7 @@ public class UIManager implements OnTouchListener {
                 connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
                 wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                mNfcAdapter = NfcAdapter.getDefaultAdapter(mContext.getApplicationContext());
 
                 optionalValueSeparator = "\\" + XMLPrefsManager.get(Behavior.optional_values_separator);
 
@@ -549,6 +557,8 @@ public class UIManager implements OnTouchListener {
 
 //            bluetooth
             boolean bluetoothOn = mBluetoothAdapter != null && mBluetoothAdapter.isEnabled();
+            // nfc
+            boolean nfcOn = mNfcAdapter != null && mNfcAdapter.isEnabled();
 
             String copy = format;
 
@@ -574,6 +584,11 @@ public class UIManager implements OnTouchListener {
             copy = b2.matcher(copy).replaceAll(bluetoothOn ? ON : OFF);
             copy = b3.matcher(copy).replaceAll(bluetoothOn ? _true : _false);
             copy = b4.matcher(copy).replaceAll(bluetoothOn ? TRUE : FALSE);
+            copy = nfc0.matcher(copy).replaceAll(nfcOn ? one : zero);
+            copy = nfc1.matcher(copy).replaceAll(nfcOn ? on : off);
+            copy = nfc2.matcher(copy).replaceAll(nfcOn ? ON : OFF);
+            copy = nfc3.matcher(copy).replaceAll(nfcOn ? _true : _false);
+            copy = nfc4.matcher(copy).replaceAll(nfcOn ? TRUE : FALSE);
             copy = ip4.matcher(copy).replaceAll(NetworkUtils.getIPAddress(true));
             copy = ip6.matcher(copy).replaceAll(NetworkUtils.getIPAddress(false));
             copy = dt.matcher(copy).replaceAll(mobileType);

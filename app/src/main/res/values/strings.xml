@@ -208,6 +208,7 @@
     <string name="location_label">Location:</string>
     <string name="brightness_label">Brightness:</string>
     <string name="bluetooth_label">Bluetooth:</string>
+    <string name="nfc_label">NFC:</string>
 
     <!-- contacts -->
     <string name="sms_hint">write your SMS or nothing to cancel</string>
