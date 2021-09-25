@@ -1,6 +1,7 @@
 package ohi.andre.consolelauncher.commands.main.raw;
 
 import android.bluetooth.BluetoothAdapter;
+import android.nfc.NfcAdapter;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -98,6 +99,13 @@ public class status implements CommandAbstraction {
                 .append(info.res.getString(R.string.bluetooth_label)).append(Tuils.SPACE).append(bluetoothOn).append(Tuils.NEWLINE)
                 .append(info.res.getString(R.string.location_label)).append(Tuils.SPACE).append(gps_enabled || network_enabled).append(Tuils.NEWLINE)
                 .append(info.res.getString(R.string.brightness_label)).append(Tuils.SPACE).append(autobrightnessState == SCREEN_BRIGHTNESS_MODE_AUTOMATIC ? "(auto) " : Tuils.EMPTYSTRING).append(b).append("%");
+
+        // nfc
+        NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(info.context.getApplicationContext());
+
+        if(nfcAdapter != null) {
+            builder.append(Tuils.NEWLINE).append(info.res.getString(R.string.nfc_label)).append(Tuils.SPACE).append( nfcAdapter.isEnabled());
+        }
 
         return builder.toString();
     }
