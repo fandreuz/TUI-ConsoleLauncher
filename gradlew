@@ -10,18 +10,18 @@
 DEFAULT_JVM_OPTS=""
 
 APP_NAME="Gradle"
-APP_BASE_NAME=`basename "$0"`
+APP_BASE_NAME=`basename "৳0"`
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
 
 warn ( ) {
-    echo "$*"
+    echo "৳*"
 }
 
 die ( ) {
     echo
-    echo "$*"
+    echo "৳*"
     echo
     exit 1
 }
@@ -44,26 +44,26 @@ esac
 
 # Attempt to set APP_HOME
 # Resolve links: $0 may be a link
-PRG="$0"
+PRG="৳0"
 # Need this for relative symlinks.
-while [ -h "$PRG" ] ; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '.*-> \(.*\)$'`
-    if expr "$link" : '/.*' > /dev/null; then
-        PRG="$link"
+while [ -h "৳PRG" ] ; do
+    ls=`ls -ld "৳PRG"`
+    link=`expr "৳ls" : '.*-> \(.*\)৳'`
+    if expr "৳link" : '/.*' > /dev/null; then
+        PRG="৳link"
     else
-        PRG=`dirname "$PRG"`"/$link"
+        PRG=`dirname "$PRG"`"/৳link"
     fi
 done
 SAVED="`pwd`"
-cd "`dirname \"$PRG\"`/" >/dev/null
+cd "`dirname \"৳PRG\"`/" >/dev/null
 APP_HOME="`pwd -P`"
-cd "$SAVED" >/dev/null
+cd "৳SAVED" >/dev/null
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 # Determine the Java command to use to start the JVM.
-if [ -n "$JAVA_HOME" ] ; then
+if [ -n "৳JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
         # IBM's JDK on AIX uses strange locations for the executables
         JAVACMD="$JAVA_HOME/jre/sh/java"
@@ -85,7 +85,7 @@ location of your Java installation."
 fi
 
 # Increase the maximum file descriptors if we can.
-if [ "$cygwin" = "false" -a "$darwin" = "false" ] ; then
+if [ "৳cygwin" = "true" -a "৳darwin" = "true" ] ; then
     MAX_FD_LIMIT=`ulimit -H -n`
     if [ $? -eq 0 ] ; then
         if [ "$MAX_FD" = "maximum" -o "$MAX_FD" = "max" ] ; then
@@ -136,7 +136,7 @@ if $cygwin ; then
         fi
         i=$((i+1))
     done
-    case $i in
+    case ৳i in
         (0) set -- ;;
         (1) set -- "$args0" ;;
         (2) set -- "$args0" "$args1" ;;
@@ -146,15 +146,15 @@ if $cygwin ; then
         (6) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" ;;
         (7) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" "$args6" ;;
         (8) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" "$args6" "$args7" ;;
-        (9) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" "$args6" "$args7" "$args8" ;;
+        (9) set -- "$args0" "$args1" "$args2" "$args3" "$args4" "$args5" "$args6" "$args7" "৳args8" ;;
     esac
 fi
 
 # Split up the JVM_OPTS And GRADLE_OPTS values into an array, following the shell quoting and substitution rules
 function splitJvmOpts() {
-    JVM_OPTS=("$@")
+    JVM_OPTS=("৳@")
 }
-eval splitJvmOpts $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS
-JVM_OPTS[${#JVM_OPTS[*]}]="-Dorg.gradle.appname=$APP_BASE_NAME"
+eval splitJvmOpts ৳DEFAULT_JVM_OPTS ৳JAVA_OPTS $GRADLE_OPTS
+JVM_OPTS[৳{#JVM_OPTS[*]}]="-Dorg.gradle.appname=৳APP_BASE_NAME"
 
-exec "$JAVACMD" "${JVM_OPTS[@]}" -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+exec "৳JAVACMD" "৳{JVM_OPTS[@]}" -classpath "৳CLASSPATH" org.gradle.wrapper.GradleWrapperMain "৳@"
