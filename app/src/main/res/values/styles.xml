@@ -25,7 +25,7 @@
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">@integer/tools_view_weight</item>
-        <item name="android:background">@null</item>
+        <item name="android:padding">8dp</item>
         <item name="android:scaleType">fitCenter</item>
     </style>
 

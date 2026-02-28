@@ -1,6 +1,8 @@
 package ohi.andre.consolelauncher.managers.music;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentUris;
@@ -13,8 +15,8 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.RemoteInput;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.RemoteInput;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -58,7 +60,11 @@ public class MusicService extends Service implements
         if(System.currentTimeMillis() - lastNotificationChange < 500 || songTitle == null || songTitle.length() == 0) return super.onStartCommand(intent, flags, startId);
 
         lastNotificationChange = System.currentTimeMillis();
-        startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+        } else {
+            startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle));
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -70,7 +76,11 @@ public class MusicService extends Service implements
         lastNotificationChange = System.currentTimeMillis();
 
         mp.start();
-        startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+        } else {
+            startForeground(NOTIFY_ID, buildNotification(this.getApplicationContext(), songTitle));
+        }
     }
 
     public void initMusicPlayer(){
@@ -159,11 +169,20 @@ public class MusicService extends Service implements
     }
 
     public static Notification buildNotification(Context context, String songTitle) {
+        String channelId = "music_channel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, "Music", NotificationManager.IMPORTANCE_LOW);
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+
         Intent notIntent = new Intent(context, LauncherActivity.class);
-        PendingIntent pendInt = PendingIntent.getActivity(context, 0, notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendInt = PendingIntent.getActivity(context, 0, notIntent, Tuils.pendingIntentFlags(PendingIntent.FLAG_UPDATE_CURRENT));
 
         Notification not;
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId);
         builder.setContentIntent(pendInt)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setTicker(songTitle)
@@ -181,7 +200,7 @@ public class MusicService extends Service implements
             i.putExtra(MainManager.MUSIC_SERVICE, true);
 
             NotificationCompat.Action action = new NotificationCompat.Action.Builder(R.mipmap.ic_launcher, label,
-                    PendingIntent.getBroadcast(context.getApplicationContext(), 10, i, PendingIntent.FLAG_UPDATE_CURRENT))
+                    PendingIntent.getBroadcast(context.getApplicationContext(), 10, i, Tuils.pendingIntentFlags(PendingIntent.FLAG_UPDATE_CURRENT)))
                     .addRemoteInput(remoteInput)
                     .build();
 

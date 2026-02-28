@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ohi.andre.consolelauncher">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <supports-screens
         android:anyDensity="true"
@@ -31,13 +30,12 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK"  />
-
-    <permission
-        android:name="android.permission.FLASHLIGHT"
-        android:description="@string/help_flash"
-        android:label="@string/help_flash"
-        android:permissionGroup="android.permission-group.HARDWARE_CONTROLS"
-        android:protectionLevel="normal" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- features -->
     <uses-feature
@@ -74,11 +72,17 @@
         android:name="android.hardware.audio.output"
         android:required="false" />
 
+    <permission
+        android:name="ohi.andre.consolelauncher.permission.RECEIVE_CMD"
+        android:protectionLevel="signature" />
+
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Custom.Solid">
+        android:theme="@style/Custom.Solid"
+        android:usesCleartextTraffic="false"
+        android:requestLegacyExternalStorage="true">
 
         <provider
             android:name=".tuils.GenericFileProvider"
@@ -100,7 +104,8 @@
             android:resumeWhilePausing="true"
             android:stateNotNeeded="true"
             android:taskAffinity=""
-            android:windowSoftInputMode="stateAlwaysVisible|adjustResize">
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -114,7 +119,8 @@
         <receiver
             android:name=".tuils.stuff.PolicyReceiver"
             android:description="@string/admin_permission"
-            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true">
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/policy" />
@@ -128,11 +134,16 @@
         <service
             android:name=".managers.notifications.KeeperService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
+                android:value="Maintains the launcher console state and provides persistent access to T-UI commands via notification."/>
+        </service>
         <service
             android:name=".managers.music.MusicService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <activity
             android:name=".commands.tuixt.TuixtActivity"
@@ -140,9 +151,10 @@
             android:label="@string/tuixt_label"
             android:noHistory="true"
             android:theme="@style/Custom.Solid"
-            android:windowSoftInputMode="stateAlwaysVisible|adjustResize">
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
+            android:exported="true">
             <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
+                android:name="androidx.core.app.PARENT_ACTIVITY"
                 android:value=".LauncherActivity" />
 
             <intent-filter>
@@ -219,16 +231,20 @@
         <service
             android:name=".managers.notifications.NotificationService"
             android:label="@string/notification_reader"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
-        <service android:name=".managers.notifications.NotificationMonitorService" />
+        <service 
+            android:name=".managers.notifications.NotificationMonitorService"
+            android:exported="false" />
 
         <activity
             android:name=".tuils.stuff.FakeLauncherActivity"
-            android:enabled="false">
+            android:enabled="false"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

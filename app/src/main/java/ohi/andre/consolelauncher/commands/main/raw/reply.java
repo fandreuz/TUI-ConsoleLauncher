@@ -2,7 +2,7 @@ package ohi.andre.consolelauncher.commands.main.raw;
 
 import android.content.Intent;
 import android.os.Build;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;

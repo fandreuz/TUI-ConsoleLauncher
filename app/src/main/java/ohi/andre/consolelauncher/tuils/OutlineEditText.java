@@ -4,7 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
 
-public class OutlineEditText extends android.support.v7.widget.AppCompatEditText {
+public class OutlineEditText extends androidx.appcompat.widget.AppCompatEditText {
 
     private int drawTimes = -1;
 

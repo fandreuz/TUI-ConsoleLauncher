@@ -141,23 +141,29 @@ public class TerminalManager {
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
         this.mPrefix = prefixView;
 
+        int toolbarColor = XMLPrefsManager.getColor(Theme.toolbar_color);
+        int enterColor = XMLPrefsManager.getColor(Theme.enter_color);
+
         if (submitView != null) {
-            submitView.setColorFilter(XMLPrefsManager.getColor(Theme.enter_color));
+            submitView.setColorFilter(enterColor, android.graphics.PorterDuff.Mode.SRC_IN);
             submitView.setOnClickListener(v -> onNewInput());
         }
 
         if (backView != null) {
-            backView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            backView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            backView.setBackgroundColor(0);
             backView.setOnClickListener(v -> onBackPressed());
         }
 
         if (nextView != null) {
-            nextView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            nextView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            nextView.setBackgroundColor(0);
             nextView.setOnClickListener(v -> onNextPressed());
         }
 
         if (pasteView != null) {
-            pasteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            pasteView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            pasteView.setBackgroundColor(0);
             pasteView.setOnClickListener(v -> {
                 String text = Tuils.getTextFromClipboard(context);
                 if(text != null && text.length() > 0) {
@@ -167,7 +173,8 @@ public class TerminalManager {
         }
 
         if (deleteView != null) {
-            deleteView.setColorFilter(XMLPrefsManager.getColor(Theme.toolbar_color));
+            deleteView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            deleteView.setBackgroundColor(0);
             deleteView.setOnClickListener(v -> setInput(Tuils.EMPTYSTRING));
         }
 

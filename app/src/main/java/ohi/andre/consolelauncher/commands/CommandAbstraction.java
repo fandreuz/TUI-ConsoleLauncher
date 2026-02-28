@@ -25,6 +25,7 @@ public interface CommandAbstraction {
     int LONG = 30;
     int BOUND_REPLY_APP = 31;
     int DATASTORE_PATH_TYPE = 32;
+    int THEME_PRESET = 33;
 
     String exec(ExecutePack pack) throws Exception;
     int[] argType();

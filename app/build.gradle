@@ -1,56 +1,78 @@
 apply plugin: 'com.android.application'
+
 android {
-    compileSdkVersion 27
-    buildToolsVersion '28.0.3'
-    dexOptions {
+    namespace "ohi.andre.consolelauncher"
+    compileSdk 34
+
+    def keystorePropertiesFile = rootProject.file("local.properties")
+    def keystoreProperties = new Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("../" + (keystoreProperties["storeFile"] ?: "release.jks"))
+            storePassword = keystoreProperties["storePassword"] ?: ""
+            keyAlias = keystoreProperties["keyAlias"] ?: "tui-alias"
+            keyPassword = keystoreProperties["keyPassword"] ?: ""
+        }
     }
 
     defaultConfig {
         applicationId "ohi.andre.consolelauncher"
+        minSdk 21
+        targetSdk 34
+        versionCode 301
+        versionName "v6.15.1-updated-v2"
 
-        minSdkVersion 14
-        targetSdkVersion 27
-        flavorDimensions "default"
-
-        versionName "v6.15"
-        versionCode 205
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    buildFeatures {
+        buildConfig true
+    }
+
     buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
         release {
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
+
     productFlavors {
+        flavorDimensions = ["default"]
         fdroid {
+            dimension "default"
         }
         playstore {
+            dimension "default"
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    dependencies {
-        implementation 'com.android.support:appcompat-v7:27.1.1'
-    }
-    lintOptions {
+
+    lint {
         checkReleaseBuilds false
     }
-    android.applicationVariants.all { variant ->
-        def formattedDate = new Date().format('hh.mm')
-
-        variant.outputs.all {
-            outputFileName = "./${variant.versionName}/${variant.applicationId}_${variant.getFlavorName()}_${variant.versionCode}_${formattedDate}.apk"
-        }
-    }
 }
+
 dependencies {
-    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
-    implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6'
-    implementation 'com.jayway.jsonpath:json-path:2.4.0'
-    implementation 'org.jsoup:jsoup:1.11.3'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.29'
+    implementation 'com.jayway.jsonpath:json-path:2.9.0'
+    implementation 'org.jsoup:jsoup:1.17.2'
     implementation 'it.andreuzzi:CompareString2:1.0.9'
 }

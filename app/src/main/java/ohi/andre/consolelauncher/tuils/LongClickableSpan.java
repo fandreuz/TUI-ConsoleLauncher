@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Vibrator;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.view.MenuItem;
@@ -134,21 +134,18 @@ public class LongClickableSpan extends ClickableSpan {
                     menu.setOnMenuItemClickListener(item -> {
                         int id = item.getItemId();
 
-                        switch (id) {
-                            case R.id.exclude_app:
-                                NotificationManager.setState(n.pkg, false);
-                                break;
-                            case R.id.exclude_notification:
-                                Tuils.log(n.text);
-                                NotificationManager.addFilter(n.text, -1);
-                                break;
-                            case R.id.reply_notification:
-                                Intent intent = new Intent(PrivateIOReceiver.ACTION_INPUT);
-                                intent.putExtra(PrivateIOReceiver.TEXT, "reply -to " + n.pkg + Tuils.SPACE);
+                        if (id == R.id.exclude_app) {
+                            NotificationManager.setState(n.pkg, false);
+                        } else if (id == R.id.exclude_notification) {
+                            Tuils.log(n.text);
+                            NotificationManager.addFilter(n.text, -1);
+                        } else if (id == R.id.reply_notification) {
+                            Intent intent = new Intent(PrivateIOReceiver.ACTION_INPUT);
+                            intent.putExtra(PrivateIOReceiver.TEXT, "reply -to " + n.pkg + Tuils.SPACE);
 
-                                LocalBroadcastManager.getInstance(v.getContext().getApplicationContext()).sendBroadcast(intent);
-                            default:
-                                return false;
+                            LocalBroadcastManager.getInstance(v.getContext().getApplicationContext()).sendBroadcast(intent);
+                        } else {
+                            return false;
                         }
 
                         return true;

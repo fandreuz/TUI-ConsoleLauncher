@@ -2,10 +2,10 @@ package ohi.andre.consolelauncher.tuils;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 
-public class OutlineTextView extends android.support.v7.widget.AppCompatTextView {
+public class OutlineTextView extends androidx.appcompat.widget.AppCompatTextView {
 
     public static String SHADOW_TAG = "hasShadow";
 

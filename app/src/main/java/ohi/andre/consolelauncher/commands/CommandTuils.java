@@ -136,7 +136,7 @@ public class CommandTuils {
         } else if (type == CommandAbstraction.CONTACTNUMBER && info instanceof MainPack) {
             MainPack pack = (MainPack) info;
             return contactNumber(input, pack.contacts);
-        } else if (type == CommandAbstraction.PLAIN_TEXT) {
+        } else if (type == CommandAbstraction.PLAIN_TEXT || type == CommandAbstraction.THEME_PRESET) {
             return plainText(input);
         } else if (type == CommandAbstraction.VISIBLE_PACKAGE && info instanceof MainPack) {
             MainPack pack = (MainPack) info;

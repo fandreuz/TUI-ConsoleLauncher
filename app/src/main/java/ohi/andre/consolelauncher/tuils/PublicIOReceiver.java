@@ -4,8 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.RemoteInput;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.core.app.RemoteInput;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import ohi.andre.consolelauncher.BuildConfig;
 import ohi.andre.consolelauncher.MainManager;
