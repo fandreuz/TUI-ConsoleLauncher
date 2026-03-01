@@ -1,22 +1,23 @@
-# T-UI Linux CLI Launcher (Modernized Fork)
+# T-UI Linux CLI Launcher
 
-A modernized version of the original T-UI Linux CLI Launcher, updated for compatibility with modern Android versions (API 34+) and enhanced with security hardening.
-
-### Credits & Attribution
-*   **Original Author:** Francesco Andreuzzi from Trieste, Italy.
-*   **Original Project:** [GitHub Repository](https://github.com/fandreuz/TUI-ConsoleLauncher)
-*   **Original Play Store Page:** [Google Play](https://play.google.com/store/apps/details?id=ohi.andre.consolelauncher&hl=en)
-*   **Note:** This is a fork. In accordance with the original license, this software is free and should not be confused with the original 't-ui' or 'Linux CLI Launcher' official releases.
+Updated for compatibility with modern Android versions (API 34+) and enhanced with security hardening.
 
 ---
 
 ## 🚀 Recent Changes & Modernization
 
-This fork ensures the launcher remains functional, secure, and performant on modern Android devices (Android 11 through Android 14+).
+These updates ensure the launcher remains functional, secure, and performant on modern Android devices (Android 11 through Android 14+).
 
-### ✨ New Features
-*   **Built-in BusyBox Manager:** Gain access to 300+ Linux commands (ls, grep, awk, top, etc.) via the new `busybox` command.
-*   **Theme Preset Shortcut Buttons:** Enhanced the `theme -preset` command to show interactive shortcut buttons for presets (blue, red, green, pink, bw, cyberpunk).
+### ⌨️ New Commands
+*   **`username [user] [device]`**: Instantly customize your terminal prompt. Changes both the username and device name and reloads the UI to apply.
+*   **`theme -preset [name]`**: Rapidly switch between high-quality pre-configured themes.
+    *   **Available Presets:** `blue`, `red`, `green`, `pink`, `bw`, `cyberpunk`.
+    *   **Smart Suggestions:** Applying a preset automatically colors the suggestion bar and shortcut buttons to match the aesthetic.
+*   **`bbman`**: The new BusyBox manager for installing and verifying Linux binaries.
+
+### ✨ Enhanced Features
+*   **Built-in BusyBox Manager:** Gain access to 300+ Linux commands (ls, grep, awk, top, etc.) via the new `bbman -install` command.
+*   **Theme Preset Shortcut Buttons:** Enhanced the `theme -preset` command to show interactive shortcut buttons for presets.
 *   **Synchronized Theme UI:** Applying a preset now automatically colors the shortcut buttons (suggestions) to match the overall theme.
 *   **One-Tap Application:** Shortcut buttons for theme presets execute immediately upon clicking.
 

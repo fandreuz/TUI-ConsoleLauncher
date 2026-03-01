@@ -40,15 +40,6 @@ public class ChangelogManager {
 
         final SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, 0);
 
-//        if true, it's the first time the user opens the app. no need to show changelog
-        if(!force && MessagesManager.isShowingFirstTimeTutorial(context)) {
-            preferences.edit()
-                .putBoolean(url, true)
-                .apply();
-
-            return;
-        }
-
         final int MAX_LENGTH = 200;
 
         final String changelogUrl = url;

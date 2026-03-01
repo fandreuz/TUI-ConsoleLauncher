@@ -27,7 +27,6 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ChangelogManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.HTMLExtractManager;
-import ohi.andre.consolelauncher.managers.MessagesManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.ThemeManager;
@@ -129,8 +128,6 @@ public class MainManager {
     private ThemeManager themeManager;
     private HTMLExtractManager htmlExtractManager;
 
-    MessagesManager messagesManager;
-
     private BroadcastReceiver receiver;
 
     public static int commandCount = 0;
@@ -201,10 +198,6 @@ public class MainManager {
         themeManager = new ThemeManager(client, mContext, c);
         musicManager2 = XMLPrefsManager.getBoolean(Behavior.enable_music) ? new MusicManager2(mContext) : null;
         htmlExtractManager = new HTMLExtractManager(mContext, client);
-
-        if(XMLPrefsManager.getBoolean(Behavior.show_hints)) {
-            messagesManager = new MessagesManager(mContext);
-        }
 
         mainPack = new MainPack(mContext, group, aliasManager, appsManager, musicManager2, contactManager, redirectator, rssManager, client);
 
@@ -342,7 +335,6 @@ public class MainManager {
                     break;
                 }
                 if (r) {
-                    if(messagesManager != null) messagesManager.afterCmd();
                     break;
                 }
             }
@@ -364,8 +356,6 @@ public class MainManager {
     public void destroy() {
         mainPack.destroy();
         TuiLocationManager.disposeStatic();
-
-        if(messagesManager != null) messagesManager.onDestroy();
 
         themeManager.dispose();
         htmlExtractManager.dispose(mContext);
