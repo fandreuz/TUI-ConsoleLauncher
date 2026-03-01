@@ -8,6 +8,8 @@ Updated for compatibility with modern Android versions (API 34+) and enhanced wi
 
 These updates ensure the launcher remains functional, secure, and performant on modern Android devices (Android 11 through Android 14+).
 
+> **Pro Tip:** On the very first install, if background transparency does not take effect immediately, simply type \`restart\` in the terminal and press enter.
+
 ### ⌨️ New Commands
 *   **`username [user] [device]`**: Instantly customize your terminal prompt. Changes both the username and device name and reloads the UI to apply.
 *   **`theme -preset [name]`**: Rapidly switch between high-quality pre-configured themes.
