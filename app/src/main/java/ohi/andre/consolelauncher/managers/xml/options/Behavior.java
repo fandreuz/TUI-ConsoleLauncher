@@ -146,7 +146,7 @@ public enum Behavior implements XMLPrefsSave {
     show_hints {
         @Override
         public String defaultValue() {
-            return "true";
+            return "false";
         }
 
         @Override
@@ -568,7 +568,7 @@ public enum Behavior implements XMLPrefsSave {
     home_path {
         @Override
         public String defaultValue() {
-            return Environment.getExternalStorageDirectory().getAbsolutePath();
+            return Tuils.getFolder().getAbsolutePath();
         }
 
         @Override

@@ -133,6 +133,8 @@ public class XMLPrefsManager {
 
     static boolean commonsLoaded = false;
     public static void loadCommons(Context context) {
+        Tuils.init(context);
+
         if(commonsLoaded) return;
         commonsLoaded = true;
 

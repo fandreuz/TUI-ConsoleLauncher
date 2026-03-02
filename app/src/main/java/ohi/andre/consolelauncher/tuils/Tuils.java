@@ -30,8 +30,8 @@ import android.os.Parcelable;
 import android.os.Process;
 import android.os.StatFs;
 import android.provider.Settings;
-import android.support.v4.content.FileProvider;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.core.content.FileProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.telephony.TelephonyManager;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -112,7 +112,6 @@ public class Tuils {
     public static final String TRIBLE_SPACE = "   ";
     public static final String DOT = ".";
     public static final String EMPTYSTRING = "";
-    private static final String TUI_FOLDER = "t-ui";
     public static final String MINUS = "-";
 
     public static Pattern patternNewline = Pattern.compile("%n", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
@@ -1160,7 +1159,7 @@ public class Tuils {
 
     public static boolean hasInternetAccess() {
         try {
-            HttpURLConnection urlc = (HttpURLConnection) (new URL("http://clients3.google.com/generate_204").openConnection());
+            HttpURLConnection urlc = (HttpURLConnection) (new URL("https://clients3.google.com/generate_204").openConnection());
             return (urlc.getResponseCode() == 204 && urlc.getContentLength() == 0);
         } catch (IOException e) {
             return false;
@@ -1379,11 +1378,6 @@ public class Tuils {
         return uri;
     }
 
-    private static File getTuiFolder() {
-        File internalDir = Environment.getExternalStorageDirectory();
-        return new File(internalDir, TUI_FOLDER);
-    }
-
     public static double eval(final String str) {
         return new Object() {
             int pos = -1, ch;
@@ -1480,24 +1474,17 @@ public class Tuils {
 
     private static final int FILEUPDATE_DELAY = 100;
     private static File folder = null;
+
+    public static void init(Context context) {
+        if (folder != null) return;
+        folder = context.getExternalFilesDir(null);
+        if (folder == null) {
+            folder = context.getFilesDir();
+        }
+    }
+
     public static File getFolder() {
         if(folder != null) return folder;
-
-        int elapsedTime = 0;
-        while (elapsedTime < 1000) {
-            File tuiFolder = Tuils.getTuiFolder();
-            if(tuiFolder != null && ((tuiFolder.exists() && tuiFolder.isDirectory()) || tuiFolder.mkdir())) {
-                folder = tuiFolder;
-                return folder;
-            }
-
-            try {
-                Thread.sleep(FILEUPDATE_DELAY);
-            } catch (InterruptedException e) {}
-
-            elapsedTime += FILEUPDATE_DELAY;
-        }
-
         return null;
     }
 
@@ -1530,10 +1517,14 @@ public class Tuils {
     }
 
     public static String getNetworkType(Context context) {
-        TelephonyManager mTelephonyManager = (TelephonyManager)
-                context.getSystemService(Context.TELEPHONY_SERVICE);
-        int networkType = mTelephonyManager.getNetworkType();
-        switch (networkType) {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_PHONE_STATE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            return "unknown";
+        }
+        try {
+            TelephonyManager mTelephonyManager = (TelephonyManager)
+                    context.getSystemService(Context.TELEPHONY_SERVICE);
+            int networkType = mTelephonyManager.getNetworkType();
+            switch (networkType) {
             case TelephonyManager.NETWORK_TYPE_GPRS:
             case TelephonyManager.NETWORK_TYPE_EDGE:
             case TelephonyManager.NETWORK_TYPE_CDMA:
@@ -1552,8 +1543,13 @@ public class Tuils {
                 return "3g";
             case TelephonyManager.NETWORK_TYPE_LTE:
                 return "4g";
+            case TelephonyManager.NETWORK_TYPE_NR:
+                return "5g";
             default:
                 return "unknown";
+        }
+        } catch (SecurityException e) {
+            return "unknown";
         }
     }
 
@@ -1575,6 +1571,13 @@ public class Tuils {
             drawables[1].setColorFilter(color, PorterDuff.Mode.SRC_IN);
             fCursorDrawable.set(editor, drawables);
         } catch (Throwable ignored) {}
+    }
+
+    public static int pendingIntentFlags(int flags) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            return flags | android.app.PendingIntent.FLAG_IMMUTABLE;
+        }
+        return flags;
     }
 
     public static int nOfBytes(File file) {

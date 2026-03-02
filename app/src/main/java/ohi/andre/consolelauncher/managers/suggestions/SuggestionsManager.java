@@ -55,6 +55,7 @@ import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.managers.xml.options.Reply;
 import ohi.andre.consolelauncher.managers.xml.options.Rss;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
+import ohi.andre.consolelauncher.tuils.BusyBoxInstaller;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -787,6 +788,18 @@ public class SuggestionsManager {
             case CommandAbstraction.DATASTORE_PATH_TYPE:
                 suggestDataStoreType(suggestions, beforeLastSpace);
                 break;
+            case CommandAbstraction.THEME_PRESET:
+                suggestThemePresets(suggestions, afterLastSpace, beforeLastSpace);
+                break;
+        }
+    }
+
+    private void suggestThemePresets(List<Suggestion> suggestions, String afterLastSpace, String beforeLastSpace) {
+        String[] presets = {"blue", "red", "green", "pink", "bw", "cyberpunk"};
+        for (String p : presets) {
+            if (afterLastSpace == null || afterLastSpace.length() == 0 || p.startsWith(afterLastSpace)) {
+                suggestions.add(new Suggestion(beforeLastSpace, p, true, Suggestion.TYPE_PERMANENT));
+            }
         }
     }
 

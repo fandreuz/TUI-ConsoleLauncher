@@ -10,9 +10,9 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.app.RemoteInput;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.RemoteInput;
 import android.text.SpannableString;
 import android.text.TextUtils;
 
@@ -68,10 +68,15 @@ public class KeeperService extends Service {
             if(priority > 2) priority = 2;
             if(priority < -2) priority = -2;
 
-            String path = intent != null ? intent.getStringExtra(PATH_KEY) : Environment.getExternalStorageDirectory().getAbsolutePath();
+            String path = intent != null ? intent.getStringExtra(PATH_KEY) : Tuils.getFolder().getAbsolutePath();
 
-            startForeground(ONGOING_NOTIFICATION_ID, buildNotification(getApplicationContext(), title, subtitle, Tuils.getHint(path),
-                    clickCmd, showHome, lastCommands, upDown, priority));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(ONGOING_NOTIFICATION_ID, buildNotification(getApplicationContext(), title, subtitle, Tuils.getHint(path),
+                        clickCmd, showHome, lastCommands, upDown, priority), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            } else {
+                startForeground(ONGOING_NOTIFICATION_ID, buildNotification(getApplicationContext(), title, subtitle, Tuils.getHint(path),
+                        clickCmd, showHome, lastCommands, upDown, priority));
+            }
 
             int lastCmdSize = XMLPrefsManager.getInt(Behavior.tui_notification_lastcmds_size);
             if(lastCmdSize > 0) {
@@ -84,7 +89,7 @@ public class KeeperService extends Service {
 
             if(lastCommands != null) updateCmds(intent.getStringExtra(CMD_KEY));
 
-            String path = intent != null ? intent.getStringExtra(PATH_KEY) : Environment.getExternalStorageDirectory().getAbsolutePath();
+            String path = intent != null ? intent.getStringExtra(PATH_KEY) : Tuils.getFolder().getAbsolutePath();
 
             NotificationManagerCompat.from(getApplicationContext()).notify(KeeperService.ONGOING_NOTIFICATION_ID,
                     KeeperService.buildNotification(getApplicationContext(), title, subtitle, Tuils.getHint(path),
@@ -155,7 +160,7 @@ public class KeeperService extends Service {
                     c,
                     0,
                     startMain,
-                    PendingIntent.FLAG_CANCEL_CURRENT
+                    Tuils.pendingIntentFlags(PendingIntent.FLAG_CANCEL_CURRENT)
             );
         } else if(clickCmd != null && clickCmd.length() > 0) {
             Intent cmdIntent = new Intent(PublicIOReceiver.ACTION_CMD);
@@ -165,7 +170,7 @@ public class KeeperService extends Service {
                     c,
                     0,
                     cmdIntent,
-                    0
+                    Tuils.pendingIntentFlags(0)
             );
         } else {
             pendingIntent = null;
@@ -222,7 +227,7 @@ public class KeeperService extends Service {
             NotificationCompat.Action.Builder actionBuilder = new NotificationCompat.Action.Builder(
                     R.mipmap.ic_launcher,
                     cmdLabel,
-                    PendingIntent.getBroadcast(c.getApplicationContext(), 40, i, PendingIntent.FLAG_UPDATE_CURRENT))
+                    PendingIntent.getBroadcast(c.getApplicationContext(), 40, i, Tuils.pendingIntentFlags(PendingIntent.FLAG_UPDATE_CURRENT)))
                         .addRemoteInput(remoteInput);
 
             builder.addAction(actionBuilder.build());

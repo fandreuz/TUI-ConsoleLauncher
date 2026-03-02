@@ -1,31 +1,39 @@
+# Android Build Artifacts
+**/build/
+**/.gradle/
+**/captures/
+**/output-metadata.json
 
-*.class
+# Signing Keys
+**/*.jks
+**/*.keystore
+**/*.p12
+release.jks
 
-# Package Files #
-*.dex
-*.war
-*.ear
-*.apk
-bin/
-bin
-gen/
-release/
-release
-gen
-build/
-build
-.metadata/
-.metadata
-.gradle/
-.gradle
-.idea/
-.idea
-*.project
+# Local Configuration
+**/local.properties
+signing.properties
+keystore.properties
+google-services.json
+
+# IDE Files
+**/.idea/
+**/*.iml
+**/.classpath
+**/.project
+**/.settings/
+**/bin/
+
+# APKs and generated binaries
+**/*.apk
+**/*.idsig
+**/*.dm
+
+# System Files
 .DS_Store
-target/
+Thumbs.db
 
-*.iml
-*.properties
-app/app.iml
-
-*.md
+# Temporary Files
+*.tmp
+*.log
+*.swp

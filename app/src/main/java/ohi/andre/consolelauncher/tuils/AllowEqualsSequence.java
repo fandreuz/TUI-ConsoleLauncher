@@ -1,6 +1,6 @@
 package ohi.andre.consolelauncher.tuils;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collections;

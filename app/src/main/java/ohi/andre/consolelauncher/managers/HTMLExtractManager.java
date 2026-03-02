@@ -6,15 +6,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.net.Uri;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 
 import com.jayway.jsonpath.JsonPath;
-
-import net.minidev.json.JSONArray;
 
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -500,7 +498,7 @@ public class HTMLExtractManager {
                             output(output, context, weatherArea, TerminalManager.CATEGORY_NO_COLOR);
                         } else if(o instanceof List) {
 //                            this is an array of JSON objects
-                            JSONArray a = (JSONArray) o;
+                            List a = (List) o;
 
                             for(int c = 0; c < a.size(); c++) {
                                 String f = format == null ? defaultFormat : format;

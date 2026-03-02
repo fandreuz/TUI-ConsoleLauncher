@@ -11,7 +11,7 @@ import ohi.andre.consolelauncher.tuils.Tuils;
  * Created by francescoandreuzzi on 29/01/2017.
  */
 
-public class calc extends PermanentSuggestionCommand {
+public class calc implements PermanentSuggestionCommand {
 
     @Override
     public String exec(ExecutePack pack) throws Exception {

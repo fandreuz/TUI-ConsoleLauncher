@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Parcelable;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
@@ -27,7 +27,6 @@ import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.managers.ChangelogManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.HTMLExtractManager;
-import ohi.andre.consolelauncher.managers.MessagesManager;
 import ohi.andre.consolelauncher.managers.RssManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
 import ohi.andre.consolelauncher.managers.ThemeManager;
@@ -39,6 +38,7 @@ import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.tuils.BusyBoxInstaller;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -128,8 +128,6 @@ public class MainManager {
     private ThemeManager themeManager;
     private HTMLExtractManager htmlExtractManager;
 
-    MessagesManager messagesManager;
-
     private BroadcastReceiver receiver;
 
     public static int commandCount = 0;
@@ -199,12 +197,7 @@ public class MainManager {
         rssManager = new RssManager(mContext, client);
         themeManager = new ThemeManager(client, mContext, c);
         musicManager2 = XMLPrefsManager.getBoolean(Behavior.enable_music) ? new MusicManager2(mContext) : null;
-        ChangelogManager.printLog(mContext, client);
         htmlExtractManager = new HTMLExtractManager(mContext, client);
-
-        if(XMLPrefsManager.getBoolean(Behavior.show_hints)) {
-            messagesManager = new MessagesManager(mContext);
-        }
 
         mainPack = new MainPack(mContext, group, aliasManager, appsManager, musicManager2, contactManager, redirectator, rssManager, client);
 
@@ -342,7 +335,6 @@ public class MainManager {
                     break;
                 }
                 if (r) {
-                    if(messagesManager != null) messagesManager.afterCmd();
                     break;
                 }
             }
@@ -364,8 +356,6 @@ public class MainManager {
     public void destroy() {
         mainPack.destroy();
         TuiLocationManager.disposeStatic();
-
-        if(messagesManager != null) messagesManager.onDestroy();
 
         themeManager.dispose();
         htmlExtractManager.dispose(mContext);
@@ -521,6 +511,19 @@ public class MainManager {
 
         @Override
         public boolean trigger(final MainPack info, final String input) throws Exception {
+            final String trimmed = input.trim();
+            final String cmd = trimmed.split(" ")[0];
+
+            if (!BusyBoxInstaller.isInstalled(mContext)) {
+                String[] common = {"ping", "echo", "ls", "grep", "cat", "vi", "top", "ps", "ip"};
+                for (String c : common) {
+                    if (cmd.equalsIgnoreCase(c)) {
+                        Tuils.sendOutput(mContext, "Command not found. You can install BusyBox using: bbman -install", TerminalManager.CATEGORY_OUTPUT);
+                        return true;
+                    }
+                }
+            }
+
             new StoppableThread() {
                 @Override
                 public void run() {

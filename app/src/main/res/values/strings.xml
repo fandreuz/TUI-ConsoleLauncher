@@ -71,9 +71,6 @@
 
     <!-- hints -->
     <string-array name="hints">
-        <item name="hint_twitter">Did you know? t-ui is on Twitter. Have a look (\"$ tui -twitter\")</item>
-        <item name="hint_telegram">Did you know? There\'s a Telegram group with many enthusiastic users, where you can discuss, share and chat (\"$ tui -telegram\")</item>
-        <item name="hint_googlep">Did you know? Our official Google+ community is full of tips, experimental apks and discussions (\"$ tui -googlep\")</item>
         <item name="hint_tutorial">Did you read the tutorial? (\"$ tutorial\")</item>
         <item name="hint_theme">Did you know that you can easily switch your theme? Have a look at the cmd \"$ theme\"</item>
         <item name="hint_theme2">Did you know? You can create your custom theme and share it with other users. Have a look at the cmd \"$ theme -create\"</item>
@@ -97,7 +94,6 @@
         <item>You can call your contacts with the cmd \"call contactName\"</item>
         <item>t-ui is highly customizable. Check \"config -ls\" or use the cmd \"config -tutorial\" to see what you can change</item>
         <item>You can choose within a large database of themes uploaded by t-ui users. Check the cmd \"theme -view\"</item>
-        <item>Join our community! Google+, Twitter, Telegram and GitHub. Use the cmd \"tui\"</item>
     </string-array>
 
     <!-- apps -->
@@ -322,16 +318,15 @@
     </string>
     <string name="help_share">$ share [pathToFile]
     </string>
-    <string name="help_shellcommands">Print the commands in /system/bin and /system/xbin</string>
     <string name="help_shortcut">-ls [appName] -> show the shortcuts of this app
         \n-use [shortcutID OR shortcut index] [optional: appName] -> use the specified shortcut
         \n-cp [index] [appName] -> copy to clipboard the nth shortcut of the selected app (first: 0)</string>
     <string name="help_status">Get info about battery charge, wifi status and mobile data</string>
-    <string name="help_theme">-apply [name] -> apply the selected theme (case sensitive). require internet connection. may take some seconds
+    <string name="help_theme">-apply [path] -> apply a theme from a local file
+        \n-set [element] [color] -> manually set a color
+        \n-preset [name] -> apply a built-in preset (blue, red, green, pink, bw, cyberpunk)
         \n-old -> re-apply the theme that was replaced by the current one
-        \n-standard -> apply the standard theme
-        \n-view -> view the available themes
-        \n-create -> create a new theme</string>
+        \n-standard -> apply the standard theme</string>
     <string name="help_time">Print the current time with the given format
         \n\nUsage:
         \n$ time [index] (index means the index of the desired time_format</string>
@@ -344,9 +339,6 @@
         \n-reset -> removes the t-ui folder and resets default settings (restart required)
         \n-log [fileName] -> log the text on screen to the file
         \n-priority [command] [int] -> set the priority of the selected command
-        \n-twitter -> show t-ui Twitter page
-        \n-googlep -> show the community on Google+
-        \n-telegram -> open the official Telegram group
         \n-sourcecode -> open the GitHub page
         \n-folder -> print the path of the t-ui folder</string>
     <string name="help_tuinotes">-add [line] [text] -> add a new note at the specified line (the note will be appended if line is omitted)
@@ -439,4 +431,6 @@
         \n$ open [pathToFile]
     </string>
 
+    <string name="help_username">Change the username and device name: username [new_user] [new_device]</string>
+    <string name="help_bbman">-install -> download and setup BusyBox\n-remove -> uninstall BusyBox</string>
 </resources>

@@ -351,7 +351,7 @@ public enum Ui implements XMLPrefsSave {
     system_wallpaper {
         @Override
         public String defaultValue() {
-            return "false";
+            return "true";
         }
 
         @Override
