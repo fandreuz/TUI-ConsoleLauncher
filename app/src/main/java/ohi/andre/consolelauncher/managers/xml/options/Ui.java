@@ -332,7 +332,7 @@ public enum Ui implements XMLPrefsSave {
             return "Your username";
         }
     },
-    deviceName {
+    device_name {
         @Override
         public String defaultValue() {
             return Build.DEVICE;

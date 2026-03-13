@@ -1157,7 +1157,7 @@ public class UIManager implements OnTouchListener {
             String deviceFormat = XMLPrefsManager.get(Behavior.device_format);
 
             String username = XMLPrefsManager.get(Ui.username);
-            String deviceName = XMLPrefsManager.get(Ui.deviceName);
+            String deviceName = XMLPrefsManager.get(Ui.device_name);
             if (deviceName == null || deviceName.length() == 0) {
                 deviceName = Build.DEVICE;
             }
