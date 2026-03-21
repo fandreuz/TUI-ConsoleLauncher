@@ -215,15 +215,6 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                 }
             }
 
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.READ_PHONE_STATE);
-            }
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
-            }
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                     permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
@@ -588,25 +579,32 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
                     break;
                 case STARTING_PERMISSION:
                     int count = 0;
+                    boolean storageDenied = false;
                     while(count < permissions.length && count < grantResults.length) {
                         if(grantResults[count] == PackageManager.PERMISSION_DENIED) {
-                            Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
-                            new Thread() {
-                                @Override
-                                public void run() {
-                                    super.run();
-
-                                    try {
-                                        sleep(2000);
-                                    } catch (InterruptedException e) {}
-
-                                    runOnUiThread(stopActivity);
-                                }
-                            }.start();
-                            return;
+                            String p = permissions[count];
+                            if (p.equals(Manifest.permission.READ_EXTERNAL_STORAGE) || p.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                                storageDenied = true;
+                            }
                         }
                         count++;
                     }
+
+                    if (storageDenied) {
+                        Toast.makeText(this, R.string.permissions_toast, Toast.LENGTH_LONG).show();
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                super.run();
+                                try {
+                                    sleep(2000);
+                                } catch (InterruptedException e) {}
+                                runOnUiThread(stopActivity);
+                            }
+                        }.start();
+                        return;
+                    }
+
                     canApplyTheme = false;
                     finishOnCreate();
                     break;

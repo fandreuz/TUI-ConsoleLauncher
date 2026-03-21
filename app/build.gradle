@@ -23,8 +23,8 @@ android {
         applicationId "ohi.andre.consolelauncher"
         minSdk 21
         targetSdk 34
-        versionCode 301
-        versionName "v6.15.1-updated-v2"
+        versionCode 302
+        versionName "v6.15.2-updated-v2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -1,5 +1,6 @@
 package ohi.andre.consolelauncher;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
@@ -10,6 +11,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -644,7 +647,7 @@ public class UIManager implements OnTouchListener {
         String key;
         String url;
 
-        public WeatherRunnable() {
+        public WeatherRunnable(boolean manual) {
 
             if(XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
                 weatherDelay = XMLPrefsManager.getInt(Behavior.weather_update_time);
@@ -657,36 +660,18 @@ public class UIManager implements OnTouchListener {
 
             String where = XMLPrefsManager.get(Behavior.weather_location);
             if(where == null || where.length() == 0 || (!Tuils.isNumber(where) && !where.contains(","))) {
-//                Tuils.location(mContext, new Tuils.ArgsRunnable() {
-//                    @Override
-//                    public void run() {
-//                        setUrl(
-//                                "lat=" + get(int.class, 0) + "&lon=" + get(int.class, 1),
-//                                finalKey,
-//                                XMLPrefsManager.get(Behavior.weather_temperature_measure));
-//                        WeatherRunnable.this.run();
-//                    }
-//                }, new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        updateText(Label.weather, Tuils.span(mContext, mContext.getString(R.string.location_error), XMLPrefsManager.getColor(Theme.weather_color), labelSizes[Label.weather.ordinal()]));
-//                    }
-//                }, handler);
-
-//                Location l = Tuils.getLocation(mContext);
-//                if(l != null) {
-//                    setUrl(
-//                            "lat=" + l.getLatitude() + "&lon=" + l.getLongitude(),
-//                            finalKey,
-//                            XMLPrefsManager.get(Behavior.weather_temperature_measure));
-//                    WeatherRunnable.this.run();
-//                } else {
-//                    updateText(Label.weather, Tuils.span(mContext, mContext.getString(R.string.location_error), XMLPrefsManager.getColor(Theme.weather_color), labelSizes[Label.weather.ordinal()]));
-//                }
-
-                TuiLocationManager l = TuiLocationManager.instance(mContext);
-                l.add(ACTION_WEATHER_GOT_LOCATION);
-
+                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                        ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    TuiLocationManager l = TuiLocationManager.instance(mContext);
+                    l.add(ACTION_WEATHER_GOT_LOCATION);
+                } else {
+                    if (manual) {
+                        TuiLocationManager l = TuiLocationManager.instance(mContext);
+                        l.add(ACTION_WEATHER_GOT_LOCATION);
+                    } else {
+                        updateText(Label.weather, Tuils.span(mContext, "Weather: Please enable Location permission in app settings.", weatherColor, labelSizes[Label.weather.ordinal()]));
+                    }
+                }
             } else {
                 fixedLocation = true;
 
@@ -835,18 +820,13 @@ public class UIManager implements OnTouchListener {
                     updateText(Label.weather, s);
 
                     if(showWeatherUpdate) {
-                        String message = context.getString(R.string.weather_updated) + Tuils.SPACE + c.get(Calendar.HOUR_OF_DAY) + "." + c.get(Calendar.MINUTE) + Tuils.SPACE + "(" + lastLatitude + ", " + lastLongitude + ")";
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+                        String message = context.getString(R.string.weather_updated) + Tuils.SPACE + sdf.format(c.getTime());
                         Tuils.sendOutput(context, message, TerminalManager.CATEGORY_OUTPUT);
                     }
                 } else if(action.equals(ACTION_WEATHER_GOT_LOCATION)) {
-//                    int result = intent.getIntExtra(XMLPrefsManager.VALUE_ATTRIBUTE, 0);
-//                    if(result == PackageManager.PERMISSION_DENIED) {
-//                        updateText(Label.weather, Tuils.span(context, context.getString(R.string.location_error), weatherColor, labelSizes[Label.weather.ordinal()]));
-//                    } else handler.post(weatherRunnable);
-
                     if(intent.getBooleanExtra(TuiLocationManager.FAIL, false)) {
                         handler.removeCallbacks(weatherRunnable);
-                        weatherRunnable = null;
 
                         CharSequence s = Tuils.span(context, context.getString(R.string.location_error), weatherColor, labelSizes[Label.weather.ordinal()]);
 
@@ -859,7 +839,7 @@ public class UIManager implements OnTouchListener {
 
                         if(!weatherPerformedStartupRun || XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
                             handler.removeCallbacks(weatherRunnable);
-                            handler.post(weatherRunnable);
+                            if (weatherRunnable != null) handler.post(weatherRunnable);
                         }
                     }
                 } else if(action.equals(ACTION_WEATHER_DELAY)) {
@@ -872,10 +852,11 @@ public class UIManager implements OnTouchListener {
                     }
 
                     handler.removeCallbacks(weatherRunnable);
-                    handler.postDelayed(weatherRunnable, 1000 * 60);
+                    if (weatherRunnable != null) handler.postDelayed(weatherRunnable, 1000 * 60);
                 } else if(action.equals(ACTION_WEATHER_MANUAL_UPDATE)) {
                     handler.removeCallbacks(weatherRunnable);
-                    handler.post(weatherRunnable);
+                    weatherRunnable = new WeatherRunnable(true);
+                    if (weatherRunnable != null) handler.post(weatherRunnable);
                 }
             }
         };
@@ -1224,7 +1205,7 @@ public class UIManager implements OnTouchListener {
         }
 
         if(show[Label.weather.ordinal()]) {
-            weatherRunnable = new WeatherRunnable();
+            weatherRunnable = new WeatherRunnable(false);
 
             weatherColor = XMLPrefsManager.getColor(Theme.weather_color);
 

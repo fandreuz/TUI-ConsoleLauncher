@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Parcelable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -38,6 +39,7 @@ import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.BusyBoxInstaller;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
@@ -248,6 +250,19 @@ public class MainManager {
         };
 
         LocalBroadcastManager.getInstance(mContext.getApplicationContext()).registerReceiver(receiver, filter);
+
+        final SharedPreferences firstRunPrefs = mContext.getSharedPreferences("first_run", Context.MODE_PRIVATE);
+        if (firstRunPrefs.getBoolean("is_first_launch", true)) {
+            new android.os.Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Tuils.sendOutput(mContext, Tuils.span("--- Welcome to T-UI Launcher! ---", XMLPrefsManager.getColor(Theme.output_color)));
+                    Tuils.sendOutput(mContext, "Use 'explain' to see a summary of the new modernized features.");
+                    Tuils.sendOutput(mContext, "Type 'help' for a full list of commands.");
+                    firstRunPrefs.edit().putBoolean("is_first_launch", false).apply();
+                }
+            }, 1000);
+        }
     }
 
     private void updateServices(String cmd, boolean wasMusicService) {

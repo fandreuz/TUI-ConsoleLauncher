@@ -45,9 +45,11 @@ public class tuiweather extends ParamCommand {
 
                 save.parent().write(save, "true");
                 ((Reloadable) pack.context).addMessage(save.parent().path(), save.label() + " -> " + "true");
+                
+                LocalBroadcastManager.getInstance(pack.context.getApplicationContext()).sendBroadcast(new Intent(UIManager.ACTION_WEATHER_MANUAL_UPDATE));
                 ((Reloadable) pack.context).reload();
 
-                return null;
+                return "Weather enabled. If it shows a location error, please enable Location permission in your Android app settings.";
             }
         },
         disable {
