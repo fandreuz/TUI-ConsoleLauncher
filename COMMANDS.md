@@ -33,30 +33,22 @@ adb install -r app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk
 
 ---
 
-## 🐧 BusyBox Management
+## ☀️ Weather Configuration
 
-The launcher now features a built-in BusyBox manager to enable standard Linux commands.
+The `weather` command requires a personal API key from [OpenWeatherMap](https://openweathermap.org/) for manual updates.
 
-### Installation
-In the T-UI terminal, type:
-```bash
-bbman -install
-```
-This downloads the architecture-specific ELF binary, verifies its **SHA-256 hash**, and sets up the environment.
-
-### Usage
-Once installed, you can use any Linux command directly:
-```bash
-ls -la
-grep "search_term" file.txt
-busybox --list
-```
-
-### Removal
-To clean up the environment:
-```bash
-bbman -remove
-```
+### Setting your Key
+1.  Register for a free account on the OpenWeatherMap website.
+2.  Generate an API key in your account settings.
+3.  In the T-UI terminal, type:
+    ```bash
+    weather -set_key [YOUR_API_KEY]
+    ```
+4.  Enable weather updates:
+    ```bash
+    weather -enable
+    ```
+    *(If it shows a location error, ensure Location permission is granted in Android settings)*
 
 ---
 
@@ -73,7 +65,3 @@ adb uninstall ohi.andre.consolelauncher
 adb push local_file.txt /data/user/0/ohi.andre.consolelauncher/files/
 ```
 
----
-
-## 🛡 Security Note
-All binaries are verified using hardcoded SHA-256 hashes found in `app/src/main/java/ohi/andre/consolelauncher/tuils/BusyBoxInstaller.java`. All network transport is forced over HTTPS.

@@ -432,5 +432,4 @@
     </string>
 
     <string name="help_username">Change the username and device name: username [new_user] [new_device]</string>
-    <string name="help_bbman">-install -> download and setup BusyBox\n-remove -> uninstall BusyBox</string>
 </resources>

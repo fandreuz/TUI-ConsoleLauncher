@@ -21,9 +21,6 @@ public class explain implements APICommand, CommandAbstraction {
         sb.append(Tuils.span("🛡️ Security:", ((MainPack)pack).commandColor)).append(Tuils.NEWLINE);
         sb.append("Your signing keys are private and stored in local.properties. Binaries are verified with SHA-256.").append(Tuils.NEWLINE);
         sb.append(Tuils.NEWLINE);
-        sb.append(Tuils.span("🐧 BusyBox (bbman):", ((MainPack)pack).commandColor)).append(Tuils.NEWLINE);
-        sb.append("Use 'bbman -install' to get a full Linux environment (ls, grep, vi, etc.).").append(Tuils.NEWLINE);
-        sb.append(Tuils.NEWLINE);
         sb.append(Tuils.span("🎨 Themes:", ((MainPack)pack).commandColor)).append(Tuils.NEWLINE);
         sb.append("Use 'theme -preset [name]' for high-quality themes. Available: blue, red, green, pink, bw, cyberpunk.").append(Tuils.NEWLINE);
         sb.append(Tuils.NEWLINE);
