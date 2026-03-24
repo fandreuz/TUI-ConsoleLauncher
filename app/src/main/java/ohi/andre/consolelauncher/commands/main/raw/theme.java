@@ -85,7 +85,7 @@ public class theme extends ParamCommand {
                 // Check if system wallpaper is enabled
                 boolean isTransparent = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Ui.system_wallpaper);
                 Theme backgroundTarget = isTransparent ? Theme.overlay_color : Theme.bg_color;
-                
+
                 // Set to 100% transparent if wallpaper is active (#00), otherwise solid (#FF)
                 String transPrefix = isTransparent ? "#00" : "#FF";
 
