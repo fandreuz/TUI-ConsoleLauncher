@@ -75,6 +75,8 @@ public class TuiLocationManager {
                     i.putExtra(LONGITUDE, location.getLongitude());
                     localBroadcastManager.sendBroadcast(i);
                 }
+
+                dispose();
             }
 
             @Override
@@ -130,7 +132,7 @@ public class TuiLocationManager {
         c.setAccuracy(Criteria.ACCURACY_COARSE);
         c.setBearingRequired(false);
         c.setCostAllowed(false);
-        c.setHorizontalAccuracy(Criteria.NO_REQUIREMENT);
+        c.setHorizontalAccuracy(Criteria.ACCURACY_LOW);
         c.setPowerRequirement(Criteria.POWER_LOW);
         c.setSpeedRequired(false);
 
