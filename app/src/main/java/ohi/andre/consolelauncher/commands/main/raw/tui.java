@@ -40,8 +40,9 @@ public class tui extends ParamCommand {
                 ComponentName name = new ComponentName(info.context, PolicyReceiver.class);
                 policy.removeActiveAdmin(name);
 
-                Uri packageURI = Uri.parse("package:" + BuildConfig.APPLICATION_ID);
+                Uri packageURI = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null);
                 Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
+                uninstallIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 info.context.startActivity(uninstallIntent);
 
                 return null;
