@@ -38,6 +38,7 @@ import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.BusyBoxInstaller;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;

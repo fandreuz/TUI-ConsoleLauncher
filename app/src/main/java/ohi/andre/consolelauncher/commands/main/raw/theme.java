@@ -82,12 +82,16 @@ public class theme extends ParamCommand {
                 Map<Theme, String> colors = new HashMap<>();
                 Map<Suggestions, String> suggestionColors = new HashMap<>();
                 
-                // Common transparency for background (90% opacity = E6)
-                String transBg = "#E6";
+                // Check if system wallpaper is enabled
+                boolean isTransparent = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Ui.system_wallpaper);
+                Theme backgroundTarget = isTransparent ? Theme.overlay_color : Theme.bg_color;
+
+                // Set to 100% transparent if wallpaper is active (#00), otherwise solid (#FF)
+                String transPrefix = isTransparent ? "#00" : "#FF";
 
                 switch(name) {
                     case "blue":
-                        colors.put(Theme.bg_color, transBg + "001221");
+                        colors.put(backgroundTarget, transPrefix + "001221");
                         colors.put(Theme.input_color, "#00BFFF");
                         colors.put(Theme.output_color, "#E0FFFF");
                         colors.put(Theme.device_color, "#1E90FF");
@@ -102,7 +106,7 @@ public class theme extends ParamCommand {
                         suggestionColors.put(Suggestions.song_bg_color, "#1E90FF");
                         break;
                     case "red":
-                        colors.put(Theme.bg_color, transBg + "210000");
+                        colors.put(backgroundTarget, transPrefix + "210000");
                         colors.put(Theme.input_color, "#FF4500");
                         colors.put(Theme.output_color, "#FFEBEE");
                         colors.put(Theme.device_color, "#B71C1C");
@@ -117,7 +121,7 @@ public class theme extends ParamCommand {
                         suggestionColors.put(Suggestions.song_bg_color, "#B22222");
                         break;
                     case "green":
-                        colors.put(Theme.bg_color, transBg + "001B00");
+                        colors.put(backgroundTarget, transPrefix + "001B00");
                         colors.put(Theme.input_color, "#00FF41");
                         colors.put(Theme.output_color, "#D5F5E3");
                         colors.put(Theme.device_color, "#2ECC71");
@@ -132,7 +136,7 @@ public class theme extends ParamCommand {
                         suggestionColors.put(Suggestions.song_bg_color, "#228B22");
                         break;
                     case "pink":
-                        colors.put(Theme.bg_color, transBg + "1A0010");
+                        colors.put(backgroundTarget, transPrefix + "1A0010");
                         colors.put(Theme.input_color, "#FF69B4");
                         colors.put(Theme.output_color, "#FCE4EC");
                         colors.put(Theme.device_color, "#AD1457");
@@ -147,7 +151,7 @@ public class theme extends ParamCommand {
                         suggestionColors.put(Suggestions.song_bg_color, "#C71585");
                         break;
                     case "bw":
-                        colors.put(Theme.bg_color, transBg + "000000");
+                        colors.put(backgroundTarget, transPrefix + "000000");
                         colors.put(Theme.input_color, "#FFFFFF");
                         colors.put(Theme.output_color, "#CCCCCC");
                         colors.put(Theme.device_color, "#AAAAAA");
@@ -168,7 +172,7 @@ public class theme extends ParamCommand {
                         suggestionColors.put(Suggestions.song_text_color, "#000000");
                         break;
                     case "cyberpunk":
-                        colors.put(Theme.bg_color, transBg + "0D0615");
+                        colors.put(backgroundTarget, transPrefix + "0D0615");
                         colors.put(Theme.input_color, "#FCEE09"); 
                         colors.put(Theme.output_color, "#00F0FF"); 
                         colors.put(Theme.device_color, "#FF003C"); 
