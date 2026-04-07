@@ -38,7 +38,7 @@ public class uninstall implements CommandAbstraction {
             return e.toString();
         }
 
-        return "Uninstallation started for: " + packageName;
+        return String.format("Uninstalling %s...", packageName);
     }
 
     @Override
