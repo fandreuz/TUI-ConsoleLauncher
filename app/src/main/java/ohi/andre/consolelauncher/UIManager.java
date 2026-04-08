@@ -839,14 +839,11 @@ public class UIManager implements OnTouchListener {
                         Tuils.sendOutput(context, message, TerminalManager.CATEGORY_OUTPUT);
                     }
                 } else if(action.equals(ACTION_WEATHER_GOT_LOCATION)) {
-//                    int result = intent.getIntExtra(XMLPrefsManager.VALUE_ATTRIBUTE, 0);
-//                    if(result == PackageManager.PERMISSION_DENIED) {
-//                        updateText(Label.weather, Tuils.span(context, context.getString(R.string.location_error), weatherColor, labelSizes[Label.weather.ordinal()]));
-//                    } else handler.post(weatherRunnable);
-
                     if(intent.getBooleanExtra(TuiLocationManager.FAIL, false)) {
-                        handler.removeCallbacks(weatherRunnable);
-                        weatherRunnable = null;
+                        if (weatherRunnable != null) {
+                            handler.removeCallbacks(weatherRunnable);
+                            weatherRunnable = null;
+                        }
 
                         CharSequence s = Tuils.span(context, context.getString(R.string.location_error), weatherColor, labelSizes[Label.weather.ordinal()]);
 
@@ -858,8 +855,10 @@ public class UIManager implements OnTouchListener {
                         location = Tuils.locationName(context, lastLatitude, lastLongitude);
 
                         if(!weatherPerformedStartupRun || XMLPrefsManager.wasChanged(Behavior.weather_key, false)) {
-                            handler.removeCallbacks(weatherRunnable);
-                            handler.post(weatherRunnable);
+                            if (weatherRunnable != null) {
+                                handler.removeCallbacks(weatherRunnable);
+                                handler.post(weatherRunnable);
+                            }
                         }
                     }
                 } else if(action.equals(ACTION_WEATHER_DELAY)) {
@@ -871,10 +870,15 @@ public class UIManager implements OnTouchListener {
                         Tuils.sendOutput(context, message, TerminalManager.CATEGORY_OUTPUT);
                     }
 
-                    handler.removeCallbacks(weatherRunnable);
-                    handler.postDelayed(weatherRunnable, 1000 * 60);
+                    if (weatherRunnable != null) {
+                        handler.removeCallbacks(weatherRunnable);
+                        handler.postDelayed(weatherRunnable, 1000 * 60);
+                    }
                 } else if(action.equals(ACTION_WEATHER_MANUAL_UPDATE)) {
-                    handler.removeCallbacks(weatherRunnable);
+                    if (weatherRunnable != null) {
+                        handler.removeCallbacks(weatherRunnable);
+                    }
+                    weatherRunnable = new WeatherRunnable();
                     handler.post(weatherRunnable);
                 }
             }
