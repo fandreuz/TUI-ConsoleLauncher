@@ -7,6 +7,7 @@ import ohi.andre.consolelauncher.R;
 import ohi.andre.consolelauncher.commands.CommandAbstraction;
 import ohi.andre.consolelauncher.commands.ExecutePack;
 import ohi.andre.consolelauncher.commands.main.MainPack;
+import ohi.andre.consolelauncher.managers.AppsManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
 public class uninstall implements CommandAbstraction {
@@ -15,13 +16,29 @@ public class uninstall implements CommandAbstraction {
     public String exec(ExecutePack pack) {
         MainPack info = (MainPack) pack;
 
-        String packageName = info.getLaunchInfo().componentName.getPackageName();
+        AppsManager.LaunchInfo launchInfo = info.getLaunchInfo();
+        if (launchInfo == null || launchInfo.componentName == null) {
+            return info.res.getString(R.string.output_appnotfound);
+        }
 
-        Uri packageURI = Uri.parse("package:" + packageName);
-        Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
-        info.context.startActivity(uninstallIntent);
+        return uninstall(info, launchInfo.componentName.getPackageName());
+    }
 
-        return Tuils.EMPTYSTRING;
+    private String uninstall(MainPack info, String packageName) {
+        if (packageName == null || packageName.isEmpty()) {
+            return info.res.getString(R.string.output_appnotfound);
+        }
+
+        try {
+            Uri packageURI = Uri.fromParts("package", packageName, null);
+            Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
+            uninstallIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            info.context.startActivity(uninstallIntent);
+        } catch (Exception e) {
+            return e.toString();
+        }
+
+        return String.format("Uninstalling %s...", packageName);
     }
 
     @Override
@@ -31,7 +48,7 @@ public class uninstall implements CommandAbstraction {
 
     @Override
     public int[] argType() {
-        return new int[]{CommandAbstraction.VISIBLE_PACKAGE};
+        return new int[]{CommandAbstraction.ALL_PACKAGES};
     }
 
     @Override
@@ -48,7 +65,20 @@ public class uninstall implements CommandAbstraction {
     @Override
     public String onArgNotFound(ExecutePack pack, int index) {
         MainPack info = (MainPack) pack;
-        return info.res.getString(R.string.output_appnotfound);
+        String arg = (String) pack.args[index];
+
+        // Attempt to find the app in ALL_PACKAGES (including hidden) even if argType parsing failed
+        AppsManager.LaunchInfo li = info.appsManager.findLaunchInfoWithLabel(arg, AppsManager.HIDDEN_APPS);
+        if (li == null) {
+            li = info.appsManager.findLaunchInfoWithLabel(arg, AppsManager.SHOWN_APPS);
+        }
+
+        if (li != null && li.componentName != null) {
+            return uninstall(info, li.componentName.getPackageName());
+        }
+
+        // If still not found, assume the arg might be the package name itself
+        return uninstall(info, arg);
     }
 
 }
