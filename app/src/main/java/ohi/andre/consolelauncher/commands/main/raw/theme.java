@@ -16,6 +16,7 @@ import ohi.andre.consolelauncher.managers.ThemeManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
+import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Tuils;
 import ohi.andre.consolelauncher.tuils.interfaces.Reloadable;
 
@@ -83,7 +84,7 @@ public class theme extends ParamCommand {
                 Map<Suggestions, String> suggestionColors = new HashMap<>();
                 
                 // Check if system wallpaper is enabled
-                boolean isTransparent = XMLPrefsManager.getBoolean(ohi.andre.consolelauncher.managers.xml.options.Ui.system_wallpaper);
+                boolean isTransparent = XMLPrefsManager.getBoolean(Ui.system_wallpaper);
                 Theme backgroundTarget = isTransparent ? Theme.overlay_color : Theme.bg_color;
 
                 // Set to 100% transparent if wallpaper is active (#00), otherwise solid (#FF)
