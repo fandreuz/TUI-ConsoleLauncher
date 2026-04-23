@@ -1,6 +1,6 @@
 # T-UI Launcher Development & Deployment Guide
 
-This document summarizes the essential commands for building, installing, and managing the T-UI Linux CLI Launcher fork.
+This document summarizes the essential commands for building, installing, and managing the T-UI Linux CLI Launcher.
 
 ## 🛠 Building the APK
 
